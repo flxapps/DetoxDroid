@@ -21,4 +21,13 @@ Notifications are the number 1 way for apps to draw our attention. Any app on yo
 And rather than needing to opt-in for this mode, you are encouraged to deliberately to pause the app, allowing colors and notifications. If the pause is over, DetoxDroid automatically comes back into life. This makes digital detoxing your new default.
 
 ## Installation
-[TODO]
+1. Enable developer mode:
+1.1. Go to Android Settings → About Phone
+1.2. Look for the build number option
+1.3. Touch it multiple times until developer mode is enabled
+2. Enable USB debugging
+2.1. Go to Android Settings → Developer Options
+2.2. Look for USB debugging and enable it
+3. Connect device with your computer
+Connect your device with your computer and look at your phone. A prompt may show up asking you to allow debugging by your computer. Accept this.
+4. Run the installation script
