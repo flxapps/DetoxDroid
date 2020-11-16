@@ -1,0 +1,42 @@
+<resources>
+    <string name="app.name">DetoxDroid</string>
+    <string name="app.name.credits">detoxdroid.flx.es</string>
+    <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
+    <string name="app.notificationListenerService.name">DetoxDroid Notification Listener Service</string>
+
+    <string name="actions.navigationDrawer.open">Open navigation drawer</string>
+    <string name="actions.navigationDrawer.close">Close navigation drawer</string>
+    <string name="actions.config">Config…</string>
+    <string name="actions.manageExceptions">Manage Exceptions…</string>
+    <string name="action.clickToActivate">Click to (de-)activate</string>
+
+    <string name="navigation.home">Home</string>
+    <string name="navigation.whitelist">App Whitelist</string>
+    <string name="navigation.donate">Donate</string>
+
+    <string name="home.welcome">Welcome to DetoxDroid!</string>
+    <string name="home.welcome.sub">Make \"Do Not Disturb\" your new default.</string>
+    <string name="home.welcome.hint">DetoxDroid will support you in winding down your smartphone use and curb with your smartphone addiction.</string>
+
+    <string name="home.doNotDisturb">\"Do Not Disturb\" Mode</string>
+    <string name="home.doNotDisturb.subtitle">Make it your new default</string>
+    <string name="home.doNotDisturb.description">DetoxDroid automatically (re-)activates the do not disturb mode. Exceptions can be made with the system settings.</string>
+    <string name="home.doNotDisturb.configure">Configure \"Do Not Disturb\" Mode…</string>
+
+    <string name="home.pauseButton">Pause Button</string>
+    <string name="home.pauseButton.subtitle">Take a break from taking a break.</string>
+    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. It will automatically come back into life, once the pause is over.</string>
+    <string name="home.pauseButton.duration">Duration of the pause in minutes</string>
+    <string name="home.pauseButton.quickSettings">Add pause button tile to quick settings</string>
+    <string name="home.pauseButton.homeButton">Pause on long-pressing the home button</string>
+
+    <string name="home.grayscale">Automatic Grayscale</string>
+    <string name="home.grayscale.subtitle">Color up by coloring down your phone</string>
+    <string name="home.grayscale.description">Strip away all the neuron-stimulating colors (hint: you can add your camera and gallery app to the exceptions).</string>
+
+    <string name="home.donate">Donate</string>
+    <string name="home.donate.hint">DetoxDroid is open-source and without ads. If you find the app useful, please consider leaving a donation to support the development of the app.</string>
+    <string name="home.noPermissions">You need to grant DetoxDroid elevated privileges from your computer.</string>
+    <string name="home.noPermissions.how">How?</string>
+
+</resources>
