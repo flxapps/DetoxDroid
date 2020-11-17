@@ -6,9 +6,9 @@ if [ ! -f "platform-tools/adb" ]; then
     unzip platform-tools-latest-linux.zip 
 fi
 
-if [ ! -f "release/app-release.apk" ]; then
+if [ ! -f "detoxdroid-latest.apk" ]; then
     echo "Download latest DetoxDroid APK"
-    wget -O detoxdroid-latest.apk https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/app-release.apk
+    wget -O detoxdroid-latest.apk https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/release/app-release.apk
 fi
 
 echo "Installing Detox Droid on your device"
