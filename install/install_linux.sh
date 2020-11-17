@@ -6,13 +6,13 @@ if [ ! -f "platform-tools/adb" ]; then
     unzip platform-tools-latest-linux.zip 
 fi
 
-if [ ! -f "app-release.apk" ]; then
+if [ ! -f "release/app-release.apk" ]; then
     echo "Download latest DetoxDroid APK"
-    wget -O app-release.apk https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/app-release.apk
+    wget -O detoxdroid-latest.apk https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/app-release.apk
 fi
 
 echo "Installing Detox Droid on your device"
-platform-tools/adb install -r app-release.apk
+platform-tools/adb install -r detoxdroid-latest.apk
 
 echo "Granting Permissions"
 platform-tools/adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
@@ -22,3 +22,5 @@ echo "Starting App"
 platform-tools/adb shell monkey -p com.flx_apps.digitaldetox 1
 
 echo "Done."
+
+
