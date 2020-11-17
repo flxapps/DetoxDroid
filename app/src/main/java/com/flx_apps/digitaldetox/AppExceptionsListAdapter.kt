@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.androidannotations.annotations.EBean
 
 @EBean
-open class ExceptionsListItemRecyclerViewAdapter(context: Context) : RecyclerView.Adapter<ExceptionsListItemRecyclerViewAdapter.ViewHolder>() {
+open class AppExceptionsListAdapter(context: Context) : RecyclerView.Adapter<AppExceptionsListAdapter.ViewHolder>() {
     lateinit var values: List<AppWhitelistItem>
 
     var prefs: Prefs_ = Prefs_(context)

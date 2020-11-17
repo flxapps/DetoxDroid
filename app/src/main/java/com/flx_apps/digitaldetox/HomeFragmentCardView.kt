@@ -26,6 +26,9 @@ open class HomeFragmentCardView(context: Context, attrs: AttributeSet) :
     lateinit var title: TextView
 
     @ViewById
+    lateinit var overline: TextView
+
+    @ViewById
     lateinit var subtitle: TextView
 
     @ViewById
@@ -34,6 +37,7 @@ open class HomeFragmentCardView(context: Context, attrs: AttributeSet) :
     var content: LinearLayout?
 
     private val titleText: String
+    private val overlineText: String
     private val subtitleText: String
     private val descriptionText: String
 
@@ -47,6 +51,7 @@ open class HomeFragmentCardView(context: Context, attrs: AttributeSet) :
                 titleText = getString(R.styleable.HomeFragmentCardView_title).orEmpty()
                 subtitleText = getString(R.styleable.HomeFragmentCardView_subtitle).orEmpty()
                 descriptionText = getString(R.styleable.HomeFragmentCardView_description).orEmpty()
+                overlineText = getString(R.styleable.HomeFragmentCardView_overline).orEmpty()
             } finally {
                 recycle()
             }
@@ -67,6 +72,8 @@ open class HomeFragmentCardView(context: Context, attrs: AttributeSet) :
         title.text = titleText
         subtitle.text = subtitleText
         description.text = descriptionText
+        overline.text = overlineText
+        if (overline.text.isEmpty()) overline.visibility = GONE
     }
 
     override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {

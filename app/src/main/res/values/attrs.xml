@@ -2,6 +2,7 @@
 <resources>
     <declare-styleable name="HomeFragmentCardView">
         <attr name="title" format="string|reference" />
+        <attr name="overline" format="string|reference" />
         <attr name="subtitle" format="string|reference" />
         <attr name="description" format="string|reference" />
     </declare-styleable>

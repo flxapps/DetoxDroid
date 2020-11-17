@@ -1,142 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#f4f4f4"
-        tools:context=".HomeFragment">
+        android:fillViewport="true">
 
-        <TextView
-            android:id="@+id/textWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="16dp"
-            android:paddingTop="16dp"
-            android:paddingRight="16dp"
-            android:text="@string/home.welcome"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/textWelcomeSub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="16dp"
-            android:paddingTop="8dp"
-            android:paddingRight="16dp"
-            android:text="@string/home.welcome.sub"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textWelcome" />
-
-        <TextView
-            android:id="@+id/textWelcomeInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="16dp"
-            android:paddingTop="8dp"
-            android:paddingRight="16dp"
-            android:text="@string/home.welcome.hint"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/textWelcomeSub" />
-
-        <com.flx_apps.digitaldetox.HomeFragmentCardView_
-            android:id="@+id/btnToggleZenModeDefault"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:description="@string/home.doNotDisturb.description"
-            app:layout_constraintTop_toBottomOf="@+id/textWelcomeInfo"
-            app:subtitle="@string/home.doNotDisturb.subtitle"
-            app:title="@string/home.doNotDisturb">
+            android:layout_height="match_parent"
+            android:background="#f4f4f4"
+            android:orientation="vertical"
+            tools:context=".HomeFragment">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnConfigZenMode"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+            <TextView
+                android:id="@+id/textWelcome"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/actions.config" />
-        </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+                android:paddingLeft="16dp"
+                android:paddingTop="16dp"
+                android:paddingRight="16dp"
+                android:text="@string/home.welcome"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5" />
 
-        <com.flx_apps.digitaldetox.HomeFragmentCardView_
-            android:id="@+id/btnToggleGrayscale"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:description="@string/home.grayscale.description"
-            app:layout_constraintTop_toBottomOf="@+id/btnToggleZenModeDefault"
-            app:subtitle="@string/home.grayscale.subtitle"
-            app:title="@string/home.grayscale">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnManageGrayscaleExceptions"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+            <TextView
+                android:id="@+id/textWelcomeSub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/actions.manageExceptions" />
-        </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+                android:paddingLeft="16dp"
+                android:paddingTop="8dp"
+                android:paddingRight="16dp"
+                android:text="@string/home.welcome.sub"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
-        <!--    <com.google.android.material.card.MaterialCardView-->
-        <!--        android:id="@+id/test"-->
-        <!--        android:layout_width="match_parent"-->
-        <!--        android:layout_height="wrap_content"-->
-        <!--        android:layout_marginTop="16dp"-->
-        <!--        android:checkable="true"-->
-        <!--        android:clickable="true"-->
-        <!--        android:focusable="true"-->
-        <!--        app:cardCornerRadius="0dp"-->
-        <!--        app:cardElevation="4dp"-->
-        <!--        app:contentPadding="16dp"-->
-        <!--        app:layout_constraintTop_toBottomOf="@+id/textWelcomeInfo">-->
+            <TextView
+                android:id="@+id/textWelcomeInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="16dp"
+                android:paddingTop="8dp"
+                android:paddingRight="16dp"
+                android:text="@string/home.welcome.hint"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
 
-        <!--        <LinearLayout-->
-        <!--            android:layout_width="match_parent"-->
-        <!--            android:layout_height="wrap_content"-->
-        <!--            android:orientation="vertical">-->
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnToggleZenModeDefault"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.doNotDisturb.description"
+                app:overline="@string/action.clickToActivate"
+                app:subtitle="@string/home.doNotDisturb.subtitle"
+                app:title="@string/home.doNotDisturb">
 
-        <!--            <TextView-->
-        <!--                android:layout_width="wrap_content"-->
-        <!--                android:layout_height="wrap_content"-->
-        <!--                android:text="@string/action.clickToActivate"-->
-        <!--                android:textAppearance="@style/TextAppearance.MaterialComponents.Overline" />-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConfigZenMode"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/action.config" />
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 
-        <!--            <TextView-->
-        <!--                android:layout_width="wrap_content"-->
-        <!--                android:layout_height="wrap_content"-->
-        <!--                android:text="@string/home.doNotDisturb"-->
-        <!--                android:textAppearance="@style/TextAppearance.AppCompat.Large" />-->
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnToggleGrayscale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.grayscale.description"
+                app:overline="@string/action.clickToActivate"
+                app:subtitle="@string/home.grayscale.subtitle"
+                app:title="@string/home.grayscale">
 
-        <!--            <TextView-->
-        <!--                android:layout_width="wrap_content"-->
-        <!--                android:layout_height="wrap_content"-->
-        <!--                android:text="@string/home.doNotDisturb.subtitle"-->
-        <!--                android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnManageGrayscaleExceptions"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/action.manageExceptions" />
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 
-        <!--            <TextView-->
-        <!--                android:layout_width="wrap_content"-->
-        <!--                android:layout_height="wrap_content"-->
-        <!--                android:text="@string/home.doNotDisturb.description"-->
-        <!--                android:textAppearance="@style/TextAppearance.AppCompat.Small" />-->
-        <!--        </LinearLayout>-->
-        <!--    </com.google.android.material.card.MaterialCardView>-->
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:description="@string/home.pauseButton.description"
+                app:layout_constraintTop_toBottomOf="@+id/btnToggleGrayscale"
+                app:subtitle="@string/home.pauseButton.subtitle"
+                app:title="@string/home.pauseButton">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/btnToggleDetox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:src="@drawable/ic_play"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSetPauseDuration"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home.pauseButton.setDuration" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.core.widget.NestedScrollView>
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnToggleDetox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:src="@drawable/ic_play" />
+</FrameLayout>

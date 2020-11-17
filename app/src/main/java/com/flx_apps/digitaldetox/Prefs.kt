@@ -1,9 +1,6 @@
 package com.flx_apps.digitaldetox
 
-import org.androidannotations.annotations.sharedpreferences.DefaultBoolean
-import org.androidannotations.annotations.sharedpreferences.DefaultLong
-import org.androidannotations.annotations.sharedpreferences.DefaultStringSet
-import org.androidannotations.annotations.sharedpreferences.SharedPref
+import org.androidannotations.annotations.sharedpreferences.*
 
 /**
  * Creation Date: 11/15/20
@@ -14,7 +11,7 @@ interface Prefs {
     @DefaultBoolean(false)
     fun isRunning(): Boolean
 
-    @DefaultBoolean(true)
+    @DefaultBoolean(false)
     fun zenModeDefaultEnabled(): Boolean
 
     @DefaultBoolean(false)
@@ -25,4 +22,7 @@ interface Prefs {
 
     @DefaultLong(-1)
     fun pauseUntil(): Long
+
+    @DefaultInt(1)
+    fun pauseDuration(): Int
 }
