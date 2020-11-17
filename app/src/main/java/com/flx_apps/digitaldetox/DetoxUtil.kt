@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.os.Build
 import android.provider.Settings
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -75,5 +76,18 @@ object DetoxUtil {
             return true
         }
         return false
+    }
+
+    @JvmStatic
+    fun togglePause(
+        context: Context
+    ): Boolean {
+        val now = System.currentTimeMillis()
+        val prefs = Prefs_(context)
+        var isPausing = !(now < prefs.pauseUntil().get())
+        prefs.edit().pauseUntil().put(if (isPausing) now + TimeUnit.MINUTES.toMillis(prefs.pauseDuration().get().toLong()) else -1).apply()
+        setGrayscale(context, !isPausing)
+        setZenMode(context, !isPausing)
+        return isPausing
     }
 }

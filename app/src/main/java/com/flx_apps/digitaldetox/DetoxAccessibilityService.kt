@@ -6,7 +6,6 @@ import android.view.accessibility.AccessibilityEvent
 import org.androidannotations.annotations.EService
 import org.androidannotations.annotations.SystemService
 import org.androidannotations.annotations.sharedpreferences.Pref
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -32,10 +31,8 @@ open class DetoxAccessibilityService : AccessibilityService() {
         isPausing = now < prefs.pauseUntil().get()
 
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_ASSIST_READING_CONTEXT) {
-            prefs.edit().pauseUntil().put(if (isPausing) -1 else now + TimeUnit.MINUTES.toMillis(1)).apply()
-            DetoxUtil.setGrayscale(applicationContext, isPausing)
-            DetoxUtil.setZenMode(applicationContext, isPausing)
-            isGrayscale = isPausing
+            isPausing = DetoxUtil.togglePause(baseContext)
+            isGrayscale = !isPausing
         }
 
         val exceptions = setOf(
