@@ -6,11 +6,12 @@
     tools:context=".NoPermissionsFragment">
 
     <TextView
-        android:padding="32dp"
-        android:maxLines="8"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:autoLink="web"
         android:gravity="center"
+        android:maxLines="8"
+        android:padding="32dp"
         android:text="@string/noPermissions.text" />
 
 </FrameLayout>

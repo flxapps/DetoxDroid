@@ -20,8 +20,7 @@ import org.androidannotations.annotations.sharedpreferences.Pref
 
 @EFragment(R.layout.fragment_home)
 open class HomeFragment : Fragment() {
-    private val ACCESSIBILITY_SERVICE_COMPONENT = "com.flx_apps.digitaldetox/com.flx_apps.digitaldetox.DigitalDetoxAccessibilityService_"
-    private val NOTIFICATION_SERVICE_COMPONENT = "com.flx_apps.digitaldetox/com.flx_apps.digitaldetox.DigitalDetoxNotificationListenerService"
+    private val ACCESSIBILITY_SERVICE_COMPONENT = DetoxAccessibilityService_::class.java.`package`!!.name + "/" + DetoxAccessibilityService_::class.java.name
 
     @ViewById
     lateinit var btnToggleDetox: FloatingActionButton

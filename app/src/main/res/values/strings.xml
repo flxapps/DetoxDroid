@@ -1,6 +1,6 @@
 <resources>
     <string name="app.name">DetoxDroid</string>
-    <string name="app.name.credits">detoxdroid.flx.es</string>
+    <string name="app.name.credits">detoxdroid.flx-apps.com</string>
 
     <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
     <string name="app.accessibilityService.description">This services disables and enables grayscale mode depending on which app is currently open. It also reacts to long-pressing the home button and manages detoxing mode pauses.</string>
@@ -42,7 +42,7 @@
 
     <string name="noPermissions.text">
         You need to grant this app elevated privileges from your computer.\n\n
-        Please visit https://github.com/flxapps/DetoxDroid to find out how.
+        Please visit https://detoxdroid.flx-apps.com/ to find out how.
     </string>
 
 </resources>
