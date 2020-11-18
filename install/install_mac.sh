@@ -2,8 +2,8 @@
 
 if [ ! -f "platform-tools/adb" ]; then
     echo "Downloading Android Platform Tools"
-    wget -O platform-tools-latest-linux.zip https://dl.google.com/android/repository/platform-tools-latest-linux.zip
-    unzip platform-tools-latest-linux.zip 
+    wget -O platform-tools-latest-darwin.zip https://dl.google.com/android/repository/platform-tools-latest-darwin.zip
+    unzip platform-tools-latest-darwin.zip 
 fi
 
 if [ ! -f "detoxdroid-latest.apk" ]; then
