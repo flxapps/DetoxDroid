@@ -30,7 +30,18 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     5. Look for USB debugging and enable it
     6. Connect device with your computer
     7. A prompt should ask you whether you want to allow debugging by your computer: Confirm
-2. Run the [installation script](https://github.com/flxapps/DetoxDroid/tree/master/install) for your OS
+2. Run the installation script for your OS:
+    - Linux: [install_linux.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_linux.sh)
+
+If the installation script does not work or you do not trust it, follow these steps:
+1. On your phone, download and install [the latest APK](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/release/app-release.apk) (or compile it yourself using the git repository)
+2. On your computer or laptop, download and unzip the [Android SDK Platform Tools for your OS](https://developer.android.com/studio/releases/platform-tools)
+3. Go the the platform-tools/ folder and open a terminal
+4. Grant the [WRITE_SECURE_SETTINGS](https://developer.android.com/reference/android/Manifest.permission#WRITE_SECURE_SETTINGS) permission to the app by running
+```
+adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
+```
+This permission is mandatory for the grayscale feature to work and can only be granted from your computer via adb.
 
 ## Support
 If you like the project, feel free to support further development.
