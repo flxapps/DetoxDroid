@@ -35,21 +35,8 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     - MacOS: [install_mac.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_mac.sh) (download and execute from terminal by running `bash install_mac.sh`)
     - Windows: [install_windows.bat](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_windows.bat) (download and double-click)
 
-### Alternatives
-If the installation script does not work or you do not trust it, follow these steps:
-1. Create a temporary folder
-2. Download [the latest APK](https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk) of the app (or compile it yourself using the git repository) and save it to the folder
-2. Download the [Android SDK Platform Tools for your OS](https://developer.android.com/studio/releases/platform-tools) and unzip them to your folder
-3. Open a terminal and navigate to the folder:
-```
-cd /path/to/your/folder
-```
-4. Install DetoxDroid and grant the necessary [WRITE_SECURE_SETTINGS](https://developer.android.com/reference/android/Manifest.permission#WRITE_SECURE_SETTINGS) permission via ADB by executing in your terminal:
-```
-platform-tools/adb install -r detoxdroid-latest.apk
-platform-tools/adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
-```
-This permission is mandatory for the grayscale feature to work and can only be granted from your computer via adb.
+### Alternative
+If the installation script does not work or you do not trust it, follow the [manual installation steps](https://github.com/flxapps/DetoxDroid/wiki/Manual-Installation).
 
 ## Support
 If you like the project, feel free to support further development.
