@@ -8,7 +8,7 @@ fi
 
 if [ ! -f "detoxdroid-latest.apk" ]; then
     echo "Download latest DetoxDroid APK"
-    wget -O detoxdroid-latest.apk https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/release/app-release.apk
+    wget -O detoxdroid-latest.apk https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk
 fi
 
 echo "Installing Detox Droid on your device"

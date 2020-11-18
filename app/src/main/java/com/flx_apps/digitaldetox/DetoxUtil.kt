@@ -43,6 +43,8 @@ object DetoxUtil {
         context: Context,
         grayscale: Boolean
     ): Boolean {
+        if (!Prefs_(context).grayscaleEnabled().get()) return false
+
         val contentResolver = context.contentResolver
         val result1 = Settings.Secure.putInt(
             contentResolver,
@@ -62,7 +64,10 @@ object DetoxUtil {
         context: Context,
         enabled: Boolean
     ): Boolean {
+        if (!Prefs_(context).zenModeDefaultEnabled().get()) return false
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            // Fallback for Android 5, probably not working properly though (Settings don't seem to be persisted)
             return Settings.Global.putInt(
                 context.contentResolver,
                 ZEN_MODE,
@@ -72,7 +77,23 @@ object DetoxUtil {
 
         val notificationManager: NotificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         if (notificationManager.isNotificationPolicyAccessGranted) {
-            notificationManager.setInterruptionFilter(if (enabled) NotificationManager.INTERRUPTION_FILTER_NONE else NotificationManager.INTERRUPTION_FILTER_ALL)
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                var policy = NotificationManager.Policy(
+//                    NotificationManager.Policy.PRIORITY_CATEGORY_CALLS,
+//                    NotificationManager.Policy.PRIORITY_SENDERS_CONTACTS,
+//                    NotificationManager.Policy.PRIORITY_SENDERS_CONTACTS,
+//                    NotificationManager.Policy.SUPPRESSED_EFFECT_SCREEN_ON and NotificationManager.Policy.SUPPRESSED_EFFECT_SCREEN_OFF
+//                )
+//                notificationManager.notificationPolicy = policy
+//            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                var zenPolicy = ZenPolicy.Builder()
+//                    .hideAllVisualEffects()
+//                    .allowAlarms(true)
+//                    .allowMedia(true)
+//                    .build()
+//            }
+            notificationManager.setInterruptionFilter(if (enabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY else NotificationManager.INTERRUPTION_FILTER_ALL)
             return true
         }
         return false
@@ -84,7 +105,7 @@ object DetoxUtil {
     ): Boolean {
         val now = System.currentTimeMillis()
         val prefs = Prefs_(context)
-        var isPausing = !(now < prefs.pauseUntil().get())
+        val isPausing = !(now < prefs.pauseUntil().get()) // new pause state: inversion of "are we currently pausing?"
         prefs.edit().pauseUntil().put(if (isPausing) now + TimeUnit.MINUTES.toMillis(prefs.pauseDuration().get().toLong()) else -1).apply()
         setGrayscale(context, !isPausing)
         setZenMode(context, !isPausing)

@@ -32,6 +32,7 @@
         <service
             android:name=".DetoxAccessibilityService_"
             android:label="@string/app.accessibilityService.name"
+            android:description="@string/app.accessibilityService.description"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

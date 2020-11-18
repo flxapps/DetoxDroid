@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox
 
 import android.accessibilityservice.AccessibilityService
 import android.app.NotificationManager
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import org.androidannotations.annotations.EService
 import org.androidannotations.annotations.SystemService
@@ -54,6 +55,11 @@ open class DetoxAccessibilityService : AccessibilityService() {
             DetoxUtil.setGrayscale(applicationContext, grayscale)
             isGrayscale = grayscale
         }
+    }
+
+    override fun onKeyEvent(event: KeyEvent?): Boolean {
+        // TODO: implement pause feature here?
+        return super.onKeyEvent(event)
     }
 
     override fun onInterrupt() {}
