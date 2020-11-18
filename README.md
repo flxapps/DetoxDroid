@@ -31,3 +31,9 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     6. Connect device with your computer
     7. A prompt should ask you whether you want to allow debugging by your computer: Confirm
 2. Run the [installation script](https://github.com/flxapps/DetoxDroid/tree/master/install) for your OS
+
+## Support
+If you like the project, feel free to support further development.
+- [Submit feature suggestions and bug reports](https://github.com/flxapps/DetoxDroid/issues/new)
+- [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
+- [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
