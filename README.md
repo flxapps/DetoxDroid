@@ -35,6 +35,7 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     - MacOS: [install_mac.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_mac.sh) (download and execute from terminal by running `bash install_mac.sh`)
     - Windows: [install_windows.bat](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_windows.bat) (download and double-click)
 
+### Alternatives
 If the installation script does not work or you do not trust it, follow these steps:
 1. Create a temporary folder
 2. Download [the latest APK](https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk) of the app (or compile it yourself using the git repository) and save it to the folder
