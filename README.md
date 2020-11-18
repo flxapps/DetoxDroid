@@ -31,8 +31,8 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     6. Connect device with your computer
     7. A prompt should ask you whether you want to allow debugging by your computer: Confirm
 2. Run the installation script for your OS:
-    - Linux: [install_linux.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_linux.sh) (download and execute from terminal with `bash install_linux.sh`)
-    - MacOS: [install_mac.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_mac.sh) (download and execute from terminal with `bash install_linux.sh`)
+    - Linux: [install_linux.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_linux.sh) (download and execute from terminal by running `bash install_linux.sh`)
+    - MacOS: [install_mac.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_mac.sh) (download and execute from terminal by running `bash install_mac.sh`)
     - Windows: [install_windows.bat](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_windows.bat) (download and double-click)
 
 If the installation script does not work or you do not trust it, follow these steps:
