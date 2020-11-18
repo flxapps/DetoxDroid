@@ -1,4 +1,5 @@
 # DetoxDroid
+Digital Detoxing As Your New Default
 
 ## What it is about
 
