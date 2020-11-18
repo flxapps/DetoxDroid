@@ -1,12 +1,12 @@
 if not exist "platform-tools/adb" (
-    echo "Downloading Android Platform Tools"
-    powershell.exe -Command "(New-Object Net.WebClient).DownloadFile('https://dl.google.com/android/repository/platform-tools-latest-windows.zip', 'platform-tools-latest-windows.zip')"
+    echo "Downloading and unzipping Android Platform Tools. Please wait..."
+    powershell.exe -nologo -noprofile -command "(New-Object Net.WebClient).DownloadFile('https://dl.google.com/android/repository/platform-tools-latest-windows.zip', 'platform-tools-latest-windows.zip')"
     powershell.exe -nologo -noprofile -command "& { $shell = New-Object -COM Shell.Application; $target = $shell.NameSpace('%cd%'); $zip = $shell.NameSpace('%cd%\platform-tools-latest-windows.zip'); $target.CopyHere($zip.Items(), 16); }"
 )
 
 if not exist "detoxdroid-latest.apk" (
-    echo "Download latest DetoxDroid APK"
-    powershell.exe -Command "https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk', 'detoxdroid-latest.apk')"
+    echo "Downloading latest DetoxDroid APK"
+    powershell.exe -nologo -noprofile -command "(New-Object Net.WebClient).DownloadFile('https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk', 'detoxdroid-latest.apk')"
 )
 
 echo "Installing Detox Droid on your device"
