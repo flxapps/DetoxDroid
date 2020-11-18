@@ -1,5 +1,5 @@
 # DetoxDroid
-Digital Detoxing As Your New Default
+Digital Detoxing as Your New Default
 
 ## What it is about
 
@@ -31,15 +31,22 @@ Rather than needing to opt-in for this mode, you are encouraged to deliberately 
     6. Connect device with your computer
     7. A prompt should ask you whether you want to allow debugging by your computer: Confirm
 2. Run the installation script for your OS:
-    - Linux: [install_linux.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_linux.sh)
+    - Linux: [install_linux.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_linux.sh) (download and execute from terminal with `bash install_linux.sh`)
+    - MacOS: [install_mac.sh](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_mac.sh) (download and execute from terminal with `bash install_linux.sh`)
+    - Windows: [install_windows.bat](https://raw.githubusercontent.com/flxapps/DetoxDroid/master/install/install_windows.bat) (download and double-click)
 
 If the installation script does not work or you do not trust it, follow these steps:
-1. On your phone, download and install [the latest APK](https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk) (or compile it yourself using the git repository)
-2. On your computer or laptop, download and unzip the [Android SDK Platform Tools for your OS](https://developer.android.com/studio/releases/platform-tools)
-3. Go the the platform-tools/ folder and open a terminal
-4. Grant the [WRITE_SECURE_SETTINGS](https://developer.android.com/reference/android/Manifest.permission#WRITE_SECURE_SETTINGS) permission to the app by running
+1. Create a temporary folder
+2. Download [the latest APK](https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk) of the app (or compile it yourself using the git repository) and save it to the folder
+2. Download the [Android SDK Platform Tools for your OS](https://developer.android.com/studio/releases/platform-tools) and unzip them to your folder
+3. Open a terminal and navigate to the folder:
 ```
-adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
+cd /path/to/your/folder
+```
+4. Install DetoxDroid and grant the necessary [WRITE_SECURE_SETTINGS](https://developer.android.com/reference/android/Manifest.permission#WRITE_SECURE_SETTINGS) permission via ADB by executing in your terminal:
+```
+platform-tools/adb install -r detoxdroid-latest.apk
+platform-tools/adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
 ```
 This permission is mandatory for the grayscale feature to work and can only be granted from your computer via adb.
 
