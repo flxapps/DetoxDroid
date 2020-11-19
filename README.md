@@ -1,6 +1,8 @@
 # DetoxDroid
 Digital Detoxing as Your New Default
 
+![DetoxDroid Feature Roll](/assets/feature-roll-compressed.png?raw=true "Features")
+
 ## What it is about
 
 Usually, "Digital Detoxing" apps in Android are about opting-in for a contract to not use our phones for the next X minutes. Or that we will not use the app Y for more than Z minutes. These contracts are often reinforced with financial incentives, i.e. if we fail we will have to pay a fee of a few dollars to the developers.
