@@ -1,4 +1,4 @@
-> This project is currently in an alpha state. I am happy for any people who are willing to test the app and contribute by suggestions, feedback and bug reports.
+> This project is currently in an alpha state. I am happy for all people who are willing to test the app and contribute by suggestions, feedback and bug reports.
 
 # DetoxDroid
 Digital Detoxing as Your New Default
