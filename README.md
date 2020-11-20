@@ -3,7 +3,7 @@
 # DetoxDroid
 Digital Detoxing as Your New Default
 
-![DetoxDroid Feature Roll](/assets/feature-roll-compressed.png?raw=true "Features")
+<img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="190" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="190" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="190" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="190" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="190" />
 
 ## What it is about
 
