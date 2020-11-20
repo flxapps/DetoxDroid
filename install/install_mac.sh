@@ -7,11 +7,11 @@ if [ ! -f "platform-tools/adb" ]; then
 fi
 
 if [ ! -f "detoxdroid-latest.apk" ]; then
-    echo "Downloading latest DetoxDroid APK"
+    echo "Downloading latest DetoxDroid APK..."
     wget -O detoxdroid-latest.apk https://github.com/flxapps/DetoxDroid/releases/latest/download/app-release.apk
 fi
 
-echo "Installing Detox Droid on your device"
+echo "Installing DetoxDroid on your device"
 platform-tools/adb install -r detoxdroid-latest.apk
 
 echo "Granting Permissions"
