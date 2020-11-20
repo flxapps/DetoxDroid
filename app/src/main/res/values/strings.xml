@@ -3,6 +3,7 @@
     <string name="app.name.credits">detoxdroid.flx-apps.com</string>
 
     <string name="app.quickSettingsTile">Pause DetoxDroid</string>
+    <string name="app.quickSettingsTile.paused">DetoxDroid has been paused for %d minutes.</string>
     <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
     <string name="app.accessibilityService.description">This services disables and enables grayscale mode depending on which app is currently open. It also reacts to long-pressing the home button and manages detoxing mode pauses.</string>
 

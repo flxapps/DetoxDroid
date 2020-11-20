@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.os.Build
 import android.provider.Settings
+import android.widget.Toast
 import java.util.concurrent.TimeUnit
 
 
@@ -109,6 +110,9 @@ object DetoxUtil {
         prefs.edit().pauseUntil().put(if (isPausing) now + TimeUnit.MINUTES.toMillis(prefs.pauseDuration().get().toLong()) else -1).apply()
         setGrayscale(context, !isPausing)
         setZenMode(context, !isPausing)
+        if (isPausing) {
+            Toast.makeText(context, context.getString(R.string.app_quickSettingsTile_paused, prefs.pauseDuration().get()), Toast.LENGTH_SHORT).show()
+        }
         return isPausing
     }
 }
