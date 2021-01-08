@@ -29,10 +29,10 @@ open class AppExceptionsListFragment : Fragment() {
     open fun loadApps() {
         val pm: PackageManager? = activity?.packageManager
         val apps = pm?.getInstalledApplications(0)
-        val appList: MutableList<AppExceptionsListAdapter.AppWhitelistItem> = ArrayList()
+        val appList: MutableList<AppExceptionsListAdapter.AppExceptionListItem> = ArrayList()
         apps?.iterator()?.forEach {
             appList.add(
-                AppExceptionsListAdapter.AppWhitelistItem(
+                AppExceptionsListAdapter.AppExceptionListItem(
                     it.loadLabel(pm) as String,
                     it.packageName
                 )
@@ -43,7 +43,7 @@ open class AppExceptionsListFragment : Fragment() {
     }
 
     @UiThread
-    open fun initAdapter(appList: List<AppExceptionsListAdapter.AppWhitelistItem>) {
+    open fun initAdapter(appList: List<AppExceptionsListAdapter.AppExceptionListItem>) {
         if (!this::list.isInitialized) return
 
         with(list) {

@@ -7,5 +7,8 @@
         <item
             android:id="@+id/nav_home"
             android:title="@string/navigation.home" />
+        <item
+            android:id="@+id/nav_about"
+            android:title="@string/navigation.about" />
     </group>
 </menu>

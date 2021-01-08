@@ -1,9 +1,10 @@
 <resources>
-    <string name="app.name">DetoxDroid</string>
-    <string name="app.name.credits">detoxdroid.flx-apps.com</string>
+    <string name="app.name_">DetoxDroid</string>
+    <string name="app.subtitle">detoxdroid.flx-apps.com</string>
 
     <string name="app.quickSettingsTile">Pause DetoxDroid</string>
     <string name="app.quickSettingsTile.paused">DetoxDroid has been paused for %d minutes.</string>
+    <string name="app.quickSettingsTile.noPause">Take another pause in %d minutes.</string>
     <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
     <string name="app.accessibilityService.description">This services disables and enables grayscale mode depending on which app is currently open. It also reacts to long-pressing the home button and manages detoxing mode pauses.</string>
 
@@ -18,6 +19,7 @@
     <string name="action.clickToActivate">Click to (de-)activate</string>
 
     <string name="navigation.home">Home</string>
+    <string name="navigation.about">About</string>
     <string name="navigation.donate">Donate</string>
 
     <string name="home.welcome">Welcome to DetoxDroid!</string>
@@ -31,20 +33,32 @@
     <string name="home.grayscale">Automatic Grayscale</string>
     <string name="home.grayscale.subtitle">Color up by coloring down your phone</string>
     <string name="home.grayscale.description">Strip away all the neuron-stimulating colors (hint: you can add your camera and gallery app to the exceptions).</string>
+    <string name="home.grayscale.exceptions.states.gray">Gray</string>
+    <string name="home.grayscale.exceptions.states.colors">Colors</string>
+    <string name="home.grayscale.exceptions.states.ignored">Ignored</string>
 
     <string name="home.pauseButton">Pause Button</string>
     <string name="home.pauseButton.subtitle">Take a break from taking a break</string>
-    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. It will automatically come back into life, once the pause is over. A pause can be made by pressing the quick settings tile or by long-pressing the home button.</string>
+    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. It will automatically come back into life, once the pause is over. A pause can be made by pressing the quick settings tile or by long-pressing the home button. You can also set a minimum time between the pauses to prevent yourself from tricking yourself by pausing all the time.</string>
     <string name="home.pauseButton.setDuration">Set Pause Duration</string>
+    <string name="home.pauseButton.setTimeBetweenPause">Set Time Between Pauses</string>
     <!--    <string name="home.pauseButton.quickSettings">Add pause button tile to quick settings</string>-->
     <!--    <string name="home.pauseButton.homeButton">Pause on long-pressing the home button</string>-->
 
-    <string name="home.donate">Donate</string>
-    <string name="home.donate.hint">DetoxDroid is open-source and without ads. If you find the app useful, please consider leaving a donation to support the development of the app.</string>
+    <string name="about.coffee">Buy me a coffee</string>
+    <string name="about.coffee.link">https://ko-fi.com/flxapps</string>
+    <string name="about.patron">Become a patron</string>
+    <string name="about.patron.link">https://liberapay.com/DetoxDroid/donate</string>
+    <string name="about.contact">Contact me</string>
+    <string name="about.contact.link">mailto:detoxdroid@flx-apps.com</string>
+    <string name="about.github">Contribute on GitHub</string>
+    <string name="about.github.link">https://github.com/flxapps/DetoxDroid</string>
 
     <string name="noPermissions.text">
-        You need to grant this app elevated privileges from your computer.\n\n
-        Please visit https://detoxdroid.flx-apps.com/ to find out how.
+        You need to grant this app elevated privileges from your computer.
+        \n\nDon\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.
     </string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

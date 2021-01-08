@@ -25,4 +25,10 @@ interface Prefs {
 
     @DefaultInt(1)
     fun pauseDuration(): Int
+
+    @DefaultLong(-1)
+    fun nextPauseAllowedAt(): Long
+
+    @DefaultInt(5)
+    fun timeBetweenPauses(): Int
 }

@@ -4,34 +4,34 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.recyclerview.widget.RecyclerView
 import org.androidannotations.annotations.EBean
 
 @EBean
 open class AppExceptionsListAdapter(context: Context) : RecyclerView.Adapter<AppExceptionsListAdapter.ViewHolder>() {
-    lateinit var values: List<AppWhitelistItem>
+    lateinit var values: List<AppExceptionListItem>
 
     var prefs: Prefs_ = Prefs_(context)
 
-    data class AppWhitelistItem(val title: String, val pckg: String) {
+    data class AppExceptionListItem(val title: String, val pckg: String) {
         var isException = false
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.fragment_app_whitelist_list_item, parent, false)
+            .inflate(R.layout.fragment_app_exceptions_list_item, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
-        val context = holder.appIcon.context
         holder.appTitle.text = item.title
+        holder.appPackage.text = item.pckg
         holder.appIcon.setImageDrawable(holder.appIcon.context.packageManager.getApplicationIcon(item.pckg))
-        holder.btnSetWhitelisted.setOnCheckedChangeListener { button, b ->
+        holder.btnToggleExceptionState.setOnCheckedChangeListener { _, b ->
             item.isException = b
             prefs.edit().grayscaleExceptions().put(
                 prefs.grayscaleExceptions().get().let {
@@ -39,14 +39,15 @@ open class AppExceptionsListAdapter(context: Context) : RecyclerView.Adapter<App
                 }
             ).apply()
         }
-        holder.btnSetWhitelisted.isChecked = item.isException || prefs.grayscaleExceptions().get().contains(item.pckg)
+        holder.btnToggleExceptionState.isChecked = item.isException || prefs.grayscaleExceptions().get().contains(item.pckg)
     }
 
     override fun getItemCount(): Int = values.size
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val appTitle: TextView = view.findViewById(R.id.appTitle)
-        val btnSetWhitelisted: CheckBox = view.findViewById(R.id.btnSetWhitelisted)
+        val appPackage: TextView = view.findViewById(R.id.appPackage)
+        val btnToggleExceptionState: SwitchCompat = view.findViewById(R.id.btnToggleExceptionState)
         val appIcon: ImageView = view.findViewById(R.id.appIcon)
 
         override fun toString(): String {

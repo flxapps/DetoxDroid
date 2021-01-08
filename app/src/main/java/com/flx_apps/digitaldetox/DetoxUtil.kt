@@ -57,7 +57,7 @@ object DetoxUtil {
             DISPLAY_DALTONIZER,
             if (grayscale) 0 else -1
         )
-        return result1 && result2;
+        return result1 && result2
     }
 
     @JvmStatic
@@ -106,12 +106,42 @@ object DetoxUtil {
     ): Boolean {
         val now = System.currentTimeMillis()
         val prefs = Prefs_(context)
-        val isPausing = !(now < prefs.pauseUntil().get()) // new pause state: inversion of "are we currently pausing?"
+        var isPausing = (now < prefs.pauseUntil().get())
+        if (!isPausing && now < prefs.nextPauseAllowedAt().get()) {
+            // we are currently not in a pause, and a pause is not allowed right now either
+            Toast.makeText(
+                context,
+                context.getString(
+                    R.string.app_quickSettingsTile_noPause,
+                    TimeUnit.MILLISECONDS.toMinutes(prefs.nextPauseAllowedAt().get() - now) + 1
+                ),
+                Toast.LENGTH_SHORT
+            ).show()
+            return false
+        }
+
+        isPausing = !isPausing // new pause state: inversion of "are we currently pausing?"
         prefs.edit().pauseUntil().put(if (isPausing) now + TimeUnit.MINUTES.toMillis(prefs.pauseDuration().get().toLong()) else -1).apply()
         setGrayscale(context, !isPausing)
         setZenMode(context, !isPausing)
         if (isPausing) {
-            Toast.makeText(context, context.getString(R.string.app_quickSettingsTile_paused, prefs.pauseDuration().get()), Toast.LENGTH_SHORT).show()
+            // a pause was made, let's show a hint to the user
+            Toast.makeText(
+                context,
+                context.getString(
+                    R.string.app_quickSettingsTile_paused,
+                    prefs.pauseDuration().get()
+                ),
+                Toast.LENGTH_SHORT
+            ).show()
+            prefs.edit().nextPauseAllowedAt()
+                .put(prefs.pauseUntil().get() + TimeUnit.MINUTES.toMillis(prefs.timeBetweenPauses().get().toLong()))
+                .apply()
+        } else {
+            // a pause was interrupted
+            prefs.edit().nextPauseAllowedAt()
+                .put(now + TimeUnit.MINUTES.toMillis(prefs.timeBetweenPauses().get().toLong()))
+                .apply()
         }
         return isPausing
     }

@@ -10,4 +10,9 @@
         android:name="com.flx_apps.digitaldetox.HomeFragment_"
         android:label="@string/navigation.home"
         tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_about"
+        android:name="com.flx_apps.digitaldetox.AboutFragment"
+        android:label="@string/navigation.about" />
 </navigation>

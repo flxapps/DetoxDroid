@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.widget.Button
 import android.widget.NumberPicker
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -43,7 +44,7 @@ open class HomeFragment : Fragment() {
             return
         }
 
-        setDetoxIsActive(prefs.isRunning().get())
+        setDetoxIsActive(prefs.isRunning.get())
     }
 
     @AfterViews
@@ -88,7 +89,7 @@ open class HomeFragment : Fragment() {
         }
         btnToggleGrayscale.isChecked = prefs.grayscaleEnabled().get()
         if (prefs.isRunning.get()) {
-            DetoxUtil.setGrayscale(context!!, btnToggleGrayscale.isChecked)
+            DetoxUtil.setGrayscale(context!!, btnToggleGrayscale.isChecked && !prefs.grayscaleExceptions().get().contains(context!!.packageName))
         }
     }
 
@@ -99,18 +100,22 @@ open class HomeFragment : Fragment() {
             ?.addToBackStack(javaClass.name)?.commit()
     }
 
-    @Click
-    fun btnSetPauseDurationClicked() {
+    @Click(R.id.btnSetPauseDuration, R.id.btnSetTimeBetweenPauses)
+    fun btnConfigurePauseClicked(btn: Button) {
         val numberPicker = NumberPicker(context).apply {
-            minValue = 1
+            minValue = if (btn.id == R.id.btnSetPauseDuration) 1 else 0
             maxValue = 60
-            value = prefs.pauseDuration().get()
+            value = if (btn.id == R.id.btnSetPauseDuration) prefs.pauseDuration().get() else prefs.timeBetweenPauses().get()
         }
         MaterialAlertDialogBuilder(context!!).apply {
-            setTitle(R.string.home_pauseButton_setDuration)
+            setTitle(btn.text)
             setView(numberPicker)
             setPositiveButton(R.string.action_save) { _, _ ->
-                prefs.edit().pauseDuration().put(numberPicker.value).apply()
+                val editorField = when (btn.id) {
+                    R.id.btnSetPauseDuration -> prefs.edit().pauseDuration()
+                    else -> prefs.edit().timeBetweenPauses()
+                }
+                editorField.put(numberPicker.value).apply()
             }
             setNegativeButton(R.string.action_cancel, null)
         }.show()
