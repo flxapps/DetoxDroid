@@ -37,9 +37,10 @@ open class HomeFragment : Fragment() {
 
     @AfterViews
     fun init() {
-        if (context!!.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) {
+        if (true || context!!.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) {
+            log("Showing NoPermissionsFragment...")
             fragmentManager!!.beginTransaction()
-                .replace(R.id.nav_host_fragment, NoPermissionsFragment())
+                .replace(R.id.nav_host_fragment, NoPermissionsFragment_.builder().build())
                 .commit()
             return
         }

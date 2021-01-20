@@ -54,10 +54,10 @@
     <string name="about.github">Contribute on GitHub</string>
     <string name="about.github.link">https://github.com/flxapps/DetoxDroid</string>
 
-    <string name="noPermissions.text">
-        You need to grant this app elevated privileges from your computer.
-        \n\nDon\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.
-    </string>
+    <string name="noPermissions.text">You need to grant this app elevated privileges from your computer.</string>
+    <string name="noPermissions.text.notRooted">Don\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
+    <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below. Otherwise, please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
+    <string name="noPermissions.text.rooted.go">Grant Permissions</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
