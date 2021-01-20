@@ -39,5 +39,6 @@ If the installation script does not work or you do not trust it, follow the [man
 ## Support
 If you like the project, feel free to support further development.
 - [Submit feature suggestions and bug reports](https://github.com/flxapps/DetoxDroid/issues/new)
-- [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
+- [Buy me a coffee via Ko-Fi](https://ko-fi.com/flxapps)
 - [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
+- [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
