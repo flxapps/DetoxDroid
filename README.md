@@ -28,7 +28,7 @@ You are encouraged to deliberately to pause the app, allowing colors and notific
     2. Look for the build number option and touch it multiple times until developer mode is enabled
     3. Go to Android Settings → Developer Options, look for USB debugging and enable it
     4. Connect your device with your computer.
-2. [Download, unzip and run the installation script](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/flxapps/DetoxDroid/tree/master/install) for your OS
+2. [Download, unzip and run the installation script](https://downgit.github.io/#/home?url=https://github.com/flxapps/DetoxDroid/tree/master/install) for your OS
     - If you are on Windows, you should be able to run `install_windows.bat` by simply double-clicking the file.
     - If you are on Mac/Linux, you should be able to run the installation script from the console using `bash install_<os-name>.sh`
     - If at any point a prompt on your phone asks you whether you want to allow debugging by your computer, press Allow.
