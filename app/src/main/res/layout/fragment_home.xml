@@ -57,12 +57,32 @@
                 app:subtitle="@string/home.doNotDisturb.subtitle"
                 app:title="@string/home.doNotDisturb">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnConfigZenMode"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/action.config" />
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/zenModePreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$ZenModePreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnToggleBreakDoomScrolling"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.doomScrolling.description"
+                app:overline="@string/action.clickToActivate"
+                app:subtitle="@string/home.doomScrolling.subtitle"
+                app:title="@string/home.doomScrolling">
+
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/doomScrollingPreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$DoomScrollingPreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 
             <com.flx_apps.digitaldetox.HomeFragmentCardView_
@@ -75,12 +95,13 @@
                 app:subtitle="@string/home.grayscale.subtitle"
                 app:title="@string/home.grayscale">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnManageGrayscaleExceptions"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/action.manageExceptions" />
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/grayscalePreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$GrayscalePreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 
             <com.flx_apps.digitaldetox.HomeFragmentCardView_
@@ -93,19 +114,13 @@
                 app:subtitle="@string/home.pauseButton.subtitle"
                 app:title="@string/home.pauseButton">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSetPauseDuration"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/home.pauseButton.setDuration" />
+                <include layout="@layout/divider_view" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSetTimeBetweenPauses"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/home.pauseButton.setTimeBetweenPause" />
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/pauseButtonPreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$PauseButtonPreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
             </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 

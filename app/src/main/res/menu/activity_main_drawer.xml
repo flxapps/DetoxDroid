@@ -7,8 +7,21 @@
         <item
             android:id="@+id/nav_home"
             android:title="@string/navigation.home" />
-        <item
-            android:id="@+id/nav_about"
-            android:title="@string/navigation.about" />
+
+        <item android:title="@string/navigation.misc">
+            <menu>
+                <item
+                    android:id="@+id/nav_about"
+                    android:title="@string/navigation.about" />
+                <item
+                    android:id="@+id/nav_reportIssue"
+                    android:checkable="false"
+                    android:title="@string/navigation.reportIssue" />
+                <item
+                    android:id="@+id/nav_twitter"
+                    android:checkable="false"
+                    android:title="@string/navigation.twitter" />
+            </menu>
+        </item>
     </group>
 </menu>

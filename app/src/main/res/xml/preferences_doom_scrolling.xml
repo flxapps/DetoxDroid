@@ -1,0 +1,19 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:custom="http://schemas.android.com/apk/res-auto">
+    <com.flx_apps.digitaldetox.prefs.NumberPickerPreference
+        android:dialogTitle="@string/home.doomScrolling.timeUntilWarning"
+        android:inputType="number"
+        android:key="timeUntilDoomScrollingWarning"
+        android:title="@string/home.doomScrolling.timeUntilWarning"
+        app:defaultValue="3"
+        app:icon="@drawable/ic_time"
+        app:summary="@string/home.doomScrolling.timeUntilWarning.description"
+        custom:numberPickerPreference_maxValue="15"
+        custom:numberPickerPreference_minValue="1"
+        custom:numberPickerPreference_unitText="@string/time._minutes" />
+    <com.flx_apps.digitaldetox.prefs.ExceptionsPreference
+        android:icon="@drawable/ic_exceptions"
+        android:key="breakDoomScrollingExceptions"
+        app:iconSpaceReserved="false" />
+</androidx.preference.PreferenceScreen>

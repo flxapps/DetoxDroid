@@ -1,4 +1,4 @@
-package com.flx_apps.digitaldetox
+package com.flx_apps.digitaldetox.prefs
 
 import org.androidannotations.annotations.sharedpreferences.*
 
@@ -20,6 +20,9 @@ interface Prefs {
     @DefaultStringSet()
     fun grayscaleExceptions(): Set<String>
 
+    @DefaultBoolean(false)
+    fun grayscaleIgnoreNonFullScreen(): Boolean
+
     @DefaultLong(-1)
     fun pauseUntil(): Long
 
@@ -31,4 +34,13 @@ interface Prefs {
 
     @DefaultInt(5)
     fun timeBetweenPauses(): Int
+
+    @DefaultBoolean(false)
+    fun breakDoomScrollingEnabled(): Boolean
+
+    @DefaultStringSet()
+    fun breakDoomScrollingExceptions(): Set<String>
+
+    @DefaultInt(3)
+    fun timeUntilDoomScrollingWarning(): Int
 }

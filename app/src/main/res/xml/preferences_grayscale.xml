@@ -1,0 +1,11 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <CheckBoxPreference
+        app:icon="@drawable/ic_non_fullscreen"
+        app:key="grayscaleIgnoreNonFullScreen"
+        app:title="@string/home.grayscale.ignoreNonFullScreen"
+        app:summary="@string/home.grayscale.ignoreNonFullScreen.description" />
+    <com.flx_apps.digitaldetox.prefs.ExceptionsPreference
+        android:icon="@drawable/ic_exceptions"
+        android:key="grayscaleExceptions" />
+</androidx.preference.PreferenceScreen>

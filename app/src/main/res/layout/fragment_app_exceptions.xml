@@ -10,8 +10,6 @@
         android:name="com.flx_apps.digitaldetox.AppItemFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         app:layoutManager="LinearLayoutManager"
         tools:context=".AppExceptionsListFragment"
         tools:listitem="@layout/fragment_app_exceptions_list_item" />

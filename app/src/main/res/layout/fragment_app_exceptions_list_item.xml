@@ -4,7 +4,10 @@
     android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingTop="8dp"
+    android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingBottom="8dp">
 
     <ImageView
@@ -46,6 +49,8 @@
         android:id="@+id/btnToggleExceptionState"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/appTitle"

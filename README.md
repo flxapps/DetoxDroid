@@ -19,7 +19,10 @@ According to former Google design ethicist Tristan Harris, founder of the Center
 ### 2. Automatically enter the "Do Not Disturb" mode
 Notifications are the number one way for apps to draw our attention. Any app on our phones competes for our attention, and even games will remind us to play them if we have not opened them for a while. Reclaim your time by turning them off with the "Do Not Disturb" mode.
 
-### 3. Opt-out > Opt-in
+### 3. Break "Infinite Scrolling"
+Infinite scrolling (sometimes also referred as "doom scrolling") is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit strategy.
+
+### 4. Opt-out > Opt-in
 You are encouraged to deliberately to pause the app, allowing colors and notifications. If the pause is over, DetoxDroid automatically comes back into life. Let this become your new default rather than having to repeatedly decide for it.
 
 ## Installation

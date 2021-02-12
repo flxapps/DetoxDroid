@@ -1,0 +1,8 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        android:icon="@drawable/ic_settings"
+        android:key="@string/home.doNotDisturb"
+        app:iconSpaceReserved="false"
+        app:title="@string/action.configuration" />
+</androidx.preference.PreferenceScreen>

@@ -14,13 +14,19 @@
     <string name="action.requestPermissions">DetoxDroid needs specific permissions for this feature to work.</string>
     <string name="action.navigationDrawer.open">Open navigation drawer</string>
     <string name="action.navigationDrawer.close">Close navigation drawer</string>
-    <string name="action.config">Config…</string>
-    <string name="action.manageExceptions">Manage Exceptions…</string>
+    <string name="action.configuration">Configuration</string>
+    <string name="action.manageExceptions">Manage Exceptions</string>
     <string name="action.clickToActivate">Click to (de-)activate</string>
+    <string name="action.search">Search</string>
+    <string name="action.filter">Filter</string>
 
-    <string name="navigation.home">Home</string>
+    <string name="time._minutes">minutes</string>
+
+    <string name="navigation.home">Your New Default</string>
+    <string name="navigation.misc">About &amp; Miscellaneous</string>
+    <string name="navigation.reportIssue">Report Issue</string>
+    <string name="navigation.twitter">\@DetoxDroid on Twitter</string>
     <string name="navigation.about">About</string>
-    <string name="navigation.donate">Donate</string>
 
     <string name="home.welcome">Welcome to DetoxDroid!</string>
     <string name="home.welcome.sub">Make \"Do Not Disturb\" your new default.</string>
@@ -32,18 +38,37 @@
 
     <string name="home.grayscale">Automatic Grayscale</string>
     <string name="home.grayscale.subtitle">Color up by coloring down your phone</string>
-    <string name="home.grayscale.description">Strip away all the neuron-stimulating colors (hint: you can add your camera and gallery app to the exceptions).</string>
+    <string name="home.grayscale.description">Apps compete for your attention, and colors can have an enticing, manipulative effect. With DetoxDroid, you can strip away all the neuron-stimulating colors, while allowing exceptions where necessary.</string>
+    <string name="home.grayscale.ignoreNonFullScreen">Ignore Non-Fullscreen Apps</string>
+    <string name="home.grayscale.ignoreNonFullScreen.description">Non-fullscreen components (e.g. sound volume box, status bar) will be ignored, i.e. the color state will not be changed.</string>
     <string name="home.grayscale.exceptions.states.gray">Gray</string>
     <string name="home.grayscale.exceptions.states.colors">Colors</string>
     <string name="home.grayscale.exceptions.states.ignored">Ignored</string>
 
     <string name="home.pauseButton">Pause Button</string>
     <string name="home.pauseButton.subtitle">Take a break from taking a break</string>
-    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. It will automatically come back into life, once the pause is over. A pause can be made by pressing the quick settings tile or by long-pressing the home button. You can also set a minimum time between the pauses to prevent yourself from tricking yourself by pausing all the time.</string>
-    <string name="home.pauseButton.setDuration">Set Pause Duration</string>
-    <string name="home.pauseButton.setTimeBetweenPause">Set Time Between Pauses</string>
+    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button.</string>
+    <string name="home.pauseButton.duration">Pause Duration</string>
+    <string name="home.pauseButton.duration.description">Once the pause is over, DetoxDroid will automatically come back into life.</string>
+    <string name="home.pauseButton.minimumTimeBetween">Minimum Time Between Pauses</string>
+    <string name="home.pauseButton.minimumTimeBetween.description">Don\'t cheat yourself by habitually pressing the pause button all the time.</string>
     <!--    <string name="home.pauseButton.quickSettings">Add pause button tile to quick settings</string>-->
     <!--    <string name="home.pauseButton.homeButton">Pause on long-pressing the home button</string>-->
+
+    <string name="home.doomScrolling">Break "Infinite Scrolling"</string>
+    <string name="home.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>
+    <string name="home.doomScrolling.description">Infinite scrolling is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit.</string>
+    <string name="home.doomScrolling.timeUntilWarning">Time Until Warning</string>
+    <string name="home.doomScrolling.timeUntilWarning.description">DetoxDroid will notify you if it detects that you have been "doom scrolling" for this duration.</string>
+
+    <string name="exceptionsList._exceptionsDefined">%d exceptions defined</string>
+    <string name="exceptionsList.filter.userApps">User Apps</string>
+    <string name="exceptionsList.filter.systemApps">System Apps</string>
+
+    <string name="infiniteScroll.warning.title">Wake Up!</string>
+    <string name="infiniteScroll.warning.message">It appears you are caught in a loop of doom scrolling. What do you want to do?</string>
+    <string name="infiniteScroll.warning.exit">Get me out of here</string>
+    <string name="infiniteScroll.warning.continue">I want to continue</string>
 
     <string name="about.coffee">Buy me a coffee</string>
     <string name="about.coffee.link">https://ko-fi.com/flxapps</string>
@@ -58,7 +83,5 @@
     <string name="noPermissions.text.notRooted">Don\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below. Otherwise, please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted.go">Grant Permissions</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

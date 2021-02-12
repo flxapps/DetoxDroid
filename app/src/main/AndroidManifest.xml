@@ -3,13 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.flx_apps.digitaldetox">
 
+    <!-- To (de-)activate grayscale -->
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
+
+    <!-- To (de-)activate zen mode ("do not disturb" mode) -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
+    <!-- To show the user notifications / warning messages outside of the actual app -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:allowBackup="true"
@@ -21,7 +27,7 @@
         tools:replace="android:label">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivity_"
             android:label="@string/app.name_"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

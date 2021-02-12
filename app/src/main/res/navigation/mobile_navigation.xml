@@ -9,10 +9,28 @@
         android:id="@+id/nav_home"
         android:name="com.flx_apps.digitaldetox.HomeFragment_"
         android:label="@string/navigation.home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_nav_home_to_appExceptionsListFragment_"
+            app:destination="@id/appExceptionsListFragment_" />
+    </fragment>
+
+    <activity
+        android:id="@+id/nav_twitter"
+        app:action="android.intent.action.VIEW"
+        app:data="https://twitter.com/DetoxDroid"/>
+
+    <activity
+        android:id="@+id/nav_reportIssue"
+        app:action="android.intent.action.VIEW"
+        app:data="https://gitreports.com/issue/flxapps/DetoxDroid"/>
 
     <fragment
         android:id="@+id/nav_about"
         android:name="com.flx_apps.digitaldetox.AboutFragment"
         android:label="@string/navigation.about" />
+    <fragment
+        android:id="@+id/appExceptionsListFragment_"
+        android:name="com.flx_apps.digitaldetox.AppExceptionsListFragment_"
+        android:label="@string/action.manageExceptions" />
 </navigation>
