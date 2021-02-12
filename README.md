@@ -1,7 +1,10 @@
 > This project is currently in an alpha state. I am happy for all people who are willing to test the app and contribute by suggestions, feedback and bug reports.
 
 # DetoxDroid
-Digital Detoxing as Your New Default
+
+[![GitHub release](https://img.shields.io/github/release/flxapps/DetoxDroid.svg)](https://github.com/flxapps/DetoxDroid/releases/) [![GitHub license](https://img.shields.io/github/license/flxapps/DetoxDroid.svg)](https://github.com/flxapps/DetoxDroid/blob/master/LICENSE) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/flxapps/DetoxDroid/graphs/commit-activity) [![Ko-Fi](https://img.shields.io/static/v1?label=Buy%20me%20a%20coffee&message=3%20EUR&color=red)](https://ko-fi.com/flxapps/3) [![LiberaPay](https://img.shields.io/liberapay/receives/DetoxDroid)](https://liberapay.com/DetoxDroid) 
+
+## Digital Detoxing as Your New Default
 
 <img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="165" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="165" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="165" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="165" /><img src="/fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="165" />
 
