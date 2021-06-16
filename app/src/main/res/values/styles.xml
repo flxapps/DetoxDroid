@@ -25,4 +25,13 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
+    <style name="AppTheme.Widget" />
+
+    <style name="AppTheme.Widget.RadioButton">
+        <item name="android:background">?android:selectableItemBackground</item>
+        <item name="android:drawableStart">?android:listChoiceIndicatorSingle</item>
+        <item name="android:textAppearance">?android:textAppearanceMedium</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+    </style>
+
 </resources>

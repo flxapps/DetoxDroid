@@ -59,6 +59,16 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+        <activity
+            android:name=".SelectPauseDuration"
+            android:excludeFromRecents="true"
+            android:label="Pause Duration"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.MaterialComponents.Light.Dialog">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
