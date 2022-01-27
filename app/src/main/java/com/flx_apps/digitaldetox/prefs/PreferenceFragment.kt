@@ -4,11 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceCategory
+import androidx.preference.isEmpty
+import com.flx_apps.digitaldetox.DetoxAccessibilityService
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.log
+import com.takisoft.preferencex.PreferenceFragmentCompat
 import nl.invissvenska.numberpickerpreference.NumberDialogPreference
 import nl.invissvenska.numberpickerpreference.NumberPickerPreferenceDialogFragment
+import org.androidannotations.annotations.AfterPreferences
 import org.androidannotations.annotations.EFragment
+import org.androidannotations.annotations.PreferenceByKey
 import org.androidannotations.annotations.PreferenceScreen
 
 
@@ -18,7 +24,7 @@ import org.androidannotations.annotations.PreferenceScreen
  */
 @EFragment
 open class PreferenceFragment : PreferenceFragmentCompat() {
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {}
+    override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {}
 
     override fun onDisplayPreferenceDialog(preference: Preference?) {
         if (preference is NumberDialogPreference) {
@@ -64,5 +70,47 @@ open class PreferenceFragment : PreferenceFragmentCompat() {
     @PreferenceScreen(R.xml.preferences_pause_button)
     open class PauseButtonPreferencesFragment : PreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {}
+    }
+
+    @EFragment
+    @PreferenceScreen(R.xml.preferences_deactivate_apps)
+    open class DeactivateAppsPreferencesFragment : PreferenceFragment() {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {}
+    }
+
+    @EFragment
+    @PreferenceScreen(R.xml.preferences_time_rules)
+    open class TimeRulesListPreferencesFragment : PreferenceFragment() {
+        @PreferenceByKey(R.string.home_timeRules)
+        lateinit var timeRulesCategory: PreferenceCategory
+
+        @PreferenceByKey(R.string.home_timeRules_add)
+        lateinit var btnAddRule: Preference
+
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {}
+
+        @AfterPreferences
+        fun init() {
+            refreshList()
+            btnAddRule.setOnPreferenceClickListener {
+                TimeRulePreferenceDialogFragment.showDialog(btnAddRule.context)
+                true
+            }
+        }
+
+        fun refreshList() {
+            timeRulesCategory.removeAll()
+            Prefs_(context).timeRules().getOr(emptySet()).forEachIndexed { i, s ->
+                log("i=$i, timeRule=$s")
+                timeRulesCategory.addPreference(TimeRulePreference(requireContext()).apply {
+                    timeRule = TimeRule.fromString(s)
+                    key = i.toString()
+                })
+            }
+            timeRulesCategory.title =
+                if (timeRulesCategory.isEmpty()) getString(R.string.home_timeRules_alwaysActive)
+                else ""
+            DetoxAccessibilityService.instance?.reloadTimeRules()
+        }
     }
 }

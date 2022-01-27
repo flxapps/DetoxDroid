@@ -41,6 +41,15 @@ interface Prefs {
     @DefaultStringSet()
     fun breakDoomScrollingExceptions(): Set<String>
 
+    @DefaultStringSet()
+    fun timeRules(): Set<String>
+
     @DefaultInt(3)
     fun timeUntilDoomScrollingWarning(): Int
+
+    @DefaultBoolean(false)
+    fun deactivateAppsEnabled(): Boolean
+
+    @DefaultStringSet()
+    fun deactivatedApps(): Set<String>
 }

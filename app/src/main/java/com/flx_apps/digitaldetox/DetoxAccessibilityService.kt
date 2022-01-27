@@ -13,10 +13,11 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.view.ContextThemeWrapper
 import com.flx_apps.digitaldetox.prefs.Prefs_
+import com.flx_apps.digitaldetox.prefs.TimeRule
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import org.androidannotations.annotations.EService
 import org.androidannotations.annotations.SystemService
-import org.androidannotations.annotations.sharedpreferences.Pref
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 
@@ -27,13 +28,16 @@ import java.util.concurrent.TimeUnit
  */
 @EService
 open class DetoxAccessibilityService : AccessibilityService() {
-    @Pref
+    companion object {
+        @JvmStatic
+        var instance: DetoxAccessibilityService? = null
+    }
+
     lateinit var prefs: Prefs_
 
     @SystemService
     lateinit var notificationManager: NotificationManager
 
-    private var isGrayscale = false
     private var lastPackage = ""
     private var isPausing = false
     private var ignoredEventClasses = mutableSetOf(
@@ -41,6 +45,7 @@ open class DetoxAccessibilityService : AccessibilityService() {
         "com.android.systemui.volume"
     )
     private var ignoredPackages = mutableSetOf<String>()
+    private var timeRules = mutableSetOf<TimeRule>()
 
     data class ScrollViewInfo (var maxY: Int) {
         var added: Long = System.currentTimeMillis()
@@ -48,7 +53,6 @@ open class DetoxAccessibilityService : AccessibilityService() {
         override fun toString(): String {
             return "ScrollViewInfo(maxY=$maxY, added=$added, timesGrown=$timesGrown)"
         }
-
     }
 
     /**
@@ -59,22 +63,37 @@ open class DetoxAccessibilityService : AccessibilityService() {
 
     override fun onCreate() {
         super.onCreate()
+        prefs = Prefs_(this)
+        instance = this
 
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
             log(it.packageName)
             ignoredPackages.add(it.packageName)
         }
+        reloadTimeRules()
     }
 
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
+        // check whether DetoxDroid should be inactive
+        val localDateTime = LocalDateTime.now()
+        var isActive = true
+        timeRules.forEach {
+            isActive = isActive && it.isActive(localDateTime)
+            log("$it active? ${it.isActive(localDateTime)}")
+        }
+        if (!isActive) {
+            DetoxUtil.setActive(this, false)
+            return
+        }
+
+        // check whether DetoxDroid should be paused
         val now = System.currentTimeMillis()
         isPausing = now < prefs.pauseUntil().get()
 
         // TYPE_ASSIST_READING_CONTEXT happens when the home button is long-pressed
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_ASSIST_READING_CONTEXT) {
             isPausing = DetoxUtil.togglePause(baseContext)
-            isGrayscale = !isPausing
         }
 
         // if the "break doom scrolling" feature is activated, let's handle scroll events
@@ -99,18 +118,12 @@ open class DetoxAccessibilityService : AccessibilityService() {
 
         lastPackage = accessibilityEvent.packageName.toString()
 
-        // forcefully enable DoNotDisturb
-        DetoxUtil.setZenMode(applicationContext, true)
-
         // decide whether we want to grayscale or color the screen
-        val grayscale = (
+        val grayscaleApp = (
                 prefs.grayscaleEnabled().get() &&
                 !prefs.grayscaleExceptions().get().contains(accessibilityEvent.packageName)
         )
-        if (grayscale != isGrayscale) { // wantedState != currentState
-            DetoxUtil.setGrayscale(applicationContext, grayscale)
-            isGrayscale = grayscale
-        }
+        DetoxUtil.setActive(this, prefs.isRunning.get(), grayscale = grayscaleApp)
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
@@ -120,6 +133,13 @@ open class DetoxAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {}
+
+    public fun reloadTimeRules() {
+        timeRules.clear()
+        prefs.timeRules().get().forEach {
+            timeRules.add(TimeRule.fromString(it))
+        }
+    }
 
     private fun handleScrollEvent(accessibilityEvent: AccessibilityEvent) {
         val maxY = when {
@@ -203,5 +223,10 @@ open class DetoxAccessibilityService : AccessibilityService() {
                 dismiss()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        instance = null
     }
 }

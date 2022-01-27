@@ -10,7 +10,9 @@
 
     <string name="action.go">Go</string>
     <string name="action.save">Save</string>
+    <string name="action.delete">Delete</string>
     <string name="action.cancel">Cancel</string>
+    <string name="action.close">Close</string>
     <string name="action.requestPermissions">DetoxDroid needs specific permissions for this feature to work.</string>
     <string name="action.navigationDrawer.open">Open navigation drawer</string>
     <string name="action.navigationDrawer.close">Close navigation drawer</string>
@@ -27,6 +29,9 @@
     <string name="navigation.reportIssue">Report Issue</string>
     <string name="navigation.twitter">\@DetoxDroid on Twitter</string>
     <string name="navigation.about">About</string>
+    <string name="navigation.uninstall">Uninstall DetoxDroid</string>
+    <string name="navigation.uninstall.dialog.title">Attention</string>
+    <string name="navigation.uninstall.dialog.message">It might not be possible for you to uninstall DetoxDroid from the normal app manager, as you have granted particular permissions by installing it from your computer. Using this, you can revoke these permissions and uninstall DetoxDroid.</string>
 
     <string name="home.welcome">Welcome to DetoxDroid!</string>
     <string name="home.welcome.sub">Make \"Do Not Disturb\" your new default.</string>
@@ -57,9 +62,26 @@
 
     <string name="home.doomScrolling">Break "Infinite Scrolling"</string>
     <string name="home.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>
-    <string name="home.doomScrolling.description">Infinite scrolling is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit.</string>
+    <string name="home.doomScrolling.description">EXPERIMENTAL – Infinite scrolling is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit.</string>
     <string name="home.doomScrolling.timeUntilWarning">Time Until Warning</string>
     <string name="home.doomScrolling.timeUntilWarning.description">DetoxDroid will notify you if it detects that you have been "doom scrolling" for this duration.</string>
+
+    <string name="home.timeRules">Scheduled Rules</string>
+    <string name="home.timeRules.subtitle">Configure week-days and times</string>
+    <string name="home.timeRules.description">Set up rules to define when to automatically (de-)activate DetoxDroid.</string>
+    <string name="home.timeRules.alwaysActive">Profile will be always active.</string>
+    <string name="home.timeRules.allDay">all day</string>
+    <string name="home.timeRules._nextDay">next day</string>
+    <string name="home.timeRules.add">Add Rule</string>
+    <string name="home.timeRules.weekdays">Weekdays</string>
+    <string name="home.timeRules.from">From</string>
+    <string name="home.timeRules.to">To</string>
+
+    <string name="home.deactivateApps">Deactivate Apps</string>
+    <string name="home.deactivateApps.subtitle">Forget about them</string>
+    <string name="home.deactivateApps.description">You can completely deactivate apps while DetoxDroid is active. Thereby, they cannot be started from the launcher nor can they send you notifications.</string>
+    <string name="home.deactivateApps.manage">Manage Deactivated Apps</string>
+    <string name="home.deactivateApps.manage._defined">%d apps deactivated</string>
 
     <string name="exceptionsList._exceptionsDefined">%d exceptions defined</string>
     <string name="exceptionsList.filter.userApps">User Apps</string>
@@ -79,7 +101,7 @@
     <string name="about.github">Contribute on GitHub</string>
     <string name="about.github.link">https://github.com/flxapps/DetoxDroid</string>
 
-    <string name="noPermissions.text">You need to grant this app elevated privileges from your computer.</string>
+    <string name="noPermissions.text">For this feature, you need to grant this app elevated privileges from your computer via adb:</string>
     <string name="noPermissions.text.notRooted">Don\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below. Otherwise, please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted.go">Grant Permissions</string>

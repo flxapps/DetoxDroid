@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_nav_home_to_appExceptionsListFragment_"
             app:destination="@id/appExceptionsListFragment_" />
+        <action
+            android:id="@+id/action_nav_home_to_nav_no_permissions"
+            app:destination="@id/nav_no_permissions" />
     </fragment>
 
     <activity
@@ -25,6 +28,12 @@
         app:action="android.intent.action.VIEW"
         app:data="https://gitreports.com/issue/flxapps/DetoxDroid"/>
 
+    <dialog
+        android:id="@+id/nav_uninstall"
+        android:name="com.flx_apps.digitaldetox.UninstallDetoxDroidDialogFragment"
+        android:label="@string/navigation.uninstall"
+        />
+
     <fragment
         android:id="@+id/nav_about"
         android:name="com.flx_apps.digitaldetox.AboutFragment"
@@ -33,4 +42,7 @@
         android:id="@+id/appExceptionsListFragment_"
         android:name="com.flx_apps.digitaldetox.AppExceptionsListFragment_"
         android:label="@string/action.manageExceptions" />
+    <fragment
+        android:id="@+id/nav_no_permissions"
+        android:name="com.flx_apps.digitaldetox.NoPermissionsFragment_" />
 </navigation>

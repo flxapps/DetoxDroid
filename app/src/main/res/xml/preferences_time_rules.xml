@@ -1,0 +1,16 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.takisoft.preferencex.PreferenceCategory
+        android:key="@string/home.timeRules"
+        android:title="@string/home.timeRules.alwaysActive"
+        app:allowDividerAbove="true"
+        app:iconSpaceReserved="false">
+
+    </com.takisoft.preferencex.PreferenceCategory>
+    <Preference
+        android:icon="@drawable/ic_add"
+        android:key="@string/home.timeRules.add"
+        app:allowDividerAbove="true"
+        app:iconSpaceReserved="false"
+        app:title="@string/home.timeRules.add" />
+</androidx.preference.PreferenceScreen>

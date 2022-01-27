@@ -5,14 +5,13 @@ import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.dci.dev.appinfobadge.AppInfoBadge
-import com.dci.dev.appinfobadge.BaseInfoItem
 import com.dci.dev.appinfobadge.InfoItemWithLink
 
 class AboutFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val appInfoBadgeFragment = AppInfoBadge
-            .headerColor { ContextCompat.getColor(context!!, R.color.colorPrimaryDark) }
+            .headerColor { ContextCompat.getColor(requireContext(), R.color.colorPrimaryDark) }
             .withAppIcon { true }
             .withCustomItems { listOf(
                 InfoItemWithLink(
@@ -42,6 +41,6 @@ class AboutFragment : Fragment() {
             .withLibraries { false }
             .withLicenses { false }
             .show()
-        fragmentManager!!.beginTransaction().replace(R.id.nav_host_fragment, appInfoBadgeFragment).commit()
+        parentFragmentManager.beginTransaction().replace(R.id.nav_host_fragment, appInfoBadgeFragment).commit()
     }
 }

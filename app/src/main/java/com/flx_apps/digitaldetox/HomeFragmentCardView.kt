@@ -76,6 +76,11 @@ open class HomeFragmentCardView(context: Context, attrs: AttributeSet) :
         if (overline.text.isEmpty()) overline.visibility = GONE
     }
 
+    override fun setChecked(checked: Boolean) {
+        super.setChecked(checked)
+        content?.visibility = if (checked) VISIBLE else GONE
+    }
+
     override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
         if (content != null) {
             content?.addView(child, index, params)

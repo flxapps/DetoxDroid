@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -23,14 +24,15 @@
         android:id="@+id/appTitle"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:gravity="bottom"
+        android:gravity="center_vertical"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:textAppearance="?attr/textAppearanceListItem"
         app:layout_constraintBottom_toTopOf="@id/appPackage"
         app:layout_constraintEnd_toStartOf="@+id/btnToggleExceptionState"
         app:layout_constraintStart_toEndOf="@+id/appIcon"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Title" />
 
     <TextView
         android:id="@+id/appPackage"
@@ -43,7 +45,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btnToggleExceptionState"
         app:layout_constraintStart_toEndOf="@+id/appIcon"
-        app:layout_constraintTop_toBottomOf="@id/appTitle" />
+        app:layout_constraintTop_toBottomOf="@id/appTitle"
+        tools:text="Subtitle" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/btnToggleExceptionState"

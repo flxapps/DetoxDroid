@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -84,6 +85,9 @@ open class AppExceptionsListFragment : Fragment() {
                     pckg = it.packageName
                     isException = exceptions.contains(it.packageName)
                     isSystemApp = (it.flags and isSystemAppMask) !== 0
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        category = ApplicationInfo.getCategoryTitle(context, it.category)?.toString()
+                    }
                 }
             )
         }
@@ -97,8 +101,10 @@ open class AppExceptionsListFragment : Fragment() {
 
         itemAdapter = ItemAdapter()
         itemAdapter.itemFilter.filterPredicate = { item: AppItem, constraint: CharSequence? ->
-            var showItem = RANDOM_STRING.equals(constraint) ||
-                    item.name.toString().toLowerCase(Locale.getDefault())
+            var showItem = RANDOM_STRING == constraint ||
+                    item.name.orEmpty().toLowerCase(Locale.getDefault())
+                        .contains(constraint.toString().toLowerCase(Locale.getDefault())) ||
+                    item.category.orEmpty().toLowerCase(Locale.getDefault())
                         .contains(constraint.toString().toLowerCase(Locale.getDefault()))
             showItem = showItem && ((!item.isSystemApp && itemFilter.showUserApps) || (item.isSystemApp && itemFilter.showSystemApps))
             showItem
@@ -154,6 +160,7 @@ open class AppExceptionsListFragment : Fragment() {
     open class AppItem : AbstractItem<AppItem.ViewHolder>() {
         var name: String? = null
         var pckg: String? = null
+        var category: String? = null
         var isException = false
         var isSystemApp = false
 
@@ -170,23 +177,27 @@ open class AppExceptionsListFragment : Fragment() {
         }
 
         class ViewHolder(view: View) : FastAdapter.ViewHolder<AppItem>(view) {
-            val appTitle: TextView = view.findViewById(R.id.appTitle)
-            val appPackage: TextView = view.findViewById(R.id.appPackage)
+            val title: TextView = view.findViewById(R.id.appTitle)
+            val subtitle: TextView = view.findViewById(R.id.appPackage)
             val btnToggleExceptionState: SwitchCompat = view.findViewById(R.id.btnToggleExceptionState)
-            val appIcon: ImageView = view.findViewById(R.id.appIcon)
+            val icon: ImageView = view.findViewById(R.id.appIcon)
 
             override fun bindView(item: AppItem, payloads: List<Any>) {
-                appTitle.text = item.name
-                appPackage.text = item.pckg
-                appIcon.setImageDrawable(appIcon.context.packageManager.getApplicationIcon(item.pckg))
+                title.text = item.name
+                subtitle.text = item.category
+                if (subtitle.text.isNullOrEmpty()) {
+                    subtitle.visibility = View.GONE
+                }
+                icon.setImageDrawable(icon.context.packageManager.getApplicationIcon(item.pckg!!))
                 btnToggleExceptionState.isChecked = item.isException
             }
 
             override fun unbindView(item: AppItem) {
-                appTitle.text = null
-                appPackage.text = null
+                title.text = null
+                subtitle.text = null
+                subtitle.visibility = View.VISIBLE
                 btnToggleExceptionState.isChecked = false
-                appIcon.setImageDrawable(null)
+                icon.setImageDrawable(null)
             }
         }
     }

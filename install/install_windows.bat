@@ -16,11 +16,11 @@ echo If your device asks you to allow USB Debugging, press "Accept".
 %cd%\platform-tools\adb.exe start-server
 
 echo Installing DetoxDroid on your device...
-%cd%\platform-tools\adb.exe install -r detoxdroid-latest.apk
+%cd%\platform-tools\adb.exe install -r -t detoxdroid-latest.apk
 
 echo Granting Permissions
 %cd%\platform-tools\adb.exe shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
-%cd%\platform-tools\adb.exe shell pm grant com.flx_apps.digitaldetox android.permission.ACCESS_NOTIFICATION_POLICY
+%cd%\platform-tools\adb.exe shell dpm set-device-owner com.flx_apps.digitaldetox/.DetoxDroidDeviceAdminReceiver
 
 echo Starting App
 %cd%\platform-tools\adb.exe shell monkey -p com.flx_apps.digitaldetox 1

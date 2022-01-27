@@ -1,0 +1,7 @@
+Implemented "Scheduled Rules" feature (#8)
+Implemented "Deactivate Apps" feature
+Improved app list (show app categories, when available)
+Improved install instructions (#21)
+UI tweaks
+Removed GitReports feature (service is offline)
+Updated Android framework libraries

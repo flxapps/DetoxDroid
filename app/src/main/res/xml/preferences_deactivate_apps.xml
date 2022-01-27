@@ -1,0 +1,8 @@
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.flx_apps.digitaldetox.prefs.ExceptionsPreference
+        android:icon="@drawable/ic_add"
+        android:key="deactivatedApps"
+        app:summary="@string/home.deactivateApps.manage._defined"
+        app:title="@string/home.deactivateApps.manage" />
+</androidx.preference.PreferenceScreen>

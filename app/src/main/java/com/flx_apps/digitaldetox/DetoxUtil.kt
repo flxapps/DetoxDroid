@@ -1,8 +1,11 @@
 package com.flx_apps.digitaldetox
 
 import android.app.NotificationManager
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
+import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
@@ -23,22 +26,29 @@ object DetoxUtil {
     const val ZEN_MODE_IMPORTANT_INTERRUPTIONS = 1
     const val ZEN_MODE_NO_INTERRUPTIONS = 2
 
-//    @JvmStatic
-//    fun isAccessibilityServiceEnabled(
-//        context: Context,
-//        service: Class<out AccessibilityService?>
-//    ): Boolean {
-//        val am =
-//            context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-//        val enabledServices =
-//            am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-//        for (enabledService in enabledServices) {
-//            val enabledServiceInfo: ServiceInfo = enabledService.resolveInfo.serviceInfo
-//            if (enabledServiceInfo.packageName == context.packageName && enabledServiceInfo.name == service.name
-//            ) return true
-//        }
-//        return false
-//    }
+    @JvmStatic
+    var isActive: Boolean = false
+
+    @JvmStatic
+    var isGrayscale: Boolean = false
+
+    @JvmStatic
+    var isZenModeEnabled: Boolean = false
+
+    @JvmStatic
+    var isAppsDeactivated: Boolean = false
+
+    /**
+     * Convenience function to (de-)activate all DetoxDroid modules
+     */
+    @JvmStatic
+    fun setActive(context: Context, active: Boolean, grayscale: Boolean = active, zenMode: Boolean = active, appsDeactivated: Boolean = active) {
+        if (active == isActive) return
+        setGrayscale(context, grayscale)
+        setZenMode(context, zenMode)
+        setAppsDeactivated(context, appsDeactivated)
+        isActive = active
+    }
 
     @JvmStatic
     fun setGrayscale(
@@ -46,7 +56,11 @@ object DetoxUtil {
         grayscale: Boolean,
         forceSetting: Boolean = false
     ): Boolean {
-        if (!MainActivity.hasWriteSecureSettingsPermission || (!forceSetting && !Prefs_(context).grayscaleEnabled().get())) return false
+        if (
+            grayscale == isGrayscale ||
+            context.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED ||
+            (!forceSetting && !Prefs_(context).grayscaleEnabled().get())
+        ) return false
 
         val contentResolver = context.contentResolver
         val result1 = Settings.Secure.putInt(
@@ -59,15 +73,20 @@ object DetoxUtil {
             DISPLAY_DALTONIZER,
             if (grayscale) 0 else -1
         )
+        isGrayscale = grayscale
         return result1 && result2
     }
 
     @JvmStatic
     fun setZenMode(
         context: Context,
-        enabled: Boolean
+        enabled: Boolean,
+        forceSetting: Boolean = false
     ): Boolean {
-        if (!Prefs_(context).zenModeDefaultEnabled().get()) return false
+        if (
+            isZenModeEnabled == enabled ||
+            (!forceSetting && !Prefs_(context).zenModeDefaultEnabled().get())
+        ) return false
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             // Fallback for Android 5, probably not working properly though (Settings don't seem to be persisted)
@@ -97,6 +116,7 @@ object DetoxUtil {
 //                    .build()
 //            }
             notificationManager.setInterruptionFilter(if (enabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY else NotificationManager.INTERRUPTION_FILTER_ALL)
+            isZenModeEnabled = enabled
             return true
         }
         return false
@@ -124,8 +144,7 @@ object DetoxUtil {
 
         isPausing = !isPausing // new pause state: inversion of "are we currently pausing?"
         prefs.edit().pauseUntil().put(if (isPausing) now + TimeUnit.MINUTES.toMillis(prefs.pauseDuration().get().toLong()) else -1).apply()
-        setGrayscale(context, !isPausing)
-        setZenMode(context, !isPausing)
+        setActive(context, !isPausing)
         if (isPausing) {
             // a pause was made, let's show a hint to the user
             Toast.makeText(
@@ -139,12 +158,37 @@ object DetoxUtil {
             prefs.edit().nextPauseAllowedAt()
                 .put(prefs.pauseUntil().get() + TimeUnit.MINUTES.toMillis(prefs.timeBetweenPauses().get().toLong()))
                 .apply()
-        } else {
+        }
+        else {
             // a pause was interrupted
             prefs.edit().nextPauseAllowedAt()
                 .put(now + TimeUnit.MINUTES.toMillis(prefs.timeBetweenPauses().get().toLong()))
                 .apply()
         }
         return isPausing
+    }
+
+    @JvmStatic
+    fun setAppsDeactivated(context: Context, deactivated: Boolean, forceSetting: Boolean = false) {
+        val prefs = Prefs_(context)
+        if (
+            isAppsDeactivated == deactivated ||
+            !DetoxDroidDeviceAdminReceiver.isGranted(context) ||
+            (!prefs.deactivateAppsEnabled().get() && !forceSetting)
+        ) return
+        prefs.deactivatedApps().get().forEach {
+            setApplicationHidden(context, it, deactivated)
+        }
+        isAppsDeactivated = deactivated
+    }
+
+    @JvmStatic
+    fun setApplicationHidden(context: Context, pckg: String, hidden: Boolean) {
+        (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager)
+            .setApplicationHidden(
+                ComponentName(context, DetoxDroidDeviceAdminReceiver::class.java),
+                pckg,
+                hidden
+            )
     }
 }

@@ -14,8 +14,11 @@
     <!-- To (de-)activate zen mode ("do not disturb" mode) -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
-    <!-- To show the user notifications / warning messages outside of the actual app -->
+    <!-- To show the user notifications / (doom scrolling–) warning messages outside of the actual app -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- To self-uninstall DetoxDroid when it is in DeviceOwner mode -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <application
         android:allowBackup="true"
@@ -29,7 +32,8 @@
         <activity
             android:name=".MainActivity_"
             android:label="@string/app.name_"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,7 +45,8 @@
             android:name=".DetoxAccessibilityService_"
             android:description="@string/app.accessibilityService.description"
             android:label="@string/app.accessibilityService.name"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -54,11 +59,26 @@
             android:name=".QuickSettingsTileService"
             android:icon="@drawable/ic_quick_settings_tile"
             android:label="@string/app.quickSettingsTile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+
+        <receiver
+            android:name="com.flx_apps.digitaldetox.DetoxDroidDeviceAdminReceiver"
+            android:label="Detox Droid Device Admin"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_config" />
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

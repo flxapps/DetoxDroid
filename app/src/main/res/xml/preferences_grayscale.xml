@@ -3,9 +3,11 @@
     <CheckBoxPreference
         app:icon="@drawable/ic_non_fullscreen"
         app:key="grayscaleIgnoreNonFullScreen"
-        app:title="@string/home.grayscale.ignoreNonFullScreen"
-        app:summary="@string/home.grayscale.ignoreNonFullScreen.description" />
+        app:summary="@string/home.grayscale.ignoreNonFullScreen.description"
+        app:title="@string/home.grayscale.ignoreNonFullScreen" />
     <com.flx_apps.digitaldetox.prefs.ExceptionsPreference
         android:icon="@drawable/ic_exceptions"
-        android:key="grayscaleExceptions" />
+        android:key="grayscaleExceptions"
+        app:summary="@string/exceptionsList._exceptionsDefined"
+        app:title="@string/action.manageExceptions" />
 </androidx.preference.PreferenceScreen>

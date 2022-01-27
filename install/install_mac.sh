@@ -12,10 +12,11 @@ if [ ! -f "detoxdroid-latest.apk" ]; then
 fi
 
 echo "Installing DetoxDroid on your device"
-platform-tools/adb install -r detoxdroid-latest.apk
+platform-tools/adb install -r -t detoxdroid-latest.apk
 
 echo "Granting Permissions"
 platform-tools/adb shell pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS
+platform-tools/adb shell dpm set-device-owner com.flx_apps.digitaldetox/.DetoxDroidDeviceAdminReceiver
 
 echo "Starting App"
 platform-tools/adb shell monkey -p com.flx_apps.digitaldetox 1

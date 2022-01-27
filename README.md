@@ -1,5 +1,3 @@
-> This project is currently in an alpha state. I am happy for all people who are willing to test the app and contribute by suggestions, feedback and bug reports.
-
 # DetoxDroid
 
 [![GitHub release](https://img.shields.io/github/release/flxapps/DetoxDroid.svg)](https://github.com/flxapps/DetoxDroid/releases/) [![GitHub license](https://img.shields.io/github/license/flxapps/DetoxDroid.svg)](https://github.com/flxapps/DetoxDroid/blob/master/LICENSE) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/flxapps/DetoxDroid/graphs/commit-activity) [![Ko-Fi](https://img.shields.io/static/v1?label=Buy%20me%20a%20coffee&message=3%20EUR&color=red)](https://ko-fi.com/flxapps/3) [![LiberaPay](https://img.shields.io/liberapay/receives/DetoxDroid)](https://liberapay.com/DetoxDroid) 
@@ -22,11 +20,14 @@ According to former Google design ethicist Tristan Harris, founder of the Center
 ### 2. Automatically enter the "Do Not Disturb" mode
 Notifications are the number one way for apps to draw our attention. Any app on our phones competes for our attention, and even games will remind us to play them if we have not opened them for a while. Reclaim your time by turning them off with the "Do Not Disturb" mode.
 
-### 3. Break "Infinite Scrolling"
+### 3. Make Apps Disappear
+You can select apps that will completely vanish and be deactivated while DetoxDroid is running. Move Twitter, Reddit and other distractions into this vault during your productive hours and only open these apps, when you deliberately take pauses. Hence, you can completely forget about them, rather than being bothered by lockout screens.
+
+### 4. Break "Infinite Scrolling"
 Infinite scrolling (sometimes also referred as "doom scrolling") is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit strategy.
 
-### 4. Opt-out > Opt-in
-You are encouraged to deliberately to pause the app, allowing colors and notifications. If the pause is over, DetoxDroid automatically comes back into life. Let this become your new default rather than having to repeatedly decide for it.
+### 5. Opt-out > Opt-in
+You are encouraged to deliberately to pause DetoxDroid, allowing colors and notifications. If the pause is over, DetoxDroid automatically comes back into life. Let this become your new default rather than having to repeatedly decide for it.
 
 ## Installation
 1. [Enable developer mode and USB debugging](https://www.youtube.com/watch?v=0usgePpr8_Y):

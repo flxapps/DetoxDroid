@@ -16,10 +16,6 @@ import org.androidannotations.annotations.EActivity
 
 @EActivity
 open class MainActivity : AppCompatActivity() {
-    companion object {
-        public var hasWriteSecureSettingsPermission = true
-    }
-
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,9 +35,14 @@ open class MainActivity : AppCompatActivity() {
                 R.id.nav_home,
                 R.id.nav_twitter,
                 R.id.nav_reportIssue,
-                R.id.nav_about
+                R.id.nav_about,
+                R.id.nav_uninstall
             ), drawerLayout
         )
+
+        if (!DetoxDroidDeviceAdminReceiver.isGranted(this)) {
+            navView.menu.findItem(R.id.nav_uninstall).isVisible = false
+        }
 
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)

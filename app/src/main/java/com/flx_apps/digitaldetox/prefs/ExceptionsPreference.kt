@@ -19,7 +19,7 @@ class ExceptionsPreference : Preference {
     constructor(context: Context, attributeSet: AttributeSet, defStyleAttr: Int, defStyleRes: Int): super(context, attributeSet, defStyleAttr, defStyleRes)
 
     init {
-        title = context.getString(R.string.action_manageExceptions) + "…"
+        title = "$title…"
     }
 
     override fun onClick() {
@@ -31,6 +31,6 @@ class ExceptionsPreference : Preference {
     }
 
     override fun getSummary(): CharSequence {
-        return context.getString(R.string.exceptionsList__exceptionsDefined, sharedPreferences.getStringSet(key, emptySet())!!.size)
+        return super.getSummary().toString().format(sharedPreferences.getStringSet(key, emptySet())!!.size)
     }
 }

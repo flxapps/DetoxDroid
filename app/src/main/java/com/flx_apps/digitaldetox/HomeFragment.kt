@@ -8,48 +8,25 @@ import android.os.Build
 import android.provider.Settings
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.flx_apps.digitaldetox.prefs.Prefs_
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.fragment_home.*
 import org.androidannotations.annotations.AfterViews
 import org.androidannotations.annotations.Click
 import org.androidannotations.annotations.EFragment
-import org.androidannotations.annotations.ViewById
-import org.androidannotations.annotations.sharedpreferences.Pref
 
 
 @EFragment(R.layout.fragment_home)
 open class HomeFragment : Fragment() {
     private val ACCESSIBILITY_SERVICE_COMPONENT = DetoxAccessibilityService_::class.java.`package`!!.name + "/" + DetoxAccessibilityService_::class.java.name
-
-    @ViewById
-    lateinit var btnToggleDetox: FloatingActionButton
-
-    @ViewById
-    lateinit var btnToggleZenModeDefault: HomeFragmentCardView
-
-    @ViewById
-    lateinit var btnToggleBreakDoomScrolling: HomeFragmentCardView
-
-    @ViewById
-    lateinit var btnToggleGrayscale: HomeFragmentCardView
-
-    @Pref
     lateinit var prefs: Prefs_
 
     @AfterViews
     fun init() {
-        if (requireContext().checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) {
-            MainActivity.hasWriteSecureSettingsPermission = false
-            log("Showing NoPermissionsFragment...")
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, NoPermissionsFragment_.builder().build())
-                .commit()
-            return
-        }
-
-        setDetoxIsActive(prefs.isRunning.get())
+        prefs = Prefs_(context)
     }
 
     @AfterViews
@@ -67,10 +44,35 @@ open class HomeFragment : Fragment() {
         ) {
             btnToggleZenModeDefault.isChecked = false
             prefs.edit().zenModeDefaultEnabled().put(false).apply()
-            showAskForPermissionsSnackbar(
-                btnToggleZenModeDefault,
-                Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS
-            )
+            showAskForPermissionsSnackbar(btnToggleZenModeDefault, {
+                startActivityForResult(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS), 0)
+            })
+        }
+    }
+
+    @AfterViews
+    @Click
+    fun btnToggleDeactivateAppsClicked() {
+        if (btnToggleDeactivateApps.isPressed) {
+            prefs.edit().deactivateAppsEnabled().put(!prefs.deactivateAppsEnabled().get()).apply()
+        }
+        btnToggleDeactivateApps.isChecked = prefs.deactivateAppsEnabled().get()
+
+        if (
+            prefs.deactivateAppsEnabled().get() &&
+            !DetoxDroidDeviceAdminReceiver.isGranted(requireContext())
+        ) {
+            btnToggleDeactivateApps.isChecked = false
+            prefs.edit().deactivateAppsEnabled().put(false).apply()
+            showAskForPermissionsSnackbar(btnToggleZenModeDefault, {
+                findNavController().navigate(
+                    R.id.nav_no_permissions,
+                    bundleOf("rootCommand" to "dpm set-device-owner com.flx_apps.digitaldetox/.DetoxDroidDeviceAdminReceiver")
+                )
+            })
+        }
+        else {
+            DetoxUtil.setAppsDeactivated(requireContext(), prefs.isRunning().get() && prefs.deactivateAppsEnabled().get(), forceSetting = true)
         }
     }
 
@@ -80,13 +82,27 @@ open class HomeFragment : Fragment() {
         if (btnToggleGrayscale.isPressed) {
             prefs.edit().grayscaleEnabled().put(!prefs.grayscaleEnabled().get()).apply()
         }
+
         btnToggleGrayscale.isChecked = prefs.grayscaleEnabled().get()
+
+        if (
+            prefs.grayscaleEnabled().get() &&
+            requireContext().checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED
+        ) {
+            btnToggleGrayscale.isChecked = false
+            prefs.edit().grayscaleEnabled().put(false).apply()
+            showAskForPermissionsSnackbar(btnToggleGrayscale, {
+                findNavController().navigate(
+                    R.id.nav_no_permissions,
+                    bundleOf("rootCommand" to "pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS")
+                )
+            })
+            return
+        }
+
         DetoxUtil.setGrayscale(
             requireContext(),
-            prefs.isRunning().get() && btnToggleGrayscale.isChecked && !prefs.grayscaleExceptions()
-                .get().contains(
-                requireContext().packageName
-            ),
+            prefs.isRunning().get() && btnToggleGrayscale.isChecked && !prefs.grayscaleExceptions().get().contains(requireContext().packageName),
             forceSetting = true
         )
     }
@@ -106,65 +122,71 @@ open class HomeFragment : Fragment() {
         ) {
             btnToggleBreakDoomScrolling.isChecked = false
             prefs.edit().breakDoomScrollingEnabled().put(false).apply()
-            showAskForPermissionsSnackbar(
-                btnToggleBreakDoomScrolling,
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION
-            )
+            showAskForPermissionsSnackbar(btnToggleBreakDoomScrolling, {
+                startActivityForResult(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION), 0)
+            })
         }
     }
 
     @Click
+    @AfterViews
     fun btnToggleDetoxClicked() {
-        prefs.edit().isRunning.put(!prefs.isRunning().get()).apply()
-        setDetoxIsActive(prefs.isRunning().get())
-    }
-
-    private fun showAskForPermissionsSnackbar(view: View, intentAction: String) {
-        Snackbar.make(view, R.string.action_requestPermissions, Snackbar.LENGTH_INDEFINITE)
-            .setAction(R.string.action_go) {
-                startActivityForResult(
-                    Intent(intentAction),
-                    0
-                )
-            }
-            .show()
-    }
-
-    private fun setDetoxIsActive(isActive: Boolean) {
-        btnToggleDetox.setImageDrawable(
-            ContextCompat.getDrawable(
-                requireContext(),
-                if (isActive) R.drawable.ic_pause else R.drawable.ic_play
-            )
-        )
-        DetoxUtil.setGrayscale(requireContext(), isActive)
+        var isRunning = prefs.isRunning().get()
+        if (btnToggleDetox.isPressed) {
+            isRunning = !isRunning
+        }
 
         val contentResolver = context?.contentResolver
-
-        // (de-)activate accessibility service
         val accessibilityServices = Settings.Secure.getString(
             contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ).orEmpty()
-        if (isActive && !accessibilityServices.split(":")
-                .contains(ACCESSIBILITY_SERVICE_COMPONENT)
-        ) {
-            Settings.Secure.putString(
-                contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                "$accessibilityServices:$ACCESSIBILITY_SERVICE_COMPONENT".trim(':')
-            )
-            Settings.Secure.putString(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1")
-            requireContext().startService(Intent(context, DetoxAccessibilityService_::class.java))
-        } else if (!isActive && accessibilityServices.split(":")
-                .contains(ACCESSIBILITY_SERVICE_COMPONENT)
-        ) {
-            Settings.Secure.putString(
-                contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-                accessibilityServices.replace(ACCESSIBILITY_SERVICE_COMPONENT, "").trim(':')
-            )
+        val accessibilityServiceIsActivated = accessibilityServices.split(":").contains(ACCESSIBILITY_SERVICE_COMPONENT)
 
+        if (requireActivity().checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == PackageManager.PERMISSION_GRANTED) {
+            // we can (de-)activate the accessibility service programmatically, so let's do so
+            val accessibilityServices = Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ).orEmpty()
+            if (isRunning && !accessibilityServiceIsActivated) {
+                Settings.Secure.putString(
+                    contentResolver,
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                    "$accessibilityServices:$ACCESSIBILITY_SERVICE_COMPONENT".trim(':')
+                )
+                Settings.Secure.putString(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1")
+                requireContext().startService(Intent(context, DetoxAccessibilityService_::class.java))
+            }
+            else if (!isRunning && accessibilityServiceIsActivated) {
+                Settings.Secure.putString(
+                    contentResolver,
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                    accessibilityServices.replace(ACCESSIBILITY_SERVICE_COMPONENT, "").trim(':')
+                )
+            }
         }
+        else if (isRunning && !accessibilityServiceIsActivated) {
+            // we need to ask the user to activate the accessibility service manually
+            showAskForPermissionsSnackbar(btnToggleDetox, {
+                startActivityForResult(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), 0)
+            })
+            isRunning = false
+        }
+
+        btnToggleDetox.setImageDrawable(
+            ContextCompat.getDrawable(
+                requireContext(),
+                if (isRunning) R.drawable.ic_pause else R.drawable.ic_play
+            )
+        )
+        DetoxUtil.setActive(requireContext(), isRunning, grayscale = isRunning && !prefs.grayscaleExceptions().get().contains(requireContext().packageName))
+        prefs.edit().isRunning().put(isRunning).apply()
+    }
+
+    private fun showAskForPermissionsSnackbar(view: View, onClickListener: View.OnClickListener, btnText: String = getString(R.string.action_go)) {
+        Snackbar.make(view, R.string.action_requestPermissions, Snackbar.LENGTH_INDEFINITE)
+            .setAction(btnText, onClickListener)
+            .show()
     }
 }

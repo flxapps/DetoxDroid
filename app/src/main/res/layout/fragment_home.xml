@@ -48,6 +48,25 @@
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
 
             <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.timeRules.description"
+                app:layout_constraintTop_toBottomOf="@+id/btnConfigPauseButton"
+                app:subtitle="@string/home.timeRules.subtitle"
+                app:title="@string/home.timeRules">
+
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/timeRulesPreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$TimeRulesListPreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
                 android:id="@+id/btnToggleZenModeDefault"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -62,25 +81,6 @@
                 <androidx.fragment.app.FragmentContainerView
                     android:id="@+id/zenModePreferences"
                     android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$ZenModePreferencesFragment_"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
-
-            <com.flx_apps.digitaldetox.HomeFragmentCardView_
-                android:id="@+id/btnToggleBreakDoomScrolling"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:description="@string/home.doomScrolling.description"
-                app:overline="@string/action.clickToActivate"
-                app:subtitle="@string/home.doomScrolling.subtitle"
-                app:title="@string/home.doomScrolling">
-
-                <include layout="@layout/divider_view" />
-
-                <androidx.fragment.app.FragmentContainerView
-                    android:id="@+id/doomScrollingPreferences"
-                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$DoomScrollingPreferencesFragment_"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </com.flx_apps.digitaldetox.HomeFragmentCardView_>
@@ -105,6 +105,45 @@
             </com.flx_apps.digitaldetox.HomeFragmentCardView_>
 
             <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnToggleBreakDoomScrolling"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.doomScrolling.description"
+                app:overline="@string/action.clickToActivate"
+                app:subtitle="@string/home.doomScrolling.subtitle"
+                app:title="@string/home.doomScrolling">
+
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/doomScrollingPreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$DoomScrollingPreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnToggleDeactivateApps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:description="@string/home.deactivateApps.description"
+                app:overline="@string/action.clickToActivate"
+                app:subtitle="@string/home.deactivateApps.subtitle"
+                app:title="@string/home.deactivateApps">
+
+                <include layout="@layout/divider_view" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/deactivateAppsPreferences"
+                    android:name="com.flx_apps.digitaldetox.prefs.PreferenceFragment_$DeactivateAppsPreferencesFragment_"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.flx_apps.digitaldetox.HomeFragmentCardView_>
+
+            <com.flx_apps.digitaldetox.HomeFragmentCardView_
+                android:id="@+id/btnConfigPauseButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"

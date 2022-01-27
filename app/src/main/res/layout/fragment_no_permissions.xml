@@ -29,10 +29,26 @@
         android:paddingBottom="20dp"
         android:text="@string/noPermissions.text"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        app:layout_constraintBottom_toTopOf="@id/txtHint"
+        app:layout_constraintBottom_toTopOf="@id/txtAdbCommand"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/icnInfo" />
+
+    <TextView
+        android:id="@+id/txtAdbCommand"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:gravity="start|center_vertical"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="20dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintBottom_toTopOf="@id/txtHint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtTitle"
+        tools:text="pm grant blablabla" />
 
     <TextView
         android:id="@+id/txtHint"
@@ -47,7 +63,7 @@
         app:layout_constraintBottom_toTopOf="@id/btnGrantPermissions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/txtAdbCommand" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnGrantPermissions"

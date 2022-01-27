@@ -15,5 +15,6 @@
     <com.flx_apps.digitaldetox.prefs.ExceptionsPreference
         android:icon="@drawable/ic_exceptions"
         android:key="breakDoomScrollingExceptions"
-        app:iconSpaceReserved="false" />
+        app:summary="@string/exceptionsList._exceptionsDefined"
+        app:title="@string/action.manageExceptions" />
 </androidx.preference.PreferenceScreen>
