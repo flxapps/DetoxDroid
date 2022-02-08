@@ -47,7 +47,7 @@ open class DetoxAccessibilityService : AccessibilityService() {
     private var ignoredPackages = mutableSetOf<String>()
     private var timeRules = mutableSetOf<TimeRule>()
 
-    data class ScrollViewInfo (var maxY: Int) {
+    data class ScrollViewInfo(var maxY: Int) {
         var added: Long = System.currentTimeMillis()
         var timesGrown = 0
         override fun toString(): String {
@@ -59,7 +59,8 @@ open class DetoxAccessibilityService : AccessibilityService() {
      * contains information about scroll views that the user has most recently used
      * the information expires, if they have not been used in the last three minutes
      */
-    private val activeScrollViews: SelfExpiringHashMap<Int, ScrollViewInfo> = SelfExpiringHashMap(TimeUnit.SECONDS.toMillis(120))
+    private val activeScrollViews: SelfExpiringHashMap<Int, ScrollViewInfo> =
+        SelfExpiringHashMap(TimeUnit.SECONDS.toMillis(120))
 
     override fun onCreate() {
         super.onCreate()
@@ -121,8 +122,8 @@ open class DetoxAccessibilityService : AccessibilityService() {
         // decide whether we want to grayscale or color the screen
         val grayscaleApp = (
                 prefs.grayscaleEnabled().get() &&
-                !prefs.grayscaleExceptions().get().contains(accessibilityEvent.packageName)
-        )
+                        !prefs.grayscaleExceptions().get().contains(accessibilityEvent.packageName)
+                )
         DetoxUtil.setActive(this, prefs.isRunning.get(), grayscale = grayscaleApp)
     }
 
@@ -148,7 +149,7 @@ open class DetoxAccessibilityService : AccessibilityService() {
         }
 
         // dispose scroll events that contain too less information
-        if (accessibilityEvent.source == null || maxY == -1) {
+        if (accessibilityEvent.source == null || maxY == -1 || accessibilityEvent.className == null) {
             return
         }
 
@@ -158,18 +159,17 @@ open class DetoxAccessibilityService : AccessibilityService() {
         // feeds as one though
         val scrollViewId = (
                 accessibilityEvent.className.hashCode() +
-                accessibilityEvent.packageName.hashCode() +
-                accessibilityEvent.source.getBoundsInScreen(Rect()).hashCode() +
-                (accessibilityEvent.source.viewIdResourceName?.hashCode()?: 0)
-        )
+                        accessibilityEvent.packageName.hashCode() +
+                        accessibilityEvent.source.getBoundsInScreen(Rect()).hashCode() +
+                        (accessibilityEvent.source.viewIdResourceName?.hashCode() ?: 0)
+                )
 //        log("${accessibilityEvent.source}")
 
         // if the user did not navigate over that scroll view recently, let's generate an info about
         // how much elements it initially contained
         if (!activeScrollViews.containsKey(scrollViewId)) {
             activeScrollViews[scrollViewId] = ScrollViewInfo(maxY)
-        }
-        else {
+        } else {
             val scrollViewInfo = activeScrollViews[scrollViewId]!!
             // determine whether this scroll view behaves like an infinite scroll view (i.e. it grows)
             var isInfinite = false
@@ -182,7 +182,8 @@ open class DetoxAccessibilityService : AccessibilityService() {
             }
 
             // calculate how long the user was active on that scroll view
-            val scrollingTime = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - scrollViewInfo.added)
+            val scrollingTime =
+                TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - scrollViewInfo.added)
             if (isInfinite && scrollingTime >= prefs.timeUntilDoomScrollingWarning().get()) {
                 // if the scroll view is seemingly infinite and the user has been too long on it, fire the warning
                 DoomScrollingBottomSheetDialog(this).show()

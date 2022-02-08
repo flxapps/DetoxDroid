@@ -43,7 +43,6 @@ object DetoxUtil {
      */
     @JvmStatic
     fun setActive(context: Context, active: Boolean, grayscale: Boolean = active, zenMode: Boolean = active, appsDeactivated: Boolean = active) {
-        if (active == isActive) return
         setGrayscale(context, grayscale)
         setZenMode(context, zenMode)
         setAppsDeactivated(context, appsDeactivated)
