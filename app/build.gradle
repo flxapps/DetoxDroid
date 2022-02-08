@@ -10,8 +10,8 @@ android {
         applicationId "com.flx_apps.digitaldetox"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 12000
-        versionName "1.2.0"
+        versionCode 12001
+        versionName "1.2.1"
 
         javaCompileOptions {
             annotationProcessorOptions {
