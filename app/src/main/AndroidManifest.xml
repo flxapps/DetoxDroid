@@ -20,6 +20,10 @@
     <!-- To self-uninstall DetoxDroid when it is in DeviceOwner mode -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+    <!-- To get the list of installed apps on Android >= 11-->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
