@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -83,6 +84,7 @@ open class AppExceptionsListFragment : Fragment() {
                 AppItem().apply {
                     name = it.loadLabel(pm) as String
                     pckg = it.packageName
+                    Log.d("appItems", "appItem: $name $pckg");
                     isException = exceptions.contains(it.packageName)
                     isSystemApp = (it.flags and isSystemAppMask) !== 0
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
