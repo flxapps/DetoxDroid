@@ -56,6 +56,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment)
+        this.currentFocus?.clearFocus()
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 

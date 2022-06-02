@@ -14,6 +14,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.widget.ContentLoadingProgressBar
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flx_apps.digitaldetox.prefs.Prefs_
@@ -48,13 +49,15 @@ open class AppExceptionsListFragment : Fragment() {
     lateinit var exceptionsSetKey: String
 
     lateinit var fastAdapter: FastAdapter<AppItem>
-    lateinit var itemAdapter: ItemAdapter<AppItem>
+    var itemAdapter: ItemAdapter<AppItem>? = null
 
     data class ItemFilter(
         var showUserApps: Boolean = true,
         var showSystemApps: Boolean = true
     )
     val itemFilter = ItemFilter()
+
+    private val isAppsListLoaded = MutableLiveData<Boolean>(false)
 
     @AfterViews
     fun init() {
@@ -87,7 +90,7 @@ open class AppExceptionsListFragment : Fragment() {
                     Log.d("appItems", "appItem: $name $pckg");
                     isException = exceptions.contains(it.packageName)
                     isSystemApp = (it.flags and isSystemAppMask) !== 0
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isAdded) {
                         category = ApplicationInfo.getCategoryTitle(context, it.category)?.toString()
                     }
                 }
@@ -102,7 +105,7 @@ open class AppExceptionsListFragment : Fragment() {
         if (!this::list.isInitialized) return
 
         itemAdapter = ItemAdapter()
-        itemAdapter.itemFilter.filterPredicate = { item: AppItem, constraint: CharSequence? ->
+        itemAdapter?.itemFilter?.filterPredicate = { item: AppItem, constraint: CharSequence? ->
             var showItem = RANDOM_STRING == constraint ||
                     item.name.orEmpty().toLowerCase(Locale.getDefault())
                         .contains(constraint.toString().toLowerCase(Locale.getDefault())) ||
@@ -111,10 +114,10 @@ open class AppExceptionsListFragment : Fragment() {
             showItem = showItem && ((!item.isSystemApp && itemFilter.showUserApps) || (item.isSystemApp && itemFilter.showSystemApps))
             showItem
         }
-        itemAdapter.setNewList(appList)
-        itemAdapter.filter(RANDOM_STRING)
+        itemAdapter?.setNewList(appList)
+        itemAdapter?.filter(RANDOM_STRING)
 
-        fastAdapter = FastAdapter.with(itemAdapter)
+        fastAdapter = FastAdapter.with(itemAdapter!!)
         fastAdapter.onClickListener = { view, adapter, item, position ->
             item.isException = !item.isException
             prefs.sharedPreferences.edit().putStringSet(
@@ -132,21 +135,32 @@ open class AppExceptionsListFragment : Fragment() {
             adapter = fastAdapter
         }
         loadingProgressBar.hide()
+        isAppsListLoaded.value = true
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        (menu.findItem(R.id.menu_search).actionView as SearchView).setOnQueryTextListener(object :
+        val searchView = (menu.findItem(R.id.menu_search).actionView as SearchView)
+        searchView.setOnQueryTextListener(object :
             SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                itemAdapter.filter(if (newText.isNullOrEmpty()) RANDOM_STRING else newText)
+                filterItemAdapterByString(newText)
                 return true
             }
         })
+        isAppsListLoaded.observe(viewLifecycleOwner) { isLoaded ->
+            if (isLoaded && searchView.query.isNotEmpty()) {
+                filterItemAdapterByString(searchView.query.toString())
+            }
+        }
+    }
+
+    private fun filterItemAdapterByString(query: String?) {
+        itemAdapter?.filter(if (query.isNullOrEmpty()) RANDOM_STRING else query)
     }
 
     @OptionsItem(R.id.menu_filter_systemApps, R.id.menu_filter_userApps)
@@ -156,7 +170,7 @@ open class AppExceptionsListFragment : Fragment() {
             R.id.menu_filter_userApps -> itemFilter.showUserApps = menuItem.isChecked
             R.id.menu_filter_systemApps -> itemFilter.showSystemApps = menuItem.isChecked
         }
-        itemAdapter.itemFilter.filter(itemAdapter.itemFilter.constraint)
+        itemAdapter?.itemFilter?.filter(itemAdapter?.itemFilter?.constraint)
     }
 
     open class AppItem : AbstractItem<AppItem.ViewHolder>() {
