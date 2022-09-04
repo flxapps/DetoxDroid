@@ -17,6 +17,9 @@ interface Prefs {
     @DefaultBoolean(false)
     fun grayscaleEnabled(): Boolean
 
+    @DefaultBoolean(false)
+    fun grayscaleExtraDim(): Boolean
+
     @DefaultStringSet()
     fun grayscaleExceptions(): Set<String>
 

@@ -44,6 +44,11 @@
     <string name="home.grayscale">Automatic Grayscale</string>
     <string name="home.grayscale.subtitle">Color up by coloring down your phone</string>
     <string name="home.grayscale.description">Apps compete for your attention, and colors can have an enticing, manipulative effect. With DetoxDroid, you can strip away all the neuron-stimulating colors, while allowing exceptions where necessary.</string>
+    <string name="home.grayscale.extraDim">Extra Dim</string>
+    <string name="home.grayscale.extraDim.key">grayscaleExtraDim</string>
+    <string name="home.grayscale.extraDim.currently_disabled.description">Make your screen even dimmer.</string>
+    <string name="home.grayscale.extraDim.currently_enabled.description.1">Your screen is now extra dim.</string>
+    <string name="home.grayscale.extraDim.currently_enabled.description.2">Long-press to adjust intensity.</string>
     <string name="home.grayscale.ignoreNonFullScreen">Ignore Non-Fullscreen Apps</string>
     <string name="home.grayscale.ignoreNonFullScreen.description">Non-fullscreen components (e.g. sound volume box, status bar) will be ignored, i.e. the color state will not be changed.</string>
     <string name="home.grayscale.exceptions.states.gray">Gray</string>
