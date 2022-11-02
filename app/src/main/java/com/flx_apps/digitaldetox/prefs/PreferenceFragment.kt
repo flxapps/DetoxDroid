@@ -1,12 +1,16 @@
 package com.flx_apps.digitaldetox.prefs
 
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.AttributeSet
+import android.view.View
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.DialogFragment
-import androidx.preference.Preference
-import androidx.preference.PreferenceCategory
-import androidx.preference.isEmpty
+import androidx.preference.*
 import com.flx_apps.digitaldetox.DetoxAccessibilityService
+import com.flx_apps.digitaldetox.DetoxUtil
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.log
 import com.takisoft.preferencex.PreferenceFragmentCompat

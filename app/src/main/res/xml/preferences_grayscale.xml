@@ -1,5 +1,9 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.flx_apps.digitaldetox.prefs.ExtraDimPreference
+        app:icon="@drawable/ic_extra_dim"
+        app:key="@string/home.grayscale.extraDim.key"
+        app:title="@string/home.grayscale.extraDim" />
     <CheckBoxPreference
         app:icon="@drawable/ic_non_fullscreen"
         app:key="grayscaleIgnoreNonFullScreen"

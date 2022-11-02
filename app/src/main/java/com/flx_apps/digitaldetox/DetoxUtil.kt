@@ -9,6 +9,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import com.flx_apps.digitaldetox.DetoxUtil.ZEN_MODE
+import com.flx_apps.digitaldetox.DetoxUtil.isZenModeEnabled
 import com.flx_apps.digitaldetox.prefs.Prefs_
 import java.util.concurrent.TimeUnit
 
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit
 object DetoxUtil {
     const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled"
     const val DISPLAY_DALTONIZER = "accessibility_display_daltonizer"
+    const val EXTRA_DIM = "reduce_bright_colors_activated"
 
     const val ZEN_MODE = "zen_mode"
     const val ZEN_MODE_OFF = 0
@@ -42,7 +45,13 @@ object DetoxUtil {
      * Convenience function to (de-)activate all DetoxDroid modules
      */
     @JvmStatic
-    fun setActive(context: Context, active: Boolean, grayscale: Boolean = active, zenMode: Boolean = active, appsDeactivated: Boolean = active) {
+    fun setActive(
+        context: Context,
+        active: Boolean,
+        grayscale: Boolean = active,
+        zenMode: Boolean = active,
+        appsDeactivated: Boolean = active
+    ) {
         setGrayscale(context, grayscale)
         setZenMode(context, zenMode)
         setAppsDeactivated(context, appsDeactivated)
@@ -72,8 +81,26 @@ object DetoxUtil {
             DISPLAY_DALTONIZER,
             if (grayscale) 0 else -1
         )
+        val result3 = setExtraDim(context, grayscale)
         isGrayscale = grayscale
-        return result1 && result2
+        return result1 && result2 && result3
+    }
+
+    @JvmStatic
+    fun setExtraDim(
+        context: Context,
+        grayscale: Boolean
+    ): Boolean {
+        if (context.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") != PackageManager.PERMISSION_GRANTED) {
+            return false
+        }
+
+        val contentResolver = context.contentResolver
+        return Settings.Secure.putInt(
+            contentResolver,
+            EXTRA_DIM,
+            if (grayscale) 1 else 0
+        )
     }
 
     @JvmStatic
