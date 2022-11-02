@@ -52,7 +52,7 @@
 
     <string name="home.pauseButton">Pause Button</string>
     <string name="home.pauseButton.subtitle">Take a break from taking a break</string>
-    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button.</string>
+    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button (not working on all devices).</string>
     <string name="home.pauseButton.duration">Pause Duration</string>
     <string name="home.pauseButton.duration.description">Once the pause is over, DetoxDroid will automatically come back into life.</string>
     <string name="home.pauseButton.minimumTimeBetween">Minimum Time Between Pauses</string>
