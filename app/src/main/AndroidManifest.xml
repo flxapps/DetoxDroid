@@ -24,6 +24,8 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
+    <meta-data android:name="com.oasisfeng.island.delegation" android:value="delegation-package-access,-island-delegation-app-ops" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
