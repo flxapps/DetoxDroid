@@ -31,7 +31,7 @@
     <string name="navigation.about">About</string>
     <string name="navigation.uninstall">Uninstall DetoxDroid</string>
     <string name="navigation.uninstall.dialog.title">Attention</string>
-    <string name="navigation.uninstall.dialog.message">It might not be possible for you to uninstall DetoxDroid from the normal app manager, as you have granted particular permissions by installing it from your computer. Using this, you can revoke these permissions and uninstall DetoxDroid.</string>
+    <string name="navigation.uninstall.dialog.message">It might not be possible for you to uninstall DetoxDroid from the normal app manager, as you have granted particular permissions by installing it from your computer. Using this, you can revoke these permissions and uninstall DetoxDroid.\n\n<b>If you have apps deactivated right now through DetoxDroid, please make sure to re-activate them first.</b></string>
 
     <string name="home.welcome">Welcome to DetoxDroid!</string>
     <string name="home.welcome.sub">Make \"Do Not Disturb\" your new default.</string>
@@ -57,7 +57,7 @@
 
     <string name="home.pauseButton">Pause Button</string>
     <string name="home.pauseButton.subtitle">Take a break from taking a break</string>
-    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button.</string>
+    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button (not working on all devices).</string>
     <string name="home.pauseButton.duration">Pause Duration</string>
     <string name="home.pauseButton.duration.description">Once the pause is over, DetoxDroid will automatically come back into life.</string>
     <string name="home.pauseButton.minimumTimeBetween">Minimum Time Between Pauses</string>

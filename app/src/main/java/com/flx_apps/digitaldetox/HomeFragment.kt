@@ -2,11 +2,15 @@ package com.flx_apps.digitaldetox
 
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Context.RESTRICTIONS_SERVICE
 import android.content.Intent
+import android.content.RestrictionsManager
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PersistableBundle
 import android.provider.Settings
 import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -17,6 +21,7 @@ import kotlinx.android.synthetic.main.fragment_home.*
 import org.androidannotations.annotations.AfterViews
 import org.androidannotations.annotations.Click
 import org.androidannotations.annotations.EFragment
+import java.util.*
 
 
 @EFragment(R.layout.fragment_home)
@@ -27,7 +32,38 @@ open class HomeFragment : Fragment() {
     @AfterViews
     fun init() {
         prefs = Prefs_(context)
+
+        val TYPE_DELEGATION = "com.oasisfeng.island.delegation";
+        val DELEGATION_APP_OPS = "-island-delegation-app-ops";
+
+        checkAndRequestIslandPermission(requireContext());
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    open fun checkAndRequestIslandPermission(context: Context): Boolean {
+        val TYPE_DELEGATION = "com.oasisfeng.island.delegation"
+        val DELEGATION_APP_OPS = "-island-delegation-app-ops"
+        val DELEGATION_PACKAGE_ACCESS = "delegation-package-access"
+        val rm = context.getSystemService(RESTRICTIONS_SERVICE) as RestrictionsManager
+        if (rm != null && rm.hasRestrictionsProvider()) { // Otherwise, current user is not managed by Island or the version of Island is too low.
+            val delegations = rm.applicationRestrictions.getStringArray(TYPE_DELEGATION)
+            if (delegations == null || !Arrays.asList(delegations)
+                    .contains(DELEGATION_PACKAGE_ACCESS)
+            ) {
+                val request = PersistableBundle()
+                request.putString(RestrictionsManager.REQUEST_KEY_DATA, DELEGATION_PACKAGE_ACCESS)
+                rm.requestPermission(
+                    TYPE_DELEGATION,
+                    "com.flx_apps.detoxdroid.app-ops",
+                    request
+                )
+            } else {
+                return true
+            }
+        }
+        return false
+    }
+
 
     @AfterViews
     @Click
