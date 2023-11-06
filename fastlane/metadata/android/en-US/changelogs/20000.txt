@@ -1,0 +1,5 @@
+Complete rewrite of the app.
+- New UI
+- Better maintainability
+- Better performance
+- Better code quality
