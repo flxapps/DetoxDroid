@@ -1,0 +1,17 @@
+Usually, "Digital Detoxing" apps in Android are about opting-in for a contract to not use our phones for the next X minutes. Or that we will not use the app Y for more than Z minutes. These contracts are often reinforced with financial incentives, i.e. if we fail we will have to pay a fee of a few dollars to the developers.
+
+This app follows a different approach by stripping away all the attention-grabbing and manipulative features of other apps. DetoxDroid does not require you to choose a time and place when you want to "detox", or punish you if you fail. Instead, it aims to enable you to use your phone rather than letting your phone use you.
+
+FEATURES
+* Grayscale: Going grayscale removes positive reinforcements and dampens compulsive smartphone use.
+* Exceptions: Exclude apps like your camera or gallery from the grayscale feature.
+* Automatic Do Not Disturb: Never forget to enter the "Do Not Disturb" mode.
+* Opt-out > Opt-in: Deliberately pause DetoxDroid rather than deliberately switching it on.
+
+INSTALLATION
+Unfortunately, installing the app on your phone is not enough for the grayscale feature to work. If your phone is rooted, you can grant the necessary permissions from the app. Otherwise, you need to grant the WRITE_SECURE_SETTINGS permission from your computer.
+Don't worry though, this usually will not take you more than a few minutes. Find out how to do it on GitHub: https://github.com/flxapps/DetoxDroid#installation
+
+SUPPORT DETOXDROID
+If you like the project, please consider becoming a patron on LiberaPay or buying me a coffee via Ko-Fi/PayPal. I would love to invest more time into it.
+Furthermore, always feel free to write me a mail or discuss the app on GitHub.

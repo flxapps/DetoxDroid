@@ -1,0 +1,5 @@
+Implemented "Break Infinite Scrolling" feature
+Refined user interface
+Improved app list (search feature, filter by user/system apps) (#9)
+Implemented "Ignore Non-Fullscreen Apps" option for grayscale feature (#3)
+Fixed buggy behavior with grayscale/detoxing checking/un-checking (#11)
