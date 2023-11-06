@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="com.flx_apps.digitaldetox.system_integration.DetoxDroidPauseInteractionSessionService"
+    android:recognitionService="com.android.test.voiceinteraction.MainRecognitionService"
+    android:settingsActivity="com.android.test.voiceinteraction.SettingsActivity"
+    android:supportsAssist="true" />
+

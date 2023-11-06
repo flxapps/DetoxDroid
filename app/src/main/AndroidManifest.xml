@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- WRITE_SECURE_SETTINGS permission in order to enable/disable the accessibility service and grayscale mode -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- SYSTEM_ALERT_WINDOW permission in order to show the overlay for disabling apps / breaking infinite scrolling -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- DEVICE_ADMIN permission in order to deactivate apps -->
+    <uses-permission
+        android:name="android.permission.BIND_DEVICE_ADMIN"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- ACCESS_NOTIFICATION_POLICY permission in order to activate/deactivate zen mode ("do not disturb" mode) -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
+    <!-- android.permission.REQUEST_DELETE_PACKAGES permission to self-uninstall DetoxDroid when it is in DeviceOwner mode -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
+    <!-- android.permission.QUERY_ALL_PACKAGES permission to get the list of installed apps on Android >= 11-->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <!-- android.permission.PACKAGE_USAGE_STATS permission to get the daily usage time of apps -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- android.permission.BIND_QUICK_SETTINGS_TILE permission to add a quick settings tile -->
+    <uses-permission
+        android:name="android.permission.BIND_QUICK_SETTINGS_TILE"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".DetoxDroidApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app.name_"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DetoxDroid"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app.name_"
+            android:theme="@style/Theme.DetoxDroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".system_integration.DetoxDroidAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false"
+            android:description="@string/app.accessibilityService.description"
+            android:label="@string/app.accessibilityService.name">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+        <service android:name=".ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService" />
+        <service android:name=".ui.screens.feature.disable_apps.AppDisabledOverlayService" />
+
+        <receiver
+            android:name="com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver"
+            android:label="Detox Droid Device Admin"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_config" />
+
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".system_integration.ScreenTurnedOffReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_OFF" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="android.service.voice.VoiceInteractionService"
+            android:label="Test Voice Interaction Service"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:process=":interactor"
+            android:exported="false">
+            <meta-data
+                android:name="android.voice_interaction"
+                android:resource="@xml/pause_interaction_service" />
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".system_integration.PauseInteractionService"
+            android:exported="false" />
+        <service
+            android:name=".system_integration.PauseTileService"
+            android:icon="@drawable/ic_launcher_foreground_outlined"
+            android:label="@string/app.quickSettingsTile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
