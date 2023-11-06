@@ -6,16 +6,22 @@ import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreenSnackbarStateProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.toHrMinString
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -41,8 +47,7 @@ fun ExtraDimTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel())
         titleText = stringResource(id = R.string.feature_grayscale_extraDim),
         subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description_description),
         trailing = {
-            Checkbox(
-                checked = viewModel.extraDimActivated.collectAsState().value,
+            Checkbox(checked = viewModel.extraDimActivated.collectAsState().value,
                 onCheckedChange = {
                     viewModel.toggleExtraDim()
                 })
@@ -87,6 +92,8 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
             range = 0..180 step 15,
             label = { it.minutes.toHrMinString() })
     }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
@@ -95,7 +102,19 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
             Text(stringResource(id = R.string.time__minutes, allowedDailyColorScreenTime))
         },
         onClick = {
-            viewModel.setShowAllowedDailyColorScreenTimeDialog(true)
+            if (!viewModel.setShowAllowedDailyColorScreenTimeDialog(true)) {
+                // the user has not given the permission to access usage stats, so we show a snackbar
+                // to request the permission
+                coroutineScope.launch {
+                    val result = FeatureScreenSnackbarStateProvider.snackbarState.showSnackbar(
+                        context.getString(R.string.action_requestPermissions),
+                        context.getString(R.string.action_go)
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        NavigationUtil.openUsageAccessSettings(context)
+                    }
+                }
+            }
         },
         leadingIcon = Icons.Default.ColorLens
     )

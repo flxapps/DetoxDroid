@@ -65,14 +65,17 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor() : ViewModel() 
 
     /**
      * Sets whether the dialog to set the allowed daily color screen time should be shown.
+     * @return whether the dialog can be shown (i.e. whether the user has given the permission to
+     * access usage stats)
      */
-    fun setShowAllowedDailyColorScreenTimeDialog(show: Boolean) {
+    fun setShowAllowedDailyColorScreenTimeDialog(show: Boolean): Boolean {
         if (show && UsageStatsProvider.screenTimeToday == 0L) {
             // the user has not given the permission to access usage stats yet, which is required
             // for this feature to work. We do not want to show the dialog in this case.
-            return
+            return false
         }
         _showAllowedDailyColorScreenTimeDialog.value = show
+        return true
     }
 
     /**
