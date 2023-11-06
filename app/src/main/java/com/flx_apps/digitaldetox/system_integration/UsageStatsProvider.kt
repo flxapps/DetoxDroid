@@ -45,6 +45,13 @@ object UsageStatsProvider {
         }
 
     /**
+     * Returns the screen time of the given apps in milliseconds.
+     */
+    fun getScreenTimeForApps(apps: List<String>): Long {
+        return apps.sumOf { usageStatsToday[it]?.totalTimeInForeground ?: 0L }
+    }
+
+    /**
      * The total screen time of the current day in milliseconds.
      */
     val screenTimeToday = usageStatsToday.values.sumOf { it.totalTimeInForeground }

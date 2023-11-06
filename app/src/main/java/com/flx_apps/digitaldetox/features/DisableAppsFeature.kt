@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
@@ -20,9 +22,9 @@ import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
-import com.flx_apps.digitaldetox.data.DataStoreProperty
-import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
+import timber.log.Timber
 import java.time.LocalDate
+import java.util.concurrent.TimeUnit
 
 /**
  * The [DisableAppsFeature] can either deactivate apps or block them.
@@ -76,12 +78,14 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
-     * The operation mode of the feature.
+     * The operation mode of the feature. By default, it is set to [DisableAppsMode.BLOCK], because
+     * [DisableAppsMode.DEACTIVATE] requires the DEVICE_ADMIN permission, which has to be granted by
+     * the user from the computer using adb.
      * @see DisableAppsMode
      */
     var operationMode: DisableAppsMode by DataStoreProperty(
         key = stringPreferencesKey("${id}_disableAppsMode"),
-        DisableAppsMode.DEACTIVATE,
+        DisableAppsMode.BLOCK,
         dataTransformer = DataStorePropertyTransformer.EnumStorePropertyTransformer(DisableAppsMode::class.java)
     )
 
@@ -129,6 +133,13 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onAppOpened(
         context: Context, packageName: String, accessibilityEvent: AccessibilityEvent
     ) {
+        Timber.d(
+            "usedUpScreenTime=${TimeUnit.MILLISECONDS.toSeconds(usedUpScreenTime)}, allowedDailyScreenTime=${
+                TimeUnit.MILLISECONDS.toSeconds(
+                    allowedDailyScreenTime
+                )
+            }"
+        )
         if (!disableableApps.contains(packageName)) {
             eventuallyIncreaseUsedUpScreenTime()
             return
@@ -163,6 +174,10 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * Increases the used up screen time by the time since the last disableable app was opened.
+     * We track these times very tightly using this approach and could consider using the
+     * [UsageStatsProvider] as an alternative. This would require the usage stats permission,
+     * but would also allow us to track the screen time even if DetoxDroid has been killed in the
+     * meantime.
      */
     private fun eventuallyIncreaseUsedUpScreenTime() {
         val today = LocalDate.now()
@@ -171,9 +186,9 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             usedUpScreenTime = 0L
             DisableAppsFeature.today = today
         }
-        if (allowedDailyScreenTime == 0L) return
+        if (disableableAppOpened == 0L) return // no disableable app was opened
         usedUpScreenTime += System.currentTimeMillis() - disableableAppOpened
-        allowedDailyScreenTime = 0L
+        disableableAppOpened = 0L
     }
 
     /**

@@ -2,9 +2,9 @@ package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsMode
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +31,9 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
         MutableStateFlow(TimeUnit.MILLISECONDS.toMinutes(DisableAppsFeature.allowedDailyScreenTime))
     val allowedDailyTime = _allowedDailyScreenTime.asStateFlow()
 
+    /**
+     * Whether the daily screen time picker dialog is visible.
+     */
     private val _dailyScreenTimePickerDialogVisible = MutableStateFlow(false)
     val dailyScreenTimePickerDialogVisible = _dailyScreenTimePickerDialogVisible.asStateFlow()
 
@@ -51,6 +54,9 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
         return true
     }
 
+    /**
+     * Sets the visibility of the daily screen time picker dialog.
+     */
     fun setShowDailyScreenTimePickerDialog(visible: Boolean) {
         _dailyScreenTimePickerDialogVisible.value = visible
     }

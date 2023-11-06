@@ -35,10 +35,12 @@ fun DisableAppsFeatureSettingsSection(viewModel: DisableAppsFeatureSettingsViewM
 fun AllowedDailyTimeTile(
     viewModel: DisableAppsFeatureSettingsViewModel = viewModel(),
 ) {
+    val context = LocalContext.current
     val allowedDailyScreenTimeInMinutes = viewModel.allowedDailyTime.collectAsState().value
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
+            label = { context.getString(R.string.time__minutes, it) },
             initialValue = allowedDailyScreenTimeInMinutes.toInt(),
             onValueSelected = {
                 viewModel.setAllowedDailyScreenTime(it.toLong())

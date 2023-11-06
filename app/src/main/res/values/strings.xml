@@ -110,7 +110,7 @@
     <string name="feature.settings.schedule.from">From</string>
     <string name="feature.settings.schedule.to">To</string>
 
-    <string name="feature.disableApps">Deactivate Apps</string>
+    <string name="feature.disableApps">Disable Apps</string>
     <string name="feature.disableApps.subtitle">Forget about them</string>
     <string name="feature.disableApps.description">DetoxDroid can either block or even completely deactivate apps while being active. Thereby, they cannot be started from the launcher nor can they send you notifications.</string>
     <string name="feature.disableApps.manage">Manage Deactivated Apps</string>
