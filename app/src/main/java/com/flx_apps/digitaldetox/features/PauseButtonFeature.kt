@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
@@ -14,8 +15,6 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.pause_button.PauseButtonFeatureSettingsSection
-import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
-import com.flx_apps.digitaldetox.data.DataStoreProperty
 import java.util.concurrent.TimeUnit
 
 /**
@@ -110,7 +109,10 @@ object PauseButtonFeature : Feature() {
 
     fun resume() {
         pauseUntil = 0
-        DetoxDroidAccessibilityService.instance?.onAccessibilityEvent(AccessibilityEventUtil.createEvent())
+        DetoxDroidAccessibilityService.instance.takeIf { it != null }?.let { service ->
+            // call onStart() for all active features if we have an instance of the service
+            FeaturesProvider.activeFeatures.onEach { it.onStart(service) }
+        }
         DetoxDroidAccessibilityService.updateState()
     }
 

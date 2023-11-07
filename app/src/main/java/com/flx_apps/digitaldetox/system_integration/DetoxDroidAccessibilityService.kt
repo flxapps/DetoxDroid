@@ -11,7 +11,6 @@ import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
-import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class DetoxDroidState {
@@ -89,8 +88,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             ignoredPackages.add(it.packageName)
         }
 
-        // send an initial event to trigger the app event listeners
-        onAccessibilityEvent(AccessibilityEventUtil.createEvent())
+        // call onStart() for all active features and update the state
+        FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
         updateState()
     }
 

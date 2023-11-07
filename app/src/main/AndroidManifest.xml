@@ -82,13 +82,14 @@
             android:name="com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver"
             android:label="Detox Droid Device Admin"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:exported="false">
+            android:exported="true">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin_config" />
 
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
             </intent-filter>
         </receiver>
         <receiver

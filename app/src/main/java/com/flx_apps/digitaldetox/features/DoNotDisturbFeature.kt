@@ -33,10 +33,27 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
     private var isZenModeEnabled: Boolean = false
 
     /**
-     * On pause, we disable the zen mode.
+     * Holds the state of the zen mode before the feature was activated.
+     */
+    private var wasZenModeEnabledBefore: Boolean = false
+
+    /**
+     * On start, we check if the zen mode is enabled and save the state.
+     * Then we enable the zen mode.
+     */
+    override fun onStart(context: Context) {
+        val notificationManager: NotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        wasZenModeEnabledBefore =
+            notificationManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        setZenMode(context, enabled = true, forceSetting = true)
+    }
+
+    /**
+     * On pause, we set the zen mode to the state it was before the feature was activated.
      */
     override fun onPause(context: Context) {
-        setZenMode(context, enabled = false, forceSetting = true)
+        setZenMode(context, enabled = wasZenModeEnabledBefore, forceSetting = true)
     }
 
     /**

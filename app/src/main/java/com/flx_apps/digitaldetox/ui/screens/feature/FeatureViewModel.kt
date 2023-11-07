@@ -12,6 +12,8 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -88,6 +90,10 @@ open class FeatureViewModel @Inject constructor(
         feature.isActivated = !feature.isActivated
         _featureIsActive.value = feature.isActivated
         FeaturesProvider.reloadActiveFeatures() // force reload of active features
+        if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Active) {
+            // if DetoxDroid is running, call onStart() or onPause() for the feature
+            if (feature.isActivated) feature.onStart(application) else feature.onPause(application)
+        }
         return feature.isActivated
     }
 

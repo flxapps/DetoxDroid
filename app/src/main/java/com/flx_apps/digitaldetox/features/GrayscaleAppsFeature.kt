@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
@@ -15,7 +16,7 @@ import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
-import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 
 const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled"
 const val DISPLAY_DALTONIZER = "accessibility_display_daltonizer"
@@ -66,6 +67,15 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     var allowedDailyColorScreenTime: Long by DataStoreProperty(
         longPreferencesKey("${id}_allowedDailyColorScreenTime"), 0L
     )
+
+    /**
+     * On start, we trigger [onAppOpened] once to turn the grayscale filter on or off depending on
+     * the current app.
+     */
+    override fun onStart(context: Context) {
+        val accessibilityEvent = AccessibilityEventUtil.createEvent()
+        onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
+    }
 
     /**
      * On a pause, turn the grayscale filter off.
