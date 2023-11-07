@@ -1,3 +1,4 @@
+import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -15,6 +16,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -175,9 +177,16 @@ fun InstalledAppsList(
 fun AppExceptionListItem(
     item: AppExceptionItem, appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
+    Timber.d("item=$item")
     // load app icon
     val packageManager = LocalContext.current.packageManager
-    val appIcon = packageManager.getApplicationIcon(item.packageName)
+
+    val appIcon = try {
+        packageManager.getApplicationIcon(item.packageName)
+    } catch (e: PackageManager.NameNotFoundException) {
+        Timber.e(e, "Could not load app icon for ${item.packageName}")
+        null
+    }
     val checkedState = remember {
         mutableStateOf(item.isException)
     }
@@ -217,11 +226,18 @@ fun AppExceptionListItem(
             })
         },
         leadingContent = {
-            Image(
-                bitmap = appIcon.toBitmap(128, 128).asImageBitmap(),
-                contentDescription = "App Icon",
-                modifier = Modifier.size(48.dp)
-            )
+            if (appIcon != null) {
+                Image(
+                    bitmap = appIcon.toBitmap(128, 128).asImageBitmap(),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.size(48.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.CheckBoxOutlineBlank, contentDescription = "App Icon",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
         })
 }
 

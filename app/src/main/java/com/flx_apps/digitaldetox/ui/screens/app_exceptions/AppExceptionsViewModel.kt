@@ -69,7 +69,7 @@ class AppExceptionsViewModel @Inject constructor(
     /**
      * Whether system apps should be shown.
      */
-    private val _showSystemApps = MutableStateFlow(true)
+    private val _showSystemApps = MutableStateFlow(false)
     val showSystemApps = _showSystemApps.asStateFlow()
 
     /**
@@ -113,24 +113,25 @@ class AppExceptionsViewModel @Inject constructor(
         val packageManager: PackageManager = application.packageManager
         val appCategories = mutableSetOf<String>()
         val apps =
-            packageManager.getInstalledApplications(PackageManager.GET_META_DATA).map { appInfo ->
-                val appCategory = appInfo.getAppCategoryTitle(application)
-                appCategories.add(appCategory)
-                AppExceptionItem(
-                    packageName = appInfo.packageName,
-                    appName = appInfo.loadLabel(packageManager).toString(),
-                    appCategory = appInfo.getAppCategoryTitle(application),
-                    isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
-                    isException = appExceptionsFeature.appExceptions.contains(
-                        appInfo.packageName
+            packageManager.getInstalledApplications(PackageManager.MATCH_UNINSTALLED_PACKAGES)
+                .map { appInfo ->
+                    val appCategory = appInfo.getAppCategoryTitle(application)
+                    appCategories.add(appCategory)
+                    AppExceptionItem(
+                        packageName = appInfo.packageName,
+                        appName = appInfo.loadLabel(packageManager).toString(),
+                        appCategory = appInfo.getAppCategoryTitle(application),
+                        isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
+                        isException = appExceptionsFeature.appExceptions.contains(
+                            appInfo.packageName
+                        )
                     )
-                )
-            }
+                }
         _appExceptionItems = apps
         _selectedAppCategories.value = appCategories.associateWith {
             false
         }
-        _filteredAppExceptionItems.value = apps
+        filterApps()
     }
 
     /**

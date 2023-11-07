@@ -28,6 +28,8 @@
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
+    <!-- Also include MATCH_UNINSTALLED_PACKAGES apps, because they potentially belong to the Work Profile -->
+    <uses-permission android:name="android.permission.MATCH_UNINSTALLED_PACKAGES" />
 
     <!-- android.permission.PACKAGE_USAGE_STATS permission to get the daily usage time of apps -->
     <uses-permission
