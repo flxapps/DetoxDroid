@@ -174,10 +174,15 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * Increases the used up screen time by the time since the last disableable app was opened.
-     * We track these times very tightly using this approach and could consider using the
+     *
+     * We track these times very tightly using this approach. We could consider using the
      * [UsageStatsProvider] as an alternative. This would require the usage stats permission,
      * but would also allow us to track the screen time even if DetoxDroid has been killed in the
      * meantime.
+     *
+     * Another advantage of the current approach is that we can also track the screen time for apps
+     * that are installed within the Work Profile (whose usage stats are not available to the
+     * main profile).
      */
     private fun eventuallyIncreaseUsedUpScreenTime() {
         val today = LocalDate.now()
