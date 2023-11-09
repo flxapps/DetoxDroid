@@ -27,8 +27,10 @@ val BreakDoomScrollingFeatureId = Feature.createId(BreakDoomScrollingFeature::cl
  * been scrolling for a defined amount of time.
  */
 object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(BreakDoomScrollingFeatureId),
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(BreakDoomScrollingFeatureId),
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
+        BreakDoomScrollingFeatureId,
+        defaultExceptionListType = AppExceptionListType.ONLY_LIST,
+    ), SupportsScheduleFeature by SupportsScheduleFeature.Impl(BreakDoomScrollingFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature() {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_doomScrolling,

@@ -45,14 +45,18 @@ interface SupportsAppExceptionsFeature {
     /**
      * The implementation of the [SupportsAppExceptionsFeature] interface.
      * @param featureId The id of the feature (usually the simple name of the feature class).
+     * @param defaultExceptionListType The default [AppExceptionListType] for this feature.
      */
-    class Impl(private val featureId: FeatureId) : SupportsAppExceptionsFeature {
+    class Impl(
+        private val featureId: FeatureId,
+        private val defaultExceptionListType: AppExceptionListType = AppExceptionListType.NOT_LIST
+    ) : SupportsAppExceptionsFeature {
         override var appExceptions: Set<String> by DataStoreProperty(
             stringSetPreferencesKey("${featureId}_exceptions"), setOf()
         )
         override var appExceptionListType: AppExceptionListType by DataStoreProperty(
             stringPreferencesKey("${featureId}_exceptionListType"),
-            AppExceptionListType.NOT_LIST,
+            defaultExceptionListType,
             dataTransformer = DataStorePropertyTransformer.EnumStorePropertyTransformer(
                 AppExceptionListType::class.java
             )
