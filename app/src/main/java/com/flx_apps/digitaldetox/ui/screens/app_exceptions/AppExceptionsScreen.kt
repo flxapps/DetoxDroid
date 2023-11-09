@@ -56,7 +56,6 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 
 /**
  * This screen allows the user to manage the app exceptions for a feature.
@@ -71,7 +70,6 @@ fun ManageAppExceptionsScreen(
     navViewModel: NavViewModel = NavViewModel.navViewModel(),
     appExceptionsViewModel: AppExceptionsViewModel = AppExceptionsViewModel.withFeatureId(featureId),
 ) {
-    Timber.d("feature=${appExceptionsViewModel.feature}")
     var showSearchBar by remember { mutableStateOf(false) }
     Scaffold(topBar = {
         TopAppBar(navigationIcon = {
@@ -177,15 +175,15 @@ fun InstalledAppsList(
 fun AppExceptionListItem(
     item: AppExceptionItem, appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
-    Timber.d("item=$item")
     // load app icon
     val packageManager = LocalContext.current.packageManager
 
     val appIcon = try {
         packageManager.getApplicationIcon(item.packageName)
     } catch (e: PackageManager.NameNotFoundException) {
-        Timber.e(e, "Could not load app icon for ${item.packageName}")
-        null
+        // icon could not be loaded
+        // this is usually the case for apps that are managed by a work profile
+        null // we return null here, so that no icon is displayed
     }
     val checkedState = remember {
         mutableStateOf(item.isException)
@@ -234,7 +232,8 @@ fun AppExceptionListItem(
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Default.CheckBoxOutlineBlank, contentDescription = "App Icon",
+                    imageVector = Icons.Default.CheckBoxOutlineBlank,
+                    contentDescription = "App Icon Placeholder",
                     modifier = Modifier.size(48.dp)
                 )
             }

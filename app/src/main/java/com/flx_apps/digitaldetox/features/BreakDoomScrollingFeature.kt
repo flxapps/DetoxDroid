@@ -70,6 +70,10 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         scrollViewSize: Int,
         accessibilityEvent: AccessibilityEvent
     ) {
+        if (accessibilityEvent.maxScrollY != 0) {
+            // the scroll view is not infinite, because it has a maximum known scroll position
+            return
+        }
         val exceptionsContainApp = appExceptions.contains(accessibilityEvent.packageName.toString())
         if (exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) return
         if (!exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST) return
@@ -80,8 +84,12 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             activeScrollViews[scrollViewId] = ScrollViewInfo(scrollViewSize)
         } else {
             var isInfiniteScrolling = false
-            if (scrollViewSize > scrollViewInfo.sizeY) {
-                scrollViewInfo.sizeY = scrollViewSize
+            val growthSize = scrollViewSize - scrollViewInfo.sizeY
+            scrollViewInfo.sizeY = scrollViewSize
+            if (growthSize > 1) {
+                // if the scroll view has grown by only one item, it is probably a "normal" scroll view,
+                // because in infinite scroll views, the scroll view usually grows by a specific amount
+                // (e.g. 10 items)
                 scrollViewInfo.timesGrown++
             }
 
