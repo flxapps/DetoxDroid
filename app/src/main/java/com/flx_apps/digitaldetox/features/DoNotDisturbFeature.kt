@@ -13,12 +13,14 @@ import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.do_not_disturb.DoNotDisturbFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.NavigationUtil
 
+val DoNotDisturbFeatureId = Feature.createId(DoNotDisturbFeature::class.java)
+
 /**
  * This feature can enable the zen mode (do not disturb mode) on the device depending on the
  * schedule. It is enabled frequently, as the user might have disabled it manually.
  */
 object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPermissionsFeature,
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(DoNotDisturbFeature::class.simpleName!!) {
+    SupportsScheduleFeature by SupportsScheduleFeature.Impl(DoNotDisturbFeatureId) {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_doNotDisturb,
         subtitle = R.string.feature_doNotDisturb_subtitle,

@@ -22,13 +22,15 @@ const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled
 const val DISPLAY_DALTONIZER = "accessibility_display_daltonizer"
 const val EXTRA_DIM = "reduce_bright_colors_activated"
 
+val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
+
 /**
  * The grayscale feature can be used to turn the screen grayscale depending on the schedule and
  * which app is currently in the foreground.
  */
 object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeature::class.simpleName!!),
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeature::class.simpleName!!) {
+    SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId) {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,

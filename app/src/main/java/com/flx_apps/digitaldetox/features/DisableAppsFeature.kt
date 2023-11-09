@@ -38,6 +38,8 @@ enum class DisableAppsMode {
     DEACTIVATE, BLOCK,
 }
 
+val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
+
 /**
  * This feature can disable apps. If DetoxDroid has DEVICE_ADMIN permission, it can completely
  * deactivate apps, so they are not visible in the launcher anymore. Otherwise it can only make
@@ -45,10 +47,8 @@ enum class DisableAppsMode {
  */
 object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
-    // SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeature::class.simpleName!!),
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
-        DisableAppsFeature::class.simpleName!!
-    ), NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature() {
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(DisableAppsFeatureId),
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature() {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
