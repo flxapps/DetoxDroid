@@ -4,6 +4,7 @@ import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.TenSecondsInMs
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -25,20 +26,26 @@ object UsageStatsProvider {
     var usageStatsToday: Map<String, UsageStats> = mapOf()
         get() {
             val now = System.currentTimeMillis()
-            if (now - usageStatsTodayLastRefresh > 1000 * 10) {
+            if (now - usageStatsTodayLastRefresh > TenSecondsInMs) {
+                // retrieve usage stats for the current day
                 val usageStatsManager = DetoxDroidApplication.appContext.getSystemService(
                     Context.USAGE_STATS_SERVICE
                 ) as UsageStatsManager
-
                 val dayBeginningMs =
                     LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()
                         .toEpochMilli()
                 field = usageStatsManager.queryUsageStats(
                     UsageStatsManager.INTERVAL_DAILY, dayBeginningMs, now
-                ).filter { it.firstTimeStamp > dayBeginningMs && it.totalTimeInForeground > 0 }
-                    .groupingBy { it.packageName }.aggregate { key, accumulator, element, first ->
-                        if (first) element else accumulator!!.apply { add(element) }
-                    }
+                ).filter {
+                    // filter out apps that were not used today
+                    it.firstTimeStamp > dayBeginningMs && it.totalTimeInForeground > 0
+                }.groupingBy {
+                    // group by package name...
+                    it.packageName
+                }.aggregate { _, accumulator, element, first ->
+                    // ... and sum up the usage stats for each package name
+                    if (first) element else accumulator!!.apply { add(element) }
+                }
                 usageStatsTodayLastRefresh = now
             }
             return field
