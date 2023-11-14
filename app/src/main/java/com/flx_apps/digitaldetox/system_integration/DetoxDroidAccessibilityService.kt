@@ -174,7 +174,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private fun handleScrollEvent(accessibilityEvent: AccessibilityEvent) {
         val scrollViewSize = when {
             accessibilityEvent.itemCount > 0 -> accessibilityEvent.itemCount
-            else -> accessibilityEvent.scrollY
+            else -> accessibilityEvent.maxScrollY
         }
 
         // dispose scroll events that contain too less information
