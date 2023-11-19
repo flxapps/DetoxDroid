@@ -21,6 +21,7 @@ import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeat
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
+import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
 
@@ -130,7 +131,9 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         when (operationMode) {
             DisableAppsMode.BLOCK -> {
-                context.startService(Intent(context, AppDisabledOverlayService::class.java))
+                context.startService(Intent(context, AppDisabledOverlayService::class.java).apply {
+                    putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
+                })
             }
 
             DisableAppsMode.DEACTIVATE -> {

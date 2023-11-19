@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.system_integration
 
+import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -27,10 +28,20 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
  */
 abstract class OverlayService(private val overlayContent: OverlayContent) : LifecycleService(),
     SavedStateRegistryOwner {
+    companion object {
+        /**
+         * May be used to pass the package name of the app that is currently running in the
+         * foreground to the overlay service via an intent.
+         */
+        const val EXTRA_RUNNING_APP_PACKAGE_NAME: String = "runningAppPackageName"
+    }
+
     private lateinit var savedStateRegistryController: SavedStateRegistryController
     override val savedStateRegistry: SavedStateRegistry
         get() = savedStateRegistryController.savedStateRegistry
     private lateinit var contentView: View
+
+    private lateinit var runningAppPackageName: String
 
     override fun onCreate() {
         super.onCreate()
@@ -66,6 +77,21 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         )
         params.gravity = Gravity.RIGHT or Gravity.TOP
         windowManager.addView(contentView, params)
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // get the package name of the app that is currently running in the foreground
+        runningAppPackageName = intent?.getStringExtra(EXTRA_RUNNING_APP_PACKAGE_NAME) ?: ""
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (this::runningAppPackageName.isInitialized) {
+            // try to kill the app that was running in the foreground
+            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.killBackgroundProcesses(packageName)
+        }
     }
 
     /**

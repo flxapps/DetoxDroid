@@ -41,6 +41,9 @@
         android:name="android.permission.BIND_QUICK_SETTINGS_TILE"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- android.permission.KILL_BACKGROUND_PROCESSES permission to kill apps from the overlay -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+
     <application
         android:name=".DetoxDroidApplication"
         android:allowBackup="true"

@@ -15,6 +15,7 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
@@ -63,6 +64,16 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     )
 
     /**
+     * Contains the package names of apps that are currently blocked, associated with the time
+     * when they were blocked.
+     */
+    private val blockedApps = SelfExpiringHashMap<String, Long>(
+        TimeUnit.MINUTES.toMillis(
+            3
+        )
+    )
+
+    /**
      * If a scroll view is scrolled, we check whether it has grown three times in size and if it
      * has, we assume that it is infinite and the user is doomscrolling. If the user has been
      * scrolling for too long, we open the break screen.
@@ -73,6 +84,14 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         scrollViewSize: Int,
         accessibilityEvent: AccessibilityEvent
     ) {
+        if (blockedApps.containsKey(accessibilityEvent.packageName.toString())) {
+            // If the app is currently blocked, the user tries to scroll again after the break screen
+            // has been opened. We will re-show the break screen, so that the user cannot continue
+            // scrolling.
+            openBreakScreen(context, accessibilityEvent.packageName.toString())
+            return
+        }
+
         // if the scroll view has a maximum scroll position, it is not infinite
         val maxScrollIsKnown = accessibilityEvent.maxScrollY != -0
         // if the scroll view has not been scrolled, we will ignore it
@@ -111,10 +130,21 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             if (isInfiniteScrolling && scrollingTime >= timeUntilWarning) {
                 // if the scroll view is seemingly infinite and the user has been too long on it,
                 // we assume that they are doomscrolling and open the break screen
-                context.startService(Intent(context, BreakDoomScrollingOverlayService::class.java))
+                openBreakScreen(context, accessibilityEvent.packageName.toString())
                 activeScrollViews.clear()
             }
         }
+    }
+
+    fun openBreakScreen(context: Context, packageName: String) {
+        context.startService(Intent(
+            context, BreakDoomScrollingOverlayService::class.java
+        ).apply {
+            putExtra(
+                OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName
+            )
+        })
+        blockedApps[packageName] = System.currentTimeMillis()
     }
 
     /**
