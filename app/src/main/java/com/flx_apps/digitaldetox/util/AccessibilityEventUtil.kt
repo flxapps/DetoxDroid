@@ -20,5 +20,17 @@ class AccessibilityEventUtil {
                 }
             return accessibilityEvent
         }
+
+        /**
+         * Returns the scroll delta of the given [accessibilityEvent] in the y direction.
+         * This is only available for API level 28 and above, otherwise, 1 is returned.
+         */
+        fun getScrollDeltaY(accessibilityEvent: AccessibilityEvent): Int {
+            var result = 1 // assume a positive scroll delta by default
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                result = accessibilityEvent.scrollDeltaY
+            }
+            return result
+        }
     }
 }

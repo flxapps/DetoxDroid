@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService
+import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.SelfExpiringHashMap
 import java.util.concurrent.TimeUnit
 
@@ -72,8 +73,11 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         scrollViewSize: Int,
         accessibilityEvent: AccessibilityEvent
     ) {
-        if (accessibilityEvent.maxScrollY != 0) {
-            // the scroll view is not infinite, because it has a maximum known scroll position
+        // if the scroll view has a maximum scroll position, it is not infinite
+        val maxScrollIsKnown = accessibilityEvent.maxScrollY != -0
+        // if the scroll view has not been scrolled, we will ignore it
+        val noRealScrolling = AccessibilityEventUtil.getScrollDeltaY(accessibilityEvent) == 0
+        if (maxScrollIsKnown || noRealScrolling) {
             return
         }
         val exceptionsContainApp = appExceptions.contains(accessibilityEvent.packageName.toString())
@@ -93,6 +97,9 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
                 // because in infinite scroll views, the scroll view usually grows by a specific amount
                 // (e.g. 10 items)
                 scrollViewInfo.timesGrown++
+            } else if (growthSize < 0) {
+                // if the scroll view has shrunk, we reset the timesGrown counter
+                scrollViewInfo.timesGrown = 0
             }
 
             if (scrollViewInfo.timesGrown >= 3) {
