@@ -53,12 +53,12 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
     /**
      * Contains information about all currently active scroll views, associated with their IDs.
-     * The information is automatically removed, if a scroll view has not been scrolled for two
-     * minutes.
+     * The information is automatically removed, if a scroll view has not been scrolled for one
+     * minute.
      */
     private val activeScrollViews: SelfExpiringHashMap<Int, ScrollViewInfo> = SelfExpiringHashMap(
         TimeUnit.SECONDS.toMillis(
-            120
+            60
         )
     )
 
