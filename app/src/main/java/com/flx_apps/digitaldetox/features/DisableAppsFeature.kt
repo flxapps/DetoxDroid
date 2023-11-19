@@ -18,13 +18,11 @@ import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
+import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
-import timber.log.Timber
-import java.time.LocalDate
-import java.util.concurrent.TimeUnit
 
 /**
  * The [DisableAppsFeature] can either deactivate apps or block them.
@@ -48,7 +46,8 @@ val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
 object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(DisableAppsFeatureId),
-    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature() {
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
+    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl() {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
@@ -97,21 +96,6 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         get() = appExceptions
 
     /**
-     * The time when the last disableable app was opened.
-     */
-    private var disableableAppOpened = 0L
-
-    /**
-     * The time the user has already used up their daily screen time.
-     */
-    private var usedUpScreenTime = 0L
-
-    /**
-     * The current date. If the date changes, the [usedUpScreenTime] is reset.
-     */
-    private var today = LocalDate.now()
-
-    /**
      * Whether the apps are currently deactivated.
      */
     private var isAppsDeactivated = false
@@ -133,21 +117,13 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onAppOpened(
         context: Context, packageName: String, accessibilityEvent: AccessibilityEvent
     ) {
-        Timber.d(
-            "usedUpScreenTime=${TimeUnit.MILLISECONDS.toSeconds(usedUpScreenTime)}, allowedDailyScreenTime=${
-                TimeUnit.MILLISECONDS.toSeconds(
-                    allowedDailyScreenTime
-                )
-            }"
-        )
         if (!disableableApps.contains(packageName)) {
+            // the app is not in the list of apps that should be disabled, so increase the used up
+            // screen time and return
             eventuallyIncreaseUsedUpScreenTime()
             return
         }
-        if (disableableAppOpened == 0L) {
-            // remember the time the app was opened
-            disableableAppOpened = System.currentTimeMillis()
-        }
+        eventuallyStartTracking() // start tracking the screen time
         if (allowedDailyScreenTime > 0L && usedUpScreenTime < allowedDailyScreenTime) {
             // the user has not used up their daily screen time yet
             return
@@ -170,30 +146,6 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     override fun onScreenTurnedOff(context: Context?) {
         eventuallyIncreaseUsedUpScreenTime()
-    }
-
-    /**
-     * Increases the used up screen time by the time since the last disableable app was opened.
-     *
-     * We track these times very tightly using this approach. We could consider using the
-     * [UsageStatsProvider] as an alternative. This would require the usage stats permission,
-     * but would also allow us to track the screen time even if DetoxDroid has been killed in the
-     * meantime.
-     *
-     * Another advantage of the current approach is that we can also track the screen time for apps
-     * that are installed within the Work Profile (whose usage stats are not available to the
-     * main profile).
-     */
-    private fun eventuallyIncreaseUsedUpScreenTime() {
-        val today = LocalDate.now()
-        if (today != DisableAppsFeature.today) {
-            // the date has changed, so we reset the used up screen time
-            usedUpScreenTime = 0L
-            DisableAppsFeature.today = today
-        }
-        if (disableableAppOpened == 0L) return // no disableable app was opened
-        usedUpScreenTime += System.currentTimeMillis() - disableableAppOpened
-        disableableAppOpened = 0L
     }
 
     /**

@@ -12,9 +12,9 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
+import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
-import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 
@@ -30,7 +30,8 @@ val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
  */
 object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId) {
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
+    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl() {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,
@@ -97,14 +98,26 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // we are not in full screen mode, so we do not want to interfere with the app
             return
         }
-        val screenTime = UsageStatsProvider.screenTimeToday
         val exceptionsContainApp = appExceptions.contains(packageName)
         // we want to turn the grayscale filter on if:
         // - the allowed screen time is exceeded and
         //   - either the app is not in the exceptions list and the exceptions list is a "not-list",
         //   - or if the app is in the exceptions list and the exceptions list is an "only-list"
         val shouldBeGrayscale =
-            screenTime >= allowedDailyColorScreenTime && (!exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) || (exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST)
+            (!exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) || (exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST)
+
+        if (!shouldBeGrayscale) {
+            // the grayscale filter should not be turned on, so we increase the used up screen time
+            eventuallyIncreaseUsedUpScreenTime()
+        } else {
+            eventuallyStartTracking()
+            if (allowedDailyColorScreenTime > 0 && usedUpScreenTime <= allowedDailyColorScreenTime) {
+                // the screen time has not been used up yet, so we do not need to turn the grayscale
+                // filter on
+                return
+            }
+        }
+
         if (shouldBeGrayscale != isCurrentlyGrayscale) {
             // only call the system settings if the grayscale filter state should be changed
             setGrayscale(context, shouldBeGrayscale)
