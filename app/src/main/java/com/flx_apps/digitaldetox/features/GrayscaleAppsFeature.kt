@@ -12,9 +12,11 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
+import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature.eventuallyIncreaseUsedUpScreenTime
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 
@@ -29,9 +31,10 @@ val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
  * which app is currently in the foreground.
  */
 object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
+    OnScreenTurnedOffSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
-    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl() {
+    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId) {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,
@@ -123,6 +126,15 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             setGrayscale(context, shouldBeGrayscale)
             isCurrentlyGrayscale = shouldBeGrayscale
         }
+    }
+
+    /**
+     * When the screen is turned off, the used up screen time is increased by the time since the
+     * last grayscale app was opened.
+     * @see eventuallyIncreaseUsedUpScreenTime
+     */
+    override fun onScreenTurnedOff(context: Context?) {
+        eventuallyIncreaseUsedUpScreenTime()
     }
 
     /**

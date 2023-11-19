@@ -1,5 +1,7 @@
 package com.flx_apps.digitaldetox.feature_types
 
+import androidx.datastore.preferences.core.longPreferencesKey
+import com.flx_apps.digitaldetox.data.DataStoreProperty
 import java.time.LocalDate
 
 /**
@@ -43,9 +45,11 @@ interface ScreenTimeTrackingFeature {
      */
     fun eventuallyIncreaseUsedUpScreenTime()
 
-    class Impl : ScreenTimeTrackingFeature {
+    class Impl(private val featureId: FeatureId) : ScreenTimeTrackingFeature {
         override var trackingSinceTimestamp: Long = 0L
-        override var usedUpScreenTime: Long = 0L
+        override var usedUpScreenTime: Long by DataStoreProperty(
+            longPreferencesKey("${featureId}_usedUpScreenTime"), 0L
+        )
         override var today: LocalDate = LocalDate.now()
 
         override fun eventuallyStartTracking() {

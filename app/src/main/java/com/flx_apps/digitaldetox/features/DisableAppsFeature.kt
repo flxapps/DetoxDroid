@@ -48,7 +48,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
-    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl() {
+    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId) {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
