@@ -15,7 +15,7 @@ android {
         applicationId = "com.flx_apps.digitaldetox"
         minSdk = 26
         targetSdk = 33
-        versionCode = 1
+        versionCode = 20000
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
