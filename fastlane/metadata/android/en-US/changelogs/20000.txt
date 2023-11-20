@@ -1,0 +1,7 @@
+Complete rewrite of the app.
+- New UI
+- More fine-grained feature scheduling
+- More fine-grained feature settings
+- Better maintainability
+- Better performance
+- Better code quality

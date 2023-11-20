@@ -1,29 +1,30 @@
 <resources>
-    <string name="app.name_">DetoxDroid</string>
-    <string name="app.subtitle">detoxdroid.flx-apps.com</string>
-
+    <!-- region Global Strings -->
+    <string name="app.name_">DetoxDroid</string> <!-- added a underscore to this string name, as some library reserved a string with the name "app.name" already -->
     <string name="app.quickSettingsTile">Pause DetoxDroid</string>
     <string name="app.quickSettingsTile.paused">DetoxDroid has been paused for %d minutes.</string>
     <string name="app.quickSettingsTile.noPause">Take another pause in %d minutes.</string>
     <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
     <string name="app.accessibilityService.description">This services disables and enables grayscale mode depending on which app is currently open. It also reacts to long-pressing the home button and manages detoxing mode pauses.</string>
-
     <string name="action.go">Go</string>
+    <string name="action.create">Create</string>
     <string name="action.save">Save</string>
     <string name="action.delete">Delete</string>
     <string name="action.cancel">Cancel</string>
     <string name="action.close">Close</string>
+    <string name="action.grantPermission">Grant Permission</string>
     <string name="action.requestPermissions">DetoxDroid needs specific permissions for this feature to work.</string>
-    <string name="action.navigationDrawer.open">Open navigation drawer</string>
-    <string name="action.navigationDrawer.close">Close navigation drawer</string>
     <string name="action.configuration">Configuration</string>
-    <string name="action.manageExceptions">Manage Exceptions</string>
-    <string name="action.clickToActivate">Click to (de-)activate</string>
     <string name="action.search">Search</string>
     <string name="action.filter">Filter</string>
+    <string name="time._minutes">%d min</string>
+    <string name="time._minutes.used">used</string>
+    <!-- endregion -->
 
-    <string name="time._minutes">minutes</string>
-
+    <!-- region Navigation Side Bar -->
+    <string name="navigation.profiles">Profiles</string>
+    <string name="navigation.profiles.schedule">View Profiles Schedule</string>
+    <string name="navigation.profiles.createNew">Create New Profile</string>
     <string name="navigation.home">Your New Default</string>
     <string name="navigation.misc">About &amp; Miscellaneous</string>
     <string name="navigation.reportIssue">Report Issue</string>
@@ -31,64 +32,106 @@
     <string name="navigation.about">About</string>
     <string name="navigation.uninstall">Uninstall DetoxDroid</string>
     <string name="navigation.uninstall.dialog.title">Attention</string>
-    <string name="navigation.uninstall.dialog.message">It might not be possible for you to uninstall DetoxDroid from the normal app manager, as you have granted particular permissions by installing it from your computer. Using this, you can revoke these permissions and uninstall DetoxDroid.</string>
+    <string name="navigation.uninstall.dialog.message">It might not be possible for you to uninstall DetoxDroid from the normal app manager, as you have granted particular permissions by installing it from your computer. Using this, you can revoke these permissions and uninstall DetoxDroid.\n\n<b>If you have apps deactivated right now through DetoxDroid, please make sure to re-activate them first.</b></string>
+    <!-- endregion -->
 
-    <string name="home.welcome">Welcome to DetoxDroid!</string>
-    <string name="home.welcome.sub">Make \"Do Not Disturb\" your new default.</string>
-    <string name="home.welcome.hint">DetoxDroid will support you in winding down your smartphone use and curb with your smartphone addiction.</string>
+    <string name="home.start">Start DetoxDroid</string>
+    <string name="home.stop">Stop DetoxDroid</string>
+    <string name="home.state.active">Running</string>
+    <string name="home.state.paused">Paused until %s</string>
+    <string name="home.state.inactive">Stopped</string>
+    <string name="home.hint">DetoxDroid will support you in winding down your smartphone use.</string>
+    <string name="home.screenTime.today">Screen time today</string>
+    <string name="home.screenTime.unavailable">Screen time unavailable</string>
 
-    <string name="home.doNotDisturb">\"Do Not Disturb\" Mode</string>
-    <string name="home.doNotDisturb.subtitle">Make it your new default</string>
-    <string name="home.doNotDisturb.description">DetoxDroid automatically (re-)activates the do not disturb mode. Exceptions can be made with the system settings.</string>
+    <string name="feature.doNotDisturb">\"Do Not Disturb\" Mode</string>
+    <string name="feature.doNotDisturb.subtitle">Make it your new default</string>
+    <string name="feature.doNotDisturb.description">DetoxDroid automatically (re-)activates the do not disturb mode. Exceptions can be made with the system settings.</string>
+    <string name="feature.doNotDisturb.systemSettings">System Settings</string>
+    <string name="feature.doNotDisturb.systemSettings.description">You can make in-depth adjustments to the do not disturb mode in the system settings.</string>
 
-    <string name="home.grayscale">Automatic Grayscale</string>
-    <string name="home.grayscale.subtitle">Color up by coloring down your phone</string>
-    <string name="home.grayscale.description">Apps compete for your attention, and colors can have an enticing, manipulative effect. With DetoxDroid, you can strip away all the neuron-stimulating colors, while allowing exceptions where necessary.</string>
-    <string name="home.grayscale.ignoreNonFullScreen">Ignore Non-Fullscreen Apps</string>
-    <string name="home.grayscale.ignoreNonFullScreen.description">Non-fullscreen components (e.g. sound volume box, status bar) will be ignored, i.e. the color state will not be changed.</string>
-    <string name="home.grayscale.exceptions.states.gray">Gray</string>
-    <string name="home.grayscale.exceptions.states.colors">Colors</string>
-    <string name="home.grayscale.exceptions.states.ignored">Ignored</string>
+    <string name="feature.grayscale">Automatic Grayscale</string>
+    <string name="feature.grayscale.subtitle">Color up by coloring down your phone</string>
+    <string name="feature.grayscale.description">Apps compete for your attention, and colors can have an enticing, manipulative effect. With DetoxDroid, you can strip away all the neuron-stimulating colors, while allowing exceptions where necessary.</string>
+    <string name="feature.grayscale.allowedColorScreenTime">Allowed Daily Color Screen Time</string>
+    <string name="feature.grayscale.allowedColorScreenTime.description">Select how much screen time you want to allow per day until the Automatic Grayscale mode activates. (DetoxDroid has to be running for screen time tracking.)</string>
+    <string name="feature.grayscale.extraDim">Extra Dim</string>
+    <string name="feature.grayscale.extraDim.description.description">Dim your screen while using grayscale mode. (Long-press to adjust intensity.)</string>
+    <string name="feature.grayscale.ignoreNonFullScreen">Ignore Non-Fullscreen Apps</string>
+    <string name="feature.grayscale.ignoreNonFullScreen.description">Non-fullscreen components (e.g. sound volume box, status bar) will be ignored, i.e. the color state will not be changed.</string>
+    <string name="feature.grayscale.exceptions.states.gray">Gray</string>
+    <string name="feature.grayscale.exceptions.states.colors">Colors</string>
+    <string name="feature.grayscale.exceptions.states.ignored">Ignored</string>
 
-    <string name="home.pauseButton">Pause Button</string>
-    <string name="home.pauseButton.subtitle">Take a break from taking a break</string>
-    <string name="home.pauseButton.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile or by long-pressing the home button.</string>
-    <string name="home.pauseButton.duration">Pause Duration</string>
-    <string name="home.pauseButton.duration.description">Once the pause is over, DetoxDroid will automatically come back into life.</string>
-    <string name="home.pauseButton.minimumTimeBetween">Minimum Time Between Pauses</string>
-    <string name="home.pauseButton.minimumTimeBetween.description">Don\'t cheat yourself by habitually pressing the pause button all the time.</string>
-    <!--    <string name="home.pauseButton.quickSettings">Add pause button tile to quick settings</string>-->
-    <!--    <string name="home.pauseButton.homeButton">Pause on long-pressing the home button</string>-->
+    <string name="feature.pause">Pause Button</string>
+    <string name="feature.pause.subtitle">Take a break from taking a break</string>
+    <string name="feature.pause.description">DetoxDroid can be paused for a defined period of time, for example if you want to take a quick look on a photo somebody sent you. A pause can be made by pressing the quick settings tile, by using the assistant or by long-pressing a button on your phone for 2 seconds.</string>
+    <string name="feature.pause.duration">Pause Duration</string>
+    <string name="feature.pause.duration.description">Once the pause is over, DetoxDroid will automatically come back into life.</string>
+    <string name="feature.pause.minimumTimeBetween">Minimum Time Between Pauses</string>
+    <string name="feature.pause.minimumTimeBetween.description">Don\'t cheat yourself by habitually pressing the pause button all the time.</string>
+    <string name="feature.pause.fromAssistant">Pause from Assistant</string>
+    <string name="feature.pause.fromAssistant.description">Set DetoxDroid as your default assistant app to start a pause. (Usually, the assistant can be started by long-pressing the home button.)</string>
+    <string name="feature.pause.fromHardwareButton">Pause from Hardware Button</string>
+    <string name="feature.pause.fromHardwareButton.description">Select a hardware button that you can long-press for 2 seconds to pause DetoxDroid.</string>
+    <string name="feature.pause.fromHardwareButton.press">Press any hardware button on your phone</string>
+    <string name="feature.pause.fromHardwareButton.noButtonPressed">No button pressed yet</string>
+    <string name="feature.pause.fromHardwareButton.selected">Selected button: %s</string>
+    <string name="feature.pause.fromHardwareButton.assign">Assign</string>
+    <string name="feature.pause.fromHardwareButton.unset">Delete Assignment</string>
+    <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid has to be running in order to assign a new hardware button.</string>
 
-    <string name="home.doomScrolling">Break "Infinite Scrolling"</string>
-    <string name="home.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>
-    <string name="home.doomScrolling.description">EXPERIMENTAL – Infinite scrolling is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit.</string>
-    <string name="home.doomScrolling.timeUntilWarning">Time Until Warning</string>
-    <string name="home.doomScrolling.timeUntilWarning.description">DetoxDroid will notify you if it detects that you have been "doom scrolling" for this duration.</string>
+    <string name="feature.doomScrolling">Break "Infinite Scrolling"</string>
+    <string name="feature.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>
+    <string name="feature.doomScrolling.description">EXPERIMENTAL – Infinite scrolling is a manipulative design technology that eliminates those brief moments where you might turn to another activity. DetoxDroid can try to detect if you have been lost in such behavior and offer you an exit.</string>
+    <string name="feature.doomScrolling.timeUntilWarning">Time Until Warning</string>
+    <string name="feature.doomScrolling.timeUntilWarning.description">DetoxDroid will notify you if it detects that you have been "doom scrolling" for this duration.</string>
 
-    <string name="home.timeRules">Scheduled Rules</string>
-    <string name="home.timeRules.subtitle">Configure week-days and times</string>
-    <string name="home.timeRules.description">Set up rules to define when to automatically (de-)activate DetoxDroid.</string>
-    <string name="home.timeRules.alwaysActive">Profile will be always active.</string>
-    <string name="home.timeRules.allDay">all day</string>
-    <string name="home.timeRules._nextDay">next day</string>
-    <string name="home.timeRules.add">Add Rule</string>
-    <string name="home.timeRules.weekdays">Weekdays</string>
-    <string name="home.timeRules.from">From</string>
-    <string name="home.timeRules.to">To</string>
+    <string name="feature.settings.exceptions">App Exceptions</string>
+    <string name="feature.settings.exceptions._notListed">%d apps will not be affected by this feature</string>
+    <string name="feature.settings.exceptions._onlyListed">%d apps will only be affected by this feature</string>
+    <string name="feature.settings.exceptions.description">Select exceptions that will be either ignored or only affected by this feature (depending on your settings).</string>
+    <string name="feature.settings.exceptions.empty">No apps found.</string>
+    <string name="feature.settings.exceptions.filterByAppType">Filter by app type</string>
+    <string name="feature.settings.exceptions.filterByCategory">Filter by app category</string>
+    <string name="feature.settings.exceptions.listType">Exception list type</string>
+    <string name="feature.settings.exceptions.listType.description">Select whether the list should contain apps that are either NOT or ONLY affected by this feature.</string>
+    <string name="feature.settings.exceptions.listType.notList">Not-List</string>
+    <string name="feature.settings.exceptions.listType.onlyList">Only-List</string>
 
-    <string name="home.deactivateApps">Deactivate Apps</string>
-    <string name="home.deactivateApps.subtitle">Forget about them</string>
-    <string name="home.deactivateApps.description">You can completely deactivate apps while DetoxDroid is active. Thereby, they cannot be started from the launcher nor can they send you notifications.</string>
-    <string name="home.deactivateApps.manage">Manage Deactivated Apps</string>
-    <string name="home.deactivateApps.manage._defined">%d apps deactivated</string>
+    <string name="feature.settings.schedule">Feature Schedule</string>
+    <string name="feature.settings.schedule.hint">%d rules are set.</string>
+    <string name="feature.settings.schedule.hint.activeAllTheTime">The feature is active all the time.</string>
+    <string name="feature.settings.schedule.description">You can configure a feature to be active only on certain days and times. This is useful if you want to use it only during work hours, for example.</string>
+    <string name="feature.settings.schedule.empty">No rules set up yet.\n\nThe feature is active all the time.</string>
+    <string name="feature.settings.schedule.everyDay">Every day</string>
+    <string name="feature.settings.schedule.allDay">all day</string>
+    <string name="feature.settings.schedule._nextDay">next day</string>
+    <string name="feature.settings.schedule.weekdays">Weekdays</string>
+    <string name="feature.settings.schedule.from">From</string>
+    <string name="feature.settings.schedule.to">To</string>
+
+    <string name="feature.disableApps">Disable Apps</string>
+    <string name="feature.disableApps.subtitle">Forget about them</string>
+    <string name="feature.disableApps.description">DetoxDroid can either block or even completely deactivate apps while being active. Thereby, they cannot be started from the launcher nor can they send you notifications.</string>
+    <string name="feature.disableApps.manage">Manage Deactivated Apps</string>
+    <string name="feature.disableApps.manage._defined">%d apps listed for deactivation</string>
+    <string name="feature.disableApps.allowedDailyTime">Allowed Daily Screen Time</string>
+    <string name="feature.disableApps.allowedDailyTime.description">Select how much screen time you want to allow yourself to use these apps per day. Once the time is up, they will be deactivated until the next day. (DetoxDroid has to be running for screen time tracking.)</string>
+    <string name="feature.disableApps.operationMode">Operation Mode</string>
+    <string name="feature.disableApps.operationMode.description">Select whether you want to block apps (i.e. show a warn screen when opening them) or completely deactivate them. The latter mode will need specific permissions.</string>
+    <string name="feature.disableApps.operationMode.block">Block</string>
+    <string name="feature.disableApps.operationMode.deactivate">Deactivate</string>
+    <string name="feature.disableApps.overlay.title">Time\'s Up!</string>
+    <string name="feature.disableApps.overlay.message">You have used up your daily screen time for this app.</string>
+    <string name="feature.disableApps.overlay.message2">Why not take a break and come back tomorrow? You won\'t miss anything.</string>
 
     <string name="exceptionsList._exceptionsDefined">%d exceptions defined</string>
     <string name="exceptionsList.filter.userApps">User Apps</string>
     <string name="exceptionsList.filter.systemApps">System Apps</string>
 
     <string name="infiniteScroll.warning.title">Wake Up!</string>
-    <string name="infiniteScroll.warning.message">It appears you are caught in a loop of doom scrolling. What do you want to do?</string>
+    <string name="infiniteScroll.warning.message">It appears you are caught in a loop of infinite-scrolling.</string>
     <string name="infiniteScroll.warning.exit">Get me out of here</string>
     <string name="infiniteScroll.warning.continue">I want to continue</string>
 
@@ -101,9 +144,28 @@
     <string name="about.github">Contribute on GitHub</string>
     <string name="about.github.link">https://github.com/flxapps/DetoxDroid</string>
 
+    <string name="noPermissions">Permissions Required</string>
     <string name="noPermissions.text">For this feature, you need to grant this app elevated privileges from your computer via adb:</string>
+    <string name="noPermissions.text.command">adb shell \"%s\"</string>
     <string name="noPermissions.text.notRooted">Don\'t worry, it takes you only a couple of minutes: Please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below. Otherwise, please visit https://detoxdroid.flx-apps.com/ to find out how.</string>
     <string name="noPermissions.text.rooted.go">Grant Permissions</string>
 
+    <string name="appCategories.video">Video</string>
+    <string name="appCategories.music">Music</string>
+    <string name="appCategories.audio">Audio</string>
+    <string name="appCategories.shopping">Shopping</string>
+    <string name="appCategories.travel">Travel</string>
+    <string name="appCategories.workout">Workout</string>
+    <string name="appCategories.dating">Dating</string>
+    <string name="appCategories.news">News</string>
+    <string name="appCategories.maps">Maps</string>
+    <string name="appCategories.social">Social</string>
+    <string name="appCategories.productivity">Productivity</string>
+    <string name="appCategories.games">Games</string>
+    <string name="appCategories.image">Image</string>
+    <string name="appCategories.other">Other</string>
+
+    <string name="rootCommand.grantWriteSecuritySettingsPermission" translatable="false">pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="rootCommand.grantDeviceAdminPermission" translatable="false">dpm set-device-owner com.flx_apps.digitaldetox/.system_integration.DetoxDroidDeviceAdminReceiver</string>
 </resources>
