@@ -18,6 +18,7 @@
     <string name="action.search">Search</string>
     <string name="action.filter">Filter</string>
     <string name="time._minutes">%d min</string>
+    <string name="time._minutes.used">used</string>
     <!-- endregion -->
 
     <!-- region Navigation Side Bar -->

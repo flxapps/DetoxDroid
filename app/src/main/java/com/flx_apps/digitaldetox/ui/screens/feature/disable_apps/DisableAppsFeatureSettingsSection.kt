@@ -2,24 +2,32 @@ package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
 import OptionsRow
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsMode
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The settings section for the disable apps feature.
@@ -37,6 +45,7 @@ fun AllowedDailyTimeTile(
 ) {
     val context = LocalContext.current
     val allowedDailyScreenTimeInMinutes = viewModel.allowedDailyTime.collectAsState().value
+    val usedUpScreenTime = DisableAppsFeature.usedUpScreenTime.milliseconds.inWholeMinutes.toInt()
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
@@ -56,11 +65,20 @@ fun AllowedDailyTimeTile(
             id = R.string.feature_disableApps_allowedDailyTime_description
         ),
         trailing = {
-            Text(
-                stringResource(
-                    id = R.string.time__minutes, allowedDailyScreenTimeInMinutes
+            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                androidx.compose.material.Text(
+                    stringResource(
+                        id = R.string.time__minutes, allowedDailyScreenTimeInMinutes
+                    )
                 )
-            )
+                androidx.compose.material.Text(
+                    modifier = Modifier.padding(top = 8.dp), text = stringResource(
+                        id = R.string.time__minutes, usedUpScreenTime
+                    ) + "\n" + stringResource(
+                        id = R.string.time__minutes_used
+                    ), style = MaterialTheme.typography.labelVerySmall, textAlign = TextAlign.Center
+                )
+            }
         },
         onClick = {
             viewModel.setShowDailyScreenTimePickerDialog(true)

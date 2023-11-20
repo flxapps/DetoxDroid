@@ -1,6 +1,8 @@
 package com.flx_apps.digitaldetox.ui.theme
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,3 +33,12 @@ val Typography = Typography(
     )
     */
 )
+
+val Typography.labelVerySmall: TextStyle
+    @Composable get() = Typography.bodySmall.copy(
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 12.sp,
+        letterSpacing = 0.4.sp,
+        color = MaterialTheme.colorScheme.secondary
+    )
