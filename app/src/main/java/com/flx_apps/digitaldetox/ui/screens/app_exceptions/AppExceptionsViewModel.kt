@@ -140,6 +140,7 @@ class AppExceptionsViewModel @Inject constructor(
      */
     fun filterApps(query: String = this.query.value) {
         this.query.value = query
+        if (this::_appExceptionItems.isInitialized.not()) return // apps not loaded yet
         val showAllCategories = _selectedAppCategories.value.values.all { !it }
         // filter apps by query, system/user apps and app categories
         val filteredApps = _appExceptionItems.filter { app ->
