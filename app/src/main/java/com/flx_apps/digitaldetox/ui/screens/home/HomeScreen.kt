@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -29,6 +32,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,12 +58,15 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
+import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.toHrMinString
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -183,7 +190,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues) {
+private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = viewModel()) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -196,6 +203,8 @@ private fun HomeScreenContent(it: PaddingValues) {
             OpenFeatureTile(feature = feature)
         }
         item {
+            UninstallDetoxDroidTile()
+            // bottom logo
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = "Logo",
@@ -243,6 +252,45 @@ fun OpenFeatureTile(
         },
         modifier = Modifier.clickable { navViewModel.openManageFeatureScreen(feature.id) })
     return
+}
+
+/**
+ * A tile that uninstalls DetoxDroid when clicked. It is only shown if the device admin permission
+ * is granted. A confirmation dialog is shown when before revoking the device admin permission.
+ */
+@Composable
+fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
+    // don't show the uninstall tile if the device admin permission is not granted
+    if (!DetoxDroidDeviceAdminReceiver.isGranted(LocalContext.current)) return
+
+    val showAreYouSureDialog = remember { MutableStateFlow(false) }
+    if (showAreYouSureDialog.collectAsState().value) {
+        // confirmation dialog
+        AlertDialog(title = {
+            Text(text = stringResource(id = R.string.home_uninstall_dialog_title))
+        }, text = {
+            Text(text = stringResource(id = R.string.home_uninstall_dialog_message))
+        }, onDismissRequest = {
+            showAreYouSureDialog.value = false
+        }, confirmButton = {
+            TextButton(onClick = {
+                viewModel.uninstallDetoxDroid()
+            }) {
+                Text(text = stringResource(id = R.string.home_uninstall))
+            }
+        })
+    }
+
+    Divider()
+    SimpleListTile(leadingIcon = Icons.Default.DeleteForever,
+        titleText = stringResource(id = R.string.home_uninstall),
+        subtitleText = stringResource(
+            id = R.string.home_uninstall_hint
+        ),
+        onClick = {
+            showAreYouSureDialog.value = true
+        })
+    Divider()
 }
 
 /**

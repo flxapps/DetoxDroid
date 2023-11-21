@@ -202,7 +202,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         super.onDestroy()
         PauseButtonFeature.pauseFeatures(this, stop = true)
-        unregisterReceiver(screenTurnedOffReceiver)
+        kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         instance = null
         updateState()
     }
