@@ -3,10 +3,12 @@ package com.flx_apps.digitaldetox.ui.screens.home;
 import android.app.Application
 import android.content.Intent
 import android.provider.Settings
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 val AccessibilityServiceComponent =
     DetoxDroidApplication::class.java.`package`!!.name + "/" + DetoxDroidAccessibilityService::class.java.name
@@ -131,5 +134,20 @@ class HomeViewModel @Inject constructor(
                 application, DetoxDroidAccessibilityService::class.java
             )
         )
+    }
+
+    /**
+     * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.
+     */
+    fun uninstallDetoxDroid() {
+        // call onDestroy() manually to run all cleanup tasks (e.g. stop all features) in a blocking way
+        // (as application.stopService() is asynchronous)
+        DetoxDroidAccessibilityService.instance?.onDestroy()
+        kotlin.runCatching { disableAccessibilityService() } // run this anyway
+        kotlin.runCatching { DetoxDroidDeviceAdminReceiver.revokePermission(application) }
+        val intent = Intent(Intent.ACTION_DELETE)
+        intent.data = "package:${application.packageName}".toUri()
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        application.startActivity(intent)
     }
 }
