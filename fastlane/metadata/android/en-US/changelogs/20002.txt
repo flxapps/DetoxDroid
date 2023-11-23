@@ -1,0 +1,1 @@
+Re-implemented the button to grant permissions using RootShell when possible
