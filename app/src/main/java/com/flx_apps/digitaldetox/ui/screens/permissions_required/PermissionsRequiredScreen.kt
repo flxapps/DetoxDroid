@@ -95,8 +95,8 @@ fun PermissionsRequiredScreenContent(grantPermissionsCommand: String) {
         )
         HyperlinkText(
             fullTextResId = R.string.noPermissions_text_notRooted,
-            linksActions = listOf("LINK"),
-            hyperLinks = listOf("https://google.com"),
+            linksActions = listOf("GITHUB"),
+            hyperLinks = listOf("https://github.com/flxapps/DetoxDroid"),
             fontSize = MaterialTheme.typography.bodyMedium.fontSize
         )
         Spacer(modifier = Modifier.weight(0.5f))
