@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -26,6 +27,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.util.RootShellCommand
+import com.stericson.RootShell.RootShell
 
 /**
  * The screen that is shown when specific permissions need to be granted from the computer (and
@@ -65,9 +68,13 @@ fun PermissionsRequiredScreen(
  * The content of the [PermissionsRequiredScreen].
  * It contains a short explanation of why the permissions are required and how to grant them using
  * adb and a command that is provided as a parameter.
+ * If the device is rooted, it also offers a button to grant the permissions using root shell.
  */
 @Composable
-fun PermissionsRequiredScreenContent(grantPermissionsCommand: String) {
+fun PermissionsRequiredScreenContent(
+    grantPermissionsCommand: String, navViewModel: NavViewModel = NavViewModel.navViewModel()
+) {
+    val isRootAvailable = RootShell.isRootAvailable()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,11 +101,27 @@ fun PermissionsRequiredScreenContent(grantPermissionsCommand: String) {
             modifier = Modifier.padding(vertical = 32.dp)
         )
         HyperlinkText(
-            fullTextResId = R.string.noPermissions_text_notRooted,
+            fullTextResId = if (isRootAvailable) R.string.noPermissions_text_rooted else R.string.noPermissions_text_notRooted,
             linksActions = listOf("GITHUB"),
             hyperLinks = listOf("https://github.com/flxapps/DetoxDroid"),
             fontSize = MaterialTheme.typography.bodyMedium.fontSize
         )
+        if (isRootAvailable) {
+            OutlinedButton(modifier = Modifier
+                .padding(top = 8.dp)
+                .align(Alignment.CenterHorizontally),
+                onClick = {
+                    // try grant permissions using root shell
+                    kotlin.runCatching {
+                        RootShell.getShell(true)
+                            .add(RootShellCommand(grantPermissionsCommand) { _, _ ->
+                                navViewModel.onBackPress()
+                            })
+                    }
+                }) {
+                Text(text = stringResource(id = R.string.noPermissions_text_rooted_go))
+            }
+        }
         Spacer(modifier = Modifier.weight(0.5f))
     }
 }
