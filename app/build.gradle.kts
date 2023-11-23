@@ -56,7 +56,7 @@ android {
 }
 
 dependencies {
-
+    // Core dependencies
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.7.2")
@@ -89,7 +89,6 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.8.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
-
     // Navigation Library
     implementation("dev.olshevski.navigation:reimagined:1.5.0")
     implementation("dev.olshevski.navigation:reimagined-hilt:1.5.0")
@@ -104,8 +103,11 @@ dependencies {
     // Chart Engine
     implementation("co.yml:ycharts:2.1.0")
 
-    // Icons
+    // Material Icons
     implementation("androidx.compose.material:material-icons-extended")
+
+    // RootTools for running (adb) commands as root
+    implementation("com.github.Stericson:RootShell:1.6")
 }
 
 kotlin.sourceSets.all {

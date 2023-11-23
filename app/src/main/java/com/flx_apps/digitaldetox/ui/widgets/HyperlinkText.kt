@@ -14,6 +14,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.core.text.toSpannable
 
+/**
+ * Usage:
+ *
+ * HyperlinkText(
+ *     modifier = Modifier.fillMaxWidth(),
+ *     fullTextResId = R.string.text_for_link,
+ *     linksActions = listOf("LINK"),
+ *     hyperLinks = listOf("https://google.com")
+ * )
+ *
+ * <string name="text_for_link">With text contain a <annotation type="LINK">link</annotation></string>
+ *
+ * @see https://gist.github.com/stevdza-san/ff9dbec0e072d8090e1e6d16e6b73c91
+ */
 @Composable
 fun HyperlinkText(
     modifier: Modifier = Modifier,
