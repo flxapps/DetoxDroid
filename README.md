@@ -39,6 +39,7 @@ You are encouraged to deliberately to pause DetoxDroid, allowing colors and noti
     - If you are on Windows, you should be able to run `install_windows.bat` by simply double-clicking the file.
     - If you are on Mac/Linux, you should be able to run the installation script from the console using `bash install_<os-name>.sh`
     - If at any point a prompt on your phone asks you whether you want to allow debugging by your computer, press Allow.
+3. Optionally, disable USB debugging again.
 
 ### Alternative Method
 If the installation script does not work or you do not trust it, follow the [manual installation steps](https://github.com/flxapps/DetoxDroid/wiki/Manual-Installation).
