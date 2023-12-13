@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -297,6 +298,9 @@ fun AppExceptionsListSettingsSheet(
                         }
                     })
             }
+            // FIXME there should be a better way to do this, e.g. using Modifier.navigationBarsPadding(),
+            //  but I couldn't get it to work for some reason
+            Box(modifier = Modifier.height(48.dp))
         }
     }
 }
