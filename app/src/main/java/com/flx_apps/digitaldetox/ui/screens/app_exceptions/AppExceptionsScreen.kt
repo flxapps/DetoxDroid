@@ -159,7 +159,7 @@ fun InstalledAppsList(
             item {
                 InfoCard(infoText = stringResource(id = R.string.feature_settings_exceptions_description))
             }
-            items(appExceptions) { appException ->
+            items(appExceptions, key = { item -> item.packageName }) { appException ->
                 AppExceptionListItem(appException)
             }
         }
