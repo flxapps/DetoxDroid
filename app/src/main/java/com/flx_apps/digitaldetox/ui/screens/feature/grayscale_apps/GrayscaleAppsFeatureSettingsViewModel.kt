@@ -2,7 +2,6 @@ package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
 import androidx.lifecycle.ViewModel
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
-import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,11 +68,6 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor() : ViewModel() 
      * access usage stats)
      */
     fun setShowAllowedDailyColorScreenTimeDialog(show: Boolean): Boolean {
-        if (show && UsageStatsProvider.screenTimeToday == 0L) {
-            // the user has not given the permission to access usage stats yet, which is required
-            // for this feature to work. We do not want to show the dialog in this case.
-            return false
-        }
         _showAllowedDailyColorScreenTimeDialog.value = show
         return true
     }

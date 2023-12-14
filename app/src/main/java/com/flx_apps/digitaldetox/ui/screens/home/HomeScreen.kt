@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -65,6 +66,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDateTime
@@ -102,21 +104,20 @@ fun HomeScreen(
 @Composable
 private fun HomeScreenSnackbarContents(
     snackbarHostState: SnackbarHostState,
-    navViewModel: NavViewModel = NavViewModel.navViewModel(),
     homeViewModel: HomeViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
-    if (snackbarState == HomeScreenSnackbarState.ShowRequireWriteSecureSettingsPermission) {
+    if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
         // show snackbar to request the write secure settings permission
         LaunchedEffect(key1 = "", block = {
             val result = snackbarHostState.showSnackbar(
                 message = context.getString(R.string.action_requestPermissions),
-                actionLabel = context.getString(R.string.action_go)
+                actionLabel = context.getString(R.string.action_go),
             )
             if (result == SnackbarResult.ActionPerformed) {
-                navViewModel.openPermissionsRequiredScreen(context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission))
                 homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
+                NavigationUtil.openAccessibilitySettings(context)
             }
         })
     }
@@ -190,7 +191,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = viewModel()) {
+private fun HomeScreenContent(it: PaddingValues) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -300,11 +301,17 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ScreenTimeChart() {
+    // TODO simple workaround to re-render the chart when the lifecycle state changes; it would
+    //  perhaps be better to use rememberLauncherForActivityResult to request the usage stats
+    @Suppress("UNUSED_VARIABLE") val lifecycleState =
+        LocalLifecycleOwner.current.lifecycle.observeAsState().value
+
     val context = LocalContext.current
-    val stats = UsageStatsProvider.usageStatsToday
+    val stats = UsageStatsProvider.getUpdatedUsageStatsToday()
+
     // only show the top 5 apps in the chart
     val chartStats = stats.values.sortedByDescending { it.totalTimeInForeground }.take(5)
-    val screenTime = UsageStatsProvider.screenTimeToday
+    val screenTime = stats.values.sumOf { it.totalTimeInForeground }
     val donutChartConfig = PieChartConfig(
         strokeWidth = 32f,
         activeSliceAlpha = .9f,
