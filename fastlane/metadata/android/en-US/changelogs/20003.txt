@@ -1,0 +1,2 @@
+- Fixed "break infinite scrolling" not working properly
+- Fixed app exceptions list and filter dialog
