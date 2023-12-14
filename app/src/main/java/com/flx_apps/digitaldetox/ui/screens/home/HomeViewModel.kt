@@ -5,7 +5,6 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -13,8 +12,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.onEmpty
-import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -22,7 +20,7 @@ val AccessibilityServiceComponent =
     DetoxDroidApplication::class.java.`package`!!.name + "/" + DetoxDroidAccessibilityService::class.java.name
 
 enum class HomeScreenSnackbarState {
-    Hidden, ShowRequireWriteSecureSettingsPermission
+    Hidden, ShowStartAcccessibilityServiceManually
 }
 
 @HiltViewModel
@@ -52,43 +50,29 @@ class HomeViewModel @Inject constructor(
      * @see DetoxDroidState
      */
     fun toggleDetoxDroidIsRunning(): DetoxDroidState? {
+        Timber.d("state = ${detoxDroidState.value}")
         val shouldBeRunning = detoxDroidState.value != DetoxDroidState.Active
         kotlin.runCatching { // if we don't have the permission to write secure settings, an exception will be thrown
             if (shouldBeRunning) {
                 activateAccessibilityService()
-                if (getEnabledAccessibilityServices().contains(AccessibilityServiceComponent)) {
+                if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Active) {
                     return DetoxDroidState.Active
                 }
             } else {
                 disableAccessibilityService()
-                if (!getEnabledAccessibilityServices().contains(AccessibilityServiceComponent)) {
+                if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Inactive) {
                     return DetoxDroidState.Inactive
                 }
             }
         }
-        // (de-)activation of accessibility service failed, so the WRITE_SECURE_SETTINGS permission is missing
 
-        viewModelScope.launch {
-            _snackbarState.onEmpty {
-                emit(HomeScreenSnackbarState.ShowRequireWriteSecureSettingsPermission)
-            }
-        }
-
-        setSnackbarState(HomeScreenSnackbarState.ShowRequireWriteSecureSettingsPermission)
+        // (de-)activation of accessibility service failed, so we need to show a snackbar to ask the user to do it manually
+        setSnackbarState(HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually)
         return null
     }
 
     fun setSnackbarState(state: HomeScreenSnackbarState) {
         _snackbarState.value = state
-    }
-
-    /**
-     * Returns a list of all enabled accessibility services.
-     */
-    private fun getEnabledAccessibilityServices(): String {
-        return Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ).orEmpty()
     }
 
     /**

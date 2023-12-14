@@ -36,4 +36,14 @@ object NavigationUtil {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         })
     }
+
+    /**
+     * Opens the accessibility services settings screen.
+     */
+    @JvmStatic
+    fun openAccessibilitySettings(context: Context) {
+        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        })
+    }
 }
