@@ -34,6 +34,7 @@ You are encouraged to deliberately to pause DetoxDroid, allowing colors and noti
     1. Go to Android Settings → About Phone
     2. Look for the build number option and touch it multiple times until developer mode is enabled
     3. Go to Android Settings → Developer Options, look for USB debugging and enable it
+    (Some devices might require enabling the "USB Debugging (Security Settings)" option or else `pm` commands won't work at all. Certain Mi devices require you to sign into a Mi Account to enable this feature.)
     4. Connect your device with your computer.
 2. [Download, unzip and run the installation script](https://downgit.github.io/#/home?url=https://github.com/flxapps/DetoxDroid/tree/master/install) for your OS
     - If you are on Windows, you should be able to run `install_windows.bat` by simply double-clicking the file.
