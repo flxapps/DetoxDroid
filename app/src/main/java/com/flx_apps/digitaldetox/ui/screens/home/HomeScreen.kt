@@ -69,6 +69,7 @@ import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -84,6 +85,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val detoxDroidState: DetoxDroidState = homeViewModel.detoxDroidState.collectAsState().value
+    Timber.d("detoxDroidState = $detoxDroidState")
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
@@ -108,6 +110,7 @@ private fun HomeScreenSnackbarContents(
 ) {
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
+    Timber.d("snackbarState = $snackbarState")
     if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
         // show snackbar to request the write secure settings permission
         LaunchedEffect(key1 = "", block = {
