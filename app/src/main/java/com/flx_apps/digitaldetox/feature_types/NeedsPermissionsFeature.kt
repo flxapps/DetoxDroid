@@ -1,7 +1,10 @@
 package com.flx_apps.digitaldetox.feature_types
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.provider.Settings
+import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
 
 /**
@@ -19,7 +22,7 @@ interface NeedsPermissionsFeature {
     /**
      * This method will be called when the user clicks on the Snackbar to request the permissions.
      */
-    fun requestPermissions(context: Context)
+    fun requestPermissions(context: Context, navViewModel: NavViewModel)
 }
 
 /**
@@ -37,7 +40,29 @@ class NeedsDrawOverlayPermissionFeature : NeedsPermissionsFeature {
     /**
      * Call this method to request the [android.Manifest.permission.SYSTEM_ALERT_WINDOW]
      */
-    override fun requestPermissions(context: Context) {
+    override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
         NavigationUtil.openOverlayPermissionsSettings(context)
+    }
+}
+
+/**
+ * A feature that needs the [android.Manifest.permission.WRITE_SECURE_SETTINGS] permission in order
+ * to work.
+ */
+class NeedsWriteSecureSettingsPermission : NeedsPermissionsFeature {
+    /**
+     * Checks whether the app has the [android.Manifest.permission.WRITE_SECURE_SETTINGS] permission.
+     */
+    override fun hasPermissions(context: Context): Boolean {
+        return context.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Call this method to request the [android.Manifest.permission.WRITE_SECURE_SETTINGS]
+     */
+    override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
+        navViewModel.openPermissionsRequiredScreen(
+            context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission),
+        )
     }
 }

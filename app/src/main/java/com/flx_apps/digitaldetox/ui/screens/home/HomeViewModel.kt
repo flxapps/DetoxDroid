@@ -15,10 +15,17 @@ import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
 import javax.inject.Inject
 
-
+/**
+ * The component name of the accessibility service. This is used to enable and disable the service.
+ * @see HomeViewModel.activateAccessibilityService
+ * @see HomeViewModel.disableAccessibilityService
+ */
 val AccessibilityServiceComponent =
     DetoxDroidApplication::class.java.`package`!!.name + "/" + DetoxDroidAccessibilityService::class.java.name
 
+/**
+ * The state of the snackbar on the home screen.
+ */
 enum class HomeScreenSnackbarState {
     Hidden, ShowStartAcccessibilityServiceManually
 }
@@ -41,10 +48,6 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Toggles the state of the accessibility service.
-     * TODO right now, this method requires the WRITE_SECURE_SETTINGS permission. We should consider
-     *   using the AccessibilityService API instead, because some features of DetoxDroid can be
-     *   used without the WRITE_SECURE_SETTINGS permission. (However, DetoxDroid makes much more
-     *   sense if this permission is granted.)
      * @return the new state of the accessibility service or null if the (de-)activation failed
      * @see DetoxDroidAccessibilityService
      * @see DetoxDroidState
@@ -53,16 +56,10 @@ class HomeViewModel @Inject constructor(
         Timber.d("state = ${detoxDroidState.value}")
         val shouldBeRunning = detoxDroidState.value != DetoxDroidState.Active
         kotlin.runCatching { // if we don't have the permission to write secure settings, an exception will be thrown
-            if (shouldBeRunning) {
-                activateAccessibilityService()
-                if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Active) {
-                    return DetoxDroidState.Active
-                }
-            } else {
-                disableAccessibilityService()
-                if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Inactive) {
-                    return DetoxDroidState.Inactive
-                }
+            if (shouldBeRunning && activateAccessibilityService()) {
+                return DetoxDroidState.Active
+            } else if (!shouldBeRunning && disableAccessibilityService()) {
+                return DetoxDroidState.Inactive
             }
         }
 
@@ -81,7 +78,7 @@ class HomeViewModel @Inject constructor(
      * manually once to make sure it is running.
      * @see DetoxDroidAccessibilityService
      */
-    private fun activateAccessibilityService() {
+    private fun activateAccessibilityService(): Boolean {
         val accessibilityServices = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ).orEmpty()
@@ -93,18 +90,18 @@ class HomeViewModel @Inject constructor(
         Settings.Secure.putString(
             contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1"
         )
-        application.startService(
+        return application.startService(
             Intent(
                 application, DetoxDroidAccessibilityService::class.java
             )
-        )
+        ) != null
     }
 
     /**
      * Disables the accessibility service.
      * @see DetoxDroidAccessibilityService
      */
-    private fun disableAccessibilityService() {
+    private fun disableAccessibilityService(): Boolean {
         val accessibilityServices = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ).orEmpty()
@@ -113,7 +110,7 @@ class HomeViewModel @Inject constructor(
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
             accessibilityServices.replace(AccessibilityServiceComponent, "").trim(':')
         )
-        application.stopService(
+        return application.stopService(
             Intent(
                 application, DetoxDroidAccessibilityService::class.java
             )
