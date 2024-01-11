@@ -11,6 +11,7 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.do_not_disturb.DoNotDisturbFeatureSettingsSection
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
 
 val DoNotDisturbFeatureId = Feature.createId(DoNotDisturbFeature::class.java)
@@ -99,7 +100,7 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
     /**
      * Opens the system settings to grant the permission to change the zen mode.
      */
-    override fun requestPermissions(context: Context) {
+    override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
         NavigationUtil.openDoNotDisturbSystemSettings(context)
     }
 }

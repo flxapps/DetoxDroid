@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,8 +24,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.MainActivity
+import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
+import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 
 /**
@@ -88,11 +92,23 @@ fun FeatureScreen(
 @Composable
 fun FeatureActivationSwitch(
     featureViewModel: FeatureViewModel = viewModel(),
+    navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
+    val context = LocalContext.current
     Switch(modifier = Modifier.padding(end = 8.dp),
         checked = featureViewModel.featureIsActive.collectAsState().value,
         onCheckedChange = {
-            featureViewModel.toggleFeatureActive()
+            if (featureViewModel.toggleFeatureActive() == null) {
+                featureViewModel.showSnackbar(message = context.getString(R.string.action_requestPermissions),
+                    actionLabel = context.getString(R.string.action_go),
+                    onResult = { snackbarResult ->
+                        if (snackbarResult == SnackbarResult.ActionPerformed) {
+                            (featureViewModel.feature as NeedsPermissionsFeature).requestPermissions(
+                                context, navViewModel
+                            )
+                        }
+                    })
+            }
         })
 }
 

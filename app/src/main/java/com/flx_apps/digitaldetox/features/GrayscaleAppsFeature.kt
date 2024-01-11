@@ -11,6 +11,8 @@ import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.feature_types.NeedsWriteSecureSettingsPermission
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
@@ -34,7 +36,8 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
-    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId) {
+    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId),
+    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission() {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,

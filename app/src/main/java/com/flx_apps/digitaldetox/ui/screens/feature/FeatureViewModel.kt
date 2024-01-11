@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.core.os.bundleOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
@@ -54,7 +53,7 @@ open class FeatureViewModel @Inject constructor(
     private val _featureIsActive = MutableStateFlow(feature.isActivated)
     val featureIsActive: StateFlow<Boolean> = _featureIsActive
 
-    val snackbarState = FeatureScreenSnackbarStateProvider.snackbarState
+    private val _snackbarState = FeatureScreenSnackbarStateProvider.snackbarState
 
     /**
      * Checks if the feature needs permissions to be activated and if the app has the permissions.
@@ -67,25 +66,11 @@ open class FeatureViewModel @Inject constructor(
 
     /**
      * Toggles the active state of the feature.
-     * @return The new active state of the feature.
+     * @return The new active state of the feature or null if the necessary permissions are missing
      */
-    internal fun toggleFeatureActive(): Boolean {
+    internal fun toggleFeatureActive(): Boolean? {
         if (activationNeedsPermission()) {
-            viewModelScope.launch {
-                val result = snackbarState.showSnackbar(
-                    message = application.getString(R.string.action_requestPermissions),
-                    actionLabel = application.getString(R.string.action_go),
-                    duration = SnackbarDuration.Indefinite
-                )
-                when (result) {
-                    SnackbarResult.ActionPerformed -> (feature as NeedsPermissionsFeature).requestPermissions(
-                        application
-                    )
-
-                    SnackbarResult.Dismissed -> {} // do nothing
-                }
-            }
-            return false
+            return null
         }
         feature.isActivated = !feature.isActivated
         _featureIsActive.value = feature.isActivated
@@ -104,7 +89,7 @@ open class FeatureViewModel @Inject constructor(
         onResult: (SnackbarResult) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = snackbarState.showSnackbar(
+            val result = _snackbarState.showSnackbar(
                 message = message, actionLabel = actionLabel, duration = duration
             )
             onResult(result)

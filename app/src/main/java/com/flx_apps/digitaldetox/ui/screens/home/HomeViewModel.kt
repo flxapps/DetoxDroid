@@ -41,10 +41,6 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Toggles the state of the accessibility service.
-     * TODO right now, this method requires the WRITE_SECURE_SETTINGS permission. We should consider
-     *   using the AccessibilityService API instead, because some features of DetoxDroid can be
-     *   used without the WRITE_SECURE_SETTINGS permission. (However, DetoxDroid makes much more
-     *   sense if this permission is granted.)
      * @return the new state of the accessibility service or null if the (de-)activation failed
      * @see DetoxDroidAccessibilityService
      * @see DetoxDroidState
