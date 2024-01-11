@@ -1,0 +1,2 @@
+- Error feedback was not working properly for the Automatic Grayscale feature, if WRITE_SECURE_SETTINGS_PERMISSION were not granted
+- On some devices, the snackbar on the main screen was shown, when DetoxDroid has been (successfully) started or stopped
