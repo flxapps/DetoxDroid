@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.ui.screens.schedule
 import android.app.Application
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -92,6 +93,7 @@ class ScheduleViewModel @Inject constructor(
         }
         scheduleFeature.scheduleRules = _rules.value.values.toSet()
         hideBottomSheet()
+        FeaturesProvider.startOrStopFeature(feature)
     }
 
     /**
@@ -102,5 +104,6 @@ class ScheduleViewModel @Inject constructor(
         _rules.value = _rules.value.filterKeys { it != ruleId }
         scheduleFeature.scheduleRules = _rules.value.values.toSet()
         hideBottomSheet()
+        FeaturesProvider.startOrStopFeature(feature)
     }
 }

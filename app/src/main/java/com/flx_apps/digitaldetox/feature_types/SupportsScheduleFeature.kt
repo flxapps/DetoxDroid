@@ -110,11 +110,11 @@ data class FeatureScheduleRule(
                 toTime = LocalTime.of(23, 59, 59, 999999999)
             }
         }
-
+        
         // the rule is active if the current day of week is in the list of days of week and the
         // current time is between fromTime and toTime or fromTime == toTime (then the whole day is
         // considered active)
-        return daysOfWeek.contains(dayOfWeek) && ((atTime.isAfter(fromTime) && atTime.isBefore(
+        return (daysOfWeek.isEmpty() || daysOfWeek.contains(dayOfWeek)) && ((atTime.isAfter(fromTime) && atTime.isBefore(
             toTime
         )) || (fromTime == toTime))
     }

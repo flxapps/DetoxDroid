@@ -78,6 +78,24 @@ object FeaturesProvider {
     }
 
     /**
+     * Starts or stops the given feature. This is used when the user toggles the active state of a
+     * feature in the UI.
+     * @param feature The feature to start or stop.
+     * @see Feature.isActive
+     * @see Feature.onStart
+     * @see Feature.onPause
+     */
+    fun startOrStopFeature(feature: Feature) {
+        reloadActiveFeatures()
+        if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Active) {
+            // if DetoxDroid is running, call onStart() or onPause() for the feature
+            if (feature.isActive()) feature.onStart(DetoxDroidApplication.appContext) else feature.onPause(
+                DetoxDroidApplication.appContext
+            )
+        }
+    }
+
+    /**
      * Returns all features that implement the [OnScrollEventSubscriptionFeature] interface.
      */
     val onScrollEventFeatures =
