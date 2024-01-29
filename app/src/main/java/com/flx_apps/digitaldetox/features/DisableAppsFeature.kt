@@ -24,6 +24,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceive
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
+import timber.log.Timber
 
 /**
  * The [DisableAppsFeature] can either deactivate apps or block them.
@@ -104,7 +105,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onPause(context: Context) {
         if (operationMode == DisableAppsMode.DEACTIVATE) {
             // if the apps are deactivated, we need to reactivate them when DetoxDroid is paused
-            setAppsDeactivated(context, false)
+            setAppsDeactivated(context, false, forceOperation = true)
         }
     }
 
@@ -161,6 +162,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         context: Context, deactivated: Boolean, forceOperation: Boolean = false
     ) {
         val skipOperation = !forceOperation && deactivated == isAppsDeactivated
+        Timber.d("Setting apps deactivated: $deactivated (skip: $skipOperation)")
         if (skipOperation || !DetoxDroidDeviceAdminReceiver.isGranted(context)) {
             // the apps are already deactivated or the device admin permission is not granted, so
             // we cannot do anything
@@ -169,9 +171,10 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         val devicePolicyManager =
             (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager)
         disableableApps.forEach {
-            devicePolicyManager.setApplicationHidden(
+            val appDeactivated = devicePolicyManager.setApplicationHidden(
                 ComponentName(context, DetoxDroidDeviceAdminReceiver::class.java), it, deactivated
             )
+            Timber.d("Operation on $it was successful: $appDeactivated")
         }
         isAppsDeactivated = deactivated
     }
