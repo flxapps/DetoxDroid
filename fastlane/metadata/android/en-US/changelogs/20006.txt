@@ -1,0 +1,1 @@
+Fixed issue with deactivated app not reactivating under certain circumstances
