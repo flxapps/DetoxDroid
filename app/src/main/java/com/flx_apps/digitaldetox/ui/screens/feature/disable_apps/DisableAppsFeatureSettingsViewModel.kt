@@ -9,6 +9,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -44,10 +45,14 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
      * @see DisableAppsMode
      */
     fun changeOperationMode(mode: DisableAppsMode): Boolean {
+        Timber.d("Changing operation mode to $mode")
         if (mode == DisableAppsFeature.operationMode) return true
         val app = getApplication<Application>()
         if (mode == DisableAppsMode.DEACTIVATE && !DetoxDroidDeviceAdminReceiver.isGranted(app)) {
             return false
+        } else if (DisableAppsFeature.operationMode == DisableAppsMode.DEACTIVATE && mode == DisableAppsMode.BLOCK) {
+            // we eventually need to reactivate the apps
+            DisableAppsFeature.setAppsDeactivated(app, false, forceOperation = true)
         }
         DisableAppsFeature.operationMode = mode
         _operationMode.value = mode

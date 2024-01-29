@@ -157,8 +157,15 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * opened or used in any way.
      * @see DevicePolicyManager.setApplicationHidden
      */
-    fun setAppsDeactivated(context: Context, deactivated: Boolean) {
-        if (isAppsDeactivated == deactivated || !DetoxDroidDeviceAdminReceiver.isGranted(context)) return
+    fun setAppsDeactivated(
+        context: Context, deactivated: Boolean, forceOperation: Boolean = false
+    ) {
+        val skipOperation = !forceOperation && deactivated == isAppsDeactivated
+        if (skipOperation || !DetoxDroidDeviceAdminReceiver.isGranted(context)) {
+            // the apps are already deactivated or the device admin permission is not granted, so
+            // we cannot do anything
+            return
+        }
         val devicePolicyManager =
             (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager)
         disableableApps.forEach {
