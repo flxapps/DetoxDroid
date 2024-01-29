@@ -113,10 +113,12 @@ fun OperationModeTile(
                     selectedOption = selectedOption,
                     onOptionSelected = {
                         val selectedMode = it as DisableAppsMode
-                        if (selectedMode == DisableAppsMode.DEACTIVATE && !disableAppsFeatureSettingsViewModel.changeOperationMode(
-                                selectedMode
-                            )
-                        ) {
+                        val modeSuccessfullyChanged =
+                            disableAppsFeatureSettingsViewModel.changeOperationMode(selectedMode)
+                        if (!modeSuccessfullyChanged && selectedMode == DisableAppsMode.DEACTIVATE) {
+                            // we could not successfully change the operation mode to DEACTIVATE,
+                            // so we show a snackbar that informs the user that they need to grant
+                            // the device admin permission
                             featureViewModel.showSnackbar(message = context.getString(R.string.action_requestPermissions),
                                 duration = SnackbarDuration.Short,
                                 actionLabel = context.getString(R.string.action_go),
