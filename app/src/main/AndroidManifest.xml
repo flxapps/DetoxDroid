@@ -13,6 +13,9 @@
     <!-- SYSTEM_ALERT_WINDOW permission in order to show the overlay for disabling apps / breaking infinite scrolling -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- KILL_BACKGROUND_PROCESSES permission in order to kill apps from the overlay -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+
     <!-- DEVICE_ADMIN permission in order to deactivate apps -->
     <uses-permission
         android:name="android.permission.BIND_DEVICE_ADMIN"
