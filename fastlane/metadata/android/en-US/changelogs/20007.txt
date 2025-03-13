@@ -2,5 +2,3 @@
 
 🐛 Bug Fixes
 - save and restore color filter setting during grayscale toggle
-- close-app-after-doomscroll-detectedadd permission to AndroidManifest.xml
-
