@@ -120,6 +120,8 @@ jobs:
             git_range="$latest_tag..HEAD"
           fi
           
+          echo "Generating changelog based on commits in $git_range"
+          
           # Generate changelog based on conventional commits
           echo "### Release v$NEW_VERSION" > "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
           echo "" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
