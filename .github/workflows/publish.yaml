@@ -40,22 +40,22 @@ jobs:
       - name: Accept Licenses & Install Build Tools
         run: |
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Add zipalign to PATH and fix ANDROID_HOME
         run: |
-          echo "$ANDROID_SDK_ROOT/build-tools/33.0.0" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/build-tools/35.0.0" >> $GITHUB_PATH
           echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/33.0.0:$PATH" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/35.0.0:$PATH" >> $GITHUB_ENV
 
       - name: Verify Android SDK Setup and debug ANDROID_HOME path
         run: |
           sdkmanager --list
-          which zipalign
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
-          ls -la $ANDROID_HOME
+          echo "Checking ANDROID_HOME: $ANDROID_HOME"
+          ls -la $ANDROID_HOME/build-tools/
+          ls -la $ANDROID_HOME/build-tools/35.0.0
+          which zipalign || echo "zipalign not found"
 
       - name: Determine version bump
         id: version
@@ -190,7 +190,7 @@ jobs:
           keyAlias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildToolsVersion: 33.0.0
+          buildToolsVersion: 35.0.0
 
       - name: Rename signed APK
         run: |
