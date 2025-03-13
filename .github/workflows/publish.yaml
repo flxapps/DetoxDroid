@@ -24,12 +24,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          build-tools-version: "33.0.0"  # Specify the required build tools version
-          platform-version: "33"        # Specify the required platform version
-
       - name: Determine version bump
         id: version
         run: |
@@ -152,17 +146,19 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleRelease
 
+      - name: Install Android SDK Build Tools
+        run: sdkmanager "build-tools;33.0.0"
+
       - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
+        uses: ilharp/sign-android-release@v1
         id: sign_app
         with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.KEY_ALIAS }}
+          releaseDir: app/build/outputs/apk/release
+          signingKey: ${{ secrets.SIGNING_KEY }}
+          keyAlias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "33.0.0"
+          buildToolsVersion: 33.0.0
 
       - name: Rename signed APK
         run: |
