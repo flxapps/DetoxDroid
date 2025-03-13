@@ -1,4 +1,5 @@
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -16,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FilterChip
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -77,7 +78,8 @@ fun ManageAppExceptionsScreen(
         TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
             AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
                 AnimatedVisibility(visible = it) {
-                    SearchBar(query = appExceptionsViewModel.query.value ?: "",
+                    SearchBar(
+                        query = appExceptionsViewModel.query.value ?: "",
                         onQueryChange = { query ->
                             appExceptionsViewModel.filterApps(query)
                         },
@@ -153,7 +155,7 @@ fun InstalledAppsList(
             item {
                 InfoCard(infoText = stringResource(id = R.string.feature_settings_exceptions_description))
             }
-            items(appExceptions, key = { item -> item.packageName }) { appException ->
+            items(appExceptions, key = { item -> item.appInfo.packageName }) { appException ->
                 AppExceptionListItem(appException)
             }
         }
@@ -172,22 +174,25 @@ fun AppExceptionListItem(
     // load app icon
     val packageManager = LocalContext.current.packageManager
 
-    val appIcon = try {
-        packageManager.getApplicationIcon(item.packageName)
-    } catch (e: PackageManager.NameNotFoundException) {
-        // icon could not be loaded
-        // this is usually the case for apps that are managed by a work profile
-        null // we return null here, so that no icon is displayed
+    val appIcon by produceState<Bitmap?>(null, key1 = item.appInfo.packageName) {
+        value = try {
+            packageManager.getApplicationIcon(item.appInfo.packageName).toBitmap(128, 128)
+        } catch (e: PackageManager.NameNotFoundException) {
+            // icon could not be loaded
+            // this is usually the case for apps that are managed by a work profile
+            null // we return null here, so that no icon is displayed
+        }
     }
     val checkedState = remember {
         mutableStateOf(item.isException)
     }
-    androidx.compose.material3.ListItem(headlineContent = { Text(item.appName) },
+    androidx.compose.material3.ListItem(
+        headlineContent = { Text(item.appInfo.appName) },
         supportingContent = {
             // The supporting content contains the app category and whether the app is a system app
             // or a user app.
             Row {
-                if (item.isSystemApp) {
+                if (item.appInfo.isSystemApp) {
                     Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                         Text(text = "System", style = MaterialTheme.typography.bodySmall)
                     }
@@ -196,13 +201,13 @@ fun AppExceptionListItem(
                         Text(text = "User", style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                if (item.appCategory.isNotBlank()) {
+                if (item.appInfo.appCategory.isNotBlank()) {
                     Badge(
                         containerColor = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(start = 4.dp)
                     ) {
                         Text(
-                            text = item.appCategory,
+                            text = item.appInfo.appCategory,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -212,15 +217,16 @@ fun AppExceptionListItem(
         trailingContent = {
             Checkbox(checked = checkedState.value, onCheckedChange = {
                 runBlocking {
-                    checkedState.value = appExceptionsViewModel.toggleAppException(item.packageName)
-                        ?: checkedState.value
+                    checkedState.value =
+                        appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
+                            ?: checkedState.value
                 }
             })
         },
         leadingContent = {
             if (appIcon != null) {
                 Image(
-                    bitmap = appIcon.toBitmap(128, 128).asImageBitmap(),
+                    bitmap = appIcon!!.asImageBitmap(),
                     contentDescription = "App Icon",
                     modifier = Modifier.size(48.dp)
                 )
@@ -250,20 +256,24 @@ fun AppExceptionsListSettingsSheet(
         viewModel.setShowListSettingsSheet(false)
     }, sheetState = rememberModalBottomSheetState()) {
         Column {
-            androidx.compose.material3.ListItem(headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
                 supportingContent = {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        FilterChip(selected = viewModel.showSystemApps.collectAsState().value,
+                        FilterChip(
+                            selected = viewModel.showSystemApps.collectAsState().value,
                             onClick = { viewModel.toggleShowSystemApps() }) {
                             Text(text = "System apps")
                         }
-                        FilterChip(selected = viewModel.showUserApps.collectAsState().value,
+                        FilterChip(
+                            selected = viewModel.showUserApps.collectAsState().value,
                             onClick = { viewModel.toggleShowUserApps() }) {
                             Text(text = "User apps")
                         }
                     }
                 })
-            androidx.compose.material3.ListItem(headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByCategory)) },
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByCategory)) },
                 supportingContent = {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         viewModel.selectedAppCategories.collectAsState().value.forEach {
@@ -281,11 +291,13 @@ fun AppExceptionsListSettingsSheet(
                 R.string.feature_settings_exceptions_listType_onlyList to AppExceptionListType.ONLY_LIST
             ).filter { (viewModel.feature as SupportsAppExceptionsFeature).listTypes.contains(it.value) }
             if (listTypeMap.size > 1) {
-                androidx.compose.material3.ListItem(headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_listType)) },
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_listType)) },
                     supportingContent = {
                         Column {
                             Text(text = stringResource(id = R.string.feature_settings_exceptions_listType_description))
-                            OptionsRow(options = listTypeMap,
+                            OptionsRow(
+                                options = listTypeMap,
                                 selectedOption = viewModel.exceptionListType.collectAsState().value,
                                 onOptionSelected = { viewModel.setExceptionListType(it as AppExceptionListType) })
                         }

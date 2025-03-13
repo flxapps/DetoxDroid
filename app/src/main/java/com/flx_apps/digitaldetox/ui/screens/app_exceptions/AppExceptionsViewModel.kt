@@ -3,14 +3,14 @@ package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 import ManageAppExceptionsScreen
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
+import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
-import com.flx_apps.digitaldetox.util.getAppCategoryTitle
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,10 +27,7 @@ import javax.inject.Inject
  * @property isException Whether the app is already an exception for the current feature.
  */
 data class AppExceptionItem(
-    val packageName: String,
-    val appName: String,
-    val appCategory: String,
-    val isSystemApp: Boolean,
+    val appInfo: ApplicationInfoData,
     var isException: Boolean
 )
 
@@ -110,23 +107,12 @@ class AppExceptionsViewModel @Inject constructor(
      * already an exception for the current feature.
      */
     private fun loadInstalledApps() {
-        val packageManager: PackageManager = application.packageManager
         val appCategories = mutableSetOf<String>()
-        val apps =
-            packageManager.getInstalledApplications(PackageManager.MATCH_UNINSTALLED_PACKAGES)
-                .map { appInfo ->
-                    val appCategory = appInfo.getAppCategoryTitle(application)
-                    appCategories.add(appCategory)
-                    AppExceptionItem(
-                        packageName = appInfo.packageName,
-                        appName = appInfo.loadLabel(packageManager).toString(),
-                        appCategory = appInfo.getAppCategoryTitle(application),
-                        isSystemApp = appInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
-                        isException = appExceptionsFeature.appExceptions.contains(
-                            appInfo.packageName
-                        )
-                    )
-                }
+        val apps = ApplicationInfoRepository.getInstalledApps().map {
+            val isException = appExceptionsFeature.appExceptions.contains(it.packageName)
+            appCategories += it.appCategory
+            AppExceptionItem(it, isException)
+        }
         _appExceptionItems = apps
         _selectedAppCategories.value = appCategories.associateWith {
             false
@@ -143,14 +129,14 @@ class AppExceptionsViewModel @Inject constructor(
         if (this::_appExceptionItems.isInitialized.not()) return // apps not loaded yet
         val showAllCategories = _selectedAppCategories.value.values.all { !it }
         // filter apps by query, system/user apps and app categories
-        val filteredApps = _appExceptionItems.filter { app ->
-            val appNameContainsQuery = query.isBlank() || app.appName.contains(
+        val filteredApps = _appExceptionItems.filter { item ->
+            val appNameContainsQuery = query.isBlank() || item.appInfo.appName.contains(
                 query, ignoreCase = true
             )
             val appTypeShouldBeShown =
-                app.isSystemApp && _showSystemApps.value || !app.isSystemApp && _showUserApps.value
+                item.appInfo.isSystemApp && _showSystemApps.value || !item.appInfo.isSystemApp && _showUserApps.value
             val appCategoryShouldBeShown =
-                showAllCategories || _selectedAppCategories.value[app.appCategory]!!
+                showAllCategories || _selectedAppCategories.value[item.appInfo.appCategory]!!
             appNameContainsQuery && appTypeShouldBeShown && appCategoryShouldBeShown
         }
         _filteredAppExceptionItems.value = filteredApps
@@ -162,12 +148,13 @@ class AppExceptionsViewModel @Inject constructor(
      * @return The new exception state of the app or null if the app was not found.
      */
     fun toggleAppException(packageName: String): Boolean? {
-        _filteredAppExceptionItems.value?.find { app -> app.packageName == packageName }?.apply {
-            isException = !isException
-            if (isException) appExceptionsFeature.appExceptions += packageName
-            else appExceptionsFeature.appExceptions -= packageName
-            return isException
-        }
+        _filteredAppExceptionItems.value?.find { app -> app.appInfo.packageName == packageName }
+            ?.apply {
+                isException = !isException
+                if (isException) appExceptionsFeature.appExceptions += packageName
+                else appExceptionsFeature.appExceptions -= packageName
+                return isException
+            }
         return null
     }
 

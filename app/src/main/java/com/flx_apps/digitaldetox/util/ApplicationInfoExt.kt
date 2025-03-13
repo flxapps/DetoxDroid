@@ -408,3 +408,10 @@ fun ApplicationInfo.getAppCategoryTitle(
     }
     return context.getString(stringResourceId)
 }
+
+/**
+ * Returns true if the app is a system app, false otherwise.
+ */
+fun ApplicationInfo.isSystemApp(): Boolean {
+    return this.flags and ApplicationInfo.FLAG_SYSTEM != 0
+}
