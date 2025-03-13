@@ -161,7 +161,7 @@ jobs:
           echo "" >> "$changelog_file"
           
           # Handle Breaking Changes
-          breaking_changes=$(git log $git_range --pretty=format:"%s" | grep -E "^BREAKING CHANGE|^feat!|^fix!" | sed -E "s/^(BREAKING CHANGE|feat!|fix!)(\((.*)\))?: /\3/" | sed 's/^/- /' || true)
+          breaking_changes=$(git log $git_range --pretty=format:"%s" | grep -E "^BREAKING CHANGE|^feat!|^fix!" | sed -E "s/^(BREAKING CHANGE|feat!|fix!)(\(.*\))?: //" | sed 's/^/- /' || true)
           if [ -n "$breaking_changes" ]; then
             echo "⚠️ BREAKING CHANGES" >> "$changelog_file"
             echo "$breaking_changes" >> "$changelog_file"
@@ -169,7 +169,7 @@ jobs:
           fi
 
           # Handle Features
-          features=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\((.*)\))?: /\2/" | sed 's/^/- /' || true)
+          features=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
               if [ -n "$features" ]; then
                 echo "✨ New Features" >> "$changelog_file"
                 echo "$features" >> "$changelog_file"
@@ -177,7 +177,7 @@ jobs:
               fi
           
           # Handle Bug Fixes
-          fixes=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\((.*)\))?: /\2/" | sed 's/^/- /' || true)
+          fixes=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
               if [ -n "$fixes" ]; then
                 echo "🐛 Bug Fixes" >> "$changelog_file"
                 echo "$fixes" >> "$changelog_file"
