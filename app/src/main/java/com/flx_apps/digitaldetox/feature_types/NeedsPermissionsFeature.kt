@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.provider.Settings
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.util.NavigationUtil
 
 /**
@@ -61,8 +62,10 @@ class NeedsWriteSecureSettingsPermission : NeedsPermissionsFeature {
      * Call this method to request the [android.Manifest.permission.WRITE_SECURE_SETTINGS]
      */
     override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
-        navViewModel.openPermissionsRequiredScreen(
-            context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission),
+        navViewModel.openRoute(
+            NavigationRoutes.PermissionsRequired(
+                context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
+            )
         )
     }
 }

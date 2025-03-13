@@ -6,13 +6,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.MainActivity
-import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.features.FeaturesProvider
-import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.olshevski.navigation.reimagined.navController
 import dev.olshevski.navigation.reimagined.navigate
 import dev.olshevski.navigation.reimagined.pop
+import timber.log.Timber
 import javax.inject.Inject
 
 val DefaultFeatureId = FeaturesProvider.featureList[0].id
@@ -51,32 +50,21 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
         navController.pop()
     }
 
-    fun openManageFeatureScreen(
-        featureId: FeatureId
-    ) {
-        savedStateHandle["featureId"] = featureId
-        navController.navigate(NavigationRoutes.ManageFeature(featureId))
-    }
-
-    fun openAppExceptionsScreen(
-        featureId: FeatureId = savedStateHandle["featureId"] ?: DefaultFeatureId
-    ) {
-        savedStateHandle["featureId"] = featureId
-        navController.navigate(NavigationRoutes.AppExceptions(featureId))
-    }
-
-    fun openFeatureScheduleScreen(
-        featureId: FeatureId = savedStateHandle["featureId"] ?: DefaultFeatureId
-    ) {
-        savedStateHandle["featureId"] = featureId
-        navController.navigate(NavigationRoutes.FeatureSchedule(featureId))
-    }
-
     /**
-     * Opens the screen to show the user how to grant required permissions.
-     * @see PermissionsRequiredScreen
+     * Opens a route from the [NavigationRoutes] enum.
      */
-    fun openPermissionsRequiredScreen(grantPermissionsCommand: String) {
-        navController.navigate(NavigationRoutes.PermissionsRequired(grantPermissionsCommand))
+    fun openRoute(route: NavigationRoutes) {
+        Timber.d("Navigating to $route")
+        kotlin.runCatching {
+            // put all arguments into the saved state handle, so that they can be retrieved later from
+            // child destinations
+            val args = route.toString().split("(", ")")[1].split(", ")
+            for (arg in args) {
+                val (key, value) = arg.split("=")
+                savedStateHandle[key] = value
+            }
+        }
+        // navigate to the route
+        navController.navigate(route)
     }
 }

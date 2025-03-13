@@ -15,6 +15,7 @@ import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
@@ -40,6 +41,6 @@ fun OpenScheduleTile(
         },
         leadingIcon = Icons.Default.EditCalendar,
         onClick = {
-            navViewModel.openFeatureScheduleScreen()
+            navViewModel.openRoute(NavigationRoutes.FeatureSchedule(featureId = featureViewModel.feature.id))
         })
 }

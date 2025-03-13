@@ -24,6 +24,7 @@ import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsMode
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -124,9 +125,11 @@ fun OperationModeTile(
                                 actionLabel = context.getString(R.string.action_go),
                                 onResult = { snackbarResult ->
                                     if (snackbarResult == SnackbarResult.ActionPerformed) {
-                                        navViewModel.openPermissionsRequiredScreen(
-                                            context.getString(
-                                                R.string.rootCommand_grantDeviceAdminPermission
+                                        navViewModel.openRoute(
+                                            NavigationRoutes.PermissionsRequired(
+                                                context.getString(
+                                                    R.string.rootCommand_grantDeviceAdminPermission
+                                                )
                                             )
                                         )
                                     }

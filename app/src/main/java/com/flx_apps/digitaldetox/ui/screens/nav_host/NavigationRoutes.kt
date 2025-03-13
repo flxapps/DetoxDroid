@@ -35,4 +35,7 @@ sealed class NavigationRoutes : Parcelable {
     data class PermissionsRequired(
         val grantPermissionsCommand: String
     ) : NavigationRoutes()
+
+    @Parcelize
+    data object UsageStats : NavigationRoutes()
 }

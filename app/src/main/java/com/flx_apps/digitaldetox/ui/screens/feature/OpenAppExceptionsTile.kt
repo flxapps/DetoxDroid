@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
@@ -32,7 +33,8 @@ fun OpenAppExceptionsTile(
     subtitleText: String? = null,
 ) {
     val feature = featureViewModel.feature as SupportsAppExceptionsFeature
-    SimpleListTile(titleText = titleText, subtitleText = subtitleText ?: stringResource(
+    SimpleListTile(
+        titleText = titleText, subtitleText = subtitleText ?: stringResource(
         id = if (feature.appExceptionListType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions__notListed
         else R.string.feature_settings_exceptions__onlyListed, feature.appExceptions.size
     ), trailing = {
@@ -42,7 +44,7 @@ fun OpenAppExceptionsTile(
             modifier = Modifier.size(24.dp)
         )
     }, onClick = {
-        navViewModel.openAppExceptionsScreen()
+        navViewModel.openRoute(NavigationRoutes.AppExceptions(featureId = featureViewModel.feature.id))
     }, leadingIcon = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions)
     )
 }

@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.nav_host
 
 import ManageAppExceptionsScreen
+import UsageStatsScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
@@ -11,6 +12,7 @@ import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
 import com.flx_apps.digitaldetox.ui.screens.schedule.FeatureScheduleScreen
 import dev.olshevski.navigation.reimagined.AnimatedNavHost
+import timber.log.Timber
 
 /**
  * The navigation host for the app. It is responsible for routing to the correct screen based on
@@ -25,6 +27,7 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
     AnimatedNavHost(
         backstack = navViewModel.backstack
     ) { route ->
+        Timber.d("Navigating to $route")
         when (route) {
             is NavigationRoutes.Home -> HomeScreen()
 
@@ -43,6 +46,8 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
             is NavigationRoutes.PermissionsRequired -> PermissionsRequiredScreen(
                 grantPermissionsCommand = route.grantPermissionsCommand
             )
+
+            is NavigationRoutes.UsageStats -> UsageStatsScreen()
         }
     }
 }

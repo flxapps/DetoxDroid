@@ -1,7 +1,9 @@
 package com.flx_apps.digitaldetox.ui.screens.home
 
 import StatusIndicator
+import android.annotation.SuppressLint
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +19,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +60,7 @@ import co.yml.charts.ui.piechart.charts.DonutPieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
@@ -63,13 +68,13 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceive
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlinx.coroutines.flow.MutableStateFlow
-import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -85,7 +90,6 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val detoxDroidState: DetoxDroidState = homeViewModel.detoxDroidState.collectAsState().value
-    Timber.d("detoxDroidState = $detoxDroidState")
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
@@ -110,7 +114,6 @@ private fun HomeScreenSnackbarContents(
 ) {
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
-    Timber.d("snackbarState = $snackbarState")
     if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
         // show snackbar to request the write secure settings permission
         LaunchedEffect(key1 = "", block = {
@@ -175,7 +178,8 @@ private fun AppBar(detoxDroidState: DetoxDroidState) {
 private fun StartStopActionButton(
     detoxDroidState: DetoxDroidState, homeViewModel: HomeViewModel = viewModel()
 ) {
-    ExtendedFloatingActionButton(text = { Text(text = stringResource(id = if (detoxDroidState != DetoxDroidState.Inactive) R.string.home_stop else R.string.home_start)) },
+    ExtendedFloatingActionButton(
+        text = { Text(text = stringResource(id = if (detoxDroidState != DetoxDroidState.Inactive) R.string.home_stop else R.string.home_start)) },
         icon = {
             Icon(
                 painter = if (detoxDroidState != DetoxDroidState.Inactive) painterResource(
@@ -194,7 +198,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues) {
+private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = viewModel()) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -227,9 +231,10 @@ private fun HomeScreenContent(it: PaddingValues) {
 @Composable
 fun OpenFeatureTile(
     feature: Feature,
-    navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ComponentActivity)
+    navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)
 ) {
-    androidx.compose.material3.ListItem(headlineContent = { Text(stringResource(id = feature.texts.title)) },
+    androidx.compose.material3.ListItem(
+        headlineContent = { Text(stringResource(id = feature.texts.title)) },
         supportingContent = {
             Text(
                 stringResource(
@@ -254,7 +259,11 @@ fun OpenFeatureTile(
                 )
             }
         },
-        modifier = Modifier.clickable { navViewModel.openManageFeatureScreen(feature.id) })
+        modifier = Modifier.clickable {
+            navViewModel.openRoute(
+                NavigationRoutes.ManageFeature(featureId = feature.id)
+            )
+        })
     return
 }
 
@@ -286,7 +295,8 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
     }
 
     Divider()
-    SimpleListTile(leadingIcon = Icons.Default.DeleteForever,
+    SimpleListTile(
+        leadingIcon = Icons.Default.DeleteForever,
         titleText = stringResource(id = R.string.home_uninstall),
         subtitleText = stringResource(
             id = R.string.home_uninstall_hint
@@ -301,12 +311,13 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
  * A [DonutPieChart] that displays the screen time of the current day and the apps that were used
  * today.
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ScreenTimeChart() {
+fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     // TODO simple workaround to re-render the chart when the lifecycle state changes; it would
     //  perhaps be better to use rememberLauncherForActivityResult to request the usage stats
-    @Suppress("UNUSED_VARIABLE") val lifecycleState =
+    @Suppress("unused", "UnusedVariable") val lifecycleState =
         LocalLifecycleOwner.current.lifecycle.observeAsState().value
 
     val context = LocalContext.current
@@ -353,8 +364,7 @@ fun ScreenTimeChart() {
     )
     Column {
         BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+            modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
         ) {
             DonutPieChart(
                 modifier = Modifier
