@@ -41,6 +41,9 @@ jobs:
         run: |
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+          
+      - name: Add zipalign to PATH
+        run: echo "$ANDROID_SDK_ROOT/build-tools/33.0.0" >> $GITHUB_PATH
 
       - name: Verify Android SDK Setup
         run: |
