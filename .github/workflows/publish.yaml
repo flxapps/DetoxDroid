@@ -41,14 +41,21 @@ jobs:
         run: |
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.0"
-          
-      - name: Add zipalign to PATH
-        run: echo "$ANDROID_SDK_ROOT/build-tools/33.0.0" >> $GITHUB_PATH
 
-      - name: Verify Android SDK Setup
+      - name: Add zipalign to PATH and fix ANDROID_HOME
+        run: |
+          echo "$ANDROID_SDK_ROOT/build-tools/33.0.0" >> $GITHUB_PATH
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/33.0.0:$PATH" >> $GITHUB_ENV
+
+      - name: Verify Android SDK Setup and debug ANDROID_HOME path
         run: |
           sdkmanager --list
           which zipalign
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+          ls -la $ANDROID_HOME
 
       - name: Determine version bump
         id: version
