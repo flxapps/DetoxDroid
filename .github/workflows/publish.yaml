@@ -182,7 +182,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Sign APK
-        uses: ilharp/sign-android-release@v1
+        uses: ilharp/sign-android-release@nightly
         id: sign_app
         with:
           releaseDir: app/build/outputs/apk/release
@@ -194,7 +194,7 @@ jobs:
 
       - name: Rename signed APK
         run: |
-          mv ${{ steps.sign_app.outputs.signedReleaseFile }} ./app-$NEW_VERSION.apk
+          mv ${{ steps.sign_app.outputs.signedFile }} ./app-$NEW_VERSION.apk
 
       - name: Create Git tag
         run: |
