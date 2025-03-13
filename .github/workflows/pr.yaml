@@ -63,10 +63,10 @@ jobs:
       - name: Validate version consistency
         run: |
           # Compare version in build.gradle and fastlane metadata (if exists)
-          if [ -f "app/build.gradle" ]; then
-            GRADLE_FILE="app/build.gradle"
-          elif [ -f "build.gradle" ]; then
-            GRADLE_FILE="build.gradle"
+          if [ -f "app/build.gradle.kts" ]; then
+            GRADLE_FILE="app/build.gradle.kts"
+          elif [ -f "build.gradle.kts" ]; then
+            GRADLE_FILE="build.gradle.kts"
           else
             echo "Could not find build.gradle file"
             exit 0

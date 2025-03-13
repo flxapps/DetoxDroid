@@ -82,10 +82,10 @@ jobs:
       - name: Update version in build.gradle
         run: |
           # Find the main build.gradle file
-          if [ -f "app/build.gradle" ]; then
-            GRADLE_FILE="app/build.gradle"
-          elif [ -f "build.gradle" ]; then
-            GRADLE_FILE="build.gradle"
+          if [ -f "app/build.gradle.kts" ]; then
+            GRADLE_FILE="app/build.gradle.kts"
+          elif [ -f "build.gradle.kts" ]; then
+            GRADLE_FILE="build.gradle.kts"
           else
             echo "Could not find build.gradle file"
             exit 1
@@ -168,7 +168,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt
-          git add app/build.gradle build.gradle || true
+          git add app/build.gradle.kts build.gradle.kts || true
           git commit -m "chore: bump version to v$NEW_VERSION [skip ci]"
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin "v$NEW_VERSION"
