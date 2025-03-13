@@ -3,11 +3,7 @@ package com.flx_apps.digitaldetox.ui.screens.feature
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -23,12 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 
 /**
@@ -53,19 +49,10 @@ fun FeatureScreen(
 ) { // back pressed dispatcher is used to handle back button presses
     val feature = featureViewModel.feature
     val snackbarHostState = FeatureScreenSnackbarStateProvider.snackbarState
-    val onBackPressedDispatcher = (LocalContext.current as MainActivity).onBackPressedDispatcher
     Scaffold(snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
     }, topBar = {
-        LargeTopAppBar(navigationIcon = { // Back button
-            IconButton(onClick = {
-                onBackPressedDispatcher.onBackPressed()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack, contentDescription = "Back"
-                )
-            }
-        }, title = {
+        LargeTopAppBar(navigationIcon = { AppBarBackButton() }, title = {
             Column {
                 Text(stringResource(id = feature.texts.title))
                 Text(

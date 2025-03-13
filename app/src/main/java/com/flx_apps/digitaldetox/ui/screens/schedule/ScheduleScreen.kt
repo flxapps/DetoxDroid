@@ -11,11 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,7 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
-import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -55,20 +53,11 @@ import java.util.Locale
 @Composable
 fun FeatureScheduleScreen(
     featureId: FeatureId,
-    navViewModel: NavViewModel = NavViewModel.navViewModel(),
     scheduleViewModel: ScheduleViewModel = ScheduleViewModel.withFeatureId(featureId)
 ) {
     val bottomSheetVisible = scheduleViewModel.dialogRule.collectAsState(null).value != null
     Scaffold(topBar = {
-        TopAppBar(navigationIcon = {
-            IconButton(onClick = {
-                navViewModel.onBackPress()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack, contentDescription = "Back"
-                )
-            }
-        }, title = {
+        TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
             Text(text = stringResource(id = R.string.feature_settings_schedule))
         })
     }, floatingActionButton = {
@@ -153,10 +142,10 @@ fun FeatureScheduleRuleBottomSheet(
                     val choices =
                         DayOfWeek.values().map { rule.daysOfWeek.contains(it) }.toBooleanArray()
                     showWeekDayPickerDialog(context, choices) {
-                        viewModel.updateBottomSheet(
-                            daysOfWeek = DayOfWeek.values().filterIndexed { index, _ ->
-                                    choices[index]
-                                })
+                        viewModel.updateBottomSheet(daysOfWeek = DayOfWeek.values()
+                            .filterIndexed { index, _ ->
+                                choices[index]
+                            })
                     }
                 })
             SimpleListTile(titleText = stringResource(id = R.string.feature_settings_schedule_from),
@@ -206,8 +195,9 @@ private fun showWeekDayPickerDialog(
 ) {
     AlertDialog.Builder(context)
         .setTitle(context.getString(R.string.feature_settings_schedule_weekdays))
-        .setMultiChoiceItems(DayOfWeek.values()
-            .map { it.getDisplayName(TextStyle.FULL, Locale.getDefault()) }.toTypedArray(), choices
+        .setMultiChoiceItems(
+            DayOfWeek.values().map { it.getDisplayName(TextStyle.FULL, Locale.getDefault()) }
+                .toTypedArray(), choices
         ) { _, which, isChecked ->
             choices[which] = isChecked
         }.setPositiveButton(context.getString(R.string.action_save)) { _, _ ->

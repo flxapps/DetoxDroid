@@ -54,6 +54,7 @@ import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import kotlinx.coroutines.runBlocking
@@ -73,15 +74,7 @@ fun ManageAppExceptionsScreen(
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
     Scaffold(topBar = {
-        TopAppBar(navigationIcon = {
-            IconButton(onClick = {
-                navViewModel.onBackPress()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack, contentDescription = "Back"
-                )
-            }
-        }, title = {
+        TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
             AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
                 AnimatedVisibility(visible = it) {
                     SearchBar(query = appExceptionsViewModel.query.value ?: "",
