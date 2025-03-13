@@ -146,9 +146,6 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleRelease
 
-      - name: Install Android SDK Build Tools
-        run: sdkmanager "build-tools;33.0.0"
-
       - name: Sign APK
         uses: ilharp/sign-android-release@v1
         id: sign_app
