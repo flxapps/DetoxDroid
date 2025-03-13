@@ -161,6 +161,13 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setGrayscale(
         context: Context, grayscale: Boolean
     ): Boolean {
+        if (grayscale) {
+            // save the current color filter
+            defaultDaltonizer = Settings.Secure.getInt(
+                context.contentResolver, DISPLAY_DALTONIZER, -1
+            )
+        }
+
         val contentResolver = context.contentResolver
 
         if (grayscale) {
