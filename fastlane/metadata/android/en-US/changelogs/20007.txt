@@ -1,6 +1,6 @@
 ### Release v2.0.7
 
-✨ New Features
-
 🐛 Bug Fixes
+- save and restore color filter setting during grayscale toggle
+- close-app-after-doomscroll-detectedadd permission to AndroidManifest.xml
 
