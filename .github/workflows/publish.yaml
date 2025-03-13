@@ -24,6 +24,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          build-tools-version: "33.0.0"  # Specify the required build tools version
+          platform-version: "33"        # Specify the required platform version
+
       - name: Determine version bump
         id: version
         run: |
