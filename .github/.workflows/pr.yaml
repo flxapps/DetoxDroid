@@ -1,0 +1,79 @@
+name: Android PR Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Check code style
+        run: ./gradlew ktlintCheck || true
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Upload build reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-reports
+          path: |
+            */build/reports/
+
+      - name: Check for conventional commit format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if ! echo "$PR_TITLE" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?: .+$'; then
+            echo "Warning: PR title doesn't follow conventional commit format."
+            echo "Expected format: 'type(scope): description' where type is one of: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+            echo "Example: 'feat(ui): add new login screen'"
+            exit 0  # Warning only, don't fail the build
+          fi
+
+      - name: Validate version consistency
+        run: |
+          # Compare version in build.gradle and fastlane metadata (if exists)
+          if [ -f "app/build.gradle" ]; then
+            GRADLE_FILE="app/build.gradle"
+          elif [ -f "build.gradle" ]; then
+            GRADLE_FILE="build.gradle"
+          else
+            echo "Could not find build.gradle file"
+            exit 0
+          fi
+          
+          # Just verify that version info exists in build file
+          if ! grep -q "versionCode\|version =" "$GRADLE_FILE"; then
+            echo "Warning: Version information not found in Gradle file"
+            exit 0
+          fi

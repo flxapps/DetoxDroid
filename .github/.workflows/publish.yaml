@@ -1,0 +1,185 @@
+name: Publish Android App
+
+on:
+  workflow_dispatch:
+    inputs:
+      force-bump:
+        description: 'Force version bump type (patch, minor, major)'
+        required: false
+        default: ''
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history and tags for versioning
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Determine version bump
+        id: version
+        run: |
+          # Get the latest tag
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $latest_tag"
+          
+          # Parse semantic version
+          latest_version=${latest_tag#v}
+          IFS='.' read -r major minor patch <<< "$latest_version"
+          
+          # Default bump type based on conventional commits
+          bump_type="patch"  # Default to patch
+          
+          # Check for force bump input
+          if [ -n "${{ github.event.inputs.force-bump }}" ]; then
+            bump_type="${{ github.event.inputs.force-bump }}"
+          else
+            # Get conventional commits since last tag
+            commits=$(git log $latest_tag..HEAD --pretty=format:"%s")
+          
+            if echo "$commits" | grep -q "^feat\|^feat("; then
+              bump_type="minor"
+            fi
+          
+            if echo "$commits" | grep -q "^BREAKING CHANGE\|^feat!:\|^fix!:"; then
+              bump_type="major"
+            fi
+          fi
+          
+          # Increment version based on bump type
+          if [ "$bump_type" = "patch" ]; then
+            ((patch++))
+          elif [ "$bump_type" = "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          elif [ "$bump_type" = "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          fi
+          
+          # Calculate version code (e.g., 10203 for 1.2.3)
+          version_code=$((major * 10000 + minor * 100 + patch))
+          
+          # Set outputs
+          new_version="$major.$minor.$patch"
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+          echo "VERSION_CODE=$version_code" >> $GITHUB_ENV
+          echo "BUMP_TYPE=$bump_type" >> $GITHUB_ENV
+          
+          echo "New version: v$new_version"
+          echo "Version code: $version_code"
+          echo "Bump type: $bump_type"
+
+      - name: Update version in build.gradle
+        run: |
+          # Find the main build.gradle file
+          if [ -f "app/build.gradle" ]; then
+            GRADLE_FILE="app/build.gradle"
+          elif [ -f "build.gradle" ]; then
+            GRADLE_FILE="build.gradle"
+          else
+            echo "Could not find build.gradle file"
+            exit 1
+          fi
+          
+          # For Groovy DSL
+          if grep -q "versionCode" "$GRADLE_FILE"; then
+            sed -i "s/versionCode .*/versionCode $VERSION_CODE/" "$GRADLE_FILE"
+            sed -i "s/versionName .*/versionName \"$NEW_VERSION\"/" "$GRADLE_FILE"
+          fi
+          
+          # For Kotlin DSL
+          if grep -q "version =" "$GRADLE_FILE"; then
+            sed -i "s/version = .*/version = \"$NEW_VERSION\"/" "$GRADLE_FILE"
+            sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$GRADLE_FILE"
+          fi
+          
+          cat "$GRADLE_FILE"
+
+      - name: Generate changelog
+        run: |
+          # Create F-Droid compatible changelog directory structure
+          mkdir -p fastlane/metadata/android/en-US/changelogs
+          
+          # Determine the range for changelog
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$latest_tag" ]; then
+            # First release - use all commits
+            git_range="HEAD"
+          else
+            # Use commits since last tag
+            git_range="$latest_tag..HEAD"
+          fi
+          
+          # Generate changelog based on conventional commits
+          echo "### Release v$NEW_VERSION" > "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          echo "" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          
+          if [ "$BUMP_TYPE" = "major" ]; then
+            echo "⚠️ BREAKING CHANGES" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+            git log $git_range --pretty=format:"- %s" | grep "^BREAKING CHANGE\|^feat!:\|^fix!:" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt" || true
+            echo "" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          fi
+          
+          # Features
+          echo "✨ New Features" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          git log $git_range --pretty=format:"- %s" | grep "^feat" | sed "s/^feat: //" | sed "s/^feat(\(.*\)): /\1: /" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt" || true
+          echo "" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          
+          # Bug fixes
+          echo "🐛 Bug Fixes" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          git log $git_range --pretty=format:"- %s" | grep "^fix" | sed "s/^fix: //" | sed "s/^fix(\(.*\)): /\1: /" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt" || true
+          echo "" >> "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          
+          # Show the generated changelog
+          cat "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "33.0.0"
+
+      - name: Rename signed APK
+        run: |
+          mv ${{ steps.sign_app.outputs.signedReleaseFile }} ./app-$NEW_VERSION.apk
+
+      - name: Create Git tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt
+          git add app/build.gradle build.gradle || true
+          git commit -m "chore: bump version to v$NEW_VERSION [skip ci]"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
+          git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Release v${{ env.NEW_VERSION }}
+          body_path: fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt
+          files: ./app-${{ env.NEW_VERSION }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
