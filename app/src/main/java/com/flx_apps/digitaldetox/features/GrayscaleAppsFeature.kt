@@ -54,6 +54,14 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private var isCurrentlyGrayscale: Boolean = false
 
     /**
+     * We use this for people who use a color filter for color blindness. If the user has a color
+     * filter enabled, we want to save the current filter and restore it when the grayscale filter
+     * is turned off.
+     * -1 means that the user does not have a color filter enabled.
+     */
+    private var defaultDaltonizer: Int = -1
+
+    /**
      * Whether the extra dim filter should be turned on when the grayscale filter is active.
      */
     var extraDim: Boolean by DataStoreProperty(
@@ -152,13 +160,22 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setGrayscale(
         context: Context, grayscale: Boolean
     ): Boolean {
+        if (grayscale) {
+            // save the current color filter
+            defaultDaltonizer = Settings.Secure.getInt(
+                context.contentResolver, DISPLAY_DALTONIZER, -1
+            )
+        }
+
         val contentResolver = context.contentResolver
         // enable/disable grayscale
         val result1 = Settings.Secure.putInt(
-            contentResolver, DISPLAY_DALTONIZER_ENABLED, if (grayscale) 1 else 0
+            contentResolver,
+            DISPLAY_DALTONIZER_ENABLED,
+            if (grayscale || defaultDaltonizer != -1) 1 else 0
         )
         val result2 = Settings.Secure.putInt(
-            contentResolver, DISPLAY_DALTONIZER, if (grayscale) 0 else -1
+            contentResolver, DISPLAY_DALTONIZER, if (grayscale) 0 else defaultDaltonizer
         )
         var result3 = true
         if (extraDim) {
