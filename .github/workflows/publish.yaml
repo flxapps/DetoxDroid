@@ -91,16 +91,16 @@ jobs:
             exit 1
           fi
           
-          # For Groovy DSL
-          if grep -q "versionCode" "$GRADLE_FILE"; then
-            sed -i "s/versionCode .*/versionCode $VERSION_CODE/" "$GRADLE_FILE"
-            sed -i "s/versionName .*/versionName \"$NEW_VERSION\"/" "$GRADLE_FILE"
+          # For Kotlin DSL
+          if grep -q "versionName =" "$GRADLE_FILE"; then
+            sed -i "s/versionName = .*/versionName = \"$NEW_VERSION\"/" "$GRADLE_FILE"
+            sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$GRADLE_FILE"
           fi
           
-          # For Kotlin DSL
-          if grep -q "version =" "$GRADLE_FILE"; then
-            sed -i "s/version = .*/version = \"$NEW_VERSION\"/" "$GRADLE_FILE"
-            sed -i "s/versionCode = .*/versionCode = $VERSION_CODE/" "$GRADLE_FILE"
+          # For Groovy DSL
+          elif grep -q "versionCode" "$GRADLE_FILE"; then
+            sed -i "s/versionCode .*/versionCode $VERSION_CODE/" "$GRADLE_FILE"
+            sed -i "s/versionName .*/versionName \"$NEW_VERSION\"/" "$GRADLE_FILE"
           fi
           
           cat "$GRADLE_FILE"
