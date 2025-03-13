@@ -18,7 +18,8 @@ import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeat
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature.eventuallyIncreaseUsedUpScreenTime
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.eventuallyIncreaseUsedUpScreenTime
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.onAppOpened
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 
@@ -160,14 +161,18 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setGrayscale(
         context: Context, grayscale: Boolean
     ): Boolean {
+        val contentResolver = context.contentResolver
+
         if (grayscale) {
             // save the current color filter
-            defaultDaltonizer = Settings.Secure.getInt(
-                context.contentResolver, DISPLAY_DALTONIZER, -1
-            )
+            val isDaltonizerEnabled = Settings.Secure.getInt(
+                contentResolver, DISPLAY_DALTONIZER_ENABLED, -1
+            ) == 1
+            defaultDaltonizer = if (isDaltonizerEnabled) Settings.Secure.getInt(
+                contentResolver, DISPLAY_DALTONIZER, -1
+            ) else -1
         }
 
-        val contentResolver = context.contentResolver
         // enable/disable grayscale
         val result1 = Settings.Secure.putInt(
             contentResolver,
