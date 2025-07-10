@@ -377,7 +377,7 @@ fun ScreenTimeChart() {
                 if (stats.isNotEmpty()) {
                     if (selectedSlice.value != null) {
                         val selectedIndex = donutChartData.slices.indexOf(selectedSlice.value)
-                        if(selectedIndex < chartStats.count()) {
+                        if(selectedIndex >= 0 && selectedIndex < chartStats.count()) {
                             val selectedStat = chartStats[selectedIndex]
                             Text(
                                 text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(),
@@ -387,7 +387,7 @@ fun ScreenTimeChart() {
                                 text = packageManager.getApplicationInfo(selectedStat.packageName, 0).loadLabel(packageManager).toString(),
                                 style = MaterialTheme.typography.labelSmall
                             )
-                        } else if(selectedIndex < 0 || selectedIndex == chartStats.count()) {
+                        } else {
                             Text(
                                 text = otherTime.toLong().milliseconds.toHrMinString(),
                                 style = MaterialTheme.typography.titleLarge
