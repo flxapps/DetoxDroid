@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -43,12 +44,14 @@ import kotlin.time.Duration.Companion.minutes
 fun GrayscaleAppsFeatureSettingsSection(
     viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()
 ) {
-    AppExceptionListTypeTile()
-    OpenAppExceptionsTile()
+    val appExceptionListType by viewModel.appExceptionListType.collectAsState()
+
+    AppExceptionListTypeTile(viewModel = viewModel)
+    OpenAppExceptionsTile(listType = appExceptionListType)
     OpenScheduleTile()
-    ExtraDimTile()
-    IgnoreFullScreenAppsTile()
-    AllowedDailyColorScreenTimeTile()
+    ExtraDimTile(viewModel = viewModel)
+    IgnoreFullScreenAppsTile(viewModel = viewModel)
+    AllowedDailyColorScreenTimeTile(viewModel = viewModel)
 }
 
 @Composable

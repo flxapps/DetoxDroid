@@ -28,12 +28,21 @@ import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 fun OpenAppExceptionsTile(
     featureViewModel: FeatureViewModel = viewModel(),
     navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalContext.current as MainActivity),
-    titleText: String = stringResource(id = R.string.feature_settings_exceptions),
+    titleText: String? = null,
     subtitleText: String? = null,
+    listType: AppExceptionListType? = null
 ) {
     val feature = featureViewModel.feature as SupportsAppExceptionsFeature
-    SimpleListTile(titleText = titleText, subtitleText = subtitleText ?: stringResource(
-        id = if (feature.appExceptionListType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions__notListed
+    val currentListType = listType ?: feature.appExceptionListType
+
+    val finalTitleText = titleText ?: if (currentListType == AppExceptionListType.NOT_LIST) {
+        stringResource(id = R.string.feature_settings_exceptions)
+    } else {
+        stringResource(id = R.string.feature_settings_inclusions)
+    }
+
+    SimpleListTile(titleText = finalTitleText, subtitleText = subtitleText ?: stringResource(
+        id = if (currentListType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions__notListed
         else R.string.feature_settings_exceptions__onlyListed, feature.appExceptions.size
     ), trailing = {
         Icon(
