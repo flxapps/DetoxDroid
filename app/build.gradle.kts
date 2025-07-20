@@ -125,8 +125,6 @@ dependencies {
     // Material Icons
     implementation("androidx.compose.material:material-icons-extended")
 
-    // RootTools for running (adb) commands as root
-    implementation("com.github.Stericson:RootShell:1.6")
 }
 
 kotlin.sourceSets.all {
