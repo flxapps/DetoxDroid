@@ -53,7 +53,7 @@
 
     <string name="feature.grayscale">Automatic Grayscale</string>
     <string name="feature.grayscale.subtitle">Color up by coloring down your phone</string>
-    <string name="feature.grayscale.description">Apps compete for your attention, and colors can have an enticing, manipulative effect. With DetoxDroid, you can strip away all the neuron-stimulating colors, while allowing exceptions where necessary.</string>
+    <string name="feature.grayscale.description">Colors are a key way apps grab your attention. By switching to grayscale, you can reduce these digital temptations and encourage more mindful phone use. You can customize which apps are affected.</string>
     <string name="feature.grayscale.allowedColorScreenTime">Allowed Daily Color Screen Time</string>
     <string name="feature.grayscale.allowedColorScreenTime.description">Select how much screen time you want to allow per day until the Automatic Grayscale mode activates. (DetoxDroid has to be running for screen time tracking.)</string>
     <string name="feature.grayscale.extraDim">Extra Dim</string>
@@ -92,14 +92,15 @@
     <string name="feature.settings.inclusions">App Inclusions</string>
     <string name="feature.settings.exceptions._notListed">%d apps will not be affected by this feature</string>
     <string name="feature.settings.exceptions._onlyListed">%d apps will only be affected by this feature</string>
-    <string name="feature.settings.exceptions.description">Select exceptions that will be either ignored or only affected by this feature (depending on your settings).</string>
+    <string name="feature.settings.exceptions.description">Select apps that should not be affected by this feature. All other apps will be grayscaled.</string>
+    <string name="feature.settings.inclusions.description">Select the apps that should be affected by this feature. All other apps will appear normally.</string>
     <string name="feature.settings.exceptions.empty">No apps found.</string>
     <string name="feature.settings.exceptions.filterByAppType">Filter by app type</string>
     <string name="feature.settings.exceptions.filterByCategory">Filter by app category</string>
-    <string name="feature.settings.exceptions.listType">Exception list type</string>
-    <string name="feature.settings.exceptions.listType.description">Select whether the list should contain apps that are either NOT or ONLY affected by this feature.</string>
-    <string name="feature.settings.exceptions.listType.notList">Not-List</string>
-    <string name="feature.settings.exceptions.listType.onlyList">Only-List</string>
+    <string name="feature.settings.exceptions.listType">Filter Mode</string>
+    <string name="feature.settings.exceptions.listType.description">Choose how to apply the grayscale filter based on your selected apps.</string>
+    <string name="feature.settings.exceptions.listType.notList">Exclude Apps</string>
+    <string name="feature.settings.exceptions.listType.onlyList">Include Apps</string>
 
     <string name="feature.settings.schedule">Feature Schedule</string>
     <string name="feature.settings.schedule.hint">%d rules are set.</string>

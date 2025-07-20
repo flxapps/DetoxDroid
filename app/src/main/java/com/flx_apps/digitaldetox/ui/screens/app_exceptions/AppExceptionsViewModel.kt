@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
@@ -48,6 +49,9 @@ class AppExceptionsViewModel @Inject constructor(
      * Feature cast to [SupportsAppExceptionsFeature].
      */
     private val appExceptionsFeature = feature as SupportsAppExceptionsFeature
+
+    val exceptionListType: AppExceptionListType
+        get() = appExceptionsFeature.appExceptionListType
 
     /**
      * Holds the list of all installed apps.

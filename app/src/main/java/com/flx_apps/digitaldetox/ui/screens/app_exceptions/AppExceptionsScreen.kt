@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
@@ -70,6 +71,8 @@ fun ManageAppExceptionsScreen(
     appExceptionsViewModel: AppExceptionsViewModel = AppExceptionsViewModel.withFeatureId(featureId),
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
+    val listType = appExceptionsViewModel.exceptionListType
+
     Scaffold(topBar = {
         TopAppBar(navigationIcon = {
             IconButton(onClick = {
@@ -103,7 +106,7 @@ fun ManageAppExceptionsScreen(
                         }) {}
                 }
                 AnimatedVisibility(visible = !it) {
-                    Text(stringResource(id = R.string.feature_settings_exceptions))
+                    Text(stringResource(id = if (listType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions else R.string.feature_settings_inclusions))
                 }
             }
         }, actions = {
@@ -145,6 +148,8 @@ fun InstalledAppsList(
     appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
     val appExceptions = appExceptionsViewModel.appExceptionItems.collectAsState().value
+    val listType = appExceptionsViewModel.exceptionListType
+
     if (appExceptions.isNullOrEmpty()) {
         Center {
             if (appExceptions == null) {
@@ -156,7 +161,12 @@ fun InstalledAppsList(
     } else {
         LazyColumn {
             item {
-                InfoCard(infoText = stringResource(id = R.string.feature_settings_exceptions_description))
+                val descriptionResId = if (listType == AppExceptionListType.NOT_LIST) {
+                    R.string.feature_settings_exceptions_description
+                } else {
+                    R.string.feature_settings_inclusions_description
+                }
+                InfoCard(infoText = stringResource(id = descriptionResId))
             }
             items(appExceptions, key = { item -> item.packageName }) { appException ->
                 AppExceptionListItem(appException)
