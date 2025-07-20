@@ -135,7 +135,7 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
             initialValue = allowedDailyColorScreenTime,
             onValueSelected = { viewModel.setAllowedDailyColorScreenTime(it.toLong()) },
             onDismissRequest = { viewModel.setShowAllowedDailyColorScreenTimeDialog(false) },
-            range = 0..180 step 15,
+            range = 0..180 step 5,
             label = { it.minutes.toHrMinString() })
     }
     val context = LocalContext.current
