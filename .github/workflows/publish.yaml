@@ -60,135 +60,96 @@ jobs:
       - name: Determine version bump
         id: version
         run: |
-          echo "🚀 Starting version bump determination..."
-          echo "================================================"
+          echo "Determining version bump..."
           
           # Get the latest tag, or an empty string if none exist
-          echo "📋 Checking for existing tags..."
+          echo "Checking for existing git tags..."
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$latest_tag" ]; then
-            echo "ℹ️  No existing tags found - this will be the first release"
-          else
-            echo "✅ Latest tag found: $latest_tag"
-          fi
+          echo "Latest tag (if any): $latest_tag"
 
           # Determine the commit range for analysis
+          echo "Determining commit range for analysis..."
           if [ -z "$latest_tag" ]; then
             # No tags exist, so analyze all commits for the first release
             commit_range="HEAD"
             # Set a base version for the very first run
             latest_version="0.0.0"
-            echo "📊 Analyzing all commits for first release"
-            echo "📈 Starting from base version: $latest_version"
+            echo "No existing tags found, using base version: $latest_version"
           else
             # Analyze commits since the last tag
             commit_range="$latest_tag..HEAD"
             latest_version=${latest_tag#v}
-            echo "📊 Analyzing commits since last tag: $latest_tag"
-            echo "📈 Current version: $latest_version"
+            echo "Found tag $latest_tag, extracted version: $latest_version"
           fi
-          echo "🔍 Commit range to analyze: $commit_range"
-          
-          # Count commits in range
-          commit_count=$(git rev-list --count $commit_range)
-          echo "📝 Number of commits to analyze: $commit_count"
+          echo "Analyzing commits in range: $commit_range"
           
           # Parse semantic version
-          echo "🔧 Parsing current version components..."
+          echo "Parsing version components from: $latest_version"
           major=$(echo "$latest_version" | cut -d. -f1)
           minor=$(echo "$latest_version" | cut -d. -f2)
           patch=$(echo "$latest_version" | cut -d. -f3)
-          echo "   📌 Current Major: $major"
-          echo "   📌 Current Minor: $minor"
-          echo "   📌 Current Patch: $patch"
+          echo "Parsed version - Major: $major, Minor: $minor, Patch: $patch"
           
           # Default bump type based on conventional commits
           bump_type="patch"  # Default to patch
-          echo "🎯 Default bump type: $bump_type"
+          echo "Default bump type set to: $bump_type"
           
           # Check for force bump input
           if [ -n "${{ github.event.inputs.force-bump }}" ]; then
             bump_type="${{ github.event.inputs.force-bump }}"
-            echo "🔒 Force bump detected: $bump_type (overriding automatic detection)"
+            echo "Force bump detected: $bump_type"
           else
-            echo "🤖 Analyzing commits for automatic bump type detection..."
             # Get conventional commits from the determined range
+            echo "Analyzing commit messages for conventional commit patterns..."
             commits=$(git log $commit_range --pretty=format:"%s")
-            
-            echo "📜 Commits to analyze:"
-            echo "$commits" | sed 's/^/   🔸 /'
-            
-            # Check for features first (minor bump)
-            feature_commits=$(echo "$commits" | grep -E "^feat\|^feat(" || true)
-            if [ -n "$feature_commits" ]; then
+            echo "Found $(echo "$commits" | wc -l) commits to analyze"
+          
+            echo "Checking for feature commits..."
+            if echo "$commits" | grep -q "^feat\|^feat("; then
               bump_type="minor"
-              echo "✨ Feature commits detected - setting bump type to minor:"
-              echo "$feature_commits" | sed 's/^/   ➤ /'
+              echo "Feature commit detected. Bumping to minor version."
             fi
           
-            # Check for breaking changes (major bump) - this overrides feature detection
-            breaking_commits=$(echo "$commits" | grep -E "^BREAKING CHANGE\|^feat!:\|^fix!:" || true)
-            if [ -n "$breaking_commits" ]; then
+            echo "Checking for breaking changes..."
+            if echo "$commits" | grep -q "^BREAKING CHANGE\|^feat!:\|^fix!:"; then
               bump_type="major"
-              echo "⚠️  Breaking change commits detected - setting bump type to major:"
-              echo "$breaking_commits" | sed 's/^/   ➤ /'
-            fi
-            
-            # Check for regular fixes if no features or breaking changes
-            if [ "$bump_type" = "patch" ]; then
-              fix_commits=$(echo "$commits" | grep -E "^fix(\(.*\))?:" || true)
-              if [ -n "$fix_commits" ]; then
-                echo "🐛 Fix commits detected - keeping patch bump:"
-                echo "$fix_commits" | sed 's/^/   ➤ /'
-              fi
+              echo "Breaking change detected. Bumping to major version."
             fi
           fi
           
-          echo "🎯 Final bump type determined: $bump_type"
-          
-          # Store original values for logging
-          original_major=$major
-          original_minor=$minor
-          original_patch=$patch
+          echo "Final bump type determined: $bump_type"
           
           # Increment version based on bump type
-          echo "⬆️  Calculating new version..."
+          echo "Incrementing version numbers..."
           if [ "$bump_type" = "patch" ]; then
+            echo "Incrementing patch version from $patch to $((patch + 1))"
             ((patch++))
-            echo "   📈 Incrementing patch: $original_patch → $patch"
           elif [ "$bump_type" = "minor" ]; then
+            echo "Incrementing minor version from $minor to $((minor + 1)) and resetting patch to 0"
             minor=$((minor + 1))
             patch=0
-            echo "   📈 Incrementing minor: $original_minor → $minor"
-            echo "   🔄 Resetting patch: $original_patch → $patch"
           elif [ "$bump_type" = "major" ]; then
+            echo "Incrementing major version from $major to $((major + 1)) and resetting minor/patch to 0"
             major=$((major + 1))
             minor=0
             patch=0
-            echo "   📈 Incrementing major: $original_major → $major"
-            echo "   🔄 Resetting minor: $original_minor → $minor"
-            echo "   🔄 Resetting patch: $original_patch → $patch"
           fi
           
           # Calculate version code (e.g., 10203 for 1.2.3)
-          echo "🔢 Calculating version code..."
+          echo "Calculating version code..."
           version_code=$((major * 10000 + minor * 100 + patch))
-          echo "   📊 Formula: ($major * 10000) + ($minor * 100) + $patch = $version_code"
+          echo "Calculated version code: $version_code"
           
           # Set outputs
           new_version="$major.$minor.$patch"
-          echo "💾 Setting environment variables..."
+          echo "Setting environment variables..."
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
           echo "VERSION_CODE=$version_code" >> $GITHUB_ENV
           echo "BUMP_TYPE=$bump_type" >> $GITHUB_ENV
           
-          echo "================================================"
-          echo "🎉 Version bump determination complete!"
-          echo "   📦 New version: v$new_version"
-          echo "   🔢 Version code: $version_code"
-          echo "   📈 Bump type: $bump_type"
-          echo "   🔄 Change: v$latest_version → v$new_version"
-          echo "================================================"
+          echo "New version: v$new_version"
+          echo "Version code: $version_code"
+          echo "Bump type: $bump_type"
 
       - name: Update version in build.gradle
         run: |
