@@ -20,7 +20,7 @@ android {
             val keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
 
             if (storeFile != null && !storeFile.isNullOrEmpty()) {
-                this.storeFile = file(storeFile)
+                this.storeFile = file("$rootDir/$storeFile")
                 this.storePassword = storePassword
                 this.keyAlias = keyAlias
                 this.keyPassword = keyPassword
