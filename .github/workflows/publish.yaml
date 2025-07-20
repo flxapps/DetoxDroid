@@ -123,7 +123,7 @@ jobs:
           echo "Incrementing version numbers..."
           if [ "$bump_type" = "patch" ]; then
             echo "Incrementing patch version from $patch to $((patch + 1))"
-            ((patch++))
+            patch=$((patch + 1))
           elif [ "$bump_type" = "minor" ]; then
             echo "Incrementing minor version from $minor to $((minor + 1)) and resetting patch to 0"
             minor=$((minor + 1))
