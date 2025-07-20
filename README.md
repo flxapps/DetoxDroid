@@ -11,7 +11,7 @@
 
 Usually, "Digital Detoxing" apps in Android are about opting-in for a contract to not use our phones for the next X minutes. Or that we will not use the app Y for more than Z minutes. These contracts are often reinforced with financial incentives, i.e. if we fail we will have to pay a fee of a few dollars to the developers.
 
-This app follows a different approach by stripping away all the attention-grabbing and manipulative features of other apps. DetoxDroid does not require you to choose a time and place when you want to "detox", or punish you if you fail. Instead, it aims to enable you to use your phone rather than letting your phone use you.
+This app follows a different approach by default, stripping away all the attention-grabbing and manipulative features of other apps. DetoxDroid does not require you to choose a time and place when you want to "detox", or punish you if you fail. Instead, it aims to enable you to use your phone rather than letting your phone use you.
 
 ## Features
 
