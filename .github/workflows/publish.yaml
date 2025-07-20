@@ -79,7 +79,9 @@ jobs:
           echo "Analyzing commits in range: $commit_range"
           
           # Parse semantic version
-          IFS='.' read -r major minor patch <<< "$latest_version"
+          major=$(echo "$latest_version" | cut -d. -f1)
+          minor=$(echo "$latest_version" | cut -d. -f2)
+          patch=$(echo "$latest_version" | cut -d. -f3)          
           
           # Default bump type based on conventional commits
           bump_type="patch"  # Default to patch
