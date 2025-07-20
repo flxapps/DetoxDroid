@@ -53,10 +53,6 @@ If you like the project, feel free to support further development.
 - [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
 - [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
 
-
-
-Here’s the updated snippet with the two screenshots at 150 px width, rendered side-by-side:
-
 ## Troubleshooting
 
 ### “App was denied access” on Pixel / Android 12+
