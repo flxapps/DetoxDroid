@@ -186,24 +186,21 @@ jobs:
           
               # Show the changelog
               cat "$changelog_file"
+      
+      - name: Decode Keystore
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > release.keystore
 
-      - name: Build APK
+      - name: Build and Sign Release APK
         run: ./gradlew assembleRelease
-
-      - name: Sign APK
-        uses: ilharp/sign-android-release@nightly
-        id: sign_app
-        with:
-          releaseDir: app/build/outputs/apk/release
-          signingKey: ${{ secrets.SIGNING_KEY }}
-          keyAlias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-          buildToolsVersion: 35.0.0
+        env:
+          SIGNING_STORE_FILE: "release.keystore"
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Rename signed APK
         run: |
-          mv ${{ steps.sign_app.outputs.signedFile }} ./app-$NEW_VERSION.apk
+          mv app/build/outputs/apk/release/app-release.apk ./app-v${{ env.NEW_VERSION }}.apk
 
       - name: Create Git tag
         run: |
@@ -222,6 +219,6 @@ jobs:
           tag_name: v${{ env.NEW_VERSION }}
           name: Release v${{ env.NEW_VERSION }}
           body_path: fastlane/metadata/android/en-US/changelogs/${{ env.VERSION_CODE }}.txt
-          files: ./app-${{ env.NEW_VERSION }}.apk
+          files: ./app-v${{ env.NEW_VERSION }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

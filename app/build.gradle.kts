@@ -11,6 +11,23 @@ android {
     namespace = "com.flx_apps.digitaldetox"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            // Will provide these values via GitHub Secrets and environment variables
+            val storeFile = System.getenv("SIGNING_STORE_FILE")
+            val storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            val keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+            val keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+
+            if (storeFile != null && !storeFile.isNullOrEmpty()) {
+                storeFile(file(storeFile))
+                storePassword(storePassword)
+                keyAlias(keyAlias)
+                keyPassword(keyPassword)
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.flx_apps.digitaldetox"
         minSdk = 26
@@ -30,6 +47,8 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+            // Tell the release build to use signing config
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
