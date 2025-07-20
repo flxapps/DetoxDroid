@@ -60,6 +60,7 @@ jobs:
       - name: Determine version bump
         id: version
         run: |
+          echo "Determining version bump..."
           # Get the latest tag, or an empty string if none exist
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "Latest tag (if any): $latest_tag"
@@ -86,16 +87,19 @@ jobs:
           # Check for force bump input
           if [ -n "${{ github.event.inputs.force-bump }}" ]; then
             bump_type="${{ github.event.inputs.force-bump }}"
+            echo "Force bump detected: $bump_type"
           else
             # Get conventional commits from the determined range
             commits=$(git log $commit_range --pretty=format:"%s")
           
             if echo "$commits" | grep -q "^feat\|^feat("; then
               bump_type="minor"
+              echo "Feature commit detected. Bumping to minor version."
             fi
           
             if echo "$commits" | grep -q "^BREAKING CHANGE\|^feat!:\|^fix!:"; then
               bump_type="major"
+              echo "Breaking change detected. Bumping to major version."
             fi
           fi
           
