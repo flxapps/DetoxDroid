@@ -60,12 +60,24 @@ jobs:
       - name: Determine version bump
         id: version
         run: |
-          # Get the latest tag
-          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "Latest tag: $latest_tag"
+          # Get the latest tag, or an empty string if none exist
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "Latest tag (if any): $latest_tag"
+
+          # Determine the commit range for analysis
+          if [ -z "$latest_tag" ]; then
+            # No tags exist, so analyze all commits for the first release
+            commit_range="HEAD"
+            # Set a base version for the very first run
+            latest_version="0.0.0"
+          else
+            # Analyze commits since the last tag
+            commit_range="$latest_tag..HEAD"
+            latest_version=${latest_tag#v}
+          fi
+          echo "Analyzing commits in range: $commit_range"
           
           # Parse semantic version
-          latest_version=${latest_tag#v}
           IFS='.' read -r major minor patch <<< "$latest_version"
           
           # Default bump type based on conventional commits
@@ -75,8 +87,8 @@ jobs:
           if [ -n "${{ github.event.inputs.force-bump }}" ]; then
             bump_type="${{ github.event.inputs.force-bump }}"
           else
-            # Get conventional commits since last tag
-            commits=$(git log $latest_tag..HEAD --pretty=format:"%s")
+            # Get conventional commits from the determined range
+            commits=$(git log $commit_range --pretty=format:"%s")
           
             if echo "$commits" | grep -q "^feat\|^feat("; then
               bump_type="minor"
@@ -169,7 +181,7 @@ jobs:
           fi
 
           # Handle Features
-          features=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
+          features=$(git log $git_range --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
               if [ -n "$features" ]; then
                 echo "✨ New Features" >> "$changelog_file"
                 echo "$features" >> "$changelog_file"
@@ -177,7 +189,7 @@ jobs:
               fi
           
           # Handle Bug Fixes
-          fixes=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
+          fixes=$(git log $git_range --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
               if [ -n "$fixes" ]; then
                 echo "🐛 Bug Fixes" >> "$changelog_file"
                 echo "$fixes" >> "$changelog_file"
