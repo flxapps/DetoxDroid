@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
 import androidx.lifecycle.ViewModel
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,9 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor() : ViewModel() 
     val showAllowedDailyColorScreenTimeDialog: StateFlow<Boolean> =
         _showAllowedDailyColorScreenTimeDialog
 
+    private val _appExceptionListType = MutableStateFlow(GrayscaleAppsFeature.appExceptionListType)
+    val appExceptionListType: StateFlow<AppExceptionListType> = _appExceptionListType
+
     /**
      * Toggles the extra dim setting.
      */
@@ -79,5 +83,10 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor() : ViewModel() 
         GrayscaleAppsFeature.allowedDailyColorScreenTime =
             minutes.minutes.inWholeMilliseconds // convert to milliseconds
         _allowedDailyColorScreenTime.value = minutes
+    }
+
+    fun setAppExceptionListType(type: AppExceptionListType) {
+        GrayscaleAppsFeature.appExceptionListType = type
+        _appExceptionListType.value = type
     }
 }

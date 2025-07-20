@@ -48,9 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureId
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -283,21 +281,6 @@ fun AppExceptionsListSettingsSheet(
                         }
                     }
                 })
-            val listTypeMap = mapOf(
-                R.string.feature_settings_exceptions_listType_notList to AppExceptionListType.NOT_LIST,
-                R.string.feature_settings_exceptions_listType_onlyList to AppExceptionListType.ONLY_LIST
-            ).filter { (viewModel.feature as SupportsAppExceptionsFeature).listTypes.contains(it.value) }
-            if (listTypeMap.size > 1) {
-                androidx.compose.material3.ListItem(headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_listType)) },
-                    supportingContent = {
-                        Column {
-                            Text(text = stringResource(id = R.string.feature_settings_exceptions_listType_description))
-                            OptionsRow(options = listTypeMap,
-                                selectedOption = viewModel.exceptionListType.collectAsState().value,
-                                onOptionSelected = { viewModel.setExceptionListType(it as AppExceptionListType) })
-                        }
-                    })
-            }
             // FIXME there should be a better way to do this, e.g. using Modifier.navigationBarsPadding(),
             //  but I couldn't get it to work for some reason
             Box(modifier = Modifier.height(48.dp))

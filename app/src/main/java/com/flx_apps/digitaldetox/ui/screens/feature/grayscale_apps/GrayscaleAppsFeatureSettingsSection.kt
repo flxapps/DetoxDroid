@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
+import OptionsRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
@@ -8,16 +9,20 @@ import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreenSnackbarStateProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
@@ -38,11 +43,41 @@ import kotlin.time.Duration.Companion.minutes
 fun GrayscaleAppsFeatureSettingsSection(
     viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()
 ) {
+    AppExceptionListTypeTile()
     OpenAppExceptionsTile()
     OpenScheduleTile()
     ExtraDimTile()
     IgnoreFullScreenAppsTile()
     AllowedDailyColorScreenTimeTile()
+}
+
+@Composable
+fun AppExceptionListTypeTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+    val listTypeMap = mapOf(
+        R.string.feature_settings_exceptions_listType_notList to AppExceptionListType.NOT_LIST,
+        R.string.feature_settings_exceptions_listType_onlyList to AppExceptionListType.ONLY_LIST
+    )
+    val selectedOption = viewModel.appExceptionListType.collectAsState().value
+
+    androidx.compose.material3.ListItem(
+        headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_listType)) },
+        supportingContent = {
+            Column {
+                Text(text = stringResource(id = R.string.feature_settings_exceptions_listType_description))
+                OptionsRow(
+                    options = listTypeMap,
+                    selectedOption = selectedOption,
+                    onOptionSelected = { viewModel.setAppExceptionListType(it as AppExceptionListType) }
+                )
+            }
+        },
+        leadingContent = {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions),
+                contentDescription = null
+            )
+        }
+    )
 }
 
 /**

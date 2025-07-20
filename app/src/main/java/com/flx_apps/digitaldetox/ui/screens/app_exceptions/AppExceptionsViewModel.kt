@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
@@ -84,9 +83,6 @@ class AppExceptionsViewModel @Inject constructor(
      */
     private val _filteredAppExceptionItems = MutableStateFlow<List<AppExceptionItem>?>(null)
     val appExceptionItems = _filteredAppExceptionItems.asStateFlow()
-
-    private val _exceptionListType = MutableStateFlow(appExceptionsFeature.appExceptionListType)
-    val exceptionListType = _exceptionListType.asStateFlow()
 
     /**
      * Whether the bottom sheet to configure the list should be shown.
@@ -196,15 +192,6 @@ class AppExceptionsViewModel @Inject constructor(
     fun toggleShowUserApps() {
         _showUserApps.value = !_showUserApps.value
         filterApps()
-    }
-
-    /**
-     * Sets the type of the app exception list.
-     * @see AppExceptionListType
-     */
-    fun setExceptionListType(type: AppExceptionListType) {
-        appExceptionsFeature.appExceptionListType = type
-        _exceptionListType.value = type
     }
 
     /**
