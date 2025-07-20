@@ -1,0 +1,37 @@
+### Release v0.1.0
+
+✨ New Features
+- change start/stop DetoxDroid button behavior
+- bump version to v2.0.3 and add release notes
+- add changelog and bump version
+- add button to grant permissions using RootShell to PermissionsRequiredScreen
+- added RootShell dependency
+- release notes
+- implemented "uninstall DetoxDroid" button showing when Device Admin permission has been granted
+- added used up screen time info to respective UI elements
+- refined by persisting tracked times to data store
+- prevent user from re-opening the app after "doom scrolling" has been detected
+- refined detection
+- refactoring & unifying of screen time tracking logic
+- refined detection
+- fixed bug that triggered the "break doom scrolling" dialog ¯too often
+
+🐛 Bug Fixes
+- Update storeFile path in build.gradle.kts to ensure correct signing configuration
+- save and restore color filter setting during grayscale toggle
+- add permission to AndroidManifest.xml
+- force app reactivation on feature pause/stop
+- reactivate apps once DisableAppsFeature.operationMode is changed to BLOCK again
+- fix schedule rule isActive heuristic
+- start/stop feature when deleting or adding schedule rules
+- start/stop feature upon (de)activation depending on the schedule rules
+- bump to version 2.0.4
+- improve toggleDetoxDroidIsRunning() error feedback check
+- show snackbar feedback when grayscale mode permissions have not been granted
+- color on/off loop under certain conditions
+- remove "maxScrollY != 0" heuristic from infinite scroll detection
+- list item checked state being confused
+- add padding to bottom sheet in AppExceptionsScreen.kt
+- NoPermissionsScreen hyperlink
+- fixed exception list crashing when filtering before apps having loaded yet
+
