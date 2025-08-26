@@ -141,7 +141,9 @@ fun ManageAppExceptionsScreen(
 fun InstalledAppsList(
     appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
+    val listType = appExceptionsViewModel.exceptionListType.collectAsState().value
     val appExceptions = appExceptionsViewModel.appExceptionItems.collectAsState().value
+    val toggledItemsSize = appExceptionsViewModel.toggledItemsSize.collectAsState().value
     if (appExceptions.isNullOrEmpty()) {
         Center {
             if (appExceptions == null) {
@@ -153,7 +155,12 @@ fun InstalledAppsList(
     } else {
         LazyColumn {
             item {
-                InfoCard(infoText = stringResource(id = R.string.feature_settings_exceptions_description))
+                InfoCard(
+                    infoText = stringResource(
+                        id = if (listType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions__notListed
+                        else R.string.feature_settings_exceptions__onlyListed, toggledItemsSize
+                    ),
+                )
             }
             items(appExceptions, key = { item -> item.appInfo.packageName }) { appException ->
                 AppExceptionListItem(appException)

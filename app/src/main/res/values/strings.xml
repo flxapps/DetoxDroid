@@ -89,16 +89,15 @@
     <string name="feature.doomScrolling.timeUntilWarning.description">DetoxDroid will notify you if it detects that you have been "doom scrolling" for this duration.</string>
 
     <string name="feature.settings.exceptions">App Exceptions</string>
-    <string name="feature.settings.exceptions._notListed">%d apps will not be affected by this feature</string>
-    <string name="feature.settings.exceptions._onlyListed">%d apps will only be affected by this feature</string>
-    <string name="feature.settings.exceptions.description">Select exceptions that will be either ignored or only affected by this feature (depending on your settings).</string>
+    <string name="feature.settings.exceptions._notListed">%d apps will not be affected by this feature.</string>
+    <string name="feature.settings.exceptions._onlyListed">%d apps will only be affected by this feature.</string>
     <string name="feature.settings.exceptions.empty">No apps found.</string>
     <string name="feature.settings.exceptions.filterByAppType">Filter by app type</string>
     <string name="feature.settings.exceptions.filterByCategory">Filter by app category</string>
-    <string name="feature.settings.exceptions.listType">Exception list type</string>
-    <string name="feature.settings.exceptions.listType.description">Select whether the list should contain apps that are either NOT or ONLY affected by this feature.</string>
-    <string name="feature.settings.exceptions.listType.notList">Not-List</string>
-    <string name="feature.settings.exceptions.listType.onlyList">Only-List</string>
+    <string name="feature.settings.exceptions.listType">Filter Mode</string>
+    <string name="feature.settings.exceptions.listType.description">Select whether this feature should affect all apps except the ones listed here (Exclude Apps) or only the apps listed here (Include Apps).</string>
+    <string name="feature.settings.exceptions.listType.notList">Exclude Apps</string>
+    <string name="feature.settings.exceptions.listType.onlyList">Include Apps</string>
 
     <string name="feature.settings.schedule">Feature Schedule</string>
     <string name="feature.settings.schedule.hint">%d rules are set.</string>

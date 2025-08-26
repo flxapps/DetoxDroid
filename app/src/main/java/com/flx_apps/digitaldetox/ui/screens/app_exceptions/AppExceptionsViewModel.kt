@@ -27,8 +27,7 @@ import javax.inject.Inject
  * @property isException Whether the app is already an exception for the current feature.
  */
 data class AppExceptionItem(
-    val appInfo: ApplicationInfoData,
-    var isException: Boolean
+    val appInfo: ApplicationInfoData, var isException: Boolean
 )
 
 /**
@@ -92,6 +91,12 @@ class AppExceptionsViewModel @Inject constructor(
     val showListSettingsSheet = _showListSettingsSheet.asStateFlow()
 
     /**
+     * Holds the number of currently toggled items (i.e. items that are selected in the list).
+     */
+    private val _toggledItemsSize = MutableStateFlow<Int>(0)
+    val toggledItemsSize = _toggledItemsSize.asStateFlow()
+
+    /**
      * Loads all installed apps when the view model is created in a coroutine.
      */
     init {
@@ -113,6 +118,7 @@ class AppExceptionsViewModel @Inject constructor(
             appCategories += it.appCategory
             AppExceptionItem(it, isException)
         }
+        _toggledItemsSize.value = apps.count { it.isException }
         _appExceptionItems = apps
         _selectedAppCategories.value = appCategories.associateWith {
             false
@@ -153,6 +159,8 @@ class AppExceptionsViewModel @Inject constructor(
                 isException = !isException
                 if (isException) appExceptionsFeature.appExceptions += packageName
                 else appExceptionsFeature.appExceptions -= packageName
+                _filteredAppExceptionItems.value = _filteredAppExceptionItems.value
+                _toggledItemsSize.value = appExceptionsFeature.appExceptions.size
                 return isException
             }
         return null

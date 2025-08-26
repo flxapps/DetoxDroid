@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.widgets
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,11 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun InfoCard(infoText: String) {
-    Card(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
         Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
             Icon(
                 tint = MaterialTheme.colorScheme.primary,
