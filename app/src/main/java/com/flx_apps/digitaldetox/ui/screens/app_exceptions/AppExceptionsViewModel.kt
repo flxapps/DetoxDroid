@@ -2,7 +2,6 @@ package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 
 import ManageAppExceptionsScreen
 import android.app.Application
-import android.content.pm.ApplicationInfo
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
@@ -20,11 +19,8 @@ import javax.inject.Inject
 
 /**
  * Represents an app that is installed on the device.
- * @property packageName The package name of the app.
- * @property appName The name of the app.
- * @property appCategory The category of the app (if available, see [ApplicationInfo.category]).
- * @property isSystemApp Whether the app is a system app.
- * @property isException Whether the app is already an exception for the current feature.
+ * @param appInfo The [ApplicationInfoData] of the app.
+ * @param isException Whether the app is an exception for the current feature.
  */
 data class AppExceptionItem(
     val appInfo: ApplicationInfoData, var isException: Boolean
