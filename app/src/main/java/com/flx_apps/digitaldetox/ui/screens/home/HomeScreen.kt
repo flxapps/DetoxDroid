@@ -41,6 +41,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -322,6 +323,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
 
     val context = LocalContext.current
     val stats = UsageStatsProvider.getUpdatedUsageStatsToday()
+    val selectedSlice = remember { mutableStateOf<PieChartData.Slice?>(null) }
+
 
     // only show the top 5 apps in the chart
     val chartStats = stats.values.sortedByDescending { it.totalTimeInForeground }.take(5)
@@ -345,6 +348,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
+    val otherTime = (screenTime - chartStats.sumOf { it.totalTimeInForeground }
+        .toFloat()).coerceAtLeast(1f);
     val donutChartData = PieChartData(
         slices = chartStats.mapIndexed { index, appStats ->
             PieChartData.Slice(
@@ -356,8 +361,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         }.plus(
             PieChartData.Slice(
                 "Other",
-                (screenTime - chartStats.sumOf { it.totalTimeInForeground }
-                    .toFloat()).coerceAtLeast(1f),
+                otherTime,
                 color = colors[colors.size - 1]
             )
         ), plotType = PlotType.Donut
@@ -371,18 +375,49 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     .fillMaxSize(fraction = 0.75f)
                     .padding(16.dp),
                 pieChartData = donutChartData,
-                pieChartConfig = donutChartConfig
+                pieChartConfig = donutChartConfig,
+                onSliceClick = {
+                    if(selectedSlice.value == it)
+                        selectedSlice.value = null
+                    else
+                        selectedSlice.value = it
+                }
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (stats.isNotEmpty()) {
-                    Text(
-                        text = screenTime.milliseconds.toHrMinString(),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = stringResource(id = R.string.home_screenTime_today),
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    if (selectedSlice.value != null) {
+                        val selectedIndex = donutChartData.slices.indexOf(selectedSlice.value)
+                        if(selectedIndex >= 0 && selectedIndex < chartStats.count()) {
+                            val selectedStat = chartStats[selectedIndex]
+                            Text(
+                                text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = packageManager.getApplicationInfo(selectedStat.packageName, 0).loadLabel(packageManager).toString(),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        } else {
+                            Text(
+                                text = otherTime.toLong().milliseconds.toHrMinString(),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "Other",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                    else {
+                        Text(
+                            text = screenTime.milliseconds.toHrMinString(),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = stringResource(id = R.string.home_screenTime_today),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 } else {
                     Text(
                         text = stringResource(id = R.string.home_screenTime_unavailable),
