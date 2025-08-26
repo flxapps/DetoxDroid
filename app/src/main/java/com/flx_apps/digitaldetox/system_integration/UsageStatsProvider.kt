@@ -38,7 +38,7 @@ object UsageStatsProvider {
                     UsageStatsManager.INTERVAL_DAILY, dayBeginningMs, now
                 ).filter {
                     // filter out apps that were not used today
-                    it.firstTimeStamp > dayBeginningMs && it.totalTimeInForeground > 0
+                    it.lastTimeUsed >= dayBeginningMs && it.totalTimeInForeground > 0
                 }.groupingBy {
                     // group by package name...
                     it.packageName
