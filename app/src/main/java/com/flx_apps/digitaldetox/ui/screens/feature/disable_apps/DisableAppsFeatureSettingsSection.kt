@@ -23,6 +23,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsMode
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
+import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
@@ -37,6 +38,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun DisableAppsFeatureSettingsSection(viewModel: DisableAppsFeatureSettingsViewModel = viewModel()) {
     ManageDisabledAppsListTile()
     AllowedDailyTimeTile()
+    OpenScheduleTile()
     OperationModeTile()
 }
 
