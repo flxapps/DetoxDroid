@@ -61,7 +61,6 @@ import co.yml.charts.ui.piechart.charts.DonutPieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
@@ -348,8 +347,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
-    val otherTime = (screenTime - chartStats.sumOf { it.totalTimeInForeground }
-        .toFloat()).coerceAtLeast(1f);
+    val otherTime =
+        (screenTime - chartStats.sumOf { it.totalTimeInForeground }.toFloat()).coerceAtLeast(1f);
     val donutChartData = PieChartData(
         slices = chartStats.mapIndexed { index, appStats ->
             PieChartData.Slice(
@@ -360,9 +359,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
             )
         }.plus(
             PieChartData.Slice(
-                "Other",
-                otherTime,
-                color = colors[colors.size - 1]
+                "Other", otherTime, color = colors[colors.size - 1]
             )
         ), plotType = PlotType.Donut
     )
@@ -377,24 +374,24 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 pieChartData = donutChartData,
                 pieChartConfig = donutChartConfig,
                 onSliceClick = {
-                    if(selectedSlice.value == it)
-                        selectedSlice.value = null
-                    else
-                        selectedSlice.value = it
-                }
-            )
+                    if (selectedSlice.value == it) selectedSlice.value = null
+                    else selectedSlice.value = it
+                })
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (stats.isNotEmpty()) {
                     if (selectedSlice.value != null) {
                         val selectedIndex = donutChartData.slices.indexOf(selectedSlice.value)
-                        if(selectedIndex >= 0 && selectedIndex < chartStats.count()) {
+                        if (selectedIndex >= 0 && selectedIndex < chartStats.count()) {
                             val selectedStat = chartStats[selectedIndex]
                             Text(
                                 text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(),
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                text = packageManager.getApplicationInfo(selectedStat.packageName, 0).loadLabel(packageManager).toString(),
+                                text = packageManager.getApplicationInfo(
+                                    selectedStat.packageName,
+                                    0
+                                ).loadLabel(packageManager).toString(),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         } else {
@@ -403,12 +400,10 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                text = "Other",
-                                style = MaterialTheme.typography.labelSmall
+                                text = "Other", style = MaterialTheme.typography.labelSmall
                             )
                         }
-                    }
-                    else {
+                    } else {
                         Text(
                             text = screenTime.milliseconds.toHrMinString(),
                             style = MaterialTheme.typography.titleLarge

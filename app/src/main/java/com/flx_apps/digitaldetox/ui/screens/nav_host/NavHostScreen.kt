@@ -1,7 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.nav_host
 
 import ManageAppExceptionsScreen
-import UsageStatsScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
@@ -47,7 +46,7 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
                 grantPermissionsCommand = route.grantPermissionsCommand
             )
 
-            is NavigationRoutes.UsageStats -> UsageStatsScreen()
+            is NavigationRoutes.UsageStats -> null
         }
     }
 }
