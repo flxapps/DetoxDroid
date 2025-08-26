@@ -52,3 +52,23 @@ If you like the project, feel free to support further development.
 - [Buy me a coffee via Ko-Fi](https://ko-fi.com/flxapps)
 - [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
 - [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
+
+## Troubleshooting
+
+### “App was denied access” on Pixel / Android 12+
+
+On some Pixel and other Android 12+ devices, you may see this dialog when DetoxDroid can’t access your usage data:
+
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/81c0d990-4b8e-40dd-9466-ac10c4833606" width="200" />
+  <img src="https://github.com/user-attachments/assets/2b8fb76b-def0-4a80-a77b-b0b6af0a374d" width="200" />
+</p>
+
+To resolve it:
+
+1. Open **Settings** → **Apps** → **DetoxDroid**.  
+2. Tap the overflow menu (⋮) and select **Allow restricted settings**.  
+3. Grant the permission.  
+
+After this, DetoxDroid will be able to read your app-usage data normally.
+
