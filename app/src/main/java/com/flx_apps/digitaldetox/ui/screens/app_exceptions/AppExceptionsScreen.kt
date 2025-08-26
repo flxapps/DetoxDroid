@@ -54,7 +54,6 @@ import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
-import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
@@ -70,7 +69,6 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun ManageAppExceptionsScreen(
     featureId: FeatureId,
-    navViewModel: NavViewModel = NavViewModel.navViewModel(),
     appExceptionsViewModel: AppExceptionsViewModel = AppExceptionsViewModel.withFeatureId(featureId),
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
@@ -78,26 +76,20 @@ fun ManageAppExceptionsScreen(
         TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
             AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
                 AnimatedVisibility(visible = it) {
-                    SearchBar(
-                        query = appExceptionsViewModel.query.value ?: "",
-                        onQueryChange = { query ->
-                            appExceptionsViewModel.filterApps(query)
-                        },
-                        onSearch = {},
-                        active = false,
-                        onActiveChange = {},
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                showSearchBar = !showSearchBar
-                                if (!showSearchBar) {
-                                    appExceptionsViewModel.filterApps("")
-                                }
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close, contentDescription = "Close"
-                                )
+                    SearchBar(query = appExceptionsViewModel.query.value, onQueryChange = { query ->
+                        appExceptionsViewModel.filterApps(query)
+                    }, onSearch = {}, active = false, onActiveChange = {}, trailingIcon = {
+                        IconButton(onClick = {
+                            showSearchBar = !showSearchBar
+                            if (!showSearchBar) {
+                                appExceptionsViewModel.filterApps("")
                             }
-                        }) {}
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close, contentDescription = "Close"
+                            )
+                        }
+                    }) {}
                 }
                 AnimatedVisibility(visible = !it) {
                     Text(stringResource(id = R.string.feature_settings_exceptions))
@@ -184,7 +176,7 @@ fun AppExceptionListItem(
     val appIcon by produceState<Bitmap?>(null, key1 = item.appInfo.packageName) {
         value = try {
             packageManager.getApplicationIcon(item.appInfo.packageName).toBitmap(128, 128)
-        } catch (e: PackageManager.NameNotFoundException) {
+        } catch (_: PackageManager.NameNotFoundException) {
             // icon could not be loaded
             // this is usually the case for apps that are managed by a work profile
             null // we return null here, so that no icon is displayed

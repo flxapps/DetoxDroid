@@ -32,8 +32,7 @@ data class AppExceptionItem(
  */
 @HiltViewModel
 class AppExceptionsViewModel @Inject constructor(
-    private val application: Application,
-    private val savedStateHandle: androidx.lifecycle.SavedStateHandle
+    application: Application, savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : FeatureViewModel(application, savedStateHandle) {
     companion object : FeatureViewModelFactory()
 
