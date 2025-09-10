@@ -53,6 +53,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    lint {
+        abortOnError = false
+    }
 }
 
 dependencies {
@@ -108,6 +111,10 @@ dependencies {
 
     // RootTools for running (adb) commands as root
     implementation("com.github.Stericson:RootShell:7a569589c0")
+
+    // Shizuku for elevated permissions without root
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
 }
 
 kotlin.sourceSets.all {

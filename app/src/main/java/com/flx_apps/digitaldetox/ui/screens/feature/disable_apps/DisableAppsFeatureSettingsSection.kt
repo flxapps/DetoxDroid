@@ -26,6 +26,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -35,7 +36,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * The settings section for the disable apps feature.
  */
 @Composable
-fun DisableAppsFeatureSettingsSection(viewModel: DisableAppsFeatureSettingsViewModel = viewModel()) {
+fun DisableAppsFeatureSettingsSection() {
     ManageDisabledAppsListTile()
     AllowedDailyTimeTile()
     OpenScheduleTile()
@@ -122,16 +123,18 @@ fun OperationModeTile(
                             // we could not successfully change the operation mode to DEACTIVATE,
                             // so we show a snackbar that informs the user that they need to grant
                             // the device admin permission
-                            featureViewModel.showSnackbar(message = context.getString(R.string.action_requestPermissions),
+                            featureViewModel.showSnackbar(
+                                message = context.getString(R.string.action_requestPermissions),
                                 duration = SnackbarDuration.Short,
                                 actionLabel = context.getString(R.string.action_go),
                                 onResult = { snackbarResult ->
                                     if (snackbarResult == SnackbarResult.ActionPerformed) {
                                         navViewModel.openRoute(
                                             NavigationRoutes.PermissionsRequired(
-                                                context.getString(
-                                                    R.string.rootCommand_grantDeviceAdminPermission
-                                                )
+                                                GrantPermissionsCommand(
+                                                    command = context.getString(R.string.rootCommand_grantDeviceAdminPermission),
+                                                    supportsShizuku = false
+                                                ),
                                             )
                                         )
                                     }

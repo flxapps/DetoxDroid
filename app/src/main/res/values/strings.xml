@@ -147,9 +147,11 @@
     <string name="noPermissions">Permissions Required</string>
     <string name="noPermissions.text">For this feature, you need to grant this app elevated privileges from your computer via adb:</string>
     <string name="noPermissions.text.command">adb shell \"%s\"</string>
-    <string name="noPermissions.text.notRooted">Don\'t worry, it takes you only a couple of minutes: Please visit <annotation type="GITHUB">GitHub</annotation> to find out how.</string>
-    <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below. Otherwise, please visit <annotation type="GITHUB">GitHub</annotation> to find out how.</string>
-    <string name="noPermissions.text.rooted.go">Grant Permissions</string>
+    <string name="noPermissions.text.visitGitHub">Please visit <annotation type="GITHUB">GitHub</annotation> to find out how.</string>
+    <string name="noPermissions.text.rooted">Since your phone appears to be rooted, you can try to grant them by clicking on the button below.</string>
+    <string name="noPermissions.text.rooted.go">Grant via Root</string>
+    <string name="noPermissions.text.shizuku">Since Shizuku is available on your device, you can try to grant them by clicking on the button below.</string>
+    <string name="noPermissions.text.shizuku.go">Grant via Shizuku</string>
 
     <string name="appCategories.video">Video</string>
     <string name="appCategories.music">Music</string>

@@ -47,6 +47,9 @@
     <!-- android.permission.KILL_BACKGROUND_PROCESSES permission to kill apps from the overlay -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
+    <!-- Shizuku permission for non-root privileged operations -->
+    <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
+
     <!-- REQUEST_DELETE_PACKAGES permission to self-uninstall -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
@@ -140,6 +143,14 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+        
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:multiprocess="false"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
     </application>
 
 </manifest>

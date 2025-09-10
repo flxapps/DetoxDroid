@@ -6,6 +6,7 @@ import android.provider.Settings
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.util.NavigationUtil
 
 /**
@@ -64,7 +65,10 @@ class NeedsWriteSecureSettingsPermission : NeedsPermissionsFeature {
     override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
         navViewModel.openRoute(
             NavigationRoutes.PermissionsRequired(
-                context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
+                GrantPermissionsCommand(
+                    command = context.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission),
+                    supportsShizuku = true
+                )
             )
         )
     }

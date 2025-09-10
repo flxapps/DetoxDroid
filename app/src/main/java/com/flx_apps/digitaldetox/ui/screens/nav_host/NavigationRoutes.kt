@@ -2,9 +2,7 @@ package com.flx_apps.digitaldetox.ui.screens.nav_host
 
 import android.os.Parcelable
 import com.flx_apps.digitaldetox.feature_types.FeatureId
-import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes.AppExceptions
-import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes.FeatureSchedule
-import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes.ManageFeature
+import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -33,7 +31,7 @@ sealed class NavigationRoutes : Parcelable {
 
     @Parcelize
     data class PermissionsRequired(
-        val grantPermissionsCommand: String
+        val grantPermissionsCommand: GrantPermissionsCommand
     ) : NavigationRoutes()
 
     @Parcelize
