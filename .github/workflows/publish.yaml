@@ -167,25 +167,25 @@ jobs:
             echo "$breaking_changes" >> "$changelog_file"
             echo "" >> "$changelog_file"
           fi
-
-          # Handle Features
-          features=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
-              if [ -n "$features" ]; then
-                echo "✨ New Features" >> "$changelog_file"
-                echo "$features" >> "$changelog_file"
-                echo "" >> "$changelog_file"
-              fi
           
-          # Handle Bug Fixes
-          fixes=$(git log v2.0.6..HEAD --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
-              if [ -n "$fixes" ]; then
-                echo "🐛 Bug Fixes" >> "$changelog_file"
-                echo "$fixes" >> "$changelog_file"
-                echo "" >> "$changelog_file"
-              fi
+          # Handle Features - USE $git_range instead of hardcoded range
+          features=$(git log $git_range --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
+          if [ -n "$features" ]; then
+            echo "✨ New Features" >> "$changelog_file"
+            echo "$features" >> "$changelog_file"
+            echo "" >> "$changelog_file"
+          fi
           
-              # Show the changelog
-              cat "$changelog_file"
+          # Handle Bug Fixes - USE $git_range instead of hardcoded range
+          fixes=$(git log $git_range --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
+          if [ -n "$fixes" ]; then
+            echo "🐛 Bug Fixes" >> "$changelog_file"
+            echo "$fixes" >> "$changelog_file"
+            echo "" >> "$changelog_file"
+          fi
+          
+          # Show the changelog
+          cat "$changelog_file"
 
       - name: Build APK
         run: ./gradlew assembleRelease
