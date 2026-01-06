@@ -11,6 +11,9 @@ import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
+import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class DetoxDroidState {
@@ -85,6 +88,10 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         registerReceiver(screenTurnedOffReceiver, intentFilter)
 
+        if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
+            BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
+        }
+
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
             ignoredPackages.add(it.packageName)
@@ -118,6 +125,13 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * is used to handle all cleanup operations).
      */
     override fun onInterrupt() {}
+
+    /**
+     * Encourages the system to restart the service if it is killed.
+     */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
 
     /**
      * Called whenever a hardware button is pressed. This is used to detect the pause button (if
@@ -209,4 +223,3 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         updateState()
     }
 }
-

@@ -50,8 +50,8 @@
     <!-- Shizuku permission for non-root privileged operations -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
-    <!-- REQUEST_DELETE_PACKAGES permission to self-uninstall -->
-    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission to prevent the app from being killed by the system -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:name=".DetoxDroidApplication"
@@ -77,10 +77,10 @@
 
         <service
             android:name=".system_integration.DetoxDroidAccessibilityService"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false"
             android:description="@string/app.accessibilityService.description"
-            android:label="@string/app.accessibilityService.name">
+            android:exported="false"
+            android:label="@string/app.accessibilityService.name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -94,9 +94,9 @@
 
         <receiver
             android:name="com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver"
+            android:exported="true"
             android:label="Detox Droid Device Admin"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:exported="true">
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/device_admin_config" />
@@ -116,10 +116,10 @@
 
         <service
             android:name="android.service.voice.VoiceInteractionService"
+            android:exported="false"
             android:label="Test Voice Interaction Service"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
-            android:process=":interactor"
-            android:exported="false">
+            android:process=":interactor">
             <meta-data
                 android:name="android.voice_interaction"
                 android:resource="@xml/pause_interaction_service" />
@@ -132,10 +132,10 @@
             android:exported="false" />
         <service
             android:name=".system_integration.PauseTileService"
+            android:exported="true"
             android:icon="@drawable/ic_launcher_foreground_outlined"
             android:label="@string/app.quickSettingsTile"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-            android:exported="true">
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
                 android:name="android.service.quicksettings.TOGGLEABLE_TILE"
                 android:value="true" />
@@ -143,13 +143,13 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
-        
+
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
-            android:multiprocess="false"
             android:enabled="true"
             android:exported="true"
+            android:multiprocess="false"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
     </application>
 
