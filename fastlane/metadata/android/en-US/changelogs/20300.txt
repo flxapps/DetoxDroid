@@ -1,0 +1,9 @@
+### Release v2.3.0
+
+✨ New Features
+- add pause from notification support and debug logging
+- add battery optimization handling to improve app stability
+
+🐛 Bug Fixes
+- update changelog generation to use dynamic git range instead of hardcoded version
+
