@@ -53,6 +53,10 @@
     <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission to prevent the app from being killed by the system -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- FOREGROUND_SERVICE and POST_NOTIFICATIONS permissions to prevent the app from being killed by the system -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".DetoxDroidApplication"
         android:allowBackup="true"

@@ -6,6 +6,10 @@
     <string name="app.quickSettingsTile.noPause">Take another pause in %d minutes.</string>
     <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
     <string name="app.accessibilityService.description">This services disables and enables grayscale mode depending on which app is currently open. It also reacts to long-pressing the home button and manages detoxing mode pauses.</string>
+    <string name="app.notification.active">Digital Detox is active</string>
+    <string name="app.notification.paused">Paused</string>
+    <string name="app.notification.action.pause">Pause</string>
+    <string name="app.notification.action.resume">Resume</string>
     <string name="action.go">Go</string>
     <string name="action.create">Create</string>
     <string name="action.save">Save</string>
@@ -81,6 +85,8 @@
     <string name="feature.pause.fromHardwareButton.assign">Assign</string>
     <string name="feature.pause.fromHardwareButton.unset">Delete Assignment</string>
     <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid has to be running in order to assign a new hardware button.</string>
+    <string name="feature.pause.notification.settings">Foreground Notification</string>
+    <string name="feature.pause.notification.settings.description">Configure notification with pause button. Grant notification permission to enable.</string>
 
     <string name="feature.doomScrolling">Break "Infinite Scrolling"</string>
     <string name="feature.doomScrolling.subtitle">Don\'t get lost in obsessive checking behaviors</string>

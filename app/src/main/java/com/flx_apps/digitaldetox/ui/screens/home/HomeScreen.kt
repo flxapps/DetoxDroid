@@ -22,8 +22,8 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +60,7 @@ import co.yml.charts.common.utils.DataUtils
 import co.yml.charts.ui.piechart.charts.DonutPieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
+import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -135,7 +136,9 @@ private fun HomeScreenSnackbarContents(
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun AppBar(detoxDroidState: DetoxDroidState) {
+private fun AppBar(
+    detoxDroidState: DetoxDroidState, navViewModel: NavViewModel = NavViewModel.navViewModel()
+) {
     TopAppBar(
         title = {
             Column {
@@ -165,6 +168,13 @@ private fun AppBar(detoxDroidState: DetoxDroidState) {
                             } else ""
                         ), style = MaterialTheme.typography.labelSmall
                     )
+                }
+            }
+        },
+        actions = {
+            if (BuildConfig.DEBUG) {
+                IconButton(onClick = { navViewModel.openRoute(NavigationRoutes.LogViewer) }) {
+                    Icon(Icons.Default.FilterList, contentDescription = "View Logs")
                 }
             }
         },
@@ -389,8 +399,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                             )
                             Text(
                                 text = packageManager.getApplicationInfo(
-                                    selectedStat.packageName,
-                                    0
+                                    selectedStat.packageName, 0
                                 ).loadLabel(packageManager).toString(),
                                 style = MaterialTheme.typography.labelSmall
                             )

@@ -79,6 +79,9 @@ object PauseButtonFeature : Feature() {
                 TimeUnit.MILLISECONDS.toMinutes(pauseDuration)
             ), Toast.LENGTH_SHORT
         ).show()
+
+        // Update the foreground notification to reflect paused state
+        DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
     }
 
     fun togglePause(context: Context) {
@@ -112,6 +115,8 @@ object PauseButtonFeature : Feature() {
         DetoxDroidAccessibilityService.instance.takeIf { it != null }?.let { service ->
             // call onStart() for all active features if we have an instance of the service
             FeaturesProvider.activeFeatures.onEach { it.onStart(service) }
+            // Update the foreground notification to reflect resumed state
+            service.updateForegroundNotification()
         }
         DetoxDroidAccessibilityService.updateState()
     }

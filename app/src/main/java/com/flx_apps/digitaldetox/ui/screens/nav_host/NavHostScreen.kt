@@ -3,22 +3,22 @@ package com.flx_apps.digitaldetox.ui.screens.nav_host
 import ManageAppExceptionsScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreen
 import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
+import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
 import com.flx_apps.digitaldetox.ui.screens.schedule.FeatureScheduleScreen
 import dev.olshevski.navigation.reimagined.AnimatedNavHost
-import timber.log.Timber
 
 /**
  * The navigation host for the app. It is responsible for routing to the correct screen based on
  * the current navigation state.
  */
 @Composable
-fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalContext.current as ComponentActivity)) {
+fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)) {
     BackHandler(navViewModel.isBackHandlerEnabled) {
         navViewModel.onBackPress()
     }
@@ -26,7 +26,6 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
     AnimatedNavHost(
         backstack = navViewModel.backstack
     ) { route ->
-        Timber.d("Navigating to $route")
         when (route) {
             is NavigationRoutes.Home -> HomeScreen()
 
@@ -47,6 +46,8 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
             )
 
             is NavigationRoutes.UsageStats -> null
+
+            is NavigationRoutes.LogViewer -> LogViewerScreen()
         }
     }
 }

@@ -6,9 +6,10 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
-import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.util.NotificationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,5 +127,12 @@ class PauseButtonFeatureSettingsViewModel @Inject constructor(application: Appli
         getApplication<Application>().startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         })
+    }
+
+    /**
+     * Opens the Android notification settings for the service channel.
+     */
+    fun openNotificationSettings() {
+        NotificationHelper.openNotificationSettings(getApplication())
     }
 }

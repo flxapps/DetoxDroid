@@ -1,20 +1,17 @@
 package com.flx_apps.digitaldetox.ui.screens.nav_host
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.MainActivity
-import com.flx_apps.digitaldetox.features.FeaturesProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.olshevski.navigation.reimagined.navController
 import dev.olshevski.navigation.reimagined.navigate
 import dev.olshevski.navigation.reimagined.pop
 import timber.log.Timber
 import javax.inject.Inject
-
-val DefaultFeatureId = FeaturesProvider.featureList[0].id
 
 /**
  * The view model for the navigation host. It is responsible for managing the navigation state.
@@ -29,7 +26,7 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
          */
         @Composable
         fun navViewModel(): NavViewModel =
-            viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
+            viewModel(viewModelStoreOwner = LocalActivity.current as MainActivity)
     }
 
     /**
@@ -55,15 +52,25 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
      */
     fun openRoute(route: NavigationRoutes) {
         Timber.d("Navigating to $route")
-        kotlin.runCatching {
-            // put all arguments into the saved state handle, so that they can be retrieved later from
-            // child destinations
-            val args = route.toString().split("(", ")")[1].split(", ")
-            for (arg in args) {
-                val (key, value) = arg.split("=")
-                savedStateHandle[key] = value
+
+        val routeString = route.toString()
+        if (routeString.contains("(") && routeString.contains(")")) {
+            kotlin.runCatching {
+                // put all arguments into the saved state handle, so that they can be retrieved later from
+                // child destinations
+                val args = routeString.split("(", ")")[1].split(", ")
+                for (arg in args) {
+                    val split = arg.split("=")
+                    if (split.size == 2) {
+                        val (key, value) = split
+                        savedStateHandle[key] = value
+                    }
+                }
+            }.onFailure {
+                Timber.e(it, "Failed to parse arguments from route $route")
             }
         }
+
         // navigate to the route
         navController.navigate(route)
     }

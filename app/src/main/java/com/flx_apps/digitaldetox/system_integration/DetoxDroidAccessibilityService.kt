@@ -1,12 +1,16 @@
 package com.flx_apps.digitaldetox.system_integration
 
 import android.accessibilityservice.AccessibilityService
+import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
+import androidx.core.app.NotificationCompat
+import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -14,7 +18,9 @@ import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
 import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
+import com.flx_apps.digitaldetox.util.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 
 enum class DetoxDroidState {
     /**
@@ -81,9 +87,26 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
     var onKeyEventListener: ((KeyEvent) -> Boolean)? = null
 
+    /**
+     * The view model/logic holder for the [DetoxDroidAccessibilityService].
+     * (Note: AccessibilityService is not a typical place for Hilt injection, but if you need dependencies
+     * you might need to use @AndroidEntryPoint on the Service)
+     */
+
     override fun onCreate() {
+        Timber.i("DetoxDroidAccessibilityService: onCreate")
         super.onCreate()
         instance = this
+
+        // Hook into uncaught exceptions
+        val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Timber.e(
+                throwable,
+                "DetoxDroidAccessibilityService: Uncaught Exception on thread ${thread.name}"
+            )
+            defaultExceptionHandler?.uncaughtException(thread, throwable)
+        }
 
         val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         registerReceiver(screenTurnedOffReceiver, intentFilter)
@@ -100,6 +123,13 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // call onStart() for all active features and update the state
         FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
         updateState()
+    }
+
+    override fun onServiceConnected() {
+        Timber.i("DetoxDroidAccessibilityService: onServiceConnected")
+        super.onServiceConnected()
+
+        startForegroundService()
     }
 
     /**
@@ -124,13 +154,31 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * Called when the service is interrupted. This is not used by DetoxDroid (however, [onDestroy]
      * is used to handle all cleanup operations).
      */
-    override fun onInterrupt() {}
+    override fun onInterrupt() {
+        Timber.w("DetoxDroidAccessibilityService: onInterrupt")
+    }
 
     /**
      * Encourages the system to restart the service if it is killed.
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Timber.i("DetoxDroidAccessibilityService: onStartCommand flags=$flags startId=$startId")
         return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Timber.i("DetoxDroidAccessibilityService: onTaskRemoved")
+        super.onTaskRemoved(rootIntent)
+    }
+
+    override fun onLowMemory() {
+        Timber.w("DetoxDroidAccessibilityService: onLowMemory")
+        super.onLowMemory()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        Timber.w("DetoxDroidAccessibilityService: onTrimMemory level=$level")
+        super.onTrimMemory(level)
     }
 
     /**
@@ -216,10 +264,72 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * turned off receiver, then sets the [instance] to null and updates the [state].
      */
     override fun onDestroy() {
+        Timber.i("DetoxDroidAccessibilityService: onDestroy")
         super.onDestroy()
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         instance = null
         updateState()
+    }
+
+    private fun startForegroundService() {
+        // Only show notification if PauseButtonFeature is activated and notifications are enabled
+        if (!PauseButtonFeature.isActivated) {
+            return
+        }
+
+        // Check if notifications are fully enabled (permission + channel settings)
+        if (!NotificationHelper.areNotificationsEnabled(this)) {
+            return
+        }
+
+        val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
+            action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
+        }
+        val pausePendingIntent = android.app.PendingIntent.getService(
+            this,
+            0,
+            pauseIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification: Notification =
+            NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+                .setContentTitle(getString(R.string.app_name_)).setContentText(
+                    getString(
+                        if (PauseButtonFeature.isPausing()) R.string.app_notification_paused
+                        else R.string.app_notification_active
+                    )
+                ).setSmallIcon(R.drawable.ic_pause).setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true).addAction(
+                    R.drawable.ic_pause, getString(
+                        if (PauseButtonFeature.isPausing()) R.string.app_notification_action_resume
+                        else R.string.app_notification_action_pause
+                    ), pausePendingIntent
+                ).build()
+
+        try {
+            // ID 101 is just an arbitrary constant integration ID
+            startForeground(101, notification)
+            Timber.i("Service moved to foreground")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to start foreground service")
+        }
+    }
+
+    /**
+     * Updates the foreground notification (e.g., when pause state changes)
+     */
+    fun updateForegroundNotification() {
+        if (NotificationHelper.areNotificationsEnabled(this) && PauseButtonFeature.isActivated) {
+            startForegroundService()
+        } else {
+            try {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                Timber.i("Service removed from foreground due to setting change or missing permission")
+            } catch (_: Exception) {
+                // Ignore - service might not have been in foreground
+            }
+        }
     }
 }

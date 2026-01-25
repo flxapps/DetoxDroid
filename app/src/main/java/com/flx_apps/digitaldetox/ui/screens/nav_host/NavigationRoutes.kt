@@ -36,4 +36,7 @@ sealed class NavigationRoutes : Parcelable {
 
     @Parcelize
     data object UsageStats : NavigationRoutes()
+
+    @Parcelize
+    data object LogViewer : NavigationRoutes()
 }
