@@ -276,10 +276,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
 
-        val cpActive = kotlin.runCatching {
-            com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated
+        val cpRequiresWarning = kotlin.runCatching {
+            com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
+                    !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
         }.getOrDefault(false)
-        if (cpActive) {
+        if (cpRequiresWarning) {
             com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(
                 this
             )

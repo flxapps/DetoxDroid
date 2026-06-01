@@ -47,7 +47,6 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
-import kotlinx.coroutines.delay
 
 /**
  * Settings UI for the Commitment Password feature.
@@ -74,12 +73,14 @@ fun CommitmentPasswordFeatureSettingsSection(
         CommitmentPasswordDialog.GENERATED_PASSWORD -> GeneratedPasswordDialog(
             viewModel, onFeatureStateChanged
         )
+
         CommitmentPasswordDialog.FORGOT_PASSWORD -> ForgotPasswordDialog(viewModel)
         CommitmentPasswordDialog.RECOVERY_IN_PROGRESS -> RecoveryInProgressDialog(viewModel)
         CommitmentPasswordDialog.RECOVERY_READY -> RecoveryReadyDialog(viewModel)
         CommitmentPasswordDialog.UNLOCK_TO_DISABLE -> UnlockToDisableDialog(
             viewModel, onFeatureStateChanged
         )
+
         else -> {}
     }
 
@@ -97,8 +98,7 @@ fun CommitmentPasswordFeatureSettingsSection(
                         )
                     )
                 )
-            }
-        )
+            })
     }
 
     val selectionEnabled = currentState != CommitmentPasswordState.SET_AND_LOCKED
@@ -150,11 +150,9 @@ private fun FeatureSelectionSection(
                     .clickable(enabled = enabled) { viewModel.toggleFeatureSelection(feature.id) }
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = context.getString(feature.texts.title),
-                    modifier = Modifier.weight(1f)
+                    text = context.getString(feature.texts.title), modifier = Modifier.weight(1f)
                 )
                 Checkbox(
                     checked = selectedFeatureIds.contains(feature.id),
@@ -187,22 +185,12 @@ private fun RecoveryStatusTile(viewModel: CommitmentPasswordViewModel) {
 
     if (!isRecoveryInProgress && !isRecoveryReady) return
 
-    LaunchedEffect(isRecoveryInProgress) {
-        if (isRecoveryInProgress) {
-            while (viewModel.isRecoveryInProgress.value && !viewModel.isRecoveryReady.value) {
-                delay(1000)
-                viewModel.updateState()
-            }
-        }
-    }
-
     if (isRecoveryReady) {
         SimpleListTile(
             leadingIcon = Icons.Default.CheckCircle,
             titleText = stringResource(R.string.feature_commitmentPassword_recovery_ready),
             subtitleText = stringResource(R.string.feature_commitmentPassword_recovery_ready_message),
-            onClick = { viewModel.showRecoveryReadyDialog() }
-        )
+            onClick = { viewModel.showRecoveryReadyDialog() })
     } else {
         val remainingRecoveryTime by viewModel.remainingRecoveryTime.collectAsState()
         SimpleListTile(
@@ -212,8 +200,7 @@ private fun RecoveryStatusTile(viewModel: CommitmentPasswordViewModel) {
                 R.string.feature_commitmentPassword_recovery_timeRemaining,
                 viewModel.formatDuration(remainingRecoveryTime)
             ),
-            onClick = { viewModel.showRecoveryInProgressDialog() }
-        )
+            onClick = { viewModel.showRecoveryInProgressDialog() })
     }
 }
 
@@ -233,8 +220,7 @@ private fun WalkthroughDialog(viewModel: CommitmentPasswordViewModel) {
             TextButton(onClick = { viewModel.dismissDialog() }) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -279,8 +265,7 @@ private fun GeneratedPasswordDialog(
             }) {
                 Text(stringResource(R.string.feature_commitmentPassword_generated_confirm))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -299,8 +284,7 @@ private fun ForgotPasswordDialog(viewModel: CommitmentPasswordViewModel) {
             TextButton(onClick = { viewModel.dismissDialog() }) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -328,8 +312,7 @@ private fun RecoveryInProgressDialog(viewModel: CommitmentPasswordViewModel) {
             TextButton(onClick = { viewModel.cancelRecovery() }) {
                 Text(stringResource(R.string.feature_commitmentPassword_recovery_cancel))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -348,8 +331,7 @@ private fun RecoveryReadyDialog(viewModel: CommitmentPasswordViewModel) {
             TextButton(onClick = { viewModel.dismissDialog() }) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -362,75 +344,64 @@ private fun UnlockToDisableDialog(
     val isLockedOut by viewModel.isLockedOut.collectAsState()
     val remainingLockoutTime by viewModel.remainingLockoutTime.collectAsState()
 
-    LaunchedEffect(isLockedOut) {
-        if (isLockedOut) {
-            while (viewModel.isLockedOut.value) {
-                delay(1000)
-                viewModel.updateState()
-            }
-        }
-    }
-
     AlertDialog(
         onDismissRequest = { viewModel.dismissDialog() },
         icon = { Icon(Icons.Default.Lock, contentDescription = null) },
         title = { Text(stringResource(R.string.feature_commitmentPassword_disable_title)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.feature_commitmentPassword_disable_enterPassword))
+                Spacer(modifier = Modifier.height(16.dp))
                 if (isLockedOut) {
                     Text(
                         text = stringResource(
                             R.string.feature_commitmentPassword_lockedOut,
                             viewModel.formatDuration(remainingLockoutTime)
-                        ),
-                        color = MaterialTheme.colorScheme.error
+                        ), color = MaterialTheme.colorScheme.error
                     )
-                } else {
-                    Text(stringResource(R.string.feature_commitmentPassword_disable_enterPassword))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = passwordInput,
-                        onValueChange = { viewModel.onPasswordInputChanged(it) },
-                        label = { Text(stringResource(R.string.feature_commitmentPassword_enter)) },
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = errorMessage.isNotEmpty(),
-                        modifier = Modifier.fillMaxWidth()
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                OutlinedTextField(
+                    value = passwordInput,
+                    onValueChange = { viewModel.onPasswordInputChanged(it) },
+                    label = { Text(stringResource(R.string.feature_commitmentPassword_enter)) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError = errorMessage.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (errorMessage.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
-                    if (errorMessage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    if (failedAttempts > 0) {
                         Text(
-                            text = errorMessage,
+                            text = stringResource(
+                                R.string.feature_commitmentPassword_attemptsRemaining,
+                                (CommitmentPasswordFeature.MAX_FAILED_ATTEMPTS - failedAttempts).coerceAtLeast(
+                                    0
+                                )
+                            ),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        if (failedAttempts > 0) {
-                            Text(
-                                text = stringResource(
-                                    R.string.feature_commitmentPassword_attemptsRemaining,
-                                    CommitmentPasswordFeature.MAX_FAILED_ATTEMPTS - failedAttempts
-                                ),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
                     }
                 }
             }
         },
         confirmButton = {
-            if (!isLockedOut) {
-                TextButton(
-                    onClick = { viewModel.verifyAndDisable(onFeatureStateChanged) },
-                    enabled = passwordInput.isNotEmpty()
-                ) {
-                    Text(stringResource(R.string.feature_commitmentPassword_disable))
-                }
+            TextButton(
+                onClick = { viewModel.verifyAndDisable(onFeatureStateChanged) },
+                enabled = passwordInput.isNotEmpty()
+            ) {
+                Text(stringResource(R.string.feature_commitmentPassword_disable))
             }
         },
         dismissButton = {
             TextButton(onClick = { viewModel.dismissDialog() }) {
                 Text(stringResource(R.string.action_cancel))
             }
-        }
-    )
+        })
 }

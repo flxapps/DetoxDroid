@@ -15,7 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -27,13 +27,11 @@ import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
-import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordDialog
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
-import kotlinx.coroutines.delay
 
 /**
  * A singleton that provides the snackbar host state for the feature screen and its children.
@@ -57,12 +55,10 @@ fun FeatureScreen(
 ) {
     val feature = featureViewModel.feature
     val snackbarHostState = FeatureScreenSnackbarStateProvider.snackbarState
-    val isFeatureSettingsLocked by produceState(initialValue = false, featureId) {
-        while (true) {
-            value = featureId != CommitmentPasswordFeatureId &&
-                    CommitmentPasswordFeature.isFeatureLocked(featureId)
-            delay(500)
-        }
+    val lockStateToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    val isFeatureSettingsLocked = remember(lockStateToken, featureId) {
+        featureId != CommitmentPasswordFeatureId &&
+                CommitmentPasswordFeature.isFeatureLocked(featureId)
     }
 
     Scaffold(snackbarHost = {
@@ -138,7 +134,7 @@ fun FeatureActivationSwitch(
                         // Unlocked – disable directly
                         CommitmentPasswordFeature.clearPasswordData(context)
                         CommitmentPasswordFeature.lockSession()
-                        CommitmentPasswordFeature.isActivated = false
+                        CommitmentPasswordFeature.updateActivationState(false)
                         featureViewModel.refreshActiveState()
                     }
                 }

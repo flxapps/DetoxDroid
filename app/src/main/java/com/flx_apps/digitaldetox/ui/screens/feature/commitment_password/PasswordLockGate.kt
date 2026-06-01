@@ -28,7 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
-import kotlinx.coroutines.delay
 
 private data class LockGateState(
     val isPasswordActive: Boolean,
@@ -54,40 +53,22 @@ private data class LockGateState(
 @Composable
 private fun rememberLockGateState(featureId: String?): LockGateState {
     val context = LocalContext.current
-    var state by remember {
-        mutableStateOf(
-            LockGateState(
-                isPasswordActive = CommitmentPasswordFeature.isActivated,
-                isPasswordSet = CommitmentPasswordFeature.isPasswordSet(context),
-                isFeatureProtected = featureId?.let { CommitmentPasswordFeature.isFeatureProtected(it) }
-                    ?: CommitmentPasswordFeature.isActivated,
-                isFeatureLocked = featureId?.let { CommitmentPasswordFeature.isFeatureLocked(it) }
-                    ?: (CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked())
-            )
+    val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    return remember(stateToken, featureId, context) {
+        val isPasswordActive = CommitmentPasswordFeature.isActivated
+        val isPasswordSet = CommitmentPasswordFeature.isPasswordSet(context)
+        val isFeatureProtected =
+            featureId?.let { CommitmentPasswordFeature.isFeatureProtected(it) } ?: isPasswordActive
+        val isFeatureLocked =
+            featureId?.let { CommitmentPasswordFeature.isFeatureLocked(it) }
+                ?: (isPasswordActive && !CommitmentPasswordFeature.isSessionUnlocked())
+        LockGateState(
+            isPasswordActive = isPasswordActive,
+            isPasswordSet = isPasswordSet,
+            isFeatureProtected = isFeatureProtected,
+            isFeatureLocked = isFeatureLocked,
         )
     }
-
-    LaunchedEffect(featureId) {
-        while (true) {
-            delay(500)
-            val isPasswordActive = CommitmentPasswordFeature.isActivated
-            val isPasswordSet = CommitmentPasswordFeature.isPasswordSet(context)
-            val isFeatureProtected =
-                featureId?.let { CommitmentPasswordFeature.isFeatureProtected(it) }
-                    ?: isPasswordActive
-            val isFeatureLocked =
-                featureId?.let { CommitmentPasswordFeature.isFeatureLocked(it) }
-                    ?: (isPasswordActive && !CommitmentPasswordFeature.isSessionUnlocked())
-            state = LockGateState(
-                isPasswordActive = isPasswordActive,
-                isPasswordSet = isPasswordSet,
-                isFeatureProtected = isFeatureProtected,
-                isFeatureLocked = isFeatureLocked,
-            )
-        }
-    }
-
-    return state
 }
 
 /**
@@ -208,22 +189,13 @@ private fun SettingsLockBanner(isLocked: Boolean) {
 @Composable
 private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) {
     val context = LocalContext.current
+    val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
     var passwordInput by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-    var failedAttempts by remember { mutableStateOf(CommitmentPasswordFeature.failedAttempts) }
-    var isLockedOut by remember { mutableStateOf(CommitmentPasswordFeature.isLockedOut()) }
-    var remainingLockoutTime by remember { mutableStateOf(CommitmentPasswordFeature.getRemainingLockoutTime()) }
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isLockedOut) {
-        if (isLockedOut) {
-            while (CommitmentPasswordFeature.isLockedOut()) {
-                delay(1000)
-                remainingLockoutTime = CommitmentPasswordFeature.getRemainingLockoutTime()
-                isLockedOut = CommitmentPasswordFeature.isLockedOut()
-            }
-        }
-    }
+    val failedAttempts = remember(stateToken) { CommitmentPasswordFeature.failedAttempts }
+    val isLockedOut = remember(stateToken) { CommitmentPasswordFeature.isLockedOut() }
+    val remainingLockoutTime = remember(stateToken) { CommitmentPasswordFeature.getRemainingLockoutTime() }
 
     if (showForgotPasswordDialog) {
         ForgotPasswordFlow(onDismiss = { showForgotPasswordDialog = false })
@@ -234,6 +206,8 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
             title = { Text(stringResource(R.string.feature_commitmentPassword_unlock)) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.feature_commitmentPassword_unlock_description))
+                    Spacer(modifier = Modifier.height(16.dp))
                     if (isLockedOut) {
                         Text(
                             text = stringResource(
@@ -242,70 +216,67 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
                             ),
                             color = MaterialTheme.colorScheme.error
                         )
-                    } else {
-                        Text(stringResource(R.string.feature_commitmentPassword_unlock_description))
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
-                            value = passwordInput,
-                            onValueChange = {
-                                passwordInput = it
-                                errorMessage = ""
-                            },
-                            label = { Text(stringResource(R.string.feature_commitmentPassword_enter)) },
-                            visualTransformation = PasswordVisualTransformation(),
-                            isError = errorMessage.isNotEmpty(),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (errorMessage.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = errorMessage,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            if (failedAttempts > 0) {
-                                Text(
-                                    text = stringResource(
-                                        R.string.feature_commitmentPassword_attemptsRemaining,
-                                        CommitmentPasswordFeature.MAX_FAILED_ATTEMPTS - failedAttempts
-                                    ),
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        }
                         Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(onClick = { showForgotPasswordDialog = true }) {
-                            Text(stringResource(R.string.feature_commitmentPassword_forgot))
-                        }
+                    }
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = {
+                            passwordInput = it
+                            errorMessage = ""
+                        },
+                        label = { Text(stringResource(R.string.feature_commitmentPassword_enter)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        isError = errorMessage.isNotEmpty(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    if (failedAttempts > 0) {
+                        Text(
+                            text = stringResource(
+                                R.string.feature_commitmentPassword_attemptsRemaining,
+                                (CommitmentPasswordFeature.MAX_FAILED_ATTEMPTS - failedAttempts).coerceAtLeast(0)
+                            ),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(onClick = { showForgotPasswordDialog = true }) {
+                        Text(stringResource(R.string.feature_commitmentPassword_forgot))
                     }
                 }
             },
             confirmButton = {
-                if (!isLockedOut) {
-                    TextButton(
-                        onClick = {
-                            val isValid =
-                                CommitmentPasswordFeature.verifyPassword(context, passwordInput)
-                            if (isValid) {
-                                CommitmentPasswordFeature.unlockSession()
-                                passwordInput = ""
-                                onUnlocked()
-                            } else {
-                                errorMessage =
-                                    context.getString(R.string.feature_commitmentPassword_incorrect)
-                                failedAttempts = CommitmentPasswordFeature.failedAttempts
-                                if (CommitmentPasswordFeature.isLockedOut()) {
-                                    isLockedOut = true
-                                    remainingLockoutTime =
-                                        CommitmentPasswordFeature.getRemainingLockoutTime()
-                                }
-                            }
-                        },
-                        enabled = passwordInput.isNotEmpty()
-                    ) {
-                        Text(stringResource(R.string.feature_commitmentPassword_verify))
-                    }
+                TextButton(
+                    onClick = {
+                        if (CommitmentPasswordFeature.isLockedOut()) {
+                            errorMessage = context.getString(
+                                R.string.feature_commitmentPassword_lockedOut,
+                                formatDuration(CommitmentPasswordFeature.getRemainingLockoutTime())
+                            )
+                            return@TextButton
+                        }
+
+                        val isValid = CommitmentPasswordFeature.verifyPassword(context, passwordInput)
+                        if (isValid) {
+                            CommitmentPasswordFeature.unlockSession()
+                            passwordInput = ""
+                            onUnlocked()
+                        } else {
+                            errorMessage =
+                                context.getString(R.string.feature_commitmentPassword_incorrect)
+                        }
+                    },
+                    enabled = passwordInput.isNotEmpty()
+                ) {
+                    Text(stringResource(R.string.feature_commitmentPassword_verify))
                 }
             },
             dismissButton = {
@@ -324,18 +295,10 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
 @Composable
 private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
     val context = LocalContext.current
-    var isRecoveryInProgress by remember { mutableStateOf(CommitmentPasswordFeature.isRecoveryInProgress()) }
-    var isRecoveryReady by remember { mutableStateOf(CommitmentPasswordFeature.isRecoveryReady()) }
-    var remainingRecoveryTime by remember { mutableStateOf(CommitmentPasswordFeature.getRemainingRecoveryTime()) }
-
-    LaunchedEffect(isRecoveryInProgress) {
-        while (isRecoveryInProgress && !isRecoveryReady) {
-            delay(1000)
-            isRecoveryInProgress = CommitmentPasswordFeature.isRecoveryInProgress()
-            isRecoveryReady = CommitmentPasswordFeature.isRecoveryReady()
-            remainingRecoveryTime = CommitmentPasswordFeature.getRemainingRecoveryTime()
-        }
-    }
+    val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    val isRecoveryInProgress = remember(stateToken) { CommitmentPasswordFeature.isRecoveryInProgress() }
+    val isRecoveryReady = remember(stateToken) { CommitmentPasswordFeature.isRecoveryReady() }
+    val remainingRecoveryTime = remember(stateToken) { CommitmentPasswordFeature.getRemainingRecoveryTime() }
 
     when {
         isRecoveryReady -> AlertDialog(
@@ -346,7 +309,7 @@ private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     if (CommitmentPasswordFeature.completeRecovery(context)) {
-                        CommitmentPasswordFeature.isActivated = false
+                        CommitmentPasswordFeature.updateActivationState(false)
                         onDismiss()
                     }
                 }) {
@@ -395,8 +358,6 @@ private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     CommitmentPasswordFeature.initiateRecovery(context)
-                    isRecoveryInProgress = true
-                    remainingRecoveryTime = CommitmentPasswordFeature.getRemainingRecoveryTime()
                 }) {
                     Text(stringResource(R.string.feature_commitmentPassword_recovery_initiate))
                 }

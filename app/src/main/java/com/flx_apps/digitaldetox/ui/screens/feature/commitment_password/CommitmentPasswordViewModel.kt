@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -70,42 +71,43 @@ class CommitmentPasswordViewModel @Inject constructor(
     init {
         updateState()
         loadLockableFeatures()
-    }
-
-    fun updateState() {
         viewModelScope.launch {
-            val isPasswordSet = CommitmentPasswordFeature.isPasswordSet(context)
-            val isLocked =
-                CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
-
-            _currentState.value = when {
-                !isPasswordSet -> CommitmentPasswordState.NOT_SET
-                isLocked -> CommitmentPasswordState.SET_AND_LOCKED
-                else -> CommitmentPasswordState.SET_AND_UNLOCKED
+            CommitmentPasswordFeature.stateToken.collect {
+                updateState()
             }
-
-            _failedAttempts.value = CommitmentPasswordFeature.failedAttempts
-            _isLockedOut.value = CommitmentPasswordFeature.isLockedOut()
-            _remainingLockoutTime.value = CommitmentPasswordFeature.getRemainingLockoutTime()
-            _isRecoveryInProgress.value = CommitmentPasswordFeature.isRecoveryInProgress()
-            _isRecoveryReady.value = CommitmentPasswordFeature.isRecoveryReady()
-            _remainingRecoveryTime.value = CommitmentPasswordFeature.getRemainingRecoveryTime()
-            _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
         }
     }
 
-    private fun loadLockableFeatures() {
-        viewModelScope.launch {
-            val features = CommitmentPasswordFeature.getLockableFeatures()
-            _lockableFeatures.value = features
+    fun updateState() {
+        val isPasswordSet = CommitmentPasswordFeature.isPasswordSet(context)
+        val isLocked =
+            CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
 
-            if (CommitmentPasswordFeature.lockedFeatureIds.isEmpty()) {
-                _selectedFeatureIds.value =
-                    features.filter { (it as? LockableFeature)?.lockedByDefault == true }
-                        .map { it.id }.toSet()
-            } else {
-                _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
-            }
+        _currentState.value = when {
+            !isPasswordSet -> CommitmentPasswordState.NOT_SET
+            isLocked -> CommitmentPasswordState.SET_AND_LOCKED
+            else -> CommitmentPasswordState.SET_AND_UNLOCKED
+        }
+
+        _failedAttempts.value = CommitmentPasswordFeature.failedAttempts
+        _isLockedOut.value = CommitmentPasswordFeature.isLockedOut()
+        _remainingLockoutTime.value = CommitmentPasswordFeature.getRemainingLockoutTime()
+        _isRecoveryInProgress.value = CommitmentPasswordFeature.isRecoveryInProgress()
+        _isRecoveryReady.value = CommitmentPasswordFeature.isRecoveryReady()
+        _remainingRecoveryTime.value = CommitmentPasswordFeature.getRemainingRecoveryTime()
+        _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
+    }
+
+    private fun loadLockableFeatures() {
+        val features = CommitmentPasswordFeature.getLockableFeatures()
+        _lockableFeatures.value = features
+
+        if (CommitmentPasswordFeature.lockedFeatureIds.isEmpty()) {
+            _selectedFeatureIds.value =
+                features.filter { (it as? LockableFeature)?.lockedByDefault == true }
+                    .map { it.id }.toSet()
+        } else {
+            _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
         }
     }
 
@@ -113,18 +115,18 @@ class CommitmentPasswordViewModel @Inject constructor(
         val current = _selectedFeatureIds.value.toMutableSet()
         if (current.contains(featureId)) current.remove(featureId) else current.add(featureId)
         _selectedFeatureIds.value = current
-        CommitmentPasswordFeature.lockedFeatureIds = current
+        CommitmentPasswordFeature.updateLockedFeatureIds(current)
     }
 
     fun selectAllFeatures() {
         val allIds = _lockableFeatures.value.map { it.id }.toSet()
         _selectedFeatureIds.value = allIds
-        CommitmentPasswordFeature.lockedFeatureIds = allIds
+        CommitmentPasswordFeature.updateLockedFeatureIds(allIds)
     }
 
     fun deselectAllFeatures() {
         _selectedFeatureIds.value = emptySet()
-        CommitmentPasswordFeature.lockedFeatureIds = emptySet()
+        CommitmentPasswordFeature.updateLockedFeatureIds(emptySet())
     }
 
     fun showWalkthroughDialog() {
@@ -147,7 +149,7 @@ class CommitmentPasswordViewModel @Inject constructor(
     fun onPasswordSaved() {
         CommitmentPasswordFeature.initializeLockedFeatures()
         CommitmentPasswordFeature.lockSession()
-        CommitmentPasswordFeature.isActivated = true
+        CommitmentPasswordFeature.updateActivationState(true)
         _showDialog.value = CommitmentPasswordDialog.NONE
         updateState()
     }
@@ -166,7 +168,7 @@ class CommitmentPasswordViewModel @Inject constructor(
                 _passwordInput.value = ""
                 updateState()
             } else {
-                _errorMessage.value = "Incorrect passphrase"
+                _errorMessage.value = context.getString(R.string.feature_commitmentPassword_incorrect)
                 updateState()
                 if (CommitmentPasswordFeature.isLockedOut()) {
                     _showDialog.value = CommitmentPasswordDialog.NONE
@@ -207,7 +209,7 @@ class CommitmentPasswordViewModel @Inject constructor(
     fun completeRecovery() {
         viewModelScope.launch {
             if (CommitmentPasswordFeature.completeRecovery(context)) {
-                CommitmentPasswordFeature.isActivated = false
+                CommitmentPasswordFeature.updateActivationState(false)
                 val password = CommitmentPasswordFeature.generatePassphrase()
                 _generatedPassword.value = password
                 if (CommitmentPasswordFeature.setPassword(context, password)) {
@@ -232,13 +234,13 @@ class CommitmentPasswordViewModel @Inject constructor(
             if (isValid) {
                 CommitmentPasswordFeature.clearPasswordData(context)
                 CommitmentPasswordFeature.lockSession()
-                CommitmentPasswordFeature.isActivated = false
+                CommitmentPasswordFeature.updateActivationState(false)
                 _showDialog.value = CommitmentPasswordDialog.NONE
                 _passwordInput.value = ""
                 updateState()
                 onDisabled()
             } else {
-                _errorMessage.value = "Incorrect passphrase"
+                _errorMessage.value = context.getString(R.string.feature_commitmentPassword_incorrect)
                 updateState()
                 if (CommitmentPasswordFeature.isLockedOut()) {
                     _showDialog.value = CommitmentPasswordDialog.NONE

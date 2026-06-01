@@ -35,6 +35,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import timber.log.Timber
 
 /**
  * Full-screen activity shown when Device Admin is revoked or the Accessibility Service is disabled
@@ -191,7 +192,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
                                                 getString(R.string.deviceAdminRevoked_reenable_explanation)
                                             )
                                         )
-                                    }
+                                    }.onFailure { Timber.e(it, "Failed to open Device Admin request intent") }
                                 }
                                 WarningReason.ACCESSIBILITY_DISABLED ->
                                     NavigationUtil.openAccessibilitySettings(this)

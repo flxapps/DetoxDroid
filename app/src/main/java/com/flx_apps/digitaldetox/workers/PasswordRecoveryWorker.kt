@@ -93,10 +93,10 @@ class PasswordRecoveryWorker @AssistedInject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                "Password Recovery",
+                applicationContext.getString(R.string.feature_commitmentPassword_recovery_channelName),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for password recovery status"
+                description = applicationContext.getString(R.string.feature_commitmentPassword_recovery_channelDescription)
             }
             (applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
                 .createNotificationChannel(channel)

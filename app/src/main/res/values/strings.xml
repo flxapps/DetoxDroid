@@ -206,6 +206,8 @@
     <string name="feature.commitmentPassword.recovery.timeRemaining">Time remaining: %s</string>
     <string name="feature.commitmentPassword.recovery.ready">Recovery Ready!</string>
     <string name="feature.commitmentPassword.recovery.ready.message">The 24-hour waiting period is complete. You can now reset your passphrase.</string>
+    <string name="feature.commitmentPassword.recovery.channelName">Password recovery</string>
+    <string name="feature.commitmentPassword.recovery.channelDescription">Notifications for commitment password recovery status</string>
     <string name="feature.commitmentPassword.recovery.cancel">Cancel Recovery</string>
     <string name="feature.commitmentPassword.recovery.complete">Reset Passphrase</string>
     <string name="feature.commitmentPassword.disable.title">Disable Password Protection?</string>

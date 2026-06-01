@@ -19,6 +19,10 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.mindrot.jbcrypt.BCrypt
 import timber.log.Timber
 import java.security.SecureRandom
@@ -70,6 +74,8 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
      * Resets to false on app restart (in-memory only).
      */
     private var sessionUnlocked: Boolean = false
+    private val _stateToken = MutableStateFlow(0L)
+    val stateToken: StateFlow<Long> = _stateToken.asStateFlow()
 
     var failedAttempts: Int by DataStoreProperty(
         intPreferencesKey("${id}_failedAttempts"), 0
@@ -91,6 +97,10 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         stringSetPreferencesKey("${id}_lockedFeatureIds"), emptySet()
     )
 
+    private fun notifyStateChanged() {
+        _stateToken.update { it + 1 }
+    }
+
     private fun getEncryptedPrefs(context: Context): SharedPreferences {
         val masterKey =
             MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
@@ -107,10 +117,12 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
     fun unlockSession() {
         sessionUnlocked = true
+        notifyStateChanged()
     }
 
     fun lockSession() {
         sessionUnlocked = false
+        notifyStateChanged()
     }
 
     fun isSessionUnlocked(): Boolean = sessionUnlocked
@@ -158,7 +170,11 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         if (!isActivated) return false
         if (!isPasswordSet(DetoxDroidApplication.appContext)) return false
         if (featureId == id) return true
-        return if (lockedFeatureIds.isEmpty()) true else lockedFeatureIds.contains(featureId)
+        return if (lockedFeatureIds.isEmpty()) {
+            getLockableFeatures().any { it.id == featureId }
+        } else {
+            lockedFeatureIds.contains(featureId)
+        }
     }
 
     /**
@@ -175,10 +191,21 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
      */
     fun initializeLockedFeatures() {
         if (lockedFeatureIds.isEmpty()) {
-            lockedFeatureIds =
+            updateLockedFeatureIds(
                 getLockableFeatures().filter { (it as? LockableFeature)?.lockedByDefault == true }
                     .map { it.id }.toSet()
+            )
         }
+    }
+
+    fun updateLockedFeatureIds(featureIds: Set<String>) {
+        lockedFeatureIds = featureIds
+        notifyStateChanged()
+    }
+
+    fun updateActivationState(activated: Boolean) {
+        isActivated = activated
+        notifyStateChanged()
     }
 
     // endregion
@@ -197,6 +224,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
             failedAttempts = 0
             lockoutUntil = 0L
             recoveryInitiatedAt = 0L
+            notifyStateChanged()
             true
         } catch (e: Exception) {
             Timber.e(e, "Failed to set password")
@@ -219,6 +247,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
                     Timber.w("User locked out after $failedAttempts failed attempts")
                 }
             }
+            notifyStateChanged()
             valid
         } catch (e: Exception) {
             Timber.e(e, "Failed to verify password")
@@ -235,11 +264,13 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         failedAttempts = 0
         lockoutUntil = 0L
         scheduleRecoveryNotification(context)
+        notifyStateChanged()
     }
 
     fun cancelRecovery(context: Context) {
         recoveryInitiatedAt = 0L
         com.flx_apps.digitaldetox.workers.PasswordRecoveryWorker.cancel(context)
+        notifyStateChanged()
     }
 
     fun completeRecovery(context: Context): Boolean {
@@ -249,6 +280,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         failedAttempts = 0
         lockoutUntil = 0L
         com.flx_apps.digitaldetox.workers.PasswordRecoveryWorker.cancel(context)
+        notifyStateChanged()
         return true
     }
 
@@ -258,6 +290,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         lockoutUntil = 0L
         recoveryInitiatedAt = 0L
         DetoxDroidDeviceAdminReceiver.setUninstallBlocked(context, false)
+        notifyStateChanged()
     }
 
     private fun scheduleRecoveryNotification(context: Context) {
@@ -298,7 +331,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     override fun onStart(context: Context) {
         if (!hasPermissions(context)) {
             Timber.w("CommitmentPasswordFeature: Device Admin not granted, deactivating")
-            isActivated = false
+            updateActivationState(false)
             return
         }
         lockSession()
