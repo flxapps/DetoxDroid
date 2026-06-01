@@ -76,6 +76,13 @@ open class FeatureViewModel @Inject constructor(
         return feature.isActivated
     }
 
+    /**
+     * Syncs the UI state with the current [feature.isActivated] value without toggling it.
+     */
+    fun refreshActiveState() {
+        _featureIsActive.value = feature.isActivated
+    }
+
     fun showSnackbar(
         message: String,
         actionLabel: String? = null,

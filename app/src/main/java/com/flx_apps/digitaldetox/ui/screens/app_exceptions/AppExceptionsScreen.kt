@@ -54,6 +54,9 @@ import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
+import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.SettingsLockBannerIfNeeded
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
@@ -72,55 +75,63 @@ fun ManageAppExceptionsScreen(
     appExceptionsViewModel: AppExceptionsViewModel = AppExceptionsViewModel.withFeatureId(featureId),
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
-    Scaffold(topBar = {
-        TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
-            AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
-                AnimatedVisibility(visible = it) {
-                    SearchBar(query = appExceptionsViewModel.query.value, onQueryChange = { query ->
-                        appExceptionsViewModel.filterApps(query)
-                    }, onSearch = {}, active = false, onActiveChange = {}, trailingIcon = {
-                        IconButton(onClick = {
-                            showSearchBar = !showSearchBar
-                            if (!showSearchBar) {
-                                appExceptionsViewModel.filterApps("")
+    PasswordLockGate(featureId = featureId, showBanner = false) {
+        val settingsLocked = LocalSettingsLocked.current
+        Scaffold(topBar = {
+            TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
+                AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
+                    AnimatedVisibility(visible = it) {
+                        SearchBar(query = appExceptionsViewModel.query.value, onQueryChange = { query ->
+                            appExceptionsViewModel.filterApps(query)
+                        }, onSearch = {}, active = false, onActiveChange = {}, trailingIcon = {
+                            IconButton(onClick = {
+                                showSearchBar = !showSearchBar
+                                if (!showSearchBar) {
+                                    appExceptionsViewModel.filterApps("")
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close, contentDescription = "Close"
+                                )
                             }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Close, contentDescription = "Close"
-                            )
-                        }
-                    }) {}
-                }
-                AnimatedVisibility(visible = !it) {
-                    Text(stringResource(id = R.string.feature_settings_exceptions))
-                }
-            }
-        }, actions = {
-            AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
-                AnimatedVisibility(visible = !it) {
-                    IconButton(onClick = {
-                        showSearchBar = !showSearchBar
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Search, contentDescription = "Search"
-                        )
+                        }) {}
+                    }
+                    AnimatedVisibility(visible = !it) {
+                        Text(stringResource(id = R.string.feature_settings_exceptions))
                     }
                 }
+            }, actions = {
+                AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
+                    AnimatedVisibility(visible = !it) {
+                        IconButton(onClick = {
+                            showSearchBar = !showSearchBar
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Search, contentDescription = "Search"
+                            )
+                        }
+                    }
+                }
+                IconButton(
+                    enabled = !settingsLocked,
+                    onClick = { appExceptionsViewModel.setShowListSettingsSheet(true) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Open Exception List Settings"
+                    )
+                }
+            })
+        }) {
+            if (appExceptionsViewModel.showListSettingsSheet.collectAsState().value) {
+                AppExceptionsListSettingsSheet()
             }
-            IconButton(onClick = { appExceptionsViewModel.setShowListSettingsSheet(true) }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Open Exception List Settings"
-                )
+            Column(modifier = Modifier.padding(paddingValues = it)) {
+                SettingsLockBannerIfNeeded(featureId = featureId)
+                Box {
+                    InstalledAppsList()
+                }
             }
-        })
-    }) {
-        if (appExceptionsViewModel.showListSettingsSheet.collectAsState().value) {
-            AppExceptionsListSettingsSheet()
-        }
-        Box(modifier = Modifier.padding(paddingValues = it)) {
-            // Content of the screen
-            InstalledAppsList()
         }
     }
 }
@@ -170,6 +181,7 @@ fun InstalledAppsList(
 fun AppExceptionListItem(
     item: AppExceptionItem, appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
+    val settingsLocked = LocalSettingsLocked.current
     // load app icon
     val packageManager = LocalContext.current.packageManager
 
@@ -214,7 +226,8 @@ fun AppExceptionListItem(
             }
         },
         trailingContent = {
-            Checkbox(checked = checkedState.value, onCheckedChange = {
+            Checkbox(enabled = !settingsLocked, checked = checkedState.value, onCheckedChange = {
+                if (settingsLocked) return@Checkbox
                 runBlocking {
                     checkedState.value =
                         appExceptionsViewModel.toggleAppException(item.appInfo.packageName)

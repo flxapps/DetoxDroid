@@ -23,6 +23,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
+import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.SettingsLockBannerIfNeeded
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
@@ -55,23 +59,30 @@ fun FeatureScheduleScreen(
     featureId: FeatureId,
     scheduleViewModel: ScheduleViewModel = ScheduleViewModel.withFeatureId(featureId)
 ) {
-    val bottomSheetVisible = scheduleViewModel.dialogRule.collectAsState(null).value != null
-    Scaffold(topBar = {
-        TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
-            Text(text = stringResource(id = R.string.feature_settings_schedule))
-        })
-    }, floatingActionButton = {
-        FloatingActionButton(onClick = {
-            scheduleViewModel.showBottomSheet()
+    PasswordLockGate(featureId = featureId, showBanner = false) {
+        val bottomSheetVisible = scheduleViewModel.dialogRule.collectAsState(null).value != null
+        val settingsLocked = LocalSettingsLocked.current
+        Scaffold(topBar = {
+            TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
+                Text(text = stringResource(id = R.string.feature_settings_schedule))
+            })
+        }, floatingActionButton = {
+            FloatingActionButton(modifier = Modifier.alpha(if (settingsLocked) 0.5f else 1f), onClick = {
+                if (settingsLocked) return@FloatingActionButton
+                scheduleViewModel.showBottomSheet()
+            }) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+            }
         }) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-        }
-    }) {
-        Box(modifier = Modifier.padding(paddingValues = it)) {
-            ScheduleRulesList(rules = scheduleViewModel.rules.collectAsState().value)
-        }
-        if (bottomSheetVisible) {
-            FeatureScheduleRuleBottomSheet()
+            Column(modifier = Modifier.padding(paddingValues = it)) {
+                SettingsLockBannerIfNeeded(featureId = featureId)
+                Box {
+                    ScheduleRulesList(rules = scheduleViewModel.rules.collectAsState().value)
+                }
+            }
+            if (bottomSheetVisible) {
+                FeatureScheduleRuleBottomSheet()
+            }
         }
     }
 }

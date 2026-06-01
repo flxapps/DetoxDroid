@@ -176,4 +176,69 @@
 
     <string name="rootCommand.grantWriteSecuritySettingsPermission" translatable="false">pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="rootCommand.grantDeviceAdminPermission" translatable="false">dpm set-device-owner com.flx_apps.digitaldetox/.system_integration.DetoxDroidDeviceAdminReceiver</string>
+
+    <!-- region Commitment Password Feature -->
+    <string name="feature.commitmentPassword">Commitment Password</string>
+    <string name="feature.commitmentPassword.subtitle">Lock your settings with commitment</string>
+    <string name="feature.commitmentPassword.description">Add an extra layer of commitment by password-protecting your DetoxDroid settings. Prevents you from easily disabling features during moments of weakness. Requires Device Admin permission.</string>
+    <string name="feature.commitmentPassword.requiresDeviceAdmin">Requires Device Admin Permission</string>
+    <string name="feature.commitmentPassword.requiresDeviceAdmin.message">This feature requires Device Admin permission to protect your commitment. Please grant it to continue.</string>
+    <string name="feature.commitmentPassword.walkthrough.title">Important: Read Before Enabling</string>
+    <string name="feature.commitmentPassword.walkthrough.message">Enabling the Commitment Password will:\n\n• Lock all selected DetoxDroid settings\n• Require a password to make any changes\n• Prevent easy disabling of features\n• Block stopping DetoxDroid while locked\n• Allow max 3 password attempts (5-min cooldown)\n• Offer a 24-hour recovery if you forget the password\n\nThis is designed to help you stay committed to your digital wellbeing goals.\n\nAre you ready to proceed?</string>
+    <string name="feature.commitmentPassword.walkthrough.proceed">I Understand, Proceed</string>
+    <string name="feature.commitmentPassword.generated.title">Your Passphrase</string>
+    <string name="feature.commitmentPassword.generated.message">Store this passphrase somewhere safe — you\'ll need it to change DetoxDroid settings:\n\n%s\n\nWrite it down or save it in a secure location before continuing.</string>
+    <string name="feature.commitmentPassword.generated.copied">Passphrase copied to clipboard</string>
+    <string name="feature.commitmentPassword.generated.confirm">I\'ve Saved the Passphrase</string>
+    <string name="feature.commitmentPassword.copy">Copy Passphrase</string>
+    <string name="feature.commitmentPassword.unlock">Unlock Settings</string>
+    <string name="feature.commitmentPassword.unlock.description">Enter your passphrase to unlock DetoxDroid settings for this session</string>
+    <string name="feature.commitmentPassword.enter">Enter Passphrase</string>
+    <string name="feature.commitmentPassword.verify">Verify</string>
+    <string name="feature.commitmentPassword.incorrect">Incorrect passphrase</string>
+    <string name="feature.commitmentPassword.attemptsRemaining">%d attempts remaining</string>
+    <string name="feature.commitmentPassword.lockedOut">Too many failed attempts. Try again in %s</string>
+    <string name="feature.commitmentPassword.forgot">Forgot Passphrase?</string>
+    <string name="feature.commitmentPassword.recovery.title">Passphrase Recovery</string>
+    <string name="feature.commitmentPassword.recovery.message">If you\'ve forgotten your passphrase, you can start a 24-hour recovery period. After 24 hours, you\'ll be able to reset the passphrase.\n\nDuring this time, your settings will remain locked.</string>
+    <string name="feature.commitmentPassword.recovery.initiate">Start 24-Hour Recovery</string>
+    <string name="feature.commitmentPassword.recovery.inProgress">Recovery in Progress</string>
+    <string name="feature.commitmentPassword.recovery.timeRemaining">Time remaining: %s</string>
+    <string name="feature.commitmentPassword.recovery.ready">Recovery Ready!</string>
+    <string name="feature.commitmentPassword.recovery.ready.message">The 24-hour waiting period is complete. You can now reset your passphrase.</string>
+    <string name="feature.commitmentPassword.recovery.cancel">Cancel Recovery</string>
+    <string name="feature.commitmentPassword.recovery.complete">Reset Passphrase</string>
+    <string name="feature.commitmentPassword.disable.title">Disable Password Protection?</string>
+    <string name="feature.commitmentPassword.disable.enterPassword">Enter your passphrase to disable password protection.</string>
+    <string name="feature.commitmentPassword.disable">Disable Protection</string>
+    <string name="feature.commitmentPassword.banner.locked">Settings are locked. Enter passphrase to make changes.</string>
+    <string name="feature.commitmentPassword.banner.unlocked">Settings unlocked for this session.</string>
+    <string name="feature.commitmentPassword.lockAgain">Lock Again</string>
+    <string name="feature.commitmentPassword.lockedBadge">🔒 Locked by commitment password</string>
+    <string name="feature.commitmentPassword.selectFeatures">Select Features to Lock</string>
+    <string name="feature.commitmentPassword.selectAll">All</string>
+    <string name="feature.commitmentPassword.selectNone">None</string>
+    <string name="feature.commitmentPassword.featuresSelected">%1$d of %2$d features selected</string>
+    <string name="feature.commitmentPassword.deviceOwner.hint.title">Optional: strengthen with Device Owner</string>
+    <string name="feature.commitmentPassword.deviceOwner.hint.subtitle">Commitment Password works with Device Admin, but Device Owner also blocks uninstallation. Tap to view the ADB command.</string>
+    <string name="feature.commitmentPassword.stop.locked">Stop DetoxDroid is locked by Commitment Password. Unlock settings first.</string>
+    <string name="feature.commitmentPassword.tamper.overlay.title">Security action blocked</string>
+    <string name="feature.commitmentPassword.tamper.overlay.message">DetoxDroid detected an uninstall/protection-bypass attempt while Commitment Password is locked. You were moved back to the home screen.</string>
+    <string name="feature.commitmentPassword.tamper.toast.uninstall">Uninstall flow blocked while Commitment Password is locked.</string>
+    <string name="feature.commitmentPassword.tamper.toast.deviceAdmin">Disabling Device Admin was blocked while Commitment Password is locked.</string>
+    <string name="feature.commitmentPassword.tamper.toast.accessibility">Disabling Accessibility Service was blocked while Commitment Password is locked.</string>
+    <!-- endregion -->
+
+    <!-- region Device Admin Revoked Warning -->
+    <string name="deviceAdminRevoked.title">Device Admin was deactivated</string>
+    <string name="deviceAdminRevoked.message">You locked DetoxDroid with Commitment Password and then removed Device Admin. This may be part of an attempt to uninstall or bypass your commitment. Take a moment to decide intentionally.</string>
+    <string name="accessibilityDisabledWarning.title">Accessibility Service was disabled</string>
+    <string name="accessibilityDisabledWarning.message">The DetoxDroid Accessibility Service was disabled while Commitment Password is active. DetoxDroid needs this service to enforce your commitment settings. Please re-enable it to continue.</string>
+    <string name="deviceAdminRevoked.prompt">To continue, type this sentence exactly:</string>
+    <string name="deviceAdminRevoked.requiredPhrase">I am making a short-term decision that I will regret</string>
+    <string name="deviceAdminRevoked.inputLabel">Type the sentence</string>
+    <string name="deviceAdminRevoked.continue">I understand, continue</string>
+    <string name="deviceAdminRevoked.reenable.explanation">DetoxDroid uses Device Admin to make your commitment harder to bypass. Re-enable it to restore full protection.</string>
+    <string name="deviceAdminRevoked.disableRequestedWarning">Commitment Password is active. Disabling Device Admin makes DetoxDroid easier to uninstall and bypass your commitment.</string>
+    <!-- endregion -->
 </resources>

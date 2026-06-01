@@ -2,14 +2,7 @@
 <device-admin>
     <uses-policies>
         <delegation-package-access />
-<!--        <limit-password />-->
-<!--        <watch-login />-->
-<!--        <reset-password />-->
-<!--        <force-lock />-->
-<!--        <wipe-data />-->
-<!--        <expire-password />-->
-<!--        <encrypted-storage />-->
-<!--        <disable-camera />-->
-<!--        <disable-keyguard-features />-->
+        <wipe-data />
+        <disable-keyguard-features />
     </uses-policies>
 </device-admin>

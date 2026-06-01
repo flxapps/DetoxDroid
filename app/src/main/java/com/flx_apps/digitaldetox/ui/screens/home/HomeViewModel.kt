@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
@@ -27,7 +28,7 @@ val AccessibilityServiceComponent =
  * The state of the snackbar on the home screen.
  */
 enum class HomeScreenSnackbarState {
-    Hidden, ShowStartAcccessibilityServiceManually
+    Hidden, ShowStartAcccessibilityServiceManually, CommitmentPasswordLocked
 }
 
 @HiltViewModel
@@ -48,14 +49,25 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Toggles the state of the accessibility service.
+     * Returns null when blocked by the Commitment Password.
      * @return the new state of the accessibility service or null if the (de-)activation failed
      * @see DetoxDroidAccessibilityService
      * @see DetoxDroidState
      */
     fun toggleDetoxDroidIsRunning(): DetoxDroidState? {
         Timber.d("state = ${detoxDroidState.value}")
+
+        // Block stopping DetoxDroid while Commitment Password is active and locked
+        if (detoxDroidState.value == DetoxDroidState.Active
+            && CommitmentPasswordFeature.isActivated
+            && !CommitmentPasswordFeature.isSessionUnlocked()
+        ) {
+            setSnackbarState(HomeScreenSnackbarState.CommitmentPasswordLocked)
+            return null
+        }
+
         val shouldBeRunning = detoxDroidState.value != DetoxDroidState.Active
-        kotlin.runCatching { // if we don't have the permission to write secure settings, an exception will be thrown
+        kotlin.runCatching {
             if (shouldBeRunning && activateAccessibilityService()) {
                 return DetoxDroidState.Active
             } else if (!shouldBeRunning && disableAccessibilityService()) {
@@ -63,7 +75,6 @@ class HomeViewModel @Inject constructor(
             }
         }
 
-        // (de-)activation of accessibility service failed, so we need to show a snackbar to ask the user to do it manually
         setSnackbarState(HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually)
         return null
     }
@@ -119,16 +130,20 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.
+     * Blocked if Commitment Password is active and the session is not unlocked.
      */
-    fun uninstallDetoxDroid() {
-        // call onDestroy() manually to run all cleanup tasks (e.g. stop all features) in a blocking way
-        // (as application.stopService() is asynchronous)
+    fun uninstallDetoxDroid(): Boolean {
+        if (CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()) {
+            setSnackbarState(HomeScreenSnackbarState.CommitmentPasswordLocked)
+            return false
+        }
         DetoxDroidAccessibilityService.instance?.onDestroy()
-        kotlin.runCatching { disableAccessibilityService() } // run this anyway
+        kotlin.runCatching { disableAccessibilityService() }
         kotlin.runCatching { DetoxDroidDeviceAdminReceiver.revokePermission(application) }
         val intent = Intent(Intent.ACTION_DELETE)
         intent.data = "package:${application.packageName}".toUri()
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         application.startActivity(intent)
+        return true
     }
 }

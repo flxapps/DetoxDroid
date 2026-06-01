@@ -14,6 +14,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -23,9 +25,15 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordDialog
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordViewModel
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
+import kotlinx.coroutines.delay
 
 /**
  * A singleton that provides the snackbar host state for the feature screen and its children.
@@ -46,9 +54,17 @@ object FeatureScreenSnackbarStateProvider {
 fun FeatureScreen(
     featureId: FeatureId,
     featureViewModel: FeatureViewModel = FeatureViewModel.withFeatureId(featureId),
-) { // back pressed dispatcher is used to handle back button presses
+) {
     val feature = featureViewModel.feature
     val snackbarHostState = FeatureScreenSnackbarStateProvider.snackbarState
+    val isFeatureSettingsLocked by produceState(initialValue = false, featureId) {
+        while (true) {
+            value = featureId != CommitmentPasswordFeatureId &&
+                    CommitmentPasswordFeature.isFeatureLocked(featureId)
+            delay(500)
+        }
+    }
+
     Scaffold(snackbarHost = {
         SnackbarHost(hostState = snackbarHostState)
     }, topBar = {
@@ -61,12 +77,14 @@ fun FeatureScreen(
                 )
             }
         }, actions = {
-            FeatureActivationSwitch()
+            FeatureActivationSwitch(isLockedByCommitmentPassword = isFeatureSettingsLocked)
         })
     }) {
         LazyColumn(modifier = Modifier.padding(it)) {
             item {
-                FeatureScreenContent(feature)
+                PasswordLockGate(featureId = featureId) {
+                    FeatureScreenContent(feature)
+                }
             }
         }
     }
@@ -75,28 +93,78 @@ fun FeatureScreen(
 /**
  * A switch to toggle the active state of the feature. If the feature needs permissions to be
  * activated, a snackbar is shown to request the permissions and the state is not toggled.
+ *
+ * For the Commitment Password feature, when it is currently active and locked, the switch triggers
+ * the "Unlock to Disable" dialog instead of immediately deactivating.
  */
 @Composable
 fun FeatureActivationSwitch(
     featureViewModel: FeatureViewModel = viewModel(),
-    navViewModel: NavViewModel = NavViewModel.navViewModel()
+    navViewModel: NavViewModel = NavViewModel.navViewModel(),
+    isLockedByCommitmentPassword: Boolean = false
 ) {
     val context = LocalContext.current
-    Switch(modifier = Modifier.padding(end = 8.dp),
-        checked = featureViewModel.featureIsActive.collectAsState().value,
-        onCheckedChange = {
-            if (featureViewModel.toggleFeatureActive() == null) {
-                featureViewModel.showSnackbar(message = context.getString(R.string.action_requestPermissions),
-                    actionLabel = context.getString(R.string.action_go),
-                    onResult = { snackbarResult ->
-                        if (snackbarResult == SnackbarResult.ActionPerformed) {
-                            (featureViewModel.feature as NeedsPermissionsFeature).requestPermissions(
-                                context, navViewModel
-                            )
-                        }
-                    })
+
+    // For CommitmentPasswordFeature we need special handling
+    if (featureViewModel.feature.id == CommitmentPasswordFeatureId) {
+        val cpViewModel: CommitmentPasswordViewModel = viewModel()
+
+        Switch(
+            modifier = Modifier.padding(end = 8.dp),
+            checked = featureViewModel.featureIsActive.collectAsState().value,
+            onCheckedChange = {
+                if (it) {
+                    // Enabling: check permissions first, then show walkthrough
+                    if (featureViewModel.activationNeedsPermission()) {
+                        featureViewModel.showSnackbar(
+                            message = context.getString(R.string.action_requestPermissions),
+                            actionLabel = context.getString(R.string.action_go),
+                            onResult = { snackbarResult ->
+                                if (snackbarResult == SnackbarResult.ActionPerformed) {
+                                    (featureViewModel.feature as NeedsPermissionsFeature).requestPermissions(
+                                        context, navViewModel
+                                    )
+                                }
+                            }
+                        )
+                    } else {
+                        cpViewModel.showWalkthroughDialog()
+                    }
+                } else {
+                    // Disabling: require passphrase if currently locked
+                    if (CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()) {
+                        cpViewModel.showUnlockToDisableDialog()
+                    } else {
+                        // Unlocked – disable directly
+                        CommitmentPasswordFeature.clearPasswordData(context)
+                        CommitmentPasswordFeature.lockSession()
+                        CommitmentPasswordFeature.isActivated = false
+                        featureViewModel.refreshActiveState()
+                    }
+                }
             }
-        })
+        )
+    } else {
+        Switch(modifier = Modifier.padding(end = 8.dp),
+            enabled = !isLockedByCommitmentPassword,
+            checked = featureViewModel.featureIsActive.collectAsState().value,
+            onCheckedChange = {
+                if (featureViewModel.toggleFeatureActive() == null) {
+                    featureViewModel.showSnackbar(
+                        message = context.getString(R.string.action_requestPermissions),
+                        actionLabel = context.getString(R.string.action_go),
+                        onResult = { snackbarResult ->
+                            if (snackbarResult == SnackbarResult.ActionPerformed) {
+                                (featureViewModel.feature as NeedsPermissionsFeature).requestPermissions(
+                                    context, navViewModel
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+        )
+    }
 }
 
 /**
@@ -110,4 +178,3 @@ fun FeatureScreenContent(feature: Feature) {
     InfoCard(infoText = stringResource(id = feature.texts.description))
     feature.settingsContent()
 }
-

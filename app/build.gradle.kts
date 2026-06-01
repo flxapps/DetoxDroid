@@ -42,6 +42,12 @@ android {
             languageVersion = "1.9"
         }
     }
+    kapt {
+        javacOptions {
+            option("-source", "17")
+            option("-target", "17")
+        }
+    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -56,6 +62,13 @@ android {
     }
     lint {
         abortOnError = false
+    }
+}
+
+// Force kaptGenerateStubs to target JVM 17 regardless of JDK version (needed with JDK 21 + Kotlin 1.8)
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KaptGenerateStubs>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
@@ -116,6 +129,12 @@ dependencies {
     // Shizuku for elevated permissions without root
     implementation("dev.rikka.shizuku:api:13.1.5")
     implementation("dev.rikka.shizuku:provider:13.1.5")
+
+    // Security: EncryptedSharedPreferences for commitment password storage
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // BCrypt for commitment password hashing
+    implementation("org.mindrot:jbcrypt:0.4")
 }
 
 kotlin.sourceSets.all {

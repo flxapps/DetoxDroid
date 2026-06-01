@@ -10,6 +10,7 @@ import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
@@ -34,7 +35,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         BreakDoomScrollingFeatureId,
         defaultExceptionListType = AppExceptionListType.ONLY_LIST,
     ), SupportsScheduleFeature by SupportsScheduleFeature.Impl(BreakDoomScrollingFeatureId),
-    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature() {
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_doomScrolling,
         R.string.feature_doomScrolling_subtitle,

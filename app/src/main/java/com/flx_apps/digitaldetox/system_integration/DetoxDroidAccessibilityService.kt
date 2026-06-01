@@ -84,6 +84,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     )
     private var ignoredPackages = mutableSetOf<String>()
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
+    private val commitmentPasswordTamperGuard by lazy {
+        CommitmentPasswordTamperGuard(this)
+    }
 
     var onKeyEventListener: ((KeyEvent) -> Boolean)? = null
 
@@ -145,6 +148,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         }
 
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            if (commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)) return
             handleAppOpenedEvent(accessibilityEvent)
             return
         }
@@ -262,12 +266,29 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     /**
      * Called when the service is destroyed. It pauses all features and unregisters the screen
      * turned off receiver, then sets the [instance] to null and updates the [state].
+     *
+     * If the Commitment Password feature is active, triggers the accessibility disabled warning
+     * to prevent the user from bypassing their commitment.
      */
     override fun onDestroy() {
         Timber.i("DetoxDroidAccessibilityService: onDestroy")
         super.onDestroy()
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
+
+        val cpActive = kotlin.runCatching {
+            com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated
+        }.getOrDefault(false)
+        if (cpActive) {
+            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(
+                this
+            )
+            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.launch(
+                this,
+                com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED
+            )
+        }
+
         instance = null
         updateState()
     }

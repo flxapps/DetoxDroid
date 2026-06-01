@@ -79,6 +79,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true"
+            android:theme="@style/Theme.DetoxDroid" />
+
         <service
             android:name=".system_integration.DetoxDroidAccessibilityService"
             android:description="@string/app.accessibilityService.description"
@@ -95,6 +103,7 @@
         </service>
         <service android:name=".ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService" />
         <service android:name=".ui.screens.feature.disable_apps.AppDisabledOverlayService" />
+        <service android:name=".ui.screens.feature.commitment_password.CommitmentPasswordTamperWarningOverlayService" />
 
         <receiver
             android:name="com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver"
@@ -155,6 +164,18 @@
             android:exported="true"
             android:multiprocess="false"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+        <!-- Disable auto-init so Hilt can provide WorkerFactory for @HiltWorker -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
     </application>
 
 </manifest>

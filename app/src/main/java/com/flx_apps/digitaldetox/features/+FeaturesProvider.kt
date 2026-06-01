@@ -28,7 +28,8 @@ object FeaturesProvider {
         DoNotDisturbFeature,
         BreakDoomScrollingFeature,
         DisableAppsFeature,
-        PauseButtonFeature
+        PauseButtonFeature,
+        CommitmentPasswordFeature
     )
 
     /**

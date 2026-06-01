@@ -45,6 +45,7 @@ fun OpenAppExceptionsTile(
         )
     }, onClick = {
         navViewModel.openRoute(NavigationRoutes.AppExceptions(featureId = featureViewModel.feature.id))
-    }, leadingIcon = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions)
+    }, allowClickWhenLocked = true,
+        leadingIcon = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions)
     )
 }
