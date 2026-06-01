@@ -1,8 +1,3 @@
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,37 +11,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FilterChip
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Badge
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
@@ -60,7 +39,8 @@ import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.Settings
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.Center
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
-import kotlinx.coroutines.runBlocking
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionTopBar
 
 /**
  * This screen allows the user to manage the app exceptions for a feature.
@@ -78,50 +58,26 @@ fun ManageAppExceptionsScreen(
     PasswordLockGate(featureId = featureId, showBanner = false) {
         val settingsLocked = LocalSettingsLocked.current
         Scaffold(topBar = {
-            TopAppBar(navigationIcon = { AppBarBackButton() }, title = {
-                AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
-                    AnimatedVisibility(visible = it) {
-                        SearchBar(query = appExceptionsViewModel.query.value, onQueryChange = { query ->
-                            appExceptionsViewModel.filterApps(query)
-                        }, onSearch = {}, active = false, onActiveChange = {}, trailingIcon = {
-                            IconButton(onClick = {
-                                showSearchBar = !showSearchBar
-                                if (!showSearchBar) {
-                                    appExceptionsViewModel.filterApps("")
-                                }
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close, contentDescription = "Close"
-                                )
-                            }
-                        }) {}
+            AppSelectionTopBar(
+                title = stringResource(id = R.string.feature_settings_exceptions),
+                showSearchBar = showSearchBar,
+                searchQuery = appExceptionsViewModel.query.value,
+                onSearchQueryChange = { query ->
+                    appExceptionsViewModel.filterApps(query)
+                },
+                onToggleSearch = {
+                    showSearchBar = !showSearchBar
+                    if (!showSearchBar) {
+                        appExceptionsViewModel.filterApps("")
                     }
-                    AnimatedVisibility(visible = !it) {
-                        Text(stringResource(id = R.string.feature_settings_exceptions))
-                    }
-                }
-            }, actions = {
-                AnimatedContent(targetState = showSearchBar, label = "ToggleSearchBar") {
-                    AnimatedVisibility(visible = !it) {
-                        IconButton(onClick = {
-                            showSearchBar = !showSearchBar
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Search, contentDescription = "Search"
-                            )
-                        }
-                    }
-                }
-                IconButton(
-                    enabled = !settingsLocked,
-                    onClick = { appExceptionsViewModel.setShowListSettingsSheet(true) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Open Exception List Settings"
-                    )
-                }
-            })
+                },
+                navigationIcon = { AppBarBackButton() },
+                searchContentDescription = "Search",
+                closeSearchContentDescription = "Close Search",
+                onOpenFilters = { appExceptionsViewModel.setShowListSettingsSheet(true) },
+                filtersEnabled = !settingsLocked,
+                filtersContentDescription = "Open Exception List Settings",
+            )
         }) {
             if (appExceptionsViewModel.showListSettingsSheet.collectAsState().value) {
                 AppExceptionsListSettingsSheet()
@@ -176,80 +132,28 @@ fun InstalledAppsList(
  * Displays an app exception item. It contains the app icon, name and a switch to toggle the
  * exception state.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppExceptionListItem(
     item: AppExceptionItem, appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
     val settingsLocked = LocalSettingsLocked.current
-    // load app icon
-    val packageManager = LocalContext.current.packageManager
-
-    val appIcon by produceState<Bitmap?>(null, key1 = item.appInfo.packageName) {
-        value = try {
-            packageManager.getApplicationIcon(item.appInfo.packageName).toBitmap(128, 128)
-        } catch (_: PackageManager.NameNotFoundException) {
-            // icon could not be loaded
-            // this is usually the case for apps that are managed by a work profile
-            null // we return null here, so that no icon is displayed
-        }
-    }
     val checkedState = remember {
         mutableStateOf(item.isException)
     }
-    androidx.compose.material3.ListItem(
-        headlineContent = { Text(item.appInfo.appName) },
-        supportingContent = {
-            // The supporting content contains the app category and whether the app is a system app
-            // or a user app.
-            Row {
-                if (item.appInfo.isSystemApp) {
-                    Badge(containerColor = MaterialTheme.colorScheme.secondary) {
-                        Text(text = "System", style = MaterialTheme.typography.bodySmall)
-                    }
-                } else {
-                    Badge(containerColor = MaterialTheme.colorScheme.secondary) {
-                        Text(text = "User", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-                if (item.appInfo.appCategory.isNotBlank()) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Text(
-                            text = item.appInfo.appCategory,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
-            }
-        },
-        trailingContent = {
-            Checkbox(enabled = !settingsLocked, checked = checkedState.value, onCheckedChange = {
-                if (settingsLocked) return@Checkbox
-                runBlocking {
-                    checkedState.value =
-                        appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
-                            ?: checkedState.value
-                }
-            })
-        },
-        leadingContent = {
-            if (appIcon != null) {
-                Image(
-                    bitmap = appIcon!!.asImageBitmap(),
-                    contentDescription = "App Icon",
-                    modifier = Modifier.size(48.dp)
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.CheckBoxOutlineBlank,
-                    contentDescription = "App Icon Placeholder",
-                    modifier = Modifier.size(48.dp)
-                )
-            }
-        })
+    AppSelectionListItem(
+        packageName = item.appInfo.packageName,
+        appName = item.appInfo.appName,
+        appCategory = item.appInfo.appCategory,
+        isSystemApp = item.appInfo.isSystemApp,
+        checked = checkedState.value,
+        enabled = !settingsLocked,
+        onCheckedChange = {
+            if (settingsLocked) return@AppSelectionListItem
+            checkedState.value =
+                appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
+                    ?: checkedState.value
+        }
+    )
 }
 
 /**

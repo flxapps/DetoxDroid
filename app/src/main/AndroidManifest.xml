@@ -86,6 +86,16 @@
             android:launchMode="singleTask"
             android:showOnLockScreen="true"
             android:theme="@style/Theme.DetoxDroid" />
+        <activity
+            android:name=".widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/widget.minimalLauncher.configure.title"
+            android:theme="@style/Theme.DetoxDroid">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name=".system_integration.DetoxDroidAccessibilityService"
@@ -126,6 +136,21 @@
                 <action android:name="android.intent.action.SCREEN_OFF" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".widgets.minimal_launcher.MinimalLauncherWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget.minimalLauncher.name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/minimal_launcher_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widgets.minimal_launcher.MinimalLauncherWidgetClickReceiver"
+            android:exported="false" />
 
         <service
             android:name="android.service.voice.VoiceInteractionService"

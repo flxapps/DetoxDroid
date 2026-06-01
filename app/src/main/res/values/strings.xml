@@ -243,4 +243,25 @@
     <string name="deviceAdminRevoked.reenable.explanation">DetoxDroid uses Device Admin to make your commitment harder to bypass. Re-enable it to restore full protection.</string>
     <string name="deviceAdminRevoked.disableRequestedWarning">Commitment Password is active. Disabling Device Admin makes DetoxDroid easier to uninstall and bypass your commitment.</string>
     <!-- endregion -->
+
+    <!-- region Minimal Launcher Widget -->
+    <string name="widget.minimalLauncher.name">DetoxDroid Launcher Widget</string>
+    <string name="widget.minimalLauncher.description">Text-only launcher widget for selected apps</string>
+    <string name="widget.minimalLauncher.empty">Tap here to select apps</string>
+    <string name="widget.minimalLauncher.configure.title">Configure Launcher Widget</string>
+    <string name="widget.minimalLauncher.available.emptyFiltered">No apps match your filters.</string>
+    <string name="widget.minimalLauncher.search.clear">Clear search</string>
+    <string name="widget.minimalLauncher.section.selected">Selected apps</string>
+    <string name="widget.minimalLauncher.selected.empty">No apps selected yet.</string>
+    <string name="widget.minimalLauncher.section.available">Available apps</string>
+    <string name="widget.minimalLauncher.filter.appType">Filter by app type</string>
+    <string name="widget.minimalLauncher.filter.category">Filter by category</string>
+    <string name="widget.minimalLauncher.filter.category.empty">No categories available</string>
+    <string name="widget.minimalLauncher.label.display">Display label</string>
+    <string name="widget.minimalLauncher.label.display.hint">Leave empty to use the app\'s original name.</string>
+    <string name="widget.minimalLauncher.label.original">Original: %1$s</string>
+    <string name="widget.minimalLauncher.label.edit">Edit label</string>
+    <string name="widget.minimalLauncher.reorder.drag">Drag to reorder</string>
+    <string name="widget.minimalLauncher.app.unavailable">App is no longer available.</string>
+    <!-- endregion -->
 </resources>
