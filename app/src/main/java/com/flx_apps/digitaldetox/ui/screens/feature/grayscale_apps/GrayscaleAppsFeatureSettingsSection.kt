@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreenSnackbarStateProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
@@ -35,10 +36,15 @@ import kotlin.time.Duration.Companion.minutes
  * A tile for the grayscale apps feature settings screen.
  */
 @Composable
-fun GrayscaleAppsFeatureSettingsSection(
-    viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()
-) {
-    OpenAppExceptionsTile()
+fun GrayscaleAppsFeatureSettingsSection() {
+    OpenAppExceptionsTile(subtitleText = stringResource(
+        id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
+            R.string.feature_grayscale_exceptions_summary_notList
+        } else {
+            R.string.feature_grayscale_exceptions_summary_onlyList
+        },
+        GrayscaleAppsFeature.appExceptions.size
+    ))
     OpenScheduleTile()
     ExtraDimTile()
     IgnoreFullScreenAppsTile()

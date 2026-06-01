@@ -93,17 +93,24 @@
     <string name="feature.doomScrolling.description">EXPERIMENTAL — Detects long scrolling sessions and offers a prompt to stop.</string>
     <string name="feature.doomScrolling.timeUntilWarning">Time Until Warning</string>
     <string name="feature.doomScrolling.timeUntilWarning.description">Shows a warning when doom scrolling is detected for this duration.</string>
+    <string name="feature.doomScrolling.exceptions.summary.notList">Doom-scrolling checks are skipped in %d apps.</string>
+    <string name="feature.doomScrolling.exceptions.summary.onlyList">Doom-scrolling checks are active in %d apps.</string>
 
     <string name="feature.settings.exceptions">App Exceptions</string>
-    <string name="feature.settings.exceptions._notListed">%d apps will not be affected by this feature.</string>
-    <string name="feature.settings.exceptions._onlyListed">%d apps will only be affected by this feature.</string>
+    <string name="feature.settings.exceptions._notListed">Active in all apps except %d selected.</string>
+    <string name="feature.settings.exceptions._onlyListed">Active only in %d selected apps.</string>
     <string name="feature.settings.exceptions.empty">No apps found.</string>
     <string name="feature.settings.exceptions.filterByAppType">Filter by app type</string>
     <string name="feature.settings.exceptions.filterByCategory">Filter by app category</string>
-    <string name="feature.settings.exceptions.listType">Filter Mode</string>
-    <string name="feature.settings.exceptions.listType.description">Choose how this list is used: Exclude Apps affects all apps except this list; Include Apps affects only this list.</string>
-    <string name="feature.settings.exceptions.listType.notList">Exclude Apps</string>
-    <string name="feature.settings.exceptions.listType.onlyList">Include Apps</string>
+    <string name="feature.settings.exceptions.listType">Feature applies to</string>
+    <string name="feature.settings.exceptions.listType.description">Pick the scope.</string>
+    <string name="feature.settings.exceptions.listType.description.notList">Example: select YouTube to exclude it.</string>
+    <string name="feature.settings.exceptions.listType.description.onlyList">Example: select YouTube to include only it.</string>
+    <string name="feature.settings.exceptions.listType.notList">All apps except selected</string>
+    <string name="feature.settings.exceptions.listType.onlyList">Only selected apps</string>
+
+    <string name="feature.grayscale.exceptions.summary.notList">Colors are allowed in %d apps.</string>
+    <string name="feature.grayscale.exceptions.summary.onlyList">Grayscale is active in %d apps.</string>
 
     <string name="feature.settings.schedule">Feature Schedule</string>
     <string name="feature.settings.schedule.hint">%d rules are set.</string>
@@ -120,6 +127,7 @@
     <string name="feature.disableApps">Disable Apps</string>
     <string name="feature.disableApps.subtitle">Forget about them</string>
     <string name="feature.disableApps.description">Blocks or deactivates selected apps while DetoxDroid is active, including launcher access and notifications.</string>
+    <string name="feature.disableApps.deactivatedApps">Deactivated Apps</string>
     <string name="feature.disableApps.manage">Manage Deactivated Apps</string>
     <string name="feature.disableApps.manage._defined">%d apps listed for deactivation</string>
     <string name="feature.disableApps.allowedDailyTime">Allowed Daily Screen Time</string>

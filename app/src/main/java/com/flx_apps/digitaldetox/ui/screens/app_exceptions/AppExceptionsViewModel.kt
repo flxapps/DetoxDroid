@@ -8,6 +8,7 @@ import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,6 +41,37 @@ class AppExceptionsViewModel @Inject constructor(
      * Feature cast to [SupportsAppExceptionsFeature].
      */
     private val appExceptionsFeature = feature as SupportsAppExceptionsFeature
+
+    /**
+     * Package name of DetoxDroid itself.
+     */
+    private val appPackageName = application.packageName
+
+    /**
+     * Allowed list types for the current feature.
+     *
+     * Some features (e.g. [DisableAppsFeature]) only support [AppExceptionListType.ONLY_LIST].
+     */
+    private val allowedListTypes = appExceptionsFeature.listTypes
+
+    /**
+     * Whether the current app should be hidden from the selection list.
+     *
+     * For [DisableAppsFeature], DetoxDroid must never deactivate itself.
+     */
+    private val shouldExcludeCurrentApp = feature == DisableAppsFeature
+
+    /**
+     * Initial list type shown in the UI.
+     *
+     * Stored values from older versions can be invalid for features with restricted list types. In
+     * that case we immediately normalize to the first allowed type and persist it.
+     */
+    private val initialExceptionListType = appExceptionsFeature.appExceptionListType.takeIf {
+        allowedListTypes.contains(it)
+    } ?: allowedListTypes.first().also {
+        appExceptionsFeature.appExceptionListType = it
+    }
 
     /**
      * Holds the list of all installed apps.
@@ -76,7 +108,7 @@ class AppExceptionsViewModel @Inject constructor(
     private val _filteredAppExceptionItems = MutableStateFlow<List<AppExceptionItem>?>(null)
     val appExceptionItems = _filteredAppExceptionItems.asStateFlow()
 
-    private val _exceptionListType = MutableStateFlow(appExceptionsFeature.appExceptionListType)
+    private val _exceptionListType = MutableStateFlow(initialExceptionListType)
     val exceptionListType = _exceptionListType.asStateFlow()
 
     /**
@@ -107,12 +139,18 @@ class AppExceptionsViewModel @Inject constructor(
      * already an exception for the current feature.
      */
     private fun loadInstalledApps() {
-        val appCategories = mutableSetOf<String>()
-        val apps = ApplicationInfoRepository.getInstalledApps().map {
-            val isException = appExceptionsFeature.appExceptions.contains(it.packageName)
-            appCategories += it.appCategory
-            AppExceptionItem(it, isException)
+        // Ensure stale persisted self-entry cannot survive in Disable Apps mode.
+        if (shouldExcludeCurrentApp && appExceptionsFeature.appExceptions.contains(appPackageName)) {
+            appExceptionsFeature.appExceptions -= appPackageName
         }
+        val appCategories = mutableSetOf<String>()
+        val apps = ApplicationInfoRepository.getInstalledApps()
+            .filterNot { shouldExcludeCurrentApp && it.packageName == appPackageName }
+            .map {
+                val isException = appExceptionsFeature.appExceptions.contains(it.packageName)
+                appCategories += it.appCategory
+                AppExceptionItem(it, isException)
+            }
         _toggledItemsSize.value = apps.count { it.isException }
         _appExceptionItems = apps
         _selectedAppCategories.value = appCategories.associateWith {
@@ -193,6 +231,7 @@ class AppExceptionsViewModel @Inject constructor(
      * @see AppExceptionListType
      */
     fun setExceptionListType(type: AppExceptionListType) {
+        if (!allowedListTypes.contains(type)) return
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
     }
