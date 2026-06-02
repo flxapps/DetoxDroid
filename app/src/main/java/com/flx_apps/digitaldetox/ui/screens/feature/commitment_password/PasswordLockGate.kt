@@ -19,11 +19,12 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -128,22 +129,20 @@ private fun SettingsLockBanner(isLocked: Boolean) {
         if (isLocked) MaterialTheme.colorScheme.onErrorContainer
         else MaterialTheme.colorScheme.onPrimaryContainer
 
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
-        color = backgroundColor
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 8.dp, vertical = 8.dp)
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -152,18 +151,20 @@ private fun SettingsLockBanner(isLocked: Boolean) {
                     tint = contentColor,
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (isLocked) stringResource(R.string.feature_commitmentPassword_banner_locked)
                     else stringResource(R.string.feature_commitmentPassword_banner_unlocked),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor
+                    color = contentColor,
+                    modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             if (isLocked) {
                 Button(
                     onClick = { showUnlockDialog = true },
+                    modifier = Modifier.padding(start = 32.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = contentColor, contentColor = backgroundColor
                     )
@@ -171,7 +172,10 @@ private fun SettingsLockBanner(isLocked: Boolean) {
                     Text(stringResource(R.string.feature_commitmentPassword_unlock))
                 }
             } else {
-                OutlinedButton(onClick = { CommitmentPasswordFeature.lockSession() }) {
+                OutlinedButton(
+                    onClick = { CommitmentPasswordFeature.lockSession() },
+                    modifier = Modifier.padding(start = 32.dp)
+                ) {
                     Text(stringResource(R.string.feature_commitmentPassword_lockAgain))
                 }
             }
