@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -130,6 +131,9 @@ fun PermissionsRequiredScreenContent(
             fullTextResId = R.string.noPermissions_text_visitGitHub,
             linksActions = listOf("GITHUB"),
             hyperLinks = listOf("https://github.com/flxapps/DetoxDroid"),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+            linkTextColor = MaterialTheme.colorScheme.primary,
+            linkTextDecoration = TextDecoration.Underline,
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
             modifier = Modifier.padding(vertical = 16.dp),
         )
