@@ -46,6 +46,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceive
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
+import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
@@ -85,11 +86,10 @@ fun CommitmentPasswordFeatureSettingsSection(
     }
 
     if (!DetoxDroidDeviceAdminReceiver.isGranted(context)) {
-        SimpleListTile(
-            leadingIcon = Icons.Default.Security,
-            titleText = stringResource(R.string.feature_commitmentPassword_deviceOwner_hint_title),
-            subtitleText = stringResource(R.string.feature_commitmentPassword_deviceOwner_hint_subtitle),
-            onClick = {
+        IconCard(
+            icon = Icons.Default.Security,
+            contentDescription = stringResource(R.string.feature_commitmentPassword_deviceOwner_hint_title),
+            modifier = Modifier.clickable {
                 navViewModel.openRoute(
                     NavigationRoutes.PermissionsRequired(
                         GrantPermissionsCommand(
@@ -98,7 +98,17 @@ fun CommitmentPasswordFeatureSettingsSection(
                         )
                     )
                 )
-            })
+            }) {
+            Text(
+                text = stringResource(R.string.feature_commitmentPassword_deviceOwner_hint_title),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                text = stringResource(R.string.feature_commitmentPassword_deviceOwner_hint_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 
     val selectionEnabled = currentState != CommitmentPasswordState.SET_AND_LOCKED
