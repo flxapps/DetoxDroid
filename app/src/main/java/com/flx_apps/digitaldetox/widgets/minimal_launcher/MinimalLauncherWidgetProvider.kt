@@ -134,7 +134,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
             val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
             val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
             val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-            return listOf(maxHeight, minHeight, 120).max()
+            return listOf(maxHeight, minHeight).filter { it > 0 }.maxOrNull() ?: 120
         }
 
         private fun resolveTextSizeSp(widgetHeightDp: Int, itemCount: Int): Float {
