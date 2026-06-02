@@ -19,6 +19,10 @@ object MinimalLauncherWidgetConfigRepository {
     private const val PACKAGE_SEPARATOR = ","
 
     fun saveSelectedApps(appWidgetId: Int, selectedApps: List<WidgetSelectedApp>) {
+        runBlocking { saveSelectedAppsAsync(appWidgetId, selectedApps) }
+    }
+
+    suspend fun saveSelectedAppsAsync(appWidgetId: Int, selectedApps: List<WidgetSelectedApp>) {
         val normalizedApps = selectedApps.asSequence()
             .map {
                 WidgetSelectedApp(
@@ -39,20 +43,20 @@ object MinimalLauncherWidgetConfigRepository {
                 )
             }
         }.toString()
-        runBlocking {
-            DataStore.edit { preferences ->
-                preferences[selectedAppsKey(appWidgetId)] = serializedApps
-            }
+        DataStore.edit { preferences ->
+            preferences[selectedAppsKey(appWidgetId)] = serializedApps
         }
     }
 
     fun getSelectedApps(appWidgetId: Int): List<WidgetSelectedApp> {
-        return runBlocking {
-            val persistedValue = DataStore.data
-                .map { preferences -> preferences[selectedAppsKey(appWidgetId)] }
-                .first()
-            parseSelectedApps(persistedValue)
-        }
+        return runBlocking { getSelectedAppsAsync(appWidgetId) }
+    }
+
+    suspend fun getSelectedAppsAsync(appWidgetId: Int): List<WidgetSelectedApp> {
+        val persistedValue = DataStore.data
+            .map { preferences -> preferences[selectedAppsKey(appWidgetId)] }
+            .first()
+        return parseSelectedApps(persistedValue)
     }
 
     fun saveSelectedPackages(appWidgetId: Int, packageNames: List<String>) {
@@ -67,10 +71,12 @@ object MinimalLauncherWidgetConfigRepository {
     }
 
     fun deleteSelectedPackages(appWidgetId: Int) {
-        runBlocking {
-            DataStore.edit { preferences ->
-                preferences.remove(selectedAppsKey(appWidgetId))
-            }
+        runBlocking { deleteSelectedPackagesAsync(appWidgetId) }
+    }
+
+    suspend fun deleteSelectedPackagesAsync(appWidgetId: Int) {
+        DataStore.edit { preferences ->
+            preferences.remove(selectedAppsKey(appWidgetId))
         }
     }
 

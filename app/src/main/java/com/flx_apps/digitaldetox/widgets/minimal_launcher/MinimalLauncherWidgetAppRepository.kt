@@ -40,11 +40,23 @@ object MinimalLauncherWidgetAppRepository {
         context: Context,
         selectedPackages: List<String>
     ): List<LaunchableAppInfo> {
-        val selectedOrder = selectedPackages.withIndex().associate { it.value to it.index }
-        return getLaunchableApps(context)
+        val packageManager = context.packageManager
+        return selectedPackages
             .asSequence()
-            .filter { selectedOrder.containsKey(it.packageName) }
-            .sortedBy { selectedOrder[it.packageName] ?: Int.MAX_VALUE }
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .mapNotNull { selectedPackage ->
+                val launchIntent = packageManager.getLaunchIntentForPackage(selectedPackage) ?: return@mapNotNull null
+                val packageName = launchIntent.component?.packageName ?: selectedPackage
+                val applicationInfo = getApplicationInfo(packageManager, packageName) ?: return@mapNotNull null
+                LaunchableAppInfo(
+                    packageName = packageName,
+                    appName = packageManager.getApplicationLabel(applicationInfo).toString(),
+                    appCategory = applicationInfo.getAppCategoryTitle(context),
+                    isSystemApp = applicationInfo.isSystemApp()
+                )
+            }
             .toList()
     }
 

@@ -85,11 +85,11 @@ fun ManageAppExceptionsScreen(
                     }
                 },
                 navigationIcon = { AppBarBackButton() },
-                searchContentDescription = "Search",
-                closeSearchContentDescription = "Close Search",
+                searchContentDescription = stringResource(id = R.string.action_search),
+                closeSearchContentDescription = stringResource(id = R.string.action_search_close),
                 onOpenFilters = { appExceptionsViewModel.setShowListSettingsSheet(true) },
                 filtersEnabled = !settingsLocked,
-                filtersContentDescription = "Open App Filters",
+                filtersContentDescription = stringResource(id = R.string.action_filter),
             )
         }) {
             if (appExceptionsViewModel.showListSettingsSheet.collectAsState().value) {
@@ -170,7 +170,7 @@ fun AppExceptionsListTypeSection(
 
     IconCard(
         icon = cardIcon,
-        contentDescription = if (supportsMultipleListTypes) "Feature scope settings" else "Feature scope information"
+        contentDescription = null
     ) {
         Text(
             text = stringResource(id = R.string.feature_settings_exceptions_listType),

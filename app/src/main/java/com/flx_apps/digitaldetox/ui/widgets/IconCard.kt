@@ -21,14 +21,14 @@ import androidx.compose.ui.unit.dp
 /**
  * Generic card with a leading icon and arbitrary content.
  * @param icon Leading icon shown in the card.
- * @param contentDescription Content description for accessibility.
+ * @param contentDescription Optional content description for accessibility.
  * @param modifier Modifier for the outer card.
  * @param content Composable content shown to the right of the icon.
  */
 @Composable
 fun IconCard(
     icon: ImageVector,
-    contentDescription: String,
+    contentDescription: String? = null,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -62,7 +62,6 @@ fun IconCard(
 fun InfoCard(infoText: String) {
     IconCard(
         icon = Icons.Default.Info,
-        contentDescription = "Info"
     ) {
         Text(
             infoText,

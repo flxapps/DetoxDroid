@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import com.flx_apps.digitaldetox.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -107,7 +109,11 @@ fun AppSelectionListItem(
                     Row {
                         Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                             Text(
-                                text = if (isSystemApp) "System" else "User",
+                                text = if (isSystemApp) {
+                                    stringResource(id = R.string.app_badge_system)
+                                } else {
+                                    stringResource(id = R.string.app_badge_user)
+                                },
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -146,20 +152,20 @@ fun AppSelectionListItem(
                     if (appIcon != null) {
                         Image(
                             bitmap = appIcon!!.asImageBitmap(),
-                            contentDescription = "App Icon",
+                            contentDescription = null,
                             modifier = Modifier.size(48.dp)
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.CheckBoxOutlineBlank,
-                            contentDescription = "App Icon Placeholder",
+                            contentDescription = null,
                             modifier = Modifier.size(48.dp)
                         )
                     }
                 } else if (extraLeadingContent == null) {
                     Icon(
                         imageVector = Icons.Default.CheckBoxOutlineBlank,
-                        contentDescription = "App Icon Placeholder",
+                        contentDescription = null,
                         modifier = Modifier.size(48.dp)
                     )
                 }

@@ -11,6 +11,11 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import com.flx_apps.digitaldetox.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MinimalLauncherWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
@@ -19,9 +24,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        appWidgetIds.forEach { appWidgetId ->
-            updateAppWidget(context, appWidgetManager, appWidgetId)
-        }
+        updateWidgetsAsync(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -31,13 +34,37 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
         newOptions: Bundle
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        updateAppWidget(context, appWidgetManager, appWidgetId)
+        updateWidgetsAsync(context, appWidgetManager, intArrayOf(appWidgetId))
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
-        appWidgetIds.forEach { appWidgetId ->
-            MinimalLauncherWidgetConfigRepository.deleteSelectedPackages(appWidgetId)
+        val pendingResult = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                appWidgetIds.forEach { appWidgetId ->
+                    MinimalLauncherWidgetConfigRepository.deleteSelectedPackagesAsync(appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private fun updateWidgetsAsync(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        val pendingResult = goAsync()
+        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+            try {
+                appWidgetIds.forEach { appWidgetId ->
+                    updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
@@ -46,8 +73,10 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, MinimalLauncherWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            appWidgetIds.forEach { appWidgetId ->
-                updateAppWidget(context, appWidgetManager, appWidgetId)
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                appWidgetIds.forEach { appWidgetId ->
+                    updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
+                }
             }
         }
 
@@ -56,12 +85,23 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            val remoteViews = RemoteViews(context.packageName, R.layout.widget_minimal_launcher)
+            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+                updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
+            }
+        }
+
+        private suspend fun updateAppWidgetInternal(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int
+        ) {
+            val appContext = context.applicationContext
+            val remoteViews = RemoteViews(appContext.packageName, R.layout.widget_minimal_launcher)
             val configureIntent = Intent(context, MinimalLauncherWidgetConfigureActivity::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             }
             val configurePendingIntent = PendingIntent.getActivity(
-                context,
+                appContext,
                 appWidgetId,
                 configureIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -71,12 +111,15 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
                 configurePendingIntent
             )
 
-            val selectedApps = MinimalLauncherWidgetConfigRepository.getSelectedApps(appWidgetId)
-            val launchableApps =
+            val selectedApps = withContext(Dispatchers.IO) {
+                MinimalLauncherWidgetConfigRepository.getSelectedAppsAsync(appWidgetId)
+            }
+            val launchableApps = withContext(Dispatchers.IO) {
                 MinimalLauncherWidgetAppRepository.getLaunchableAppsByPackages(
-                    context,
+                    appContext,
                     selectedApps.map { it.packageName }
                 )
+            }
             val labelOverridesByPackage = selectedApps.associateBy(
                 keySelector = { it.packageName },
                 valueTransform = { it.customLabel?.trim()?.ifBlank { null } }
@@ -91,7 +134,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
                 val textSizeSp = resolveTextSizeSp(availableHeightDp, launchableApps.size)
                 launchableApps.forEachIndexed { index, app ->
                     val appItemViews =
-                        RemoteViews(context.packageName, R.layout.widget_minimal_launcher_item).apply {
+                        RemoteViews(appContext.packageName, R.layout.widget_minimal_launcher_item).apply {
                             setTextViewText(
                                 R.id.widget_minimal_launcher_item_text,
                                 labelOverridesByPackage[app.packageName] ?: app.appName
@@ -110,7 +153,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
                                     )
                                 }
                             val launchPendingIntent = PendingIntent.getBroadcast(
-                                context,
+                                appContext,
                                 appWidgetId * 1000 + index,
                                 launchIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

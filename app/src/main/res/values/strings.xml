@@ -19,6 +19,7 @@
     <string name="action.grantPermission">Grant Permission</string>
     <string name="action.requestPermissions">This feature needs additional permissions.</string>
     <string name="action.search">Search</string>
+    <string name="action.search.close">Close Search</string>
     <string name="action.filter">Filter</string>
     <string name="time._minutes">%d min</string>
     <string name="time._minutes.used">used</string>
@@ -129,6 +130,8 @@
 
     <string name="exceptionsList.filter.userApps">User Apps</string>
     <string name="exceptionsList.filter.systemApps">System Apps</string>
+    <string name="app.badge.user">User</string>
+    <string name="app.badge.system">System</string>
 
     <string name="infiniteScroll.warning.title">Wake Up!</string>
     <string name="infiniteScroll.warning.message">Looks like you are stuck in an infinite-scroll loop.</string>
