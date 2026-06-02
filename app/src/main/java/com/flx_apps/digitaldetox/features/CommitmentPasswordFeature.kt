@@ -53,6 +53,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
     private const val PREFS_NAME = "commitment_password_prefs"
     private const val KEY_PASSWORD_HASH = "password_hash"
+    private const val LOCKED_FEATURES_NONE_SENTINEL = "__NONE__"
 
     const val MAX_FAILED_ATTEMPTS = 3
     const val LOCKOUT_DURATION_MS = 5 * 60 * 1000L
@@ -91,11 +92,24 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
     /**
      * Set of feature IDs explicitly selected to be locked by the password.
-     * If empty, falls back to locking all [LockableFeature] instances.
+     * Empty is treated as a legacy state and falls back to locking all [LockableFeature] instances.
+     * Explicit "lock none" is stored via [LOCKED_FEATURES_NONE_SENTINEL].
      */
     var lockedFeatureIds: Set<String> by DataStoreProperty(
         stringSetPreferencesKey("${id}_lockedFeatureIds"), emptySet()
     )
+
+    /**
+     * Returns the configured feature IDs to lock.
+     * An explicit "none" selection is stored internally via a sentinel.
+     */
+    fun getConfiguredLockedFeatureIds(): Set<String> {
+        return if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) {
+            emptySet()
+        } else {
+            lockedFeatureIds
+        }
+    }
 
     private fun notifyStateChanged() {
         _stateToken.update { it + 1 }
@@ -170,7 +184,12 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         if (!isActivated) return false
         if (!isPasswordSet(DetoxDroidApplication.appContext)) return false
         if (featureId == id) return true
+
+        // Explicit user choice: lock no feature settings.
+        if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
+
         return if (lockedFeatureIds.isEmpty()) {
+            // Backward-compatibility fallback for older persisted states.
             getLockableFeatures().any { it.id == featureId }
         } else {
             lockedFeatureIds.contains(featureId)
@@ -199,7 +218,15 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     fun updateLockedFeatureIds(featureIds: Set<String>) {
-        lockedFeatureIds = featureIds
+        val sanitizedIds = featureIds
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && it != LOCKED_FEATURES_NONE_SENTINEL }
+            .toSet()
+        lockedFeatureIds = if (sanitizedIds.isEmpty()) {
+            setOf(LOCKED_FEATURES_NONE_SENTINEL)
+        } else {
+            sanitizedIds
+        }
         notifyStateChanged()
     }
 

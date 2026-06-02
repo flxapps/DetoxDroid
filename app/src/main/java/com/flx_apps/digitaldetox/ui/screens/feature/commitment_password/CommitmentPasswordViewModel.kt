@@ -95,19 +95,20 @@ class CommitmentPasswordViewModel @Inject constructor(
         _isRecoveryInProgress.value = CommitmentPasswordFeature.isRecoveryInProgress()
         _isRecoveryReady.value = CommitmentPasswordFeature.isRecoveryReady()
         _remainingRecoveryTime.value = CommitmentPasswordFeature.getRemainingRecoveryTime()
-        _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
+        _selectedFeatureIds.value = CommitmentPasswordFeature.getConfiguredLockedFeatureIds()
     }
 
     private fun loadLockableFeatures() {
         val features = CommitmentPasswordFeature.getLockableFeatures()
         _lockableFeatures.value = features
 
+        val configuredIds = CommitmentPasswordFeature.getConfiguredLockedFeatureIds()
         if (CommitmentPasswordFeature.lockedFeatureIds.isEmpty()) {
             _selectedFeatureIds.value =
                 features.filter { (it as? LockableFeature)?.lockedByDefault == true }
                     .map { it.id }.toSet()
         } else {
-            _selectedFeatureIds.value = CommitmentPasswordFeature.lockedFeatureIds
+            _selectedFeatureIds.value = configuredIds
         }
     }
 
