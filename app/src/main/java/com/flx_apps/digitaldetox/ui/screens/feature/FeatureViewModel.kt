@@ -41,10 +41,6 @@ open class FeatureViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
     companion object : FeatureViewModelFactory()
 
-    init {
-        Timber.d("savedStateHandle: $savedStateHandle")
-    }
-
     private val featureId: String = savedStateHandle["featureId"]!!
     val feature: Feature = FeaturesProvider.getFeatureById(featureId)!!
 
@@ -52,6 +48,10 @@ open class FeatureViewModel @Inject constructor(
     val featureIsActive: StateFlow<Boolean> = _featureIsActive
 
     private val _snackbarState = FeatureScreenSnackbarStateProvider.snackbarState
+
+    init {
+        Timber.d("savedStateHandle: $savedStateHandle")
+    }
 
     /**
      * Checks if the feature needs permissions to be activated and if the app has the permissions.

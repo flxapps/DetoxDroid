@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -59,6 +60,12 @@ fun FeatureScreen(
     val isFeatureSettingsLocked = remember(lockStateToken, featureId) {
         featureId != CommitmentPasswordFeatureId &&
                 CommitmentPasswordFeature.isFeatureLocked(featureId)
+    }
+    LaunchedEffect(lockStateToken, featureId) {
+        // Commitment Password can change its activation state from dialogs outside the switch toggle.
+        if (featureId == CommitmentPasswordFeatureId) {
+            featureViewModel.refreshActiveState()
+        }
     }
 
     Scaffold(snackbarHost = {
