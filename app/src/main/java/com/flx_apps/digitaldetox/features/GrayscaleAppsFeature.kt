@@ -95,9 +95,14 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * On start, we trigger [onAppOpened] once to turn the grayscale filter on or off depending on
-     * the current app.
+     * the current app. We also read the actual system state to initialize [isCurrentlyGrayscale],
+     * so that saved defaults are not overwritten if the service (re-) starts while grayscale is active.
      */
     override fun onStart(context: Context) {
+        val contentResolver = context.contentResolver
+        isCurrentlyGrayscale =
+            Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
+            Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
     }
@@ -170,8 +175,9 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     ): Boolean {
         val contentResolver = context.contentResolver
 
-        if (grayscale) {
+        if (grayscale && !isCurrentlyGrayscale) {
             // save the current color correction state (enabled + mode)
+            // Only do this when currently not in grayscale, to not save grayscale as a default.
             defaultDaltonizerEnabled = Settings.Secure.getInt(
                 contentResolver, DISPLAY_DALTONIZER_ENABLED, 0
             )
