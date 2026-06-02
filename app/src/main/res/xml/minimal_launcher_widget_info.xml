@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
+    android:description="@string/widget.minimalLauncher.description"
+    android:initialLayout="@layout/widget_minimal_launcher"
+    android:minHeight="110dp"
+    android:minResizeHeight="70dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="180dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="0"
+    android:widgetFeatures="reconfigurable"
+    android:widgetCategory="home_screen" />

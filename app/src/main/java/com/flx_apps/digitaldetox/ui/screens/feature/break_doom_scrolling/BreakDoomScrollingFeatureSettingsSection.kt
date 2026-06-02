@@ -9,6 +9,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
@@ -21,7 +23,14 @@ import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 fun BreakDoomScrollingFeatureSettingsSection(
     viewModel: BreakDoomScrollingFeatureSettingsViewModel = viewModel()
 ) {
-    OpenAppExceptionsTile()
+    OpenAppExceptionsTile(subtitleText = stringResource(
+        id = if (BreakDoomScrollingFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
+            R.string.feature_doomScrolling_exceptions_summary_notList
+        } else {
+            R.string.feature_doomScrolling_exceptions_summary_onlyList
+        },
+        BreakDoomScrollingFeature.appExceptions.size
+    ))
     OpenScheduleTile()
 
     val timeUntilWarning = viewModel.timeUntilWarning.collectAsState().value
@@ -59,4 +68,3 @@ fun BreakDoomScrollingFeatureSettingsSection(
         leadingIcon = Icons.Default.Timelapse
     )
 }
-

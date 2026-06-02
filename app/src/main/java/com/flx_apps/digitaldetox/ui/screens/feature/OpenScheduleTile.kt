@@ -40,6 +40,7 @@ fun OpenScheduleTile(
             )
         },
         leadingIcon = Icons.Default.EditCalendar,
+        allowClickWhenLocked = true,
         onClick = {
             navViewModel.openRoute(NavigationRoutes.FeatureSchedule(featureId = featureViewModel.feature.id))
         })

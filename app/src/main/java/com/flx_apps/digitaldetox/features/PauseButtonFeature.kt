@@ -10,6 +10,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit
  *
  * - by setting DetoxDroid as default assistant app (see [PauseInteractionService]).
  */
-object PauseButtonFeature : Feature() {
+object PauseButtonFeature : Feature(), LockableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_pause,
         subtitle = R.string.feature_pause_subtitle,

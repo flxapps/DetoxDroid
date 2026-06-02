@@ -5,21 +5,33 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import java.io.File
+import javax.inject.Inject
 
 /**
  * The main application class. It is used to initialize the dependency injection framework.
+ * Implements [Configuration.Provider] to support [androidx.hilt.work.HiltWorker] with Hilt.
  */
 @HiltAndroidApp
-class DetoxDroidApplication : Application() {
+class DetoxDroidApplication : Application(), Configuration.Provider {
     companion object {
         lateinit var appContext: Application
         const val SERVICE_CHANNEL_ID = "detox_droid_service_channel"
     }
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()
@@ -35,15 +47,9 @@ class DetoxDroidApplication : Application() {
             val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
                 Timber.e(throwable, "Uncaught Exception on thread ${thread.name}")
-                // Ensure logs are flushed/saved (InMemoryLogStore does this async, so we might miss the very last beat if process dies immediately)
-                // But since we appendText immediately in the launch block, it's a race.
-                // For a crash, we hope the IO thread gets a slice.
-                // Better persistence would be synchronous here for the crash, but let's stick to the current structure.
-
                 defaultExceptionHandler?.uncaughtException(thread, throwable)
             }
         } else {
-            // For release builds, plant a simple debug tree (or no tree)
             Timber.plant(Timber.DebugTree())
         }
 

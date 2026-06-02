@@ -40,11 +40,12 @@ fun OpenAppExceptionsTile(
     ), trailing = {
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,
-            contentDescription = "Manage Exceptions",
+            contentDescription = "Manage App Scope",
             modifier = Modifier.size(24.dp)
         )
     }, onClick = {
         navViewModel.openRoute(NavigationRoutes.AppExceptions(featureId = featureViewModel.feature.id))
-    }, leadingIcon = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions)
+    }, allowClickWhenLocked = true,
+        leadingIcon = ImageVector.vectorResource(id = R.drawable.ic_app_exceptions)
     )
 }

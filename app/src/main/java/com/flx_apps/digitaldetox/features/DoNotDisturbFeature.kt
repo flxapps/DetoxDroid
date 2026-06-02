@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
@@ -21,7 +22,7 @@ val DoNotDisturbFeatureId = Feature.createId(DoNotDisturbFeature::class.java)
  * schedule. It is enabled frequently, as the user might have disabled it manually.
  */
 object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPermissionsFeature,
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(DoNotDisturbFeatureId) {
+    SupportsScheduleFeature by SupportsScheduleFeature.Impl(DoNotDisturbFeatureId), LockableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_doNotDisturb,
         subtitle = R.string.feature_doNotDisturb_subtitle,

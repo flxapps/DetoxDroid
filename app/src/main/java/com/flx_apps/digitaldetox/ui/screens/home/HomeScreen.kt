@@ -23,6 +23,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -63,6 +64,7 @@ import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -75,7 +77,6 @@ import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -116,7 +117,6 @@ private fun HomeScreenSnackbarContents(
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
     if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
-        // show snackbar to request the write secure settings permission
         LaunchedEffect(key1 = "", block = {
             val result = snackbarHostState.showSnackbar(
                 message = context.getString(R.string.action_requestPermissions),
@@ -126,6 +126,13 @@ private fun HomeScreenSnackbarContents(
                 homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
                 NavigationUtil.openAccessibilitySettings(context)
             }
+        })
+    } else if (snackbarState == HomeScreenSnackbarState.CommitmentPasswordLocked) {
+        LaunchedEffect(key1 = snackbarState, block = {
+            snackbarHostState.showSnackbar(
+                message = context.getString(R.string.feature_commitmentPassword_stop_locked),
+            )
+            homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
         })
     }
 }
@@ -183,25 +190,42 @@ private fun AppBar(
 
 /**
  * A [ExtendedFloatingActionButton] that starts or stops DetoxDroid when clicked.
+ * Shows a lock icon when Commitment Password is active and the session is locked.
  */
 @Composable
 private fun StartStopActionButton(
     detoxDroidState: DetoxDroidState, homeViewModel: HomeViewModel = viewModel()
 ) {
+    val cpLocked = com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
+            !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
+
     ExtendedFloatingActionButton(
-        text = { Text(text = stringResource(id = if (detoxDroidState != DetoxDroidState.Inactive) R.string.home_stop else R.string.home_start)) },
-        icon = {
-            Icon(
-                painter = if (detoxDroidState != DetoxDroidState.Inactive) painterResource(
-                    id = R.drawable.ic_stop
-                ) else painterResource(
-                    id = R.drawable.ic_start
-                ), contentDescription = "Run/Stop DetoxDroid"
+        text = {
+            Text(
+                text = stringResource(
+                    id = if (detoxDroidState != DetoxDroidState.Inactive) R.string.home_stop
+                    else R.string.home_start
+                )
             )
         },
-        onClick = {
-            homeViewModel.toggleDetoxDroidIsRunning()
-        })
+        icon = {
+            if (cpLocked && detoxDroidState == DetoxDroidState.Active) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_lock),
+                    contentDescription = stringResource(R.string.feature_commitmentPassword_lockedBadge)
+                )
+            } else {
+                Icon(
+                    painter = if (detoxDroidState != DetoxDroidState.Inactive) painterResource(
+                        id = R.drawable.ic_stop
+                    ) else painterResource(
+                        id = R.drawable.ic_start
+                    ), contentDescription = "Run/Stop DetoxDroid"
+                )
+            }
+        },
+        onClick = { homeViewModel.toggleDetoxDroidIsRunning() }
+    )
 }
 
 /**
@@ -222,6 +246,7 @@ private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = view
         }
         item {
             UninstallDetoxDroidTile()
+            OpenAboutTile()
             // bottom logo
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
@@ -286,8 +311,15 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
     // don't show the uninstall tile if the device admin permission is not granted
     if (!DetoxDroidDeviceAdminReceiver.isGranted(LocalContext.current)) return
 
-    val showAreYouSureDialog = remember { MutableStateFlow(false) }
-    if (showAreYouSureDialog.collectAsState().value) {
+    val showAreYouSureDialog = remember { mutableStateOf(false) }
+    val commitmentPasswordStateToken = CommitmentPasswordFeature.stateToken.collectAsState().value
+    val uninstallBlocked = remember(commitmentPasswordStateToken) { CommitmentPasswordFeature.isActivated }
+
+    LaunchedEffect(uninstallBlocked) {
+        if (uninstallBlocked) showAreYouSureDialog.value = false
+    }
+
+    if (showAreYouSureDialog.value) {
         // confirmation dialog
         AlertDialog(title = {
             Text(text = stringResource(id = R.string.home_uninstall_dialog_title))
@@ -298,6 +330,7 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         }, confirmButton = {
             TextButton(onClick = {
                 viewModel.uninstallDetoxDroid()
+                showAreYouSureDialog.value = false
             }) {
                 Text(text = stringResource(id = R.string.home_uninstall))
             }
@@ -309,12 +342,23 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         leadingIcon = Icons.Default.DeleteForever,
         titleText = stringResource(id = R.string.home_uninstall),
         subtitleText = stringResource(
-            id = R.string.home_uninstall_hint
+            id = if (uninstallBlocked) R.string.home_uninstall_blocked_hint else R.string.home_uninstall_hint
         ),
+        enabled = !uninstallBlocked,
         onClick = {
             showAreYouSureDialog.value = true
         })
     Divider()
+}
+
+@Composable
+fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
+    SimpleListTile(
+        leadingIcon = Icons.Default.Info,
+        titleText = stringResource(id = R.string.navigation_about),
+        subtitleText = stringResource(id = R.string.about_tile_subtitle),
+        onClick = { navViewModel.openRoute(NavigationRoutes.About) }
+    )
 }
 
 /**

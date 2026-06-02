@@ -43,7 +43,7 @@ class BreakDoomScrollingOverlayService :
 @Composable
 fun BreakDoomScrollingOverlay() {
     val context = androidx.compose.ui.platform.LocalContext.current
-    DetoxDroidTheme(darkTheme = true) {
+    DetoxDroidTheme {
         Column(
             modifier = Modifier
                 .fillMaxSize()
