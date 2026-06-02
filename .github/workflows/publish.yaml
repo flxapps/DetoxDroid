@@ -75,15 +75,17 @@ jobs:
           if [ -n "${{ github.event.inputs.force-bump }}" ]; then
             bump_type="${{ github.event.inputs.force-bump }}"
           else
-            # Get conventional commits since last tag
-            commits=$(git log $latest_tag..HEAD --pretty=format:"%s")
-          
-            if echo "$commits" | grep -q "^feat\|^feat("; then
-              bump_type="minor"
-            fi
-          
-            if echo "$commits" | grep -q "^BREAKING CHANGE\|^feat!:\|^fix!:"; then
+            # Get conventional commit lines from subjects + bodies since last tag
+            conventional_lines=$(
+              git log $latest_tag..HEAD --pretty=format:"%B" \
+                | sed -E 's/^[[:space:]]*[-*][[:space:]]*//' \
+                | sed -E 's/^[[:space:]]+//'
+            )
+
+            if echo "$conventional_lines" | grep -Eq '^BREAKING CHANGE:|^(feat|fix)(\([^)]*\))?!:'; then
               bump_type="major"
+            elif echo "$conventional_lines" | grep -Eq '^feat(\([^)]*\))?:'; then
+              bump_type="minor"
             fi
           fi
           
@@ -156,28 +158,33 @@ jobs:
           echo "Generating changelog based on commits in $git_range"
           
           changelog_file="fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt"
+          conventional_lines=$(
+            git log $git_range --pretty=format:"%B" \
+              | sed -E 's/^[[:space:]]*[-*][[:space:]]*//' \
+              | sed -E 's/^[[:space:]]+//'
+          )
           
           echo "### Release v$NEW_VERSION" > "$changelog_file"
           echo "" >> "$changelog_file"
           
           # Handle Breaking Changes
-          breaking_changes=$(git log $git_range --pretty=format:"%s" | grep -E "^BREAKING CHANGE|^feat!|^fix!" | sed -E "s/^(BREAKING CHANGE|feat!|fix!)(\(.*\))?: //" | sed 's/^/- /' || true)
+          breaking_changes=$(echo "$conventional_lines" | grep -E '^BREAKING CHANGE:|^(feat|fix)(\([^)]*\))?!:' | sed -E 's/^BREAKING CHANGE:[[:space:]]*/- /; s/^(feat|fix)(\([^)]*\))?!:[[:space:]]*/- /' | awk '!seen[$0]++' || true)
           if [ -n "$breaking_changes" ]; then
             echo "⚠️ BREAKING CHANGES" >> "$changelog_file"
             echo "$breaking_changes" >> "$changelog_file"
             echo "" >> "$changelog_file"
           fi
           
-          # Handle Features - USE $git_range instead of hardcoded range
-          features=$(git log $git_range --pretty=format:"%s" | grep -E "^feat(\(.*\))?:" | sed -E "s/^feat(\(.*\))?: //" | sed 's/^/- /' || true)
+          # Handle Features
+          features=$(echo "$conventional_lines" | grep -E '^feat(\([^)]*\))?:' | sed -E 's/^feat(\([^)]*\))?:[[:space:]]*/- /' | awk '!seen[$0]++' || true)
           if [ -n "$features" ]; then
             echo "✨ New Features" >> "$changelog_file"
             echo "$features" >> "$changelog_file"
             echo "" >> "$changelog_file"
           fi
           
-          # Handle Bug Fixes - USE $git_range instead of hardcoded range
-          fixes=$(git log $git_range --pretty=format:"%s" | grep -E "^fix(\(.*\))?:" | sed -E "s/^fix(\(.*\))?: //" | sed 's/^/- /' || true)
+          # Handle Bug Fixes
+          fixes=$(echo "$conventional_lines" | grep -E '^fix(\([^)]*\))?:' | sed -E 's/^fix(\([^)]*\))?:[[:space:]]*/- /' | awk '!seen[$0]++' || true)
           if [ -n "$fixes" ]; then
             echo "🐛 Bug Fixes" >> "$changelog_file"
             echo "$fixes" >> "$changelog_file"
