@@ -150,7 +150,7 @@ class CommitmentPasswordViewModel @Inject constructor(
     fun onPasswordSaved() {
         CommitmentPasswordFeature.initializeLockedFeatures()
         CommitmentPasswordFeature.lockSession()
-        CommitmentPasswordFeature.updateActivationState(true)
+        CommitmentPasswordFeature.updateActivationState(true, dispatchLifecycle = true)
         _showDialog.value = CommitmentPasswordDialog.NONE
         updateState()
     }
@@ -210,7 +210,7 @@ class CommitmentPasswordViewModel @Inject constructor(
     fun completeRecovery() {
         viewModelScope.launch {
             if (CommitmentPasswordFeature.completeRecovery(context)) {
-                CommitmentPasswordFeature.updateActivationState(false)
+                CommitmentPasswordFeature.updateActivationState(false, dispatchLifecycle = true)
                 val password = CommitmentPasswordFeature.generatePassphrase()
                 _generatedPassword.value = password
                 if (CommitmentPasswordFeature.setPassword(context, password)) {
@@ -235,7 +235,7 @@ class CommitmentPasswordViewModel @Inject constructor(
             if (isValid) {
                 CommitmentPasswordFeature.clearPasswordData(context)
                 CommitmentPasswordFeature.lockSession()
-                CommitmentPasswordFeature.updateActivationState(false)
+                CommitmentPasswordFeature.updateActivationState(false, dispatchLifecycle = true)
                 _showDialog.value = CommitmentPasswordDialog.NONE
                 _passwordInput.value = ""
                 updateState()

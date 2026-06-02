@@ -230,9 +230,13 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         notifyStateChanged()
     }
 
-    fun updateActivationState(activated: Boolean) {
+    fun updateActivationState(activated: Boolean, dispatchLifecycle: Boolean = false) {
         isActivated = activated
         notifyStateChanged()
+        if (dispatchLifecycle) {
+            FeaturesProvider.startOrStopFeature(this)
+            notifyStateChanged()
+        }
     }
 
     // endregion

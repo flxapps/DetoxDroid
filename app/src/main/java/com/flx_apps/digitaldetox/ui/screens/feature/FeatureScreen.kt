@@ -141,7 +141,10 @@ fun FeatureActivationSwitch(
                         // Unlocked – disable directly
                         CommitmentPasswordFeature.clearPasswordData(context)
                         CommitmentPasswordFeature.lockSession()
-                        CommitmentPasswordFeature.updateActivationState(false)
+                        CommitmentPasswordFeature.updateActivationState(
+                            false,
+                            dispatchLifecycle = true
+                        )
                         featureViewModel.refreshActiveState()
                     }
                 }

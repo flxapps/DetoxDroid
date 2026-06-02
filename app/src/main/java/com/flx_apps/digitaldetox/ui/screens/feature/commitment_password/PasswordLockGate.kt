@@ -313,7 +313,10 @@ private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     if (CommitmentPasswordFeature.completeRecovery(context)) {
-                        CommitmentPasswordFeature.updateActivationState(false)
+                        CommitmentPasswordFeature.updateActivationState(
+                            false,
+                            dispatchLifecycle = true
+                        )
                         onDismiss()
                     }
                 }) {
