@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AppSelectionListItem(
@@ -53,10 +55,12 @@ fun AppSelectionListItem(
 ) {
     val packageManager = LocalContext.current.packageManager
     val appIcon by produceState<Bitmap?>(null, key1 = packageName) {
-        value = try {
-            packageManager.getApplicationIcon(packageName).toBitmap(128, 128)
-        } catch (_: PackageManager.NameNotFoundException) {
-            null
+        value = withContext(Dispatchers.IO) {
+            try {
+                packageManager.getApplicationIcon(packageName).toBitmap(128, 128)
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            }
         }
     }
 

@@ -216,7 +216,7 @@ fun AppExceptionListItem(
     item: AppExceptionItem, appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
     val settingsLocked = LocalSettingsLocked.current
-    val checkedState = remember {
+    var checkedState by remember(item.appInfo.packageName, item.isException) {
         mutableStateOf(item.isException)
     }
     AppSelectionListItem(
@@ -224,12 +224,12 @@ fun AppExceptionListItem(
         appName = item.appInfo.appName,
         appCategory = item.appInfo.appCategory,
         isSystemApp = item.appInfo.isSystemApp,
-        checked = checkedState.value,
+        checked = checkedState,
         enabled = !settingsLocked,
         onCheckedChange = {
             if (settingsLocked) return@AppSelectionListItem
-            checkedState.value = appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
-                ?: checkedState.value
+            checkedState = appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
+                ?: checkedState
         })
 }
 
