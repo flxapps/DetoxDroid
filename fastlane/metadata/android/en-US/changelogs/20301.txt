@@ -1,0 +1,6 @@
+### Release v2.3.1
+
+🐛 Bug Fixes
+- prevent stuck grayscale in allowlisted apps after service restart
+- Grayscale feature would not disable when grayscale mode was already on when starting the service.
+
