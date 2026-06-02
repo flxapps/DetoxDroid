@@ -89,7 +89,7 @@ jobs:
           
           # Increment version based on bump type
           if [ "$bump_type" = "patch" ]; then
-            ((patch++))
+            patch=$((patch + 1))
           elif [ "$bump_type" = "minor" ]; then
             minor=$((minor + 1))
             patch=0
