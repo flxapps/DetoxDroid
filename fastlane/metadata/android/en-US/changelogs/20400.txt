@@ -1,0 +1,9 @@
+### Release v2.4.0
+
+✨ New Features
+- implement Commitment Password feature with tamper detection and recovery notifications
+- add Minimal Launcher widget with app selection and configuration
+- enhance App Exceptions screen with clearer UI
+- add About screen with project information and support links
+- add dark theme support
+
