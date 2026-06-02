@@ -2,7 +2,5 @@
 <device-admin>
     <uses-policies>
         <delegation-package-access />
-        <wipe-data />
-        <disable-keyguard-features />
     </uses-policies>
 </device-admin>
