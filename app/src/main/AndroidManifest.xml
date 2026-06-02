@@ -84,7 +84,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTask"
-            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
             android:theme="@style/Theme.DetoxDroid" />
         <activity
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
