@@ -173,7 +173,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
         setWarningRequired(this, true, warningReason)
 
         setContent {
-            DetoxDroidTheme(darkTheme = false) {
+            DetoxDroidTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.errorContainer

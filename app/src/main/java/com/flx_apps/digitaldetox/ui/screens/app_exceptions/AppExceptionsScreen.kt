@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -238,7 +239,7 @@ fun AppExceptionListItem(
  * by the app category.
  */
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, ExperimentalLayoutApi::class
+    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class
 )
 @Composable
 fun AppExceptionsListSettingsSheet(
@@ -246,7 +247,7 @@ fun AppExceptionsListSettingsSheet(
 ) {
     ModalBottomSheet(onDismissRequest = {
         viewModel.setShowListSettingsSheet(false)
-    }, sheetState = rememberModalBottomSheetState()) {
+    }, sheetState = rememberModalBottomSheetState(), containerColor = MaterialTheme.colorScheme.surface) {
         Column {
             androidx.compose.material3.ListItem(
                 headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
@@ -254,16 +255,15 @@ fun AppExceptionsListSettingsSheet(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         FilterChip(
                             selected = viewModel.showSystemApps.collectAsState().value,
-                            onClick = { viewModel.toggleShowSystemApps() }) {
-                            Text(text = "System apps")
-                        }
+                            onClick = { viewModel.toggleShowSystemApps() },
+                            label = { Text(text = stringResource(R.string.exceptionsList_filter_systemApps)) })
                         FilterChip(
                             selected = viewModel.showUserApps.collectAsState().value,
-                            onClick = { viewModel.toggleShowUserApps() }) {
-                            Text(text = "User apps")
-                        }
+                            onClick = { viewModel.toggleShowUserApps() },
+                            label = { Text(text = stringResource(R.string.exceptionsList_filter_userApps)) })
                     }
-                })
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent))
             androidx.compose.material3.ListItem(
                 headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByCategory)) },
                 supportingContent = {
@@ -271,13 +271,12 @@ fun AppExceptionsListSettingsSheet(
                         viewModel.selectedAppCategories.collectAsState().value.forEach {
                             FilterChip(
                                 onClick = { viewModel.toggleAppCategory(it.key) },
-                                selected = it.value
-                            ) {
-                                Text(text = it.key)
-                            }
+                                selected = it.value,
+                                label = { Text(text = it.key) })
                         }
                     }
-                })
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent))
             // FIXME there should be a better way to do this, e.g. using Modifier.navigationBarsPadding(),
             //  but I couldn't get it to work for some reason
             Box(modifier = Modifier.height(48.dp))

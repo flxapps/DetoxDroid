@@ -1,9 +1,8 @@
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FilterChip
-import androidx.compose.material.Text
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -14,7 +13,7 @@ import androidx.compose.ui.unit.dp
  * @param selectedOption The currently selected option
  * @param onOptionSelected A callback that is called when an option is selected
  */
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OptionsRow(
     options: Map<Int, Any>,
@@ -26,9 +25,8 @@ fun OptionsRow(
             FilterChip(
                 selected = option == selectedOption,
                 onClick = { onOptionSelected(option) },
-            ) {
-                Text(text = stringResource(id = textRes))
-            }
+                label = { Text(text = stringResource(id = textRes)) },
+            )
         }
     }
 }

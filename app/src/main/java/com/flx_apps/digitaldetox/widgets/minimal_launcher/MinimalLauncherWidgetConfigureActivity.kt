@@ -21,8 +21,6 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -32,10 +30,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
@@ -126,7 +127,7 @@ class MinimalLauncherWidgetConfigureActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun MinimalLauncherWidgetConfigureScreen(
     initiallySelectedApps: List<WidgetSelectedApp>,
@@ -355,7 +356,10 @@ private fun MinimalLauncherWidgetConfigureScreen(
     }
 
     if (showFiltersSheet) {
-        ModalBottomSheet(onDismissRequest = { showFiltersSheet = false }) {
+        ModalBottomSheet(
+            onDismissRequest = { showFiltersSheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -368,18 +372,17 @@ private fun MinimalLauncherWidgetConfigureScreen(
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             FilterChip(
                                 selected = showSystemApps,
-                                onClick = { showSystemApps = !showSystemApps }
-                            ) {
-                                Text(stringResource(id = R.string.exceptionsList_filter_systemApps))
-                            }
+                                onClick = { showSystemApps = !showSystemApps },
+                                label = { Text(stringResource(id = R.string.exceptionsList_filter_systemApps)) }
+                            )
                             FilterChip(
                                 selected = showUserApps,
-                                onClick = { showUserApps = !showUserApps }
-                            ) {
-                                Text(stringResource(id = R.string.exceptionsList_filter_userApps))
-                            }
+                                onClick = { showUserApps = !showUserApps },
+                                label = { Text(stringResource(id = R.string.exceptionsList_filter_userApps)) }
+                            )
                         }
-                    }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 )
 
                 ListItem(
@@ -401,14 +404,14 @@ private fun MinimalLauncherWidgetConfigureScreen(
                                             } else {
                                                 selectedCategories.add(category)
                                             }
-                                        }
-                                    ) {
-                                        Text(category)
-                                    }
+                                        },
+                                        label = { Text(category) }
+                                    )
                                 }
                             }
                         }
-                    }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 )
             }
         }

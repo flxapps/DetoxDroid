@@ -32,7 +32,7 @@ class CommitmentPasswordTamperWarningOverlayService :
 @Composable
 fun CommitmentPasswordTamperWarningOverlay() {
     val context = androidx.compose.ui.platform.LocalContext.current
-    DetoxDroidTheme(darkTheme = true) {
+    DetoxDroidTheme {
         Column(
             modifier = Modifier
                 .fillMaxSize()
