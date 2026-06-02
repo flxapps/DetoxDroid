@@ -40,6 +40,7 @@
     <string name="home.screenTime.unavailable">Screen time unavailable</string>
     <string name="home.uninstall">Uninstall DetoxDroid</string>
     <string name="home.uninstall.hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
+    <string name="home.uninstall.blocked.hint">Disabled while Commitment Password is active.</string>
     <string name="home.uninstall.dialog.title">Are you sure?</string>
     <string name="home.uninstall.dialog.message">This revokes DetoxDroid permissions so you can uninstall it normally.\n\nIf you install DetoxDroid again, you will need to grant these permissions again.</string>
 

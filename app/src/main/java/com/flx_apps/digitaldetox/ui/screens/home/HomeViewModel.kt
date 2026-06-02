@@ -130,10 +130,10 @@ class HomeViewModel @Inject constructor(
 
     /**
      * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.
-     * Blocked if Commitment Password is active and the session is not unlocked.
+     * Blocked whenever Commitment Password is active.
      */
     fun uninstallDetoxDroid(): Boolean {
-        if (CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()) {
+        if (CommitmentPasswordFeature.isActivated) {
             setSnackbarState(HomeScreenSnackbarState.CommitmentPasswordLocked)
             return false
         }

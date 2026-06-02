@@ -64,6 +64,7 @@ import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -76,7 +77,6 @@ import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -311,8 +311,15 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
     // don't show the uninstall tile if the device admin permission is not granted
     if (!DetoxDroidDeviceAdminReceiver.isGranted(LocalContext.current)) return
 
-    val showAreYouSureDialog = remember { MutableStateFlow(false) }
-    if (showAreYouSureDialog.collectAsState().value) {
+    val showAreYouSureDialog = remember { mutableStateOf(false) }
+    val commitmentPasswordStateToken = CommitmentPasswordFeature.stateToken.collectAsState().value
+    val uninstallBlocked = remember(commitmentPasswordStateToken) { CommitmentPasswordFeature.isActivated }
+
+    LaunchedEffect(uninstallBlocked) {
+        if (uninstallBlocked) showAreYouSureDialog.value = false
+    }
+
+    if (showAreYouSureDialog.value) {
         // confirmation dialog
         AlertDialog(title = {
             Text(text = stringResource(id = R.string.home_uninstall_dialog_title))
@@ -323,6 +330,7 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         }, confirmButton = {
             TextButton(onClick = {
                 viewModel.uninstallDetoxDroid()
+                showAreYouSureDialog.value = false
             }) {
                 Text(text = stringResource(id = R.string.home_uninstall))
             }
@@ -334,8 +342,9 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         leadingIcon = Icons.Default.DeleteForever,
         titleText = stringResource(id = R.string.home_uninstall),
         subtitleText = stringResource(
-            id = R.string.home_uninstall_hint
+            id = if (uninstallBlocked) R.string.home_uninstall_blocked_hint else R.string.home_uninstall_hint
         ),
+        enabled = !uninstallBlocked,
         onClick = {
             showAreYouSureDialog.value = true
         })

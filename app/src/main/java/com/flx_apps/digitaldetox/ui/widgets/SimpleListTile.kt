@@ -30,22 +30,24 @@ fun SimpleListTile(
     subtitleText: String,
     leadingIcon: ImageVector? = null,
     trailing: @Composable () -> Unit = {},
+    enabled: Boolean = true,
     allowClickWhenLocked: Boolean = false,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {}
 ) {
     val isLocked = LocalSettingsLocked.current
     val effectivelyLocked = isLocked && !allowClickWhenLocked
+    val effectivelyEnabled = enabled && !effectivelyLocked
 
     androidx.compose.material3.ListItem(
         headlineContent = { Text(titleText) },
         supportingContent = { Text(subtitleText) },
         trailingContent = trailing,
         modifier = Modifier
-            .alpha(if (effectivelyLocked) 0.5f else 1f)
-            .blockInteractionWhenLocked(effectivelyLocked)
+            .alpha(if (effectivelyEnabled) 1f else 0.5f)
+            .blockInteractionWhenLocked(!effectivelyEnabled)
             .combinedClickable(
-                enabled = !effectivelyLocked, onClick = onClick, onLongClick = onLongClick
+                enabled = effectivelyEnabled, onClick = onClick, onLongClick = onLongClick
             ),
         leadingContent = if (leadingIcon != null) {
             { Icon(imageVector = leadingIcon, contentDescription = null) }
