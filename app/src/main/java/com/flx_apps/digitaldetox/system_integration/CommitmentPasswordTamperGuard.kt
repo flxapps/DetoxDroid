@@ -9,18 +9,13 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordTamperType
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordTamperWarningOverlayService
 import timber.log.Timber
 
 internal class CommitmentPasswordTamperGuard(
     private val service: DetoxDroidAccessibilityService
 ) {
-    private enum class TamperAttemptType {
-        UninstallFlow,
-        DeviceAdminRevokeFlow,
-        AccessibilityDisableFlow
-    }
-
     private data class WindowSnapshot(
         val text: String,
         val hasSwitchLikeControl: Boolean
@@ -72,7 +67,7 @@ internal class CommitmentPasswordTamperGuard(
         return true
     }
 
-    private fun detectTamperAttemptType(accessibilityEvent: AccessibilityEvent): TamperAttemptType? {
+    private fun detectTamperAttemptType(accessibilityEvent: AccessibilityEvent): CommitmentPasswordTamperType? {
         val eventPackageName = accessibilityEvent.packageName?.toString()?.lowercase() ?: return null
         if (eventPackageName !in settingsPackages && eventPackageName !in packageInstallerPackages) {
             return null
@@ -82,16 +77,16 @@ internal class CommitmentPasswordTamperGuard(
         val snapshot = createWindowSnapshot(accessibilityEvent)
 
         if (isDetoxAccessibilityTamperFlow(className, snapshot)) {
-            return TamperAttemptType.AccessibilityDisableFlow
+            return CommitmentPasswordTamperType.Accessibility
         }
 
         if (!mentionsDetoxDroid(snapshot.text)) return null
-        if (className.contains("deviceadmin")) return TamperAttemptType.DeviceAdminRevokeFlow
+        if (className.contains("deviceadmin")) return CommitmentPasswordTamperType.DeviceAdmin
 
         val isUninstallFlow = eventPackageName in packageInstallerPackages
                 || className.contains("appinfo")
                 || className.contains("installedappdetails")
-        if (isUninstallFlow) return TamperAttemptType.UninstallFlow
+        if (isUninstallFlow) return CommitmentPasswordTamperType.Uninstall
 
         return null
     }
@@ -172,16 +167,13 @@ internal class CommitmentPasswordTamperGuard(
         DetoxDroidDeviceAdminReceiver.setUninstallBlocked(service, true)
     }
 
-    private fun showTamperWarning(attemptType: TamperAttemptType) {
+    private fun showTamperWarning(attemptType: CommitmentPasswordTamperType) {
         if (Settings.canDrawOverlays(service)) {
-            service.startService(Intent(service, CommitmentPasswordTamperWarningOverlayService::class.java))
+            service.startService(
+                CommitmentPasswordTamperWarningOverlayService.createStartIntent(service, attemptType)
+            )
             return
         }
-        val messageRes = when (attemptType) {
-            TamperAttemptType.UninstallFlow -> R.string.feature_commitmentPassword_tamper_toast_uninstall
-            TamperAttemptType.DeviceAdminRevokeFlow -> R.string.feature_commitmentPassword_tamper_toast_deviceAdmin
-            TamperAttemptType.AccessibilityDisableFlow -> R.string.feature_commitmentPassword_tamper_toast_accessibility
-        }
-        Toast.makeText(service, service.getString(messageRes), Toast.LENGTH_LONG).show()
+        Toast.makeText(service, service.getString(attemptType.toastMessageRes), Toast.LENGTH_LONG).show()
     }
 }

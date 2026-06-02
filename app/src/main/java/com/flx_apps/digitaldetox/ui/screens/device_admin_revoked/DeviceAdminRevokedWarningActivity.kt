@@ -8,16 +8,26 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,9 +35,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -176,7 +188,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
             DetoxDroidTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.errorContainer
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     DeviceAdminRevokedWarningScreen(
                         warningReason = warningReason,
@@ -228,56 +240,105 @@ private fun DeviceAdminRevokedWarningScreen(
 
     BackHandler(enabled = true) { /* consume – user must type the phrase */ }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.72f))
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = when (warningReason) {
-                DeviceAdminRevokedWarningActivity.WarningReason.DEVICE_ADMIN_REVOKED ->
-                    stringResource(R.string.deviceAdminRevoked_title)
-                DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED ->
-                    stringResource(R.string.accessibilityDisabledWarning_title)
-            },
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onErrorContainer
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = when (warningReason) {
-                DeviceAdminRevokedWarningActivity.WarningReason.DEVICE_ADMIN_REVOKED ->
-                    stringResource(R.string.deviceAdminRevoked_message)
-                DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED ->
-                    stringResource(R.string.accessibilityDisabledWarning_message)
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onErrorContainer
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = stringResource(R.string.deviceAdminRevoked_prompt),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onErrorContainer
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            value = input,
-            onValueChange = { input = it },
-            label = { Text(stringResource(R.string.deviceAdminRevoked_inputLabel)) },
-            singleLine = false,
-            minLines = 2,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onAcknowledge,
-            enabled = canContinue
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
         ) {
-            Text(stringResource(R.string.deviceAdminRevoked_continue))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = stringResource(R.string.feature_commitmentPassword_tamper_iconDescription),
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .size(40.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = when (warningReason) {
+                        DeviceAdminRevokedWarningActivity.WarningReason.DEVICE_ADMIN_REVOKED ->
+                            stringResource(R.string.deviceAdminRevoked_title)
+                        DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED ->
+                            stringResource(R.string.accessibilityDisabledWarning_title)
+                    },
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = when (warningReason) {
+                        DeviceAdminRevokedWarningActivity.WarningReason.DEVICE_ADMIN_REVOKED ->
+                            stringResource(R.string.deviceAdminRevoked_message)
+                        DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED ->
+                            stringResource(R.string.accessibilityDisabledWarning_message)
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.deviceAdminRevoked_prompt),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = requiredPhrase,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = input,
+                    onValueChange = { input = it },
+                    label = { Text(stringResource(R.string.deviceAdminRevoked_inputLabel)) },
+                    singleLine = false,
+                    minLines = 2,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onErrorContainer,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f),
+                        focusedLabelColor = MaterialTheme.colorScheme.onErrorContainer,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f),
+                        cursorColor = MaterialTheme.colorScheme.onErrorContainer,
+                        focusedTextColor = MaterialTheme.colorScheme.onErrorContainer,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onAcknowledge,
+                    enabled = canContinue,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onErrorContainer,
+                        contentColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.deviceAdminRevoked_continue))
+                }
+            }
         }
     }
 }
