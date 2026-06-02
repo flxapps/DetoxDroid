@@ -23,6 +23,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -245,6 +246,7 @@ private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = view
         }
         item {
             UninstallDetoxDroidTile()
+            OpenAboutTile()
             // bottom logo
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
@@ -338,6 +340,16 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
             showAreYouSureDialog.value = true
         })
     Divider()
+}
+
+@Composable
+fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
+    SimpleListTile(
+        leadingIcon = Icons.Default.Info,
+        titleText = stringResource(id = R.string.navigation_about),
+        subtitleText = stringResource(id = R.string.about_tile_subtitle),
+        onClick = { navViewModel.openRoute(NavigationRoutes.About) }
+    )
 }
 
 /**

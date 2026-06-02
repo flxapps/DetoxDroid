@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flx_apps.digitaldetox.ui.screens.about.AboutScreen
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreen
 import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
 import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen
@@ -46,6 +47,8 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
             )
 
             is NavigationRoutes.UsageStats -> null
+
+            is NavigationRoutes.About -> AboutScreen()
 
             is NavigationRoutes.LogViewer -> LogViewerScreen()
         }

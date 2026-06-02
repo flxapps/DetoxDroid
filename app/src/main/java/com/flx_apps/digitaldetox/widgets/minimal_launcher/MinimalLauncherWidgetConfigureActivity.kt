@@ -363,7 +363,7 @@ private fun MinimalLauncherWidgetConfigureScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ListItem(
-                    headlineContent = { Text(stringResource(id = R.string.widget_minimalLauncher_filter_appType)) },
+                    headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
                     supportingContent = {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             FilterChip(
@@ -383,7 +383,7 @@ private fun MinimalLauncherWidgetConfigureScreen(
                 )
 
                 ListItem(
-                    headlineContent = { Text(stringResource(id = R.string.widget_minimalLauncher_filter_category)) },
+                    headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByCategory)) },
                     supportingContent = {
                         if (availableCategories.isEmpty()) {
                             Text(
