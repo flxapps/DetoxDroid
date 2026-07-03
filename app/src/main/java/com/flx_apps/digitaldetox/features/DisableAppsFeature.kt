@@ -26,6 +26,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceive
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
+import com.flx_apps.digitaldetox.util.DailyAppCounter
 import timber.log.Timber
 
 /**
@@ -95,6 +96,12 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
+     * Per-app count of app-open blocks triggered today. Resets automatically at midnight and is
+     * persisted into the usage-stats database by the snapshot worker.
+     */
+    val blockCounter = DailyAppCounter()
+
+    /**
      * The apps that are to be disabled are implemented using the [appExceptions].
      * @see SupportsAppExceptionsFeature
      */
@@ -136,12 +143,14 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         when (operationMode) {
             DisableAppsMode.BLOCK -> {
+                blockCounter.increment(packageName)
                 context.startService(Intent(context, AppDisabledOverlayService::class.java).apply {
                     putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
                 })
             }
 
             DisableAppsMode.DEACTIVATE -> {
+                blockCounter.increment(packageName)
                 setAppsDeactivated(context, true)
             }
         }

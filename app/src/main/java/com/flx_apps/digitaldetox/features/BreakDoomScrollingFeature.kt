@@ -20,7 +20,9 @@ import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.util.DailyAppCounter
 import com.flx_apps.digitaldetox.util.SelfExpiringHashMap
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 
@@ -55,6 +57,12 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     )
 
     /**
+     * Per-app count of doom-scroll breaks triggered today. Resets automatically at midnight and is
+     * persisted into the usage-stats database by the snapshot worker.
+     */
+    val breakCounter = DailyAppCounter()
+
+    /**
      * Contains information about all currently active scroll views, associated with their IDs.
      * The information is automatically removed, if a scroll view has not been scrolled for one
      * minute.
@@ -79,20 +87,18 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         scrollViewSize: Int,
         accessibilityEvent: AccessibilityEvent
     ) {
-        if (AccessibilityEventUtil.getScrollDeltaY(accessibilityEvent) == 0) {
-            // if the scroll view has not been scrolled, we will ignore it
-            return
-        }
+        val pkg = accessibilityEvent.packageName.toString()
+        if (!AccessibilityEventUtil.isDownScrollEvent(accessibilityEvent)) return
 
-        if (blockedApps.containsKey(accessibilityEvent.packageName.toString())) {
+        if (blockedApps.containsKey(pkg)) {
             // If the app is currently blocked, the user tries to scroll again after the break screen
             // has been opened. We will re-show the break screen, so that the user cannot continue
-            // scrolling.
-            openBreakScreen(context, accessibilityEvent.packageName.toString())
+            // scrolling. Re-shows are not counted as new breaks and do not offer a snooze.
+            openBreakScreen(context, pkg, offerSnooze = false)
             return
         }
 
-        val exceptionsContainApp = appExceptions.contains(accessibilityEvent.packageName.toString())
+        val exceptionsContainApp = appExceptions.contains(pkg)
         if (exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) return
         if (!exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST) return
 
@@ -100,43 +106,57 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
         if (scrollViewInfo == null) {
             activeScrollViews[scrollViewId] = ScrollViewInfo(scrollViewSize)
+            Timber.d(
+                "New scroll view registered id=%d size=%d pkg=%s", scrollViewId, scrollViewSize, pkg
+            )
         } else {
-            var isInfiniteScrolling = false
             val growthSize = scrollViewSize - scrollViewInfo.sizeY
             scrollViewInfo.sizeY = scrollViewSize
+
             if (growthSize > 1) {
                 // if the scroll view has grown by only one item, it is probably a "normal" scroll view,
                 // because in infinite scroll views, the scroll view usually grows by a specific amount
                 // (e.g. 10 items)
                 scrollViewInfo.timesGrown++
             } else if (growthSize < 0) {
-                // if the scroll view has shrunk, we reset the timesGrown counter
+                // if the scroll view has shrunk, we reset the timesGrown counter and warned flag
                 scrollViewInfo.timesGrown = 0
+                scrollViewInfo.warned = false
             }
 
-            if (scrollViewInfo.timesGrown >= 3) {
+            if (scrollViewInfo.timesGrown >= 3 && !scrollViewInfo.warned) {
                 // assume that a scroll view is infinite, if its size has grown three times
-                isInfiniteScrolling = true
-            }
-
-            val scrollingTime = System.currentTimeMillis() - scrollViewInfo.added
-            if (isInfiniteScrolling && scrollingTime >= timeUntilWarning) {
-                // if the scroll view is seemingly infinite and the user has been too long on it,
-                // we assume that they are doomscrolling and open the break screen
-                openBreakScreen(context, accessibilityEvent.packageName.toString())
-                activeScrollViews.clear()
+                val scrollingTime = System.currentTimeMillis() - scrollViewInfo.added
+                if (scrollingTime >= timeUntilWarning) {
+                    // if the scroll view is seemingly infinite and the user has been too long on it,
+                    // we assume that they are doomscrolling and open the break screen
+                    Timber.i("Break screen triggered after %d ms for pkg=%s", scrollingTime, pkg)
+                    scrollViewInfo.warned = true
+                    breakCounter.increment(pkg)
+                    openBreakScreen(context, pkg, offerSnooze = true)
+                }
             }
         }
     }
 
-    private fun openBreakScreen(context: Context, packageName: String) {
-        context.startService(Intent(
-            context, BreakDoomScrollingOverlayService::class.java
-        ).apply {
-            putExtra(
-                OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName
-            )
-        })
+    /**
+     * Grants a grace period after the user tapped "give me a bit more time" on the break screen:
+     * the app is unblocked and all tracked scroll views are forgotten, so the doom-scrolling
+     * timer ([timeUntilWarning]) starts over before the next warning can appear.
+     */
+    fun snoozeApp(packageName: String) {
+        blockedApps.remove(packageName)
+        activeScrollViews.clear()
+    }
+
+    private fun openBreakScreen(context: Context, packageName: String, offerSnooze: Boolean) {
+        context.startService(
+            Intent(
+                context, BreakDoomScrollingOverlayService::class.java
+            ).apply {
+                putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
+                putExtra(BreakDoomScrollingOverlayService.EXTRA_OFFER_SNOOZE, offerSnooze)
+            })
         blockedApps[packageName] = System.currentTimeMillis()
     }
 
@@ -147,9 +167,10 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     data class ScrollViewInfo(var sizeY: Int) {
         val added: Long = System.currentTimeMillis()
         var timesGrown = 0
+        var warned = false
 
         override fun toString(): String {
-            return "ScrollViewInfo(sizeY=$sizeY, added=$added, timesGrown=$timesGrown)"
+            return "ScrollViewInfo(sizeY=$sizeY, added=$added, timesGrown=$timesGrown, warned=$warned)"
         }
     }
 }

@@ -58,6 +58,9 @@ public class SelfExpiringHashMap<K, V> implements Map<K, V> {
      */
     private final long maxLifeTimeMillis;
 
+    private long lastCleanupTime = 0L;
+    private static final long CLEANUP_INTERVAL_MS = 1000L;
+
     public SelfExpiringHashMap() {
         internalMap = new ConcurrentHashMap<K, V>();
         expiringKeys = new WeakHashMap<K, ExpiringKey<K>>();
@@ -151,8 +154,7 @@ public class SelfExpiringHashMap<K, V> implements Map<K, V> {
         ExpiringKey delayedKey = new ExpiringKey(key, lifeTimeMillis);
         ExpiringKey oldKey = expiringKeys.put((K) key, delayedKey);
         if (oldKey != null) {
-            expireKey(oldKey);
-            expiringKeys.put((K) key, delayedKey);
+            delayQueue.remove(oldKey);
         }
         delayQueue.offer(delayedKey);
         return internalMap.put(key, value);
@@ -233,10 +235,17 @@ public class SelfExpiringHashMap<K, V> implements Map<K, V> {
     }
 
     private void cleanup() {
+        long now = System.currentTimeMillis();
+        if (now - lastCleanupTime < CLEANUP_INTERVAL_MS) {
+            return;
+        }
+        lastCleanupTime = now;
         ExpiringKey<K> delayedKey = delayQueue.poll();
         while (delayedKey != null) {
-            internalMap.remove(delayedKey.getKey());
-            expiringKeys.remove(delayedKey.getKey());
+            if (expiringKeys.get(delayedKey.getKey()) == delayedKey) {
+                internalMap.remove(delayedKey.getKey());
+                expiringKeys.remove(delayedKey.getKey());
+            }
             delayedKey = delayQueue.poll();
         }
     }
@@ -313,4 +322,3 @@ public class SelfExpiringHashMap<K, V> implements Map<K, V> {
         }
     }
 }
-

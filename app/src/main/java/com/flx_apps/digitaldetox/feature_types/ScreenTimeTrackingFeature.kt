@@ -45,12 +45,45 @@ interface ScreenTimeTrackingFeature {
      */
     fun eventuallyIncreaseUsedUpScreenTime()
 
+    /**
+     * The screen time used up so far today, including the still-running tracking session (if any).
+     * Unlike [usedUpScreenTime], this does not require [eventuallyIncreaseUsedUpScreenTime] to
+     * have been called first.
+     */
+    fun currentUsedUpScreenTime(): Long {
+        val activeSessionMs = if (trackingSinceTimestamp > 0L) {
+            (System.currentTimeMillis() - trackingSinceTimestamp).coerceAtLeast(0L)
+        } else {
+            0L
+        }
+        return usedUpScreenTime + activeSessionMs
+    }
+
     class Impl(private val featureId: FeatureId) : ScreenTimeTrackingFeature {
         override var trackingSinceTimestamp: Long = 0L
         override var usedUpScreenTime: Long by DataStoreProperty(
             longPreferencesKey("${featureId}_usedUpScreenTime"), 0L
         )
+        /**
+         * Day (as epoch-day) when [usedUpScreenTime] was last reset. Persisted so a process
+         * restart across midnight resets the accumulator instead of carrying yesterday's value.
+         */
+        private var lastResetEpochDay: Long by DataStoreProperty(
+            longPreferencesKey("${featureId}_usedUpScreenTime_lastResetDay"), 0L
+        )
         override var today: LocalDate = LocalDate.now()
+
+        init {
+            // If the process restarted on a new day, the persisted [usedUpScreenTime] is stale;
+            // reset it before any feature logic reads the value.
+            val todayEpochDay = LocalDate.now().toEpochDay()
+            if (lastResetEpochDay != todayEpochDay) {
+                usedUpScreenTime = 0L
+                trackingSinceTimestamp = 0L
+                this.today = LocalDate.now()
+                lastResetEpochDay = todayEpochDay
+            }
+        }
 
         override fun eventuallyStartTracking() {
             if (trackingSinceTimestamp == 0L) {
@@ -65,6 +98,7 @@ interface ScreenTimeTrackingFeature {
                 // the date has changed, so we reset the used up screen time
                 usedUpScreenTime = 0L
                 this.today = today
+                lastResetEpochDay = today.toEpochDay()
             }
             if (trackingSinceTimestamp == 0L) return // there is no tracking timestamp
             usedUpScreenTime += System.currentTimeMillis() - trackingSinceTimestamp

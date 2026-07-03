@@ -77,7 +77,7 @@
     <string name="feature.pause.notification.settings">Foreground Notification</string>
     <string name="feature.pause.notification.settings.description">Show a foreground notification with a pause action. Requires notification permission.</string>
 
-    <string name="feature.doomScrolling">Break "Infinite Scrolling"</string>
+    <string name="feature.doomScrolling">Break \"Doom Scrolling\"</string>
     <string name="feature.doomScrolling.subtitle">Avoid getting stuck in endless feeds</string>
     <string name="feature.doomScrolling.description">EXPERIMENTAL — Detects long scrolling sessions and offers a prompt to stop.</string>
     <string name="feature.doomScrolling.timeUntilWarning">Time Until Warning</string>
@@ -135,8 +135,9 @@
     <string name="app.badge.system">System</string>
 
     <string name="infiniteScroll.warning.title">Wake Up!</string>
-    <string name="infiniteScroll.warning.message">Looks like you are stuck in an infinite-scroll loop.</string>
+    <string name="infiniteScroll.warning.message">Looks like you are stuck in a doom-scrolling loop.</string>
     <string name="infiniteScroll.warning.exit">Get me out of here</string>
+    <string name="infiniteScroll.warning.snooze">Give me a bit more time</string>
 
     <!-- region About -->
     <string name="about.coffee">Buy me a coffee</string>
@@ -273,5 +274,98 @@
     <string name="widget.minimalLauncher.label.edit">Edit label</string>
     <string name="widget.minimalLauncher.reorder.drag">Drag to reorder</string>
     <string name="widget.minimalLauncher.app.unavailable">This app is no longer available.</string>
+    <!-- endregion -->
+
+    <!-- region Usage Stats -->
+    <string name="usage_stats_more">More</string>
+    <string name="usage_stats_title">App Usage</string>
+    <string name="usage_stats_timeframe_today">Today</string>
+    <string name="usage_stats_timeframe_last7days">7 Days</string>
+    <string name="usage_stats_timeframe_last30days">30 Days</string>
+    <string name="usage_stats_timeframe_last90days">90 Days</string>
+    <string name="usage_stats_timeframe_custom">Custom</string>
+    <string name="usage_stats_timeframe_custom_title">Select date range</string>
+    <string name="usage_stats_timeframe_custom_start">Start date</string>
+    <string name="usage_stats_timeframe_custom_end">End date</string>
+    <string name="usage_stats_timeframe_custom_apply">Apply</string>
+    <string name="usage_stats_timeframe_custom_input_format">d/M/yyyy</string>
+    <string name="usage_stats_timeframe_custom_switch_to_calendar">Switch to calendar selection</string>
+    <string name="usage_stats_timeframe_custom_switch_to_input">Switch to text input</string>
+    <string name="usage_stats_improves_over_time">Stats improve over time — keep DetoxDroid active for scroll events &amp; more detailed data.</string>
+    <string name="usage_stats_daily_average">Daily avg: %s</string>
+    <string name="usage_stats_daily_average_short">daily avg</string>
+    <string name="usage_stats_vs_yesterday">vs yesterday</string>
+    <string name="usage_stats_vs_previous_period">vs previous period</string>
+    <string name="usage_stats_top_apps">Top Apps</string>
+    <string name="usage_stats_time_of_day">App Opens by Hour</string>
+    <string name="usage_stats_by_day">By Day</string>
+    <string name="usage_stats_weekday_averages">Weekday Averages</string>
+    <string name="usage_stats_detox_impact">Detox Impact</string>
+    <string name="usage_stats_badge_grayscale">Grayscale</string>
+    <string name="usage_stats_badge_disabled">Disabled</string>
+    <string name="usage_stats_badge_doom_scroll">Scroll Guard</string>
+    <string name="usage_stats_grayscale_time">In Grayscale</string>
+    <string name="usage_stats_color_remaining">Color Left</string>
+    <string name="usage_stats_scroll_breaks">Scroll Breaks</string>
+    <string name="usage_stats_blocks">Blocked</string>
+    <string name="usage_stats_launches">%d opens</string>
+    <string name="usage_stats_opens_short">opens</string>
+    <string name="usage_stats_sessions_short">sessions</string>
+    <string name="usage_stats_avg_session">avg session</string>
+    <string name="usage_stats_unlocks_short">unlocks</string>
+    <string name="usage_stats_other">Other</string>
+    <string name="usage_stats_app_details">Details</string>
+    <string name="usage_stats_quick_actions">Quick Actions</string>
+    <string name="usage_stats_no_active_features">No active features to manage</string>
+    <string name="usage_stats_add_grayscale">Add to grayscale</string>
+    <string name="usage_stats_remove_grayscale">Remove from grayscale</string>
+    <string name="usage_stats_add_scroll_guard">Add doom scroll guard</string>
+    <string name="usage_stats_remove_scroll_guard">Remove doom scroll guard</string>
+    <string name="usage_stats_disable_app">Disable app</string>
+    <string name="usage_stats_enable_app">Enable app</string>
+    <string name="usage_stats_no_data">No data for this period</string>
+    <string name="usage_stats_screen_time">Screen Time</string>
+    <string name="usage_stats_trend_7d">7-Day Trend</string>
+    <string name="usage_stats_screen_unlocks">Screen Unlocks</string>
+    <string name="usage_stats_app_categories">App Categories</string>
+    <string name="usage_stats_scroll_intensity">Scroll Intensity</string>
+    <string name="usage_stats_scroll_intensity_subtitle">Combines scroll volume with scroll speed</string>
+    <string name="usage_stats_scroll_intensity_score">scroll intensity</string>
+    <string name="usage_stats_scroll_intensity_detail">%1$d scrolls · %2$.1f/min</string>
+    <string name="usage_stats_scroll_intensity_info">Combines total scroll count with the rate per minute (using a sqrt weighting) so brief bursts cannot outrank sustained doom-scrolling. Higher = more doom-scrolling.</string>
+    <string name="usage_stats_show_more">Show more</string>
+    <string name="usage_stats_show_less">Show less</string>
+    <string name="usage_stats_sort">Sort by</string>
+    <string name="usage_stats_sort_screen_time">By Screen Time</string>
+    <string name="usage_stats_sort_opens">By Opens</string>
+    <string name="usage_stats_sort_scroll_intensity">By Scroll Intensity</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="duration_hours_short">%dh</string>
+    <string name="duration_minutes_short">%dm</string>
+    <string name="duration_hours_compact">%1$dh%2$dm</string>
+    <string name="distance_meters">%d m</string>
+    <string name="distance_kilometers">%.1f km</string>
+    <string name="usage_stats_perspective">In Perspective</string>
+    <string name="usage_stats_perspective_subtitle">The same numbers, made tangible</string>
+    <string name="usage_stats_perspective_footer">No judgement — time just gets easier to feel this way.</string>
+    <string name="usage_stats_thumb_travel">of thumb travel</string>
+    <string name="usage_stats_odometer_comparison">≈ %1$s × %2$s</string>
+    <string name="usage_stats_odometer_floors">≈ %1$d floors of scrolling</string>
+    <string name="landmark_statue_of_liberty">the Statue of Liberty</string>
+    <string name="landmark_eiffel_tower">the Eiffel Tower</string>
+    <string name="landmark_empire_state">the Empire State Building</string>
+    <string name="landmark_burj_khalifa">the Burj Khalifa</string>
+    <string name="landmark_mount_everest">Mount Everest</string>
+    <string name="landmark_marathon">a marathon</string>
+    <string name="usage_stats_time_value_setup">What\'s an hour of your time worth?</string>
+    <string name="usage_stats_time_value_hint">Tap to see what your screen time is worth</string>
+    <string name="usage_stats_time_value_label">your screen time, valued at %1$s</string>
+    <string name="usage_stats_time_value_off">off</string>
+    <string name="usage_stats_rate_per_hour">%1$s/h</string>
+    <string name="chart_tooltip_opens">%1$02d:00 — %2$d opens</string>
+    <string name="chart_tooltip_unlocks">%1$02d:00 — %2$d unlocks</string>
+    <string name="chart_percent">%1$s %2$d%%</string>
+    <string name="usage_stats_category_other">Other</string>
     <!-- endregion -->
 </resources>

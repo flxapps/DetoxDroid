@@ -60,6 +60,14 @@ object ShizukuUtils {
     }
 
     /**
+     * True when Shizuku is running *and* permission is already granted, i.e. [executeCommand]
+     * will run without prompting the user with a permission dialog.
+     */
+    fun canExecuteCommandsSilently(): Boolean {
+        return isShizukuAvailable() && checkSelfPermission()
+    }
+
+    /**
      * Checks if we have permission to use Shizuku.
      * @return true if permission is granted
      */

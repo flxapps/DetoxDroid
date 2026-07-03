@@ -77,11 +77,16 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
     fun setZenMode(
         context: Context, enabled: Boolean, forceSetting: Boolean = false
     ): Boolean {
-        // check if nothing has changed
-        if (isZenModeEnabled == enabled && !forceSetting) return false
-
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Query the real system state to avoid stale cache drift
+        val actuallyEnabled =
+            notificationManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        if (actuallyEnabled == enabled && !forceSetting) {
+            isZenModeEnabled = enabled
+            return false
+        }
+
         // we don't need to check for permissions (again), as we assume that they are already granted at this point
         // as the feature has been activated before
         notificationManager.setInterruptionFilter(if (enabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY else NotificationManager.INTERRUPTION_FILTER_ALL)

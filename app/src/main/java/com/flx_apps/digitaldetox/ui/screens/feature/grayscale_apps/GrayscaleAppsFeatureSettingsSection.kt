@@ -93,6 +93,7 @@ fun IgnoreFullScreenAppsTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = 
  */
 @Composable
 fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+    val context = LocalContext.current
     val showAllowedDailyColorScreenTimeDialog =
         viewModel.showAllowedDailyColorScreenTimeDialog.collectAsState().value
     val usedUpScreenTime = GrayscaleAppsFeature.usedUpScreenTime.milliseconds.inWholeMinutes.toInt()
@@ -103,10 +104,9 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
             initialValue = allowedDailyColorScreenTime,
             onValueSelected = { viewModel.setAllowedDailyColorScreenTime(it.toLong()) },
             onDismissRequest = { viewModel.setShowAllowedDailyColorScreenTimeDialog(false) },
-            range = 0..180 step 15,
-            label = { it.minutes.toHrMinString() })
+            range = 0..180 step 5,
+            label = { it.minutes.toHrMinString(context) })
     }
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     SimpleListTile(

@@ -44,7 +44,8 @@
         android:name="android.permission.BIND_QUICK_SETTINGS_TILE"
         tools:ignore="ProtectedPermissions" />
 
-    <!-- android.permission.KILL_BACKGROUND_PROCESSES permission to kill apps from the overlay -->
+    <!-- Fallback for best-effort force-stopping a doom-scrolling app on Android 13 and below
+         (see ForceStopUtil); a no-op for other packages since Android 14 -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <!-- Shizuku permission for non-root privileged operations -->
@@ -127,13 +128,6 @@
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
                 <action android:name="android.app.action.PROFILE_PROVISIONING_COMPLETE" />
-            </intent-filter>
-        </receiver>
-        <receiver
-            android:name=".system_integration.ScreenTurnedOffReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.SCREEN_OFF" />
             </intent-filter>
         </receiver>
         <receiver

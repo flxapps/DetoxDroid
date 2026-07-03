@@ -11,16 +11,26 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
-import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.NotificationHelper
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface UsageStatsSnapshotEntryPoint {
+    fun repository(): UsageStatsRepository
+}
 
 enum class DetoxDroidState {
     /**
@@ -114,10 +124,6 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         registerReceiver(screenTurnedOffReceiver, intentFilter)
 
-        if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
-            BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
-        }
-
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
             ignoredPackages.add(it.packageName)
@@ -126,6 +132,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // call onStart() for all active features and update the state
         FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
         updateState()
+
+        UsageStatsTracker.init(this)
     }
 
     override fun onServiceConnected() {
@@ -253,6 +261,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val scrollViewId =
             OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
 
+        // Always count scroll events for usage stats, regardless of feature activation.
+        UsageStatsTracker.onScrollEvent(accessibilityEvent)
+
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
@@ -273,6 +284,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         Timber.i("DetoxDroidAccessibilityService: onDestroy")
         super.onDestroy()
+
+        UsageStatsTracker.shutdown()
+
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
 

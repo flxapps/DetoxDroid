@@ -12,6 +12,7 @@ import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
 import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
 import com.flx_apps.digitaldetox.ui.screens.schedule.FeatureScheduleScreen
+import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsScreen
 import dev.olshevski.navigation.reimagined.AnimatedNavHost
 
 /**
@@ -46,7 +47,7 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
                 grantPermissionsCommand = route.grantPermissionsCommand
             )
 
-            is NavigationRoutes.UsageStats -> null
+            is NavigationRoutes.UsageStats -> UsageStatsScreen()
 
             is NavigationRoutes.About -> AboutScreen()
 

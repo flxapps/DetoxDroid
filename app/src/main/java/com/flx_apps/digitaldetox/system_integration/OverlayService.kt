@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.system_integration
 
-import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -41,7 +40,12 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         get() = savedStateRegistryController.savedStateRegistry
     private lateinit var contentView: View
 
-    private lateinit var runningAppPackageName: String
+    /**
+     * The package name of the app that was in the foreground when the overlay was requested
+     * (empty if the launching intent did not carry [EXTRA_RUNNING_APP_PACKAGE_NAME]).
+     */
+    var runningAppPackageName: String = ""
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -85,15 +89,6 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         return super.onStartCommand(intent, flags, startId)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (this::runningAppPackageName.isInitialized) {
-            // try to kill the app that was running in the foreground
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            activityManager.killBackgroundProcesses(packageName)
-        }
-    }
-
     /**
      * Close the overlay, stop the service and go to the home screen
      * @param secondsUntilGoToHomeScreen Seconds that have to pass after the overlay closed until
@@ -115,6 +110,13 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerTime, pendingIntentToHome)
         }
+        dismissOverlay()
+    }
+
+    /**
+     * Dismisses the overlay and stops the service without redirecting to the home screen.
+     */
+    fun dismissOverlay() {
         // remove overlay after animation and stop service
         contentView.animate().alpha(0f).setDuration(250L).withEndAction {
             contentView.visibility = View.GONE

@@ -1,6 +1,6 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeViewScrolled|typeWindowStateChanged|typeAssistReadingContext"
-    android:accessibilityFeedbackType="feedbackAllMask"
+    android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRequestFilterKeyEvents|flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:canRequestFilterKeyEvents="true"

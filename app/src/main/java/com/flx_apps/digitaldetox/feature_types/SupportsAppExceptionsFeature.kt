@@ -43,6 +43,15 @@ interface SupportsAppExceptionsFeature {
         )
 
     /**
+     * Whether this feature currently applies to [packageName], given the exception list and its
+     * [appExceptionListType].
+     */
+    fun appliesTo(packageName: String): Boolean {
+        val isListed = appExceptions.contains(packageName)
+        return if (appExceptionListType == AppExceptionListType.ONLY_LIST) isListed else !isListed
+    }
+
+    /**
      * The implementation of the [SupportsAppExceptionsFeature] interface.
      * @param featureId The id of the feature (usually the simple name of the feature class).
      * @param defaultExceptionListType The default [AppExceptionListType] for this feature.

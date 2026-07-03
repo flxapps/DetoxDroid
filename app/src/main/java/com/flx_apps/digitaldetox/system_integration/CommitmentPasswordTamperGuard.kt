@@ -126,7 +126,7 @@ internal class CommitmentPasswordTamperGuard(
             val queue = ArrayDeque<AccessibilityNodeInfo>()
             queue.add(root)
             var visited = 0
-            while (queue.isNotEmpty() && visited < 350) {
+            while (queue.isNotEmpty() && visited < MAX_WINDOW_SNAPSHOT_NODES) {
                 val node = queue.removeFirst()
                 visited++
 
@@ -175,5 +175,9 @@ internal class CommitmentPasswordTamperGuard(
             return
         }
         Toast.makeText(service, service.getString(attemptType.toastMessageRes), Toast.LENGTH_LONG).show()
+    }
+
+    companion object {
+        private const val MAX_WINDOW_SNAPSHOT_NODES = 500
     }
 }

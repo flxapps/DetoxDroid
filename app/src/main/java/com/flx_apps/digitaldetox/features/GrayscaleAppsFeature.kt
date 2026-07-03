@@ -71,6 +71,12 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private var defaultDaltonizerEnabled: Int = 0
 
     /**
+     * Represents, whether the extra dim filter is currently active.
+     * We use this variable in order to avoid unnecessary calls to the system settings.
+     */
+    private var isCurrentlyExtraDim: Boolean = false
+
+    /**
      * Whether the extra dim filter should be turned on when the grayscale filter is active.
      */
     var extraDim: Boolean by DataStoreProperty(
@@ -95,15 +101,24 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
+     * Time actually spent with the grayscale filter applied today. Only the portion of tracked
+     * screen time above the [allowedDailyColorScreenTime] allowance counts — the allowance
+     * portion is spent in color.
+     */
+    fun currentGrayscaleTimeMs(): Long =
+        (currentUsedUpScreenTime() - allowedDailyColorScreenTime).coerceAtLeast(0L)
+
+    /**
      * On start, we trigger [onAppOpened] once to turn the grayscale filter on or off depending on
-     * the current app. We also read the actual system state to initialize [isCurrentlyGrayscale],
-     * so that saved defaults are not overwritten if the service (re-) starts while grayscale is active.
+     * the current app. We also read the actual system state to initialize cached filter state, so
+     * saved defaults are not overwritten if the service (re-)starts while filters are active.
      */
     override fun onStart(context: Context) {
         val contentResolver = context.contentResolver
         isCurrentlyGrayscale =
             Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
             Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
+        isCurrentlyExtraDim = Settings.Secure.getInt(contentResolver, EXTRA_DIM, 0) == 1
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
     }
@@ -221,9 +236,12 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setExtraDim(
         context: Context, extraDim: Boolean
     ): Boolean {
+        if (isCurrentlyExtraDim == extraDim) return true
         val contentResolver = context.contentResolver
-        return Settings.Secure.putInt(
+        val result = Settings.Secure.putInt(
             contentResolver, EXTRA_DIM, if (extraDim) 1 else 0
         )
+        if (result) isCurrentlyExtraDim = extraDim
+        return result
     }
 }

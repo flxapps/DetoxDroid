@@ -7,11 +7,18 @@ import android.content.Context
 import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
+import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
+import com.flx_apps.digitaldetox.workers.UsageStatsSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -54,6 +61,22 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         }
 
         createNotificationChannel()
+        scheduleUsageStatsSnapshot()
+        UsageStatsTracker.init(this)
+        // Re-render all minimal launcher widgets on startup — after a process kill
+        // (e.g. hot restart) the system may have reset them to the initial layout.
+        MinimalLauncherWidgetProvider.updateAllWidgets(this)
+    }
+
+    private fun scheduleUsageStatsSnapshot() {
+        val snapshotRequest = PeriodicWorkRequestBuilder<UsageStatsSnapshotWorker>(
+            15, TimeUnit.MINUTES
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "usage_stats_snapshot",
+            ExistingPeriodicWorkPolicy.KEEP,
+            snapshotRequest
+        )
     }
 
     /**
@@ -69,7 +92,6 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
             }
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.deleteNotificationChannel(SERVICE_CHANNEL_ID)
             notificationManager.createNotificationChannel(channel)
         }
     }

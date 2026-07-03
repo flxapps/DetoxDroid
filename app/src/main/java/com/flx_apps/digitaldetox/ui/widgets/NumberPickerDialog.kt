@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -51,7 +52,8 @@ fun NumberPickerDialog(
         Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
             NumberPicker(value = numberPickerValue.collectAsState().value, onValueChange = {
                 numberPickerValue.value = it
-            }, range = range, label = label)
+            }, range = range, label = label, dividersColor = MaterialTheme.colorScheme.onSurface,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface))
         }
     })
 }

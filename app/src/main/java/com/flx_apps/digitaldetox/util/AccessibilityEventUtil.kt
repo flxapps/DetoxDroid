@@ -7,10 +7,8 @@ class AccessibilityEventUtil {
         fun createEvent(eventType: Int = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED): AccessibilityEvent {
             val accessibilityEvent =
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    // for API level 33 and above, we need to use the AccessibilityEvent constructor
                     AccessibilityEvent(eventType)
                 } else {
-                    // for older API levels, we can use the AccessibilityEvent.obtain() method
                     AccessibilityEvent.obtain(eventType)
                 }.apply {
                     if (packageName == null) {
@@ -24,6 +22,10 @@ class AccessibilityEventUtil {
         /**
          * Returns the scroll delta of the given [accessibilityEvent] in the y direction.
          * This is only available for API level 28 and above, otherwise, 1 is returned.
+         *
+         * Note: [AccessibilityEvent.scrollDeltaY] does **not** represent pixels. It is an abstract
+         * scroll-unit count reported by the framework. Typical values are 1, –1, or 0. A threshold
+         * based on pixels is therefore meaningless here.
          */
         fun getScrollDeltaY(accessibilityEvent: AccessibilityEvent): Int {
             var result = 1 // assume a positive scroll delta by default
@@ -31,6 +33,25 @@ class AccessibilityEventUtil {
                 result = accessibilityEvent.scrollDeltaY
             }
             return result
+        }
+
+        /**
+         * Returns true if the scroll event is a downward scroll.
+         *
+         * On API 28+, [AccessibilityEvent.scrollDeltaY] is used:
+         * - positive value  → content moved down (user scrolled down) → true
+         * - negative value  → user scrolled up → false
+         * - zero value      → direction unknown (container did not report delta) → **true**,
+         *   because treating it as down is less harmful than discarding the event entirely.
+         *   Many apps (especially those with virtualized lists) report 0 even for valid scrolls.
+         *
+         * On API < 28, the OS does not provide direction info, so we conservatively assume
+         * all scrolls are downward.
+         */
+        fun isDownScrollEvent(accessibilityEvent: AccessibilityEvent): Boolean {
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) return true
+            val deltaY = accessibilityEvent.scrollDeltaY
+            return deltaY >= 0
         }
     }
 }
