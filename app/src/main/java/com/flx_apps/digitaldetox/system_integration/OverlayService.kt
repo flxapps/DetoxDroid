@@ -40,6 +40,9 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         get() = savedStateRegistryController.savedStateRegistry
     private lateinit var contentView: View
 
+    /** Guards against a second dismiss (e.g. double tap) removing an already-removed view. */
+    private var dismissed = false
+
     /**
      * The package name of the app that was in the foreground when the overlay was requested
      * (empty if the launching intent did not carry [EXTRA_RUNNING_APP_PACKAGE_NAME]).
@@ -104,7 +107,10 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         } else {
             // use the AlarmManager to go to home screen after a certain amount of time
             val pendingIntentToHome = PendingIntent.getActivity(
-                this, 0, intentToHome, PendingIntent.FLAG_UPDATE_CURRENT
+                this,
+                0,
+                intentToHome,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             val triggerTime = SystemClock.elapsedRealtime() + secondsUntilGoToHomeScreen * 1000
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -117,11 +123,13 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
      * Dismisses the overlay and stops the service without redirecting to the home screen.
      */
     fun dismissOverlay() {
+        if (dismissed) return
+        dismissed = true
         // remove overlay after animation and stop service
         contentView.animate().alpha(0f).setDuration(250L).withEndAction {
             contentView.visibility = View.GONE
             val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-            windowManager.removeView(contentView)
+            kotlin.runCatching { windowManager.removeView(contentView) }
             stopSelf()
         }.start()
     }
