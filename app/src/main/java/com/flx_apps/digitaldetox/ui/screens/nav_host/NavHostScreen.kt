@@ -1,12 +1,12 @@
 package com.flx_apps.digitaldetox.ui.screens.nav_host
 
-import ManageAppExceptionsScreen
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.ui.screens.about.AboutScreen
+import com.flx_apps.digitaldetox.ui.screens.app_exceptions.ManageAppExceptionsScreen
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreen
 import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
 import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen

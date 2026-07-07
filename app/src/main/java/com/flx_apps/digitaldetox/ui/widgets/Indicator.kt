@@ -1,3 +1,5 @@
+package com.flx_apps.digitaldetox.ui.widgets
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding

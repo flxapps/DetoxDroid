@@ -1,3 +1,5 @@
+package com.flx_apps.digitaldetox.ui.widgets
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow

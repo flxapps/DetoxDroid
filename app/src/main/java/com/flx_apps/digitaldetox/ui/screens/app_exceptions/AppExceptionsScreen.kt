@@ -1,3 +1,5 @@
+package com.flx_apps.digitaldetox.ui.screens.app_exceptions
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,13 +41,12 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
-import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionItem
-import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.SettingsLockBannerIfNeeded
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
+import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionTopBar
 

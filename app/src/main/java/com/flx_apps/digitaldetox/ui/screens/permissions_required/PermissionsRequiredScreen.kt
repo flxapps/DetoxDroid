@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.permissions_required
 
-import HyperlinkText
 import android.os.Parcelable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.stericson.RootShell.RootShell
 import kotlinx.parcelize.Parcelize
