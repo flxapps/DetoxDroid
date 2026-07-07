@@ -14,9 +14,11 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -84,10 +86,21 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             }
             return state.value
         }
+
+        /**
+         * Ensures the logging exception handler is only chained once per process, no matter how
+         * often the service is recreated.
+         */
+        private var exceptionHandlerInstalled = false
     }
 
     private var lastPackage = ""
-    private var ignoredEventClasses = mutableSetOf(
+
+    /**
+     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
+     * window events must not be treated as "an app was opened".
+     */
+    private val ignoredEventClassPrefixes = listOf(
         "android.inputmethodservice.SoftInputWindow",
         "com.android.systemui.volume",
         "com.android.quickstep.RecentsActivity"
@@ -111,14 +124,18 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onCreate()
         instance = this
 
-        // Hook into uncaught exceptions
-        val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            Timber.e(
-                throwable,
-                "DetoxDroidAccessibilityService: Uncaught Exception on thread ${thread.name}"
-            )
-            defaultExceptionHandler?.uncaughtException(thread, throwable)
+        // Hook into uncaught exceptions (once per process — service recreation must not chain
+        // another wrapper around the previous one)
+        if (!exceptionHandlerInstalled) {
+            exceptionHandlerInstalled = true
+            val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                Timber.e(
+                    throwable,
+                    "DetoxDroidAccessibilityService: Uncaught Exception on thread ${thread.name}"
+                )
+                defaultExceptionHandler?.uncaughtException(thread, throwable)
+            }
         }
 
         val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
@@ -148,12 +165,18 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * occurs. It forwards the event to the [FeaturesProvider.activeFeatures] for processing.
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
-        if (PauseButtonFeature.isPausing()) return
-
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            // usage statistics are pure measurement and keep counting during a pause —
+            // a pause only suspends the interventions below
+            if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {
+                UsageStatsTracker.onScrollEvent(accessibilityEvent)
+            }
+            if (PauseButtonFeature.isPausing()) return
             handleScrollEvent(accessibilityEvent)
             return
         }
+
+        if (PauseButtonFeature.isPausing()) return
 
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             if (commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)) return
@@ -220,19 +243,22 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
     private fun handleAppOpenedEvent(accessibilityEvent: AccessibilityEvent) {
-        if (accessibilityEvent.packageName == null || accessibilityEvent.packageName == lastPackage) {
+        val packageName = accessibilityEvent.packageName?.toString()
+        if (packageName == null || packageName == lastPackage) {
             // ignore events that do not contain a package name or that are triggered by the same app
             return
         }
-        lastPackage = accessibilityEvent.packageName.toString()
 
-        if (ignoredEventClasses.contains(accessibilityEvent.className) || ignoredPackages.contains(
-                lastPackage
-            )
+        val className = accessibilityEvent.className?.toString().orEmpty()
+        if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
+            ignoredPackages.contains(packageName)
         ) {
-            // ignore events that are known to be irrelevant
+            // ignore events that are known to be irrelevant, without treating them as an app
+            // switch — otherwise returning from e.g. the volume dialog to the previous app would
+            // be misdetected as a new app open
             return
         }
+        lastPackage = packageName
 
         // forward event to all active features that implement the OnAppOpenedSubscriptionFeature interface
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
@@ -261,9 +287,6 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val scrollViewId =
             OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
 
-        // Always count scroll events for usage stats, regardless of feature activation.
-        UsageStatsTracker.onScrollEvent(accessibilityEvent)
-
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
@@ -291,16 +314,12 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
 
         val cpRequiresWarning = kotlin.runCatching {
-            com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
-                    !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
+            CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
         }.getOrDefault(false)
         if (cpRequiresWarning) {
-            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(
-                this
-            )
-            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.launch(
-                this,
-                com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED
+            DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(this)
+            DeviceAdminRevokedWarningActivity.launch(
+                this, DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED
             )
         }
 
