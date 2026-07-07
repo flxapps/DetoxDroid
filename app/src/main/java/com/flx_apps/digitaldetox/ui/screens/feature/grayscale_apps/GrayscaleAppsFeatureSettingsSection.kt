@@ -96,7 +96,9 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
     val context = LocalContext.current
     val showAllowedDailyColorScreenTimeDialog =
         viewModel.showAllowedDailyColorScreenTimeDialog.collectAsState().value
-    val usedUpScreenTime = GrayscaleAppsFeature.usedUpScreenTime.milliseconds.inWholeMinutes.toInt()
+    // includes the still-running tracking session, so the display doesn't lag behind
+    val usedUpScreenTime =
+        GrayscaleAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
     val allowedDailyColorScreenTime =
         viewModel.allowedDailyColorScreenTime.collectAsState().value.toInt()
     if (showAllowedDailyColorScreenTimeDialog) {

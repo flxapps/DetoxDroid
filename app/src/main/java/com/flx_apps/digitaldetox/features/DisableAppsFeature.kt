@@ -4,10 +4,13 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
@@ -22,7 +25,9 @@ import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeat
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
@@ -113,7 +118,41 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     private var isAppsDeactivated = false
 
+    /**
+     * The disableable app that most recently started a tracking session. Used by
+     * [budgetExhaustedChecker] to know which app to block when the budget runs out mid-session.
+     */
+    @Volatile
+    private var lastTrackedPackage: String? = null
+
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+    /**
+     * Fires when the daily screen-time budget is expected to run out mid-session. Without it, the
+     * block would only engage on the next window change, so a user could stay inside a single
+     * tracked app past their budget. A still-running tracking session
+     * ([ScreenTimeTrackingFeature.trackingSinceTimestamp]) signals the user is still in the app.
+     */
+    private val budgetExhaustedChecker = Runnable {
+        kotlin.runCatching {
+            val packageName = lastTrackedPackage ?: return@Runnable
+            if (!isActive() || trackingSinceTimestamp == 0L) return@Runnable
+            if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return@Runnable
+            if (allowedDailyScreenTime > 0L && currentUsedUpScreenTime() >= allowedDailyScreenTime) {
+                enforceOn(DetoxDroidApplication.appContext, packageName)
+            }
+        }
+    }
+
+    private fun scheduleBudgetExhaustedCheck() {
+        mainHandler.removeCallbacks(budgetExhaustedChecker)
+        val remainingMs = allowedDailyScreenTime - currentUsedUpScreenTime()
+        if (remainingMs <= 0) return
+        mainHandler.postDelayed(budgetExhaustedChecker, remainingMs + 250)
+    }
+
     override fun onPause(context: Context) {
+        mainHandler.removeCallbacks(budgetExhaustedChecker)
         if (operationMode == DisableAppsMode.DEACTIVATE) {
             // if the apps are deactivated, we need to reactivate them when DetoxDroid is paused
             setAppsDeactivated(context, false, forceOperation = true)
@@ -137,20 +176,33 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             return
         }
         eventuallyStartTracking() // start tracking the screen time
-        if (allowedDailyScreenTime > 0L && usedUpScreenTime < allowedDailyScreenTime) {
-            // the user has not used up their daily screen time yet
+        lastTrackedPackage = packageName
+        // currentUsedUpScreenTime() includes the running tracking session, so the budget also runs
+        // out while the user stays inside a single tracked app
+        if (allowedDailyScreenTime > 0L && currentUsedUpScreenTime() < allowedDailyScreenTime) {
+            // the user has not used up their daily screen time yet; re-check when the budget is
+            // expected to be exhausted, because no further window events arrive while the user
+            // stays in this app
+            scheduleBudgetExhaustedCheck()
             return
         }
+        enforceOn(context, packageName)
+    }
+
+    /**
+     * Applies the configured [operationMode] to [packageName]: shows the blocking overlay or
+     * deactivates the configured apps via device admin.
+     */
+    private fun enforceOn(context: Context, packageName: String) {
+        blockCounter.increment(packageName)
         when (operationMode) {
             DisableAppsMode.BLOCK -> {
-                blockCounter.increment(packageName)
                 context.startService(Intent(context, AppDisabledOverlayService::class.java).apply {
                     putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
                 })
             }
 
             DisableAppsMode.DEACTIVATE -> {
-                blockCounter.increment(packageName)
                 setAppsDeactivated(context, true)
             }
         }

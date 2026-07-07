@@ -49,7 +49,9 @@ fun AllowedDailyTimeTile(
 ) {
     val context = LocalContext.current
     val allowedDailyScreenTimeInMinutes = viewModel.allowedDailyTime.collectAsState().value
-    val usedUpScreenTime = DisableAppsFeature.usedUpScreenTime.milliseconds.inWholeMinutes.toInt()
+    // includes the still-running tracking session, so the display doesn't lag behind
+    val usedUpScreenTime =
+        DisableAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
