@@ -98,9 +98,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             return
         }
 
-        val exceptionsContainApp = appExceptions.contains(pkg)
-        if (exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) return
-        if (!exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST) return
+        if (!appliesTo(pkg)) return
 
         val scrollViewInfo = activeScrollViews[scrollViewId]
 
