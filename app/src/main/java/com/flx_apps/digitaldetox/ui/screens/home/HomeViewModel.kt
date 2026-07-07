@@ -1,4 +1,4 @@
-package com.flx_apps.digitaldetox.ui.screens.home;
+package com.flx_apps.digitaldetox.ui.screens.home
 
 import android.app.Application
 import android.content.Intent
@@ -84,19 +84,27 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
+     * The currently enabled accessibility services as a clean component list (the OS stores them
+     * as a `:`-separated string).
+     */
+    private fun enabledAccessibilityServices(): List<String> {
+        return Settings.Secure.getString(
+            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ).orEmpty().split(':').filter { it.isNotBlank() }
+    }
+
+    /**
      * Activates the accessibility service. This is done by adding the service to the list of
      * enabled accessibility services and starting the service. The service is then triggered
      * manually once to make sure it is running.
      * @see DetoxDroidAccessibilityService
      */
     private fun activateAccessibilityService(): Boolean {
-        val accessibilityServices = Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ).orEmpty()
+        val services = enabledAccessibilityServices()
         Settings.Secure.putString(
             contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            "$accessibilityServices:$AccessibilityServiceComponent".trim(':')
+            (services + AccessibilityServiceComponent).distinct().joinToString(":")
         )
         Settings.Secure.putString(
             contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1"
@@ -113,13 +121,11 @@ class HomeViewModel @Inject constructor(
      * @see DetoxDroidAccessibilityService
      */
     private fun disableAccessibilityService(): Boolean {
-        val accessibilityServices = Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ).orEmpty()
         Settings.Secure.putString(
             contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            accessibilityServices.replace(AccessibilityServiceComponent, "").trim(':')
+            enabledAccessibilityServices().filterNot { it == AccessibilityServiceComponent }
+                .joinToString(":")
         )
         return application.stopService(
             Intent(

@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
@@ -32,6 +30,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -120,13 +119,14 @@ private fun HomeScreenSnackbarContents(
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
     if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
-        LaunchedEffect(key1 = "", block = {
+        LaunchedEffect(key1 = snackbarState, block = {
             val result = snackbarHostState.showSnackbar(
                 message = context.getString(R.string.action_requestPermissions),
                 actionLabel = context.getString(R.string.action_go),
             )
+            // always reset, so the snackbar can be shown again on the next failed attempt
+            homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
             if (result == SnackbarResult.ActionPerformed) {
-                homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
                 NavigationUtil.openAccessibilitySettings(context)
             }
         })
@@ -199,8 +199,11 @@ private fun AppBar(
 private fun StartStopActionButton(
     detoxDroidState: DetoxDroidState, homeViewModel: HomeViewModel = viewModel()
 ) {
-    val cpLocked = com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
-            !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
+    // observed so the lock badge updates when the commitment password is (un)locked
+    val commitmentPasswordStateToken = CommitmentPasswordFeature.stateToken.collectAsState().value
+    val cpLocked = remember(commitmentPasswordStateToken) {
+        CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
+    }
 
     ExtendedFloatingActionButton(
         text = {
@@ -235,7 +238,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = viewModel()) {
+private fun HomeScreenContent(it: PaddingValues) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -421,7 +424,9 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 Canvas(
                     modifier = Modifier
                         .size(200.dp)
-                        .pointerInput(Unit) {
+                        // keyed on the slice angles: tap detection must not keep using a stale
+                        // capture after the stats refresh
+                        .pointerInput(sweepAngles) {
                             detectTapGestures { offset ->
                                 val canvasSize = this.size
                                 val centerX = canvasSize.width / 2f
