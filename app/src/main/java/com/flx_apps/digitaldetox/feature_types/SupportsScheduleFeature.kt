@@ -105,18 +105,18 @@ data class FeatureScheduleRule(
                 // timeOfDay is e.g. 03:00, so set fromTime to 00:00 and imagine dayOfWeek as still yesterday
                 fromTime = LocalTime.of(0, 0)
                 dayOfWeek = dayOfWeek.minus(1)
-            } else if (atTime.isAfter(fromTime)) {
+            } else if (!atTime.isBefore(fromTime)) {
                 // timeOfDay is e.g. 21:00, so set toTime to 23:59:59 (midnight)
                 toTime = LocalTime.of(23, 59, 59, 999999999)
             }
         }
-        
+
         // the rule is active if the current day of week is in the list of days of week and the
-        // current time is between fromTime and toTime or fromTime == toTime (then the whole day is
-        // considered active)
-        return (daysOfWeek.isEmpty() || daysOfWeek.contains(dayOfWeek)) && ((atTime.isAfter(fromTime) && atTime.isBefore(
-            toTime
-        )) || (fromTime == toTime))
+        // current time is between fromTime (inclusive) and toTime (exclusive), or
+        // fromTime == toTime (then the whole day is considered active)
+        return (daysOfWeek.isEmpty() || daysOfWeek.contains(dayOfWeek)) && ((!atTime.isBefore(
+            fromTime
+        ) && atTime.isBefore(toTime)) || (fromTime == toTime))
     }
 
     fun copyWith(
