@@ -32,32 +32,28 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
     override val settingsContent: @Composable () -> Unit = { DoNotDisturbFeatureSettingsSection() }
 
     /**
-     * Holds the current state of the zen mode (in order to avoid unnecessary calls to the system).
+     * The interruption filter that was active before the feature enabled zen mode, so [onPause]
+     * can restore exactly what the user had (e.g. "alarms only" instead of blindly "all").
      */
-    private var isZenModeEnabled: Boolean = false
+    private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
 
     /**
-     * Holds the state of the zen mode before the feature was activated.
-     */
-    private var wasZenModeEnabledBefore: Boolean = false
-
-    /**
-     * On start, we check if the zen mode is enabled and save the state.
-     * Then we enable the zen mode.
+     * On start, we save the current interruption filter and then enable the zen mode.
      */
     override fun onStart(context: Context) {
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        wasZenModeEnabledBefore =
-            notificationManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+        previousInterruptionFilter = notificationManager.currentInterruptionFilter.takeIf {
+            it != NotificationManager.INTERRUPTION_FILTER_UNKNOWN
+        } ?: NotificationManager.INTERRUPTION_FILTER_ALL
         setZenMode(context, enabled = true, forceSetting = true)
     }
 
     /**
-     * On pause, we set the zen mode to the state it was before the feature was activated.
+     * On pause, we restore the interruption filter that was active before the feature started.
      */
     override fun onPause(context: Context) {
-        setZenMode(context, enabled = wasZenModeEnabledBefore, forceSetting = true)
+        setZenMode(context, enabled = false, forceSetting = true)
     }
 
     /**
@@ -71,7 +67,7 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
     }
 
     /**
-     * Sets the zen mode to the given value.
+     * Sets the zen mode to the given value. Disabling restores the filter saved in [onStart].
      */
     @JvmStatic
     fun setZenMode(
@@ -83,14 +79,15 @@ object DoNotDisturbFeature : Feature(), OnAppOpenedSubscriptionFeature, NeedsPer
         val actuallyEnabled =
             notificationManager.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
         if (actuallyEnabled == enabled && !forceSetting) {
-            isZenModeEnabled = enabled
             return false
         }
 
         // we don't need to check for permissions (again), as we assume that they are already granted at this point
         // as the feature has been activated before
-        notificationManager.setInterruptionFilter(if (enabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY else NotificationManager.INTERRUPTION_FILTER_ALL)
-        isZenModeEnabled = enabled
+        notificationManager.setInterruptionFilter(
+            if (enabled) NotificationManager.INTERRUPTION_FILTER_PRIORITY
+            else previousInterruptionFilter
+        )
         return true
     }
 
