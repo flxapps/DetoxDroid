@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings used exclusively by the Roborazzi store-screenshot test (StoreScreenshotTest).
+     They are bundled in the APK but only ever rendered during the screenshot test run.
+
+     Screenshot order (fastlane phoneScreenshots/1.png … 6.png):
+       1  Home            4  Break doomscrolling
+       2  Grayscale       5  Pause, not lockout
+       3  App exceptions  6  Usage stats
+
+     To add a marketing locale, drop a translated copy of this file into the matching
+     res/values-XX/ folder — the next `./gradlew :app:generateScreenshots` run will
+     auto-discover it and generate that language. No code changes needed. -->
+<resources>
+    <string name="screenshot_1_title">Digital detox, your new default.</string>
+    <string name="screenshot_1_subtitle">DetoxDroid quietly winds down your smartphone use — always working in the background.</string>
+
+    <string name="screenshot_2_title">Make your phone less distracting…</string>
+    <string name="screenshot_2_subtitle">Automatic grayscale drains the colour that keeps you hooked on endless feeds.</string>
+
+    <string name="screenshot_3_title">…without losing the apps you need.</string>
+    <string name="screenshot_3_subtitle">Keep maps, camera and messengers in full colour with per-app exceptions.</string>
+
+    <string name="screenshot_4_title">Break infinite scrolling.</string>
+    <string name="screenshot_4_subtitle">Caught doomscrolling? DetoxDroid gently interrupts and sends you on your way.</string>
+
+    <string name="screenshot_5_title">Pause — don\'t lock yourself out.</string>
+    <string name="screenshot_5_subtitle">Take a deliberate break for a few minutes instead of blocking apps outright.</string>
+
+    <string name="screenshot_6_title">Understand your habits.</string>
+    <string name="screenshot_6_subtitle">See screen time, app opens and scroll distance across days and weeks.</string>
+</resources>

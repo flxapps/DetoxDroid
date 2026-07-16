@@ -55,6 +55,49 @@ android {
     lint {
         abortOnError = false
     }
+
+    testOptions {
+        unitTests {
+            // Roborazzi/Robolectric render real resources, so they must be on the test classpath.
+            isIncludeAndroidResources = true
+            all {
+                it.jvmArgs("-Xmx3g")
+                // Forward the roborazzi Gradle properties (set by the generateScreenshots task or
+                // -Proborazzi.test.record=true on the command line) to JVM system properties.
+                if (project.hasProperty("roborazzi.test.record")) {
+                    it.systemProperty("roborazzi.test.record", "true")
+                }
+                if (project.hasProperty("roborazzi.test.verify")) {
+                    it.systemProperty("roborazzi.test.verify", "true")
+                }
+            }
+        }
+    }
+}
+
+// ── Play Store / F-Droid marketing screenshots ───────────────────────────────
+//
+// generateScreenshots — renders the StoreScreenshotTest in record mode, writing PNGs to
+// fastlane/metadata/android/<locale>/images/phoneScreenshots/.
+//
+// Usage:
+//   ./gradlew :app:generateScreenshots
+//
+afterEvaluate {
+    val baseTest = tasks.findByName("testDebugUnitTest") as? Test ?: return@afterEvaluate
+
+    tasks.register<Test>("generateScreenshots") {
+        description = "Generates the Play Store / F-Droid phone screenshots (record mode)."
+        group = "marketing"
+        testClassesDirs = baseTest.testClassesDirs
+        classpath = baseTest.classpath
+        filter {
+            includeTestsMatching("*.StoreScreenshotTest")
+        }
+        jvmArgs("-Xmx3g")
+        systemProperty("roborazzi.test.record", "true")
+        outputs.upToDateWhen { false }
+    }
 }
 
 dependencies {
@@ -124,6 +167,19 @@ dependencies {
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")
+
+    // ── Roborazzi screenshot testing (record-gated; see generateScreenshots task) ──
+    val roborazziVersion = "1.68.0"
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:$roborazziVersion")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:$roborazziVersion")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazziVersion")
+    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation(platform("androidx.compose:compose-bom:2025.02.00"))
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("androidx.test.ext:junit:1.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("com.google.dagger:hilt-android-testing:2.59.2")
+    kspTest("com.google.dagger:hilt-compiler:2.59.2")
 }
 
 kotlin.sourceSets.all {
