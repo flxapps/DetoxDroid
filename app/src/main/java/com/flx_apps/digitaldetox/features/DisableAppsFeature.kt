@@ -18,6 +18,7 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -59,7 +60,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId),
-    LockableFeature {
+    LockableFeature, PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,

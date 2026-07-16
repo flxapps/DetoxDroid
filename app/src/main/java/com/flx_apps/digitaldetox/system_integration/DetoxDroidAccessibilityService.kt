@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
+import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -171,15 +172,17 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {
                 UsageStatsTracker.onScrollEvent(accessibilityEvent)
             }
-            if (PauseButtonFeature.isPausing()) return
+            // per-feature pause gating happens inside handleScrollEvent
             handleScrollEvent(accessibilityEvent)
             return
         }
 
-        if (PauseButtonFeature.isPausing()) return
-
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)) return
+            // the tamper guard stays disabled during a pause, as before; per-feature pause gating
+            // for the interventions happens inside handleAppOpenedEvent
+            if (!PauseButtonFeature.isPausing() &&
+                commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)
+            ) return
             handleAppOpenedEvent(accessibilityEvent)
             return
         }
@@ -262,6 +265,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         // forward event to all active features that implement the OnAppOpenedSubscriptionFeature interface
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
+            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
                 this, lastPackage, accessibilityEvent
             )
@@ -288,6 +292,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
 
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
+            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
                 scrollViewId,

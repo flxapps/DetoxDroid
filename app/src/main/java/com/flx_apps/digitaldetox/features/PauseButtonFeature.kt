@@ -8,12 +8,15 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.OneMinuteInMs
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
@@ -69,6 +72,29 @@ object PauseButtonFeature : Feature(), LockableFeature {
     var hardwareKey: Int by DataStoreProperty(
         intPreferencesKey("${id}_hardwareKey"), KeyEvent.KEYCODE_UNKNOWN
     )
+
+    /**
+     * The ids of the [PausableFeature]s that a pause should *not* affect (i.e. features that keep
+     * running through a pause). Stored as an exclusion set so the default — an empty set — means "a
+     * pause affects every pausable feature", and features added in future are pausable by default.
+     * @see pausableFeatures
+     * @see isFeaturePaused
+     */
+    var pauseExemptFeatureIds: Set<FeatureId> by DataStoreProperty(
+        stringSetPreferencesKey("${id}_exemptFeatureIds"), setOf()
+    )
+
+    /** All features a pause can suspend, i.e. every [PausableFeature], in UI order. */
+    val pausableFeatures: List<Feature>
+        get() = FeaturesProvider.featureList.filter { it is PausableFeature }
+
+    /**
+     * Whether [feature] is currently suspended by an active pause — true only while a pause is
+     * running, for pausable features the user has not exempted. Consulted by the accessibility
+     * service before dispatching events to a feature.
+     */
+    fun isFeaturePaused(feature: Feature): Boolean =
+        isPausing() && feature is PausableFeature && feature.id !in pauseExemptFeatureIds
 
     /**
      * Holds the time until the pause is over. Also read by the UI to display the actual end time
@@ -142,6 +168,8 @@ object PauseButtonFeature : Feature(), LockableFeature {
         FeaturesProvider.featureList.forEach {
             // call onPause() only for active features; this feature manages itself via beginPause
             if (it == this || !it.isActive()) return@forEach
+            // a user pause leaves exempt features running; a full stop suspends everything
+            if (!stop && it.id in pauseExemptFeatureIds) return@forEach
             it.onPause(context)
         }
         DetoxDroidAccessibilityService.updateState()
@@ -153,8 +181,11 @@ object PauseButtonFeature : Feature(), LockableFeature {
         pauseUntil = pauseUntil.coerceAtMost(System.currentTimeMillis())
         mainHandler.removeCallbacks(autoResumeRunnable)
         DetoxDroidAccessibilityService.instance?.let { service ->
-            // call onStart() for all active features if we have an instance of the service
-            FeaturesProvider.activeFeatures.forEach { it.onStart(service) }
+            // restart the features the pause suspended; exempt features were never paused
+            FeaturesProvider.activeFeatures.forEach {
+                if (it.id in pauseExemptFeatureIds) return@forEach
+                it.onStart(service)
+            }
             // Update the foreground notification to reflect resumed state
             service.updateForegroundNotification()
         }

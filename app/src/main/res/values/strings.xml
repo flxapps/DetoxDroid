@@ -76,6 +76,10 @@
     <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid must be running to assign a hardware button.</string>
     <string name="feature.pause.notification.settings">Foreground Notification</string>
     <string name="feature.pause.notification.settings.description">Show a foreground notification with a pause action. Requires notification permission.</string>
+    <string name="feature.pause.affectedFeatures">Affected Features</string>
+    <string name="feature.pause.affectedFeatures.all">All features</string>
+    <string name="feature.pause.affectedFeatures.count">%1$d of %2$d features</string>
+    <string name="feature.pause.affectedFeatures.dialogHint">Choose which features a pause turns off. Unchecked features keep running during a pause.</string>
 
     <string name="feature.doomScrolling">Break \"Doom Scrolling\"</string>
     <string name="feature.doomScrolling.subtitle">Avoid getting stuck in endless feeds</string>

@@ -14,6 +14,7 @@ import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsWriteSecureSettingsPermission
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -43,7 +44,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId),
-    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature {
+    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature, PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,

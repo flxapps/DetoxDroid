@@ -7,6 +7,8 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -21,7 +23,7 @@ import javax.inject.Inject
  * We use an enum, as only one dialog can be shown at a time.
  */
 enum class PauseButtonFeatureSettingsViewModelDialog {
-    NONE, PAUSE_DURATION, TIME_BETWEEN_PAUSES_DURATION, PICK_HARDWARE_KEY
+    NONE, PAUSE_DURATION, TIME_BETWEEN_PAUSES_DURATION, PICK_HARDWARE_KEY, AFFECTED_FEATURES
 }
 
 /**
@@ -54,6 +56,27 @@ class PauseButtonFeatureSettingsViewModel @Inject constructor(application: Appli
 
     private val _hardwareKey = MutableStateFlow(PauseButtonFeature.hardwareKey)
     val hardwareKey = _hardwareKey.asStateFlow()
+
+    /** All features a pause can affect (every [com.flx_apps.digitaldetox.feature_types.PausableFeature]). */
+    val pausableFeatures: List<Feature> = PauseButtonFeature.pausableFeatures
+
+    /** The features a pause should NOT affect (kept running through a pause). */
+    private val _pauseExemptFeatureIds = MutableStateFlow(PauseButtonFeature.pauseExemptFeatureIds)
+    val pauseExemptFeatureIds = _pauseExemptFeatureIds.asStateFlow()
+
+    /**
+     * Sets whether a pause affects [featureId]. Affected features are suspended during a pause;
+     * unaffected ones keep running. Persisted as an exclusion set on [PauseButtonFeature].
+     */
+    fun setFeatureAffectedByPause(featureId: FeatureId, affected: Boolean) {
+        val newExempt = if (affected) {
+            _pauseExemptFeatureIds.value - featureId
+        } else {
+            _pauseExemptFeatureIds.value + featureId
+        }
+        PauseButtonFeature.pauseExemptFeatureIds = newExempt
+        _pauseExemptFeatureIds.value = newExempt
+    }
 
     private val _newHardwareKeySelection = MutableStateFlow(KeyEvent.KEYCODE_UNKNOWN)
     val newHardwareKeySelection = _newHardwareKeySelection.asStateFlow()
