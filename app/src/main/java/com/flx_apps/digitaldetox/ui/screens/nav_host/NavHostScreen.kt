@@ -11,6 +11,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.FeatureScreen
 import com.flx_apps.digitaldetox.ui.screens.home.HomeScreen
 import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
+import com.flx_apps.digitaldetox.ui.screens.premium.PremiumSheetHost
 import com.flx_apps.digitaldetox.ui.screens.schedule.FeatureScheduleScreen
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsScreen
 import dev.olshevski.navigation.reimagined.AnimatedNavHost
@@ -54,4 +55,6 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
             is NavigationRoutes.LogViewer -> LogViewerScreen()
         }
     }
+
+    PremiumSheetHost()
 }

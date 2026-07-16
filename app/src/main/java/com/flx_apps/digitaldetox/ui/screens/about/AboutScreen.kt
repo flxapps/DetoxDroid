@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +57,8 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val contactSubtitle = stringResource(id = R.string.about_contact_subtitle)
     val coffeeSubtitle = stringResource(id = R.string.about_coffee_subtitle)
     val patronSubtitle = stringResource(id = R.string.about_patron_subtitle)
+    val premiumTitle = stringResource(id = R.string.navigation_premium)
+    val premiumSubtitle = stringResource(id = R.string.premium_tile_subtitle)
 
     Scaffold(
         topBar = {
@@ -112,6 +116,12 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
 
+            linkItem(
+                icon = Icons.Default.WorkspacePremium,
+                title = premiumTitle,
+                subtitle = premiumSubtitle,
+                onClick = { PremiumSheetController.show() }
+            )
             linkItem(
                 icon = Icons.Default.BugReport,
                 title = reportIssueTitle,

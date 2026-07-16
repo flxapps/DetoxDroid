@@ -368,4 +368,26 @@
     <string name="chart_percent">%1$s %2$d%%</string>
     <string name="usage_stats_category_other">Other</string>
     <!-- endregion -->
+
+    <!-- region Premium -->
+    <string name="navigation.premium">DetoxDroid Premium</string>
+    <string name="premium.tile.subtitle">Support the project &amp; unlock power-user extras</string>
+    <!-- Sheet headline adapts to what opened it -->
+    <string name="premium.sheet.title.generic">Support DetoxDroid</string>
+    <string name="premium.sheet.title.nudge">Getting a lot out of DetoxDroid?</string>
+    <string name="premium.sheet.title.locked">Unlock %1$s</string>
+    <string name="premium.sheet.subtitle">DetoxDroid is free, open-source and ad-free — built and maintained by one person. A one-time tip costs almost nothing but goes a long way.</string>
+    <string name="premium.value.title">Less than a coffee, just once</string>
+    <string name="premium.value.body">No ads, no tracking — your support is what keeps DetoxDroid going. Chip in what feels right, or simply unlock below. Either way helps.</string>
+    <string name="premium.unlocked.title">Premium unlocked</string>
+    <string name="premium.unlocked.subtitle">Thank you for supporting DetoxDroid 💚</string>
+    <string name="premium.action.donatedUnlock">I\'ve donated — unlock</string>
+    <string name="premium.action.freeUnlock">Unlock without donating</string>
+    <string name="premium.action.buy">Unlock Premium</string>
+    <string name="premium.action.relock">Reset</string>
+    <string name="premium.action.done">Done</string>
+    <string name="premium.locked.footer">The lock is just a nudge — no tracking, no strings attached.</string>
+    <string name="premium.feature.usageHistory">longer usage history</string>
+    <string name="premium.chip.lockedLabel">Premium</string>
+    <!-- endregion -->
 </resources>

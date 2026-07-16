@@ -13,3 +13,9 @@ enum class TimeFrame(val days: Int, val labelRes: Int) {
     LAST_90_DAYS(days = 90, labelRes = R.string.usage_stats_timeframe_last90days),
     CUSTOM(days = 0, labelRes = R.string.usage_stats_timeframe_custom)
 }
+
+/**
+ * Historical ranges are a premium perk; only [TimeFrame.TODAY] is free. Tapping a locked frame opens
+ * the premium sheet instead of switching (see [TimeFrameSelector]).
+ */
+val TimeFrame.isPremium: Boolean get() = this != TimeFrame.TODAY

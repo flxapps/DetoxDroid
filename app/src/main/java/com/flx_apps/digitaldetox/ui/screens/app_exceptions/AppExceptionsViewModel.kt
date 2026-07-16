@@ -8,6 +8,7 @@ import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
+import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+/**
+ * Once a user has configured this many app exceptions for a feature they are clearly a power user, so
+ * we let the premium sheet surface a (capped) support nudge. See [PremiumSheetController].
+ */
+private const val POWER_USE_APP_EXCEPTIONS_THRESHOLD = 8
 
 /**
  * Represents an app that is installed on the device.
@@ -193,6 +200,11 @@ class AppExceptionsViewModel @Inject constructor(
                 else appExceptionsFeature.appExceptions -= packageName
                 _filteredAppExceptionItems.value = _filteredAppExceptionItems.value
                 _toggledItemsSize.value = appExceptionsFeature.appExceptions.size
+                if (isException &&
+                    appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
+                ) {
+                    PremiumSheetController.notifyPowerUse()
+                }
                 return isException
             }
         return null

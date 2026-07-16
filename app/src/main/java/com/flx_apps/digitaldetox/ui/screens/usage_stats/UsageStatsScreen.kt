@@ -46,6 +46,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.premium.PremiumManager
+import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
@@ -67,6 +69,7 @@ fun UsageStatsScreen(
     viewModel: UsageStatsViewModel = hiltViewModel()
 ) {
     val state = viewModel.uiState.collectAsState().value
+    val isPremiumUnlocked by PremiumManager.isPremiumUnlocked.collectAsState()
     val selectedApp = remember { mutableStateOf<AppUsageStat?>(null) }
     val showCustomPicker = remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(TopAppsSort.SCREEN_TIME) }
@@ -125,7 +128,11 @@ fun UsageStatsScreen(
                     TimeFrameSelector(
                         selectedTimeFrame = state.timeFrame,
                         availableHistoryDays = state.availableHistoryDays,
+                        isPremiumUnlocked = isPremiumUnlocked,
                         onTimeFrameSelected = { viewModel.setTimeFrame(it) },
+                        onLockedFrameClicked = {
+                            PremiumSheetController.showForLockedFeature(R.string.premium_feature_usageHistory)
+                        },
                         onCustomClicked = { showCustomPicker.value = true }
                     )
                     if (state.timeFrame == TimeFrame.CUSTOM) {
