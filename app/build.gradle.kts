@@ -150,8 +150,8 @@ dependencies {
     // Material Icons
     implementation("androidx.compose.material:material-icons-extended")
 
-    // RootTools for running (adb) commands as root
-    implementation("com.github.Stericson:RootShell:7a569589c0")
+    // libsu for running (adb) commands as root
+    implementation("com.github.topjohnwu.libsu:core:6.0.0")
 
     // Shizuku for elevated permissions without root
     implementation("dev.rikka.shizuku:api:13.1.5")

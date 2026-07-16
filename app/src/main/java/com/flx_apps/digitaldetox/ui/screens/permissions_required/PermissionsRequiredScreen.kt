@@ -35,9 +35,8 @@ import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
-import com.flx_apps.digitaldetox.util.RootShellCommand
 import com.flx_apps.digitaldetox.util.ShizukuUtils
-import com.stericson.RootShell.RootShell
+import com.topjohnwu.superuser.Shell
 import kotlinx.parcelize.Parcelize
 import timber.log.Timber
 
@@ -101,7 +100,7 @@ fun PermissionsRequiredScreenContent(
 ) {
     // both checks talk to the system (root check even spawns a process) — run them once per
     // screen, not on every recomposition
-    val isRootAvailable = remember { runCatching { RootShell.isRootAvailable() }.getOrDefault(false) }
+    val isRootAvailable = remember { runCatching { Shell.getShell().isRoot }.getOrDefault(false) }
     val isShizukuAvailable = remember { ShizukuUtils.isShizukuAvailable() }
 
     Column(
@@ -149,14 +148,13 @@ fun PermissionsRequiredScreenContent(
                 description = stringResource(id = R.string.noPermissions_text_rooted),
                 buttonText = stringResource(id = R.string.noPermissions_text_rooted_go),
                 onGrantPermissions = {
-                    // try to grant permissions using a root shell
+                    // try to grant permissions using a root shell (libsu runs the callback on the main thread)
                     runCatching {
-                        RootShell.getShell(true).add(
-                            RootShellCommand(grantPermissionsCommand.command) { _, exitCode ->
-                                if (exitCode == 0) {
-                                    navViewModel.onBackPress()
-                                }
-                            })
+                        Shell.cmd(grantPermissionsCommand.command).submit { result ->
+                            if (result.code == 0) {
+                                navViewModel.onBackPress()
+                            }
+                        }
                     }.onFailure { Timber.e(it, "Failed to run root command") }
                 })
         }
