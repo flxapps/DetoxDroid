@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
@@ -8,6 +9,7 @@ import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
@@ -32,6 +34,13 @@ private const val POWER_USE_APP_EXCEPTIONS_THRESHOLD = 8
  */
 data class AppExceptionItem(
     val appInfo: ApplicationInfoData, val isException: Boolean
+)
+
+/**
+ * A feature whose app selection can be copied into the current one ("Copy from…").
+ */
+data class ExceptionsCopySource(
+    val featureId: String, @StringRes val titleRes: Int, val appCount: Int
 )
 
 /**
@@ -214,6 +223,39 @@ class AppExceptionsViewModel @Inject constructor(
             PremiumSheetController.notifyPowerUse()
         }
         filterApps()
+    }
+
+    /**
+     * The other features this feature's selection can be copied from: every feature with app
+     * exceptions that has at least one app selected.
+     */
+    fun copySources(): List<ExceptionsCopySource> {
+        return FeaturesProvider.featureList
+            .filter { it.id != feature.id && it is SupportsAppExceptionsFeature }
+            .mapNotNull { source ->
+                val exceptions = (source as SupportsAppExceptionsFeature).appExceptions
+                if (exceptions.isEmpty()) null
+                else ExceptionsCopySource(source.id, source.texts.title, exceptions.size)
+            }
+    }
+
+    /**
+     * Replaces this feature's selection with the app selection of [featureId]. The master list is
+     * rebuilt so the UI regroups immediately.
+     */
+    fun copyExceptionsFrom(featureId: String) {
+        val source = FeaturesProvider.getFeatureById(featureId) as? SupportsAppExceptionsFeature
+            ?: return
+        var newExceptions = source.appExceptions
+        if (shouldExcludeCurrentApp) newExceptions = newExceptions - appPackageName
+        appExceptionsFeature.appExceptions = newExceptions
+        _toggledItemsSize.value = newExceptions.size
+        if (this::_appExceptionItems.isInitialized) {
+            _appExceptionItems = _appExceptionItems.map {
+                it.copy(isException = newExceptions.contains(it.appInfo.packageName))
+            }
+            filterApps()
+        }
     }
 
     /**

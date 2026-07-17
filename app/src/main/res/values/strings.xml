@@ -111,6 +111,10 @@
     <string name="feature.settings.exceptions.listType.description.onlyList">Example: select YouTube to include only it.</string>
     <string name="feature.settings.exceptions.listType.notList">All apps except selected</string>
     <string name="feature.settings.exceptions.listType.onlyList">Only selected apps</string>
+    <string name="feature.settings.exceptions.copyFrom">Copy from…</string>
+    <string name="feature.settings.exceptions.copyFrom.dialogTitle">Copy selection from</string>
+    <string name="feature.settings.exceptions.copyFrom.dialogHint">Takes over another feature\'s app selection. This replaces the current selection.</string>
+    <string name="feature.settings.exceptions.copyFrom.appCount">%d apps</string>
 
     <string name="feature.grayscale.exceptions.summary.notList">Colors are allowed in %d apps.</string>
     <string name="feature.grayscale.exceptions.summary.onlyList">Grayscale is active in %d apps.</string>

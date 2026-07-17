@@ -1,20 +1,32 @@
 package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -130,7 +142,14 @@ fun InstalledAppsList(
         } else {
             val (selected, available) = appExceptions.partition { it.isException }
             item {
-                AppListSectionHeader(stringResource(id = R.string.appList_section_selected))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppListSectionHeader(stringResource(id = R.string.appList_section_selected))
+                    CopyExceptionsFromButton(settingsLocked = settingsLocked)
+                }
             }
             if (selected.isEmpty()) {
                 item {
@@ -164,6 +183,85 @@ fun InstalledAppsList(
                 }
             }
         }
+    }
+}
+
+/**
+ * "Copy from…" next to the "Selected apps" header: takes over another feature's app selection.
+ * Only rendered when at least one other feature actually has apps selected.
+ */
+@Composable
+private fun CopyExceptionsFromButton(
+    settingsLocked: Boolean, viewModel: AppExceptionsViewModel = viewModel()
+) {
+    val copySources = remember { viewModel.copySources() }
+    if (copySources.isEmpty()) return
+    var showDialog by remember { mutableStateOf(false) }
+
+    OutlinedButton(
+        onClick = { showDialog = true },
+        enabled = !settingsLocked,
+        modifier = Modifier
+            .padding(end = 8.dp)
+            .height(32.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.ContentCopy,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = stringResource(id = R.string.feature_settings_exceptions_copyFrom),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(stringResource(id = R.string.feature_settings_exceptions_copyFrom_dialogTitle)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.feature_settings_exceptions_copyFrom_dialogHint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    copySources.forEach { source ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.copyExceptionsFrom(source.featureId)
+                                    showDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = stringResource(id = source.titleRes))
+                            Text(
+                                text = stringResource(
+                                    id = R.string.feature_settings_exceptions_copyFrom_appCount,
+                                    source.appCount
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(id = R.string.action_cancel))
+                }
+            }
+        )
     }
 }
 
