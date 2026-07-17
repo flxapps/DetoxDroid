@@ -378,11 +378,12 @@ fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
 @Composable
 fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     // observed so the chart re-renders when the user returns to the screen
-    @Suppress("UNUSED_VARIABLE", "UnusedVariable") val lifecycleState =
-        LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
 
     val context = LocalContext.current
-    val stats = UsageStatsProvider.getUpdatedUsageStatsToday()
+    // keyed on the lifecycle state: refresh when the user returns to the screen, but never
+    // re-query the (blocking) UsageStatsManager on ordinary recompositions such as slice taps
+    val stats = remember(lifecycleState) { UsageStatsProvider.getUpdatedUsageStatsToday() }
     val selectedIndex = remember { mutableStateOf(-1) }
 
     val chartStats = stats.values.sortedByDescending { it.totalTimeInForeground }.take(5)
