@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.system_integration
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
@@ -11,16 +12,33 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
+import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
-import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.NotificationHelper
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface UsageStatsSnapshotEntryPoint {
+    fun repository(): UsageStatsRepository
+}
 
 enum class DetoxDroidState {
     /**
@@ -74,10 +92,21 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             }
             return state.value
         }
+
+        /**
+         * Ensures the logging exception handler is only chained once per process, no matter how
+         * often the service is recreated.
+         */
+        private var exceptionHandlerInstalled = false
     }
 
     private var lastPackage = ""
-    private var ignoredEventClasses = mutableSetOf(
+
+    /**
+     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
+     * window events must not be treated as "an app was opened".
+     */
+    private val ignoredEventClassPrefixes = listOf(
         "android.inputmethodservice.SoftInputWindow",
         "com.android.systemui.volume",
         "com.android.quickstep.RecentsActivity"
@@ -89,6 +118,33 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     var onKeyEventListener: ((KeyEvent) -> Boolean)? = null
+        set(value) {
+            field = value
+            updateKeyEventFiltering()
+        }
+
+    /**
+     * Requests hardware-key filtering only while it is actually needed — a configured pause key,
+     * or the settings dialog listening for one. With the flag set, *every* hardware key press on
+     * the device does a binder round-trip through [onKeyEvent], so it must not stay on for the
+     * majority of users who never configure a key. The flag is declared in the service XML (so a
+     * failure here degrades to today's behavior) and switched off as soon as the service connects.
+     */
+    fun updateKeyEventFiltering() {
+        val info = serviceInfo ?: return
+        val needed =
+            onKeyEventListener != null || PauseButtonFeature.hardwareKey != KeyEvent.KEYCODE_UNKNOWN
+        val hasFlag =
+            info.flags and AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS != 0
+        if (needed == hasFlag) return
+        info.flags = if (needed) {
+            info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        } else {
+            info.flags and AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS.inv()
+        }
+        kotlin.runCatching { serviceInfo = info }
+            .onFailure { Timber.w(it, "Could not update key event filtering") }
+    }
 
     /**
      * The view model/logic holder for the [DetoxDroidAccessibilityService].
@@ -101,22 +157,22 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onCreate()
         instance = this
 
-        // Hook into uncaught exceptions
-        val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            Timber.e(
-                throwable,
-                "DetoxDroidAccessibilityService: Uncaught Exception on thread ${thread.name}"
-            )
-            defaultExceptionHandler?.uncaughtException(thread, throwable)
+        // Hook into uncaught exceptions (once per process — service recreation must not chain
+        // another wrapper around the previous one)
+        if (!exceptionHandlerInstalled) {
+            exceptionHandlerInstalled = true
+            val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                Timber.e(
+                    throwable,
+                    "DetoxDroidAccessibilityService: Uncaught Exception on thread ${thread.name}"
+                )
+                defaultExceptionHandler?.uncaughtException(thread, throwable)
+            }
         }
 
         val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         registerReceiver(screenTurnedOffReceiver, intentFilter)
-
-        if (!BatteryOptimizationHelper.isIgnoringBatteryOptimizations(this)) {
-            BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
-        }
 
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
@@ -126,12 +182,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // call onStart() for all active features and update the state
         FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
         updateState()
+
+        UsageStatsTracker.init(this)
     }
 
     override fun onServiceConnected() {
         Timber.i("DetoxDroidAccessibilityService: onServiceConnected")
         super.onServiceConnected()
 
+        updateKeyEventFiltering()
         startForegroundService()
     }
 
@@ -140,15 +199,23 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * occurs. It forwards the event to the [FeaturesProvider.activeFeatures] for processing.
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
-        if (PauseButtonFeature.isPausing()) return
-
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            // usage statistics are pure measurement and keep counting during a pause —
+            // a pause only suspends the interventions below
+            if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {
+                UsageStatsTracker.onScrollEvent(accessibilityEvent)
+            }
+            // per-feature pause gating happens inside handleScrollEvent
             handleScrollEvent(accessibilityEvent)
             return
         }
 
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)) return
+            // the tamper guard stays disabled during a pause, as before; per-feature pause gating
+            // for the interventions happens inside handleAppOpenedEvent
+            if (!PauseButtonFeature.isPausing() &&
+                commitmentPasswordTamperGuard.handleTamperAttempt(accessibilityEvent)
+            ) return
             handleAppOpenedEvent(accessibilityEvent)
             return
         }
@@ -212,22 +279,26 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
     private fun handleAppOpenedEvent(accessibilityEvent: AccessibilityEvent) {
-        if (accessibilityEvent.packageName == null || accessibilityEvent.packageName == lastPackage) {
+        val packageName = accessibilityEvent.packageName?.toString()
+        if (packageName == null || packageName == lastPackage) {
             // ignore events that do not contain a package name or that are triggered by the same app
             return
         }
-        lastPackage = accessibilityEvent.packageName.toString()
 
-        if (ignoredEventClasses.contains(accessibilityEvent.className) || ignoredPackages.contains(
-                lastPackage
-            )
+        val className = accessibilityEvent.className?.toString().orEmpty()
+        if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
+            ignoredPackages.contains(packageName)
         ) {
-            // ignore events that are known to be irrelevant
+            // ignore events that are known to be irrelevant, without treating them as an app
+            // switch — otherwise returning from e.g. the volume dialog to the previous app would
+            // be misdetected as a new app open
             return
         }
+        lastPackage = packageName
 
         // forward event to all active features that implement the OnAppOpenedSubscriptionFeature interface
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
+            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
                 this, lastPackage, accessibilityEvent
             )
@@ -246,7 +317,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         }
 
         // dispose scroll events that contain too less information
-        if (accessibilityEvent.source == null || scrollViewSize == -1 || accessibilityEvent.className == null) {
+        if (accessibilityEvent.source == null || scrollViewSize == -1 ||
+            accessibilityEvent.className == null || accessibilityEvent.packageName == null
+        ) {
             return
         }
 
@@ -254,6 +327,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
 
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
+            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
                 scrollViewId,
@@ -273,20 +347,19 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         Timber.i("DetoxDroidAccessibilityService: onDestroy")
         super.onDestroy()
+
+        UsageStatsTracker.shutdown()
+
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
 
         val cpRequiresWarning = kotlin.runCatching {
-            com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
-                    !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
+            CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
         }.getOrDefault(false)
         if (cpRequiresWarning) {
-            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(
-                this
-            )
-            com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.launch(
-                this,
-                com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED
+            DeviceAdminRevokedWarningActivity.requireAccessibilityWarning(this)
+            DeviceAdminRevokedWarningActivity.launch(
+                this, DeviceAdminRevokedWarningActivity.WarningReason.ACCESSIBILITY_DISABLED
             )
         }
 
@@ -315,17 +388,30 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
+        val isPausing = PauseButtonFeature.isPausing()
         val notification: Notification =
             NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
                 .setContentTitle(getString(R.string.app_name_)).setContentText(
-                    getString(
-                        if (PauseButtonFeature.isPausing()) R.string.app_notification_paused
-                        else R.string.app_notification_active
-                    )
+                    if (isPausing) {
+                        // show the actual end of the pause instead of a bare "Paused"
+                        getString(
+                            R.string.app_notification_pausedUntil,
+                            Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                                .atZone(ZoneId.systemDefault()).toLocalTime()
+                                .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+                        )
+                    } else getString(R.string.app_notification_active)
                 ).setSmallIcon(R.drawable.ic_pause).setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOngoing(true).addAction(
+                .setOngoing(true).apply {
+                    if (isPausing) {
+                        // live countdown to the end of the pause in the collapsed notification
+                        setWhen(PauseButtonFeature.pauseUntil)
+                        setUsesChronometer(true)
+                        setChronometerCountDown(true)
+                    }
+                }.addAction(
                     R.drawable.ic_pause, getString(
-                        if (PauseButtonFeature.isPausing()) R.string.app_notification_action_resume
+                        if (isPausing) R.string.app_notification_action_resume
                         else R.string.app_notification_action_pause
                     ), pausePendingIntent
                 ).build()

@@ -62,7 +62,7 @@ object FeaturesProvider {
                         }
                     }
                 }
-                field = featureList.filter { it.isActive() }.toMutableSet()
+                field = newActiveFeatures
                 lastActiveFeaturesReload = System.currentTimeMillis()
             }
             return field

@@ -115,16 +115,29 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         _stateToken.update { it + 1 }
     }
 
+    /**
+     * Cached [EncryptedSharedPreferences] instance. Creating one is expensive (Keystore access +
+     * file I/O) and [isFeatureProtected] is called from the UI for every feature tile, so the
+     * instance is created once per process.
+     */
+    @Volatile
+    private var encryptedPrefs: SharedPreferences? = null
+
     private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        val masterKey =
-            MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-        return EncryptedSharedPreferences.create(
-            context,
-            PREFS_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        return encryptedPrefs ?: synchronized(this) {
+            encryptedPrefs ?: run {
+                val appContext = context.applicationContext
+                val masterKey = MasterKey.Builder(appContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+                EncryptedSharedPreferences.create(
+                    appContext,
+                    PREFS_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                ).also { encryptedPrefs = it }
+            }
+        }
     }
 
     // region Session

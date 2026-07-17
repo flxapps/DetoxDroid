@@ -35,13 +35,14 @@ class PauseTileService : TileService() {
      * @see DetoxDroidState
      */
     private fun updateTile() {
-        val state = when (DetoxDroidAccessibilityService.state.value) {
+        val state = when (DetoxDroidAccessibilityService.updateState()) {
             DetoxDroidState.Inactive -> Tile.STATE_UNAVAILABLE
             DetoxDroidState.Paused -> Tile.STATE_ACTIVE
             DetoxDroidState.Active -> Tile.STATE_INACTIVE
         }
 
-        val tile = qsTile
+        // qsTile is null outside the listening window
+        val tile = qsTile ?: return
         tile.state = state
         tile.updateTile()
     }

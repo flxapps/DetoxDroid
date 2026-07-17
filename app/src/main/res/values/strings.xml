@@ -10,6 +10,9 @@
     <string name="app.notification.paused">Paused</string>
     <string name="app.notification.action.pause">Pause</string>
     <string name="app.notification.action.resume">Resume</string>
+    <string name="app.notification.channelName">DetoxDroid Service</string>
+    <string name="app.notification.channelDescription">Keeps DetoxDroid active in the background</string>
+    <string name="app.notification.pausedUntil">Paused until %s</string>
     <string name="action.go">Go</string>
     <string name="action.save">Save</string>
     <string name="action.delete">Delete</string>
@@ -76,14 +79,25 @@
     <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid must be running to assign a hardware button.</string>
     <string name="feature.pause.notification.settings">Foreground Notification</string>
     <string name="feature.pause.notification.settings.description">Show a foreground notification with a pause action. Requires notification permission.</string>
+    <string name="feature.pause.affectedFeatures">Affected Features</string>
+    <string name="feature.pause.affectedFeatures.all">All features</string>
+    <string name="feature.pause.affectedFeatures.count">%1$d of %2$d features</string>
+    <string name="feature.pause.affectedFeatures.dialogHint">Choose which features a pause turns off. Unchecked features keep running during a pause.</string>
 
-    <string name="feature.doomScrolling">Break "Infinite Scrolling"</string>
+    <string name="feature.doomScrolling">Break \"Doom Scrolling\"</string>
     <string name="feature.doomScrolling.subtitle">Avoid getting stuck in endless feeds</string>
     <string name="feature.doomScrolling.description">EXPERIMENTAL — Detects long scrolling sessions and offers a prompt to stop.</string>
     <string name="feature.doomScrolling.timeUntilWarning">Time Until Warning</string>
     <string name="feature.doomScrolling.timeUntilWarning.description">Shows a warning when doom scrolling is detected for this duration.</string>
     <string name="feature.doomScrolling.exceptions.summary.notList">Doom-scrolling checks are skipped in %d apps.</string>
     <string name="feature.doomScrolling.exceptions.summary.onlyList">Doom-scrolling checks are active in %d apps.</string>
+    <string name="feature.doomScrolling.cooldownTime">Cooldown Period</string>
+    <string name="feature.doomScrolling.cooldownTime.description">After a doom-scrolling break, the app (or just the feed that caused it) stays locked for this long.</string>
+    <string name="feature.doomScrolling.sensitivity">Detection Sensitivity</string>
+    <string name="feature.doomScrolling.sensitivity.description">How easily fast feed-scrolling triggers a break. \"Strict\" intervenes soonest. Endless feeds are always detected.</string>
+    <string name="feature.doomScrolling.sensitivity.relaxed">Relaxed</string>
+    <string name="feature.doomScrolling.sensitivity.balanced">Balanced</string>
+    <string name="feature.doomScrolling.sensitivity.strict">Strict</string>
 
     <string name="feature.settings.exceptions">App Exceptions</string>
     <string name="feature.settings.exceptions._notListed">Active in all apps except %d selected.</string>
@@ -97,6 +111,10 @@
     <string name="feature.settings.exceptions.listType.description.onlyList">Example: select YouTube to include only it.</string>
     <string name="feature.settings.exceptions.listType.notList">All apps except selected</string>
     <string name="feature.settings.exceptions.listType.onlyList">Only selected apps</string>
+    <string name="feature.settings.exceptions.copyFrom">Copy from…</string>
+    <string name="feature.settings.exceptions.copyFrom.dialogTitle">Copy selection from</string>
+    <string name="feature.settings.exceptions.copyFrom.dialogHint">Takes over another feature\'s app selection. This replaces the current selection.</string>
+    <string name="feature.settings.exceptions.copyFrom.appCount">%d apps</string>
 
     <string name="feature.grayscale.exceptions.summary.notList">Colors are allowed in %d apps.</string>
     <string name="feature.grayscale.exceptions.summary.onlyList">Grayscale is active in %d apps.</string>
@@ -135,8 +153,17 @@
     <string name="app.badge.system">System</string>
 
     <string name="infiniteScroll.warning.title">Wake Up!</string>
-    <string name="infiniteScroll.warning.message">Looks like you are stuck in an infinite-scroll loop.</string>
+    <string name="infiniteScroll.warning.message">Looks like you are stuck in a doom-scrolling loop.</string>
     <string name="infiniteScroll.warning.exit">Get me out of here</string>
+    <string name="infiniteScroll.warning.finishFirst">I\'ll finish this one, then leave</string>
+    <string name="infiniteScroll.warning.context.intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
+    <string name="infiniteScroll.warning.context.endless">This feed just keeps loading more — you\'ve been scrolling it for %1$d minutes.</string>
+    <string name="infiniteScroll.guideOut.title">A deal\'s a deal</string>
+    <string name="infiniteScroll.guideOut.message">Hope it was a good one — taking you home now.</string>
+    <string name="infiniteScroll.cooldown.title">Still cooling down</string>
+    <string name="infiniteScroll.cooldown.message">Nothing here runs away — enjoy a few more minutes to yourself.</string>
+    <string name="infiniteScroll.cooldown.context.app">%1$s will be back in %2$d min.</string>
+    <string name="infiniteScroll.cooldown.context.surface">This feed in %1$s will be back in %2$d min.</string>
 
     <!-- region About -->
     <string name="about.coffee">Buy me a coffee</string>
@@ -263,9 +290,10 @@
     <string name="widget.minimalLauncher.configure.title">Configure Launcher Widget</string>
     <string name="widget.minimalLauncher.available.emptyFiltered">No apps match your filters.</string>
     <string name="widget.minimalLauncher.search.clear">Clear search</string>
-    <string name="widget.minimalLauncher.section.selected">Selected apps</string>
-    <string name="widget.minimalLauncher.selected.empty">No apps selected yet.</string>
-    <string name="widget.minimalLauncher.section.available">Available apps</string>
+    <!-- shared between the widget configurator and the app exception lists -->
+    <string name="appList.section.selected">Selected apps</string>
+    <string name="appList.selected.empty">No apps selected yet.</string>
+    <string name="appList.section.available">Available apps</string>
     <string name="widget.minimalLauncher.filter.category.empty">No categories available</string>
     <string name="widget.minimalLauncher.label.display">Display label</string>
     <string name="widget.minimalLauncher.label.display.hint">Leave empty to use the original app name.</string>
@@ -273,5 +301,127 @@
     <string name="widget.minimalLauncher.label.edit">Edit label</string>
     <string name="widget.minimalLauncher.reorder.drag">Drag to reorder</string>
     <string name="widget.minimalLauncher.app.unavailable">This app is no longer available.</string>
+    <!-- endregion -->
+
+    <!-- region Usage Stats -->
+    <string name="usage_stats_more">More</string>
+    <string name="usage_stats_title">App Usage</string>
+    <string name="usage_stats_timeframe_today">Today</string>
+    <string name="usage_stats_timeframe_last7days">7 Days</string>
+    <string name="usage_stats_timeframe_last30days">30 Days</string>
+    <string name="usage_stats_timeframe_last90days">90 Days</string>
+    <string name="usage_stats_timeframe_custom">Custom</string>
+    <string name="usage_stats_timeframe_custom_title">Select date range</string>
+    <string name="usage_stats_timeframe_custom_start">Start date</string>
+    <string name="usage_stats_timeframe_custom_end">End date</string>
+    <string name="usage_stats_timeframe_custom_apply">Apply</string>
+    <string name="usage_stats_timeframe_custom_input_format">d/M/yyyy</string>
+    <string name="usage_stats_timeframe_custom_switch_to_calendar">Switch to calendar selection</string>
+    <string name="usage_stats_timeframe_custom_switch_to_input">Switch to text input</string>
+    <string name="usage_stats_improves_over_time">Stats improve over time — keep DetoxDroid active for scroll events &amp; more detailed data.</string>
+    <string name="usage_stats_daily_average">Daily avg: %s</string>
+    <string name="usage_stats_daily_average_short">daily avg</string>
+    <string name="usage_stats_vs_yesterday">vs yesterday</string>
+    <string name="usage_stats_vs_previous_period">vs previous period</string>
+    <string name="usage_stats_top_apps">Top Apps</string>
+    <string name="usage_stats_time_of_day">App Opens by Hour</string>
+    <string name="usage_stats_by_day">By Day</string>
+    <string name="usage_stats_weekday_averages">Weekday Averages</string>
+    <string name="usage_stats_detox_impact">Detox Impact</string>
+    <string name="usage_stats_badge_grayscale">Grayscale</string>
+    <string name="usage_stats_badge_disabled">Disabled</string>
+    <string name="usage_stats_badge_doom_scroll">Scroll Guard</string>
+    <string name="usage_stats_grayscale_time">In Grayscale</string>
+    <string name="usage_stats_color_remaining">Color Left</string>
+    <string name="usage_stats_scroll_breaks">Scroll Breaks</string>
+    <string name="usage_stats_blocks">Blocked</string>
+    <string name="usage_stats_launches">%d opens</string>
+    <string name="usage_stats_opens_short">opens</string>
+    <string name="usage_stats_sessions_short">sessions</string>
+    <string name="usage_stats_avg_session">avg session</string>
+    <string name="usage_stats_unlocks_short">unlocks</string>
+    <string name="usage_stats_other">Other</string>
+    <string name="usage_stats_app_details">Details</string>
+    <string name="usage_stats_quick_actions">Quick Actions</string>
+    <string name="usage_stats_no_active_features">No active features to manage</string>
+    <string name="usage_stats_add_grayscale">Add to grayscale</string>
+    <string name="usage_stats_remove_grayscale">Remove from grayscale</string>
+    <string name="usage_stats_add_scroll_guard">Add doom scroll guard</string>
+    <string name="usage_stats_remove_scroll_guard">Remove doom scroll guard</string>
+    <string name="usage_stats_disable_app">Disable app</string>
+    <string name="usage_stats_enable_app">Enable app</string>
+    <string name="usage_stats_no_data">No data for this period</string>
+    <string name="usage_stats_screen_time">Screen Time</string>
+    <string name="usage_stats_trend_7d">7-Day Trend</string>
+    <string name="usage_stats_screen_unlocks">Screen Unlocks</string>
+    <string name="usage_stats_app_categories">App Categories</string>
+    <string name="usage_stats_scroll_intensity">Scroll Intensity</string>
+    <string name="usage_stats_scroll_intensity_subtitle">Combines scroll volume with scroll speed</string>
+    <string name="usage_stats_scroll_intensity_score">scroll intensity</string>
+    <string name="usage_stats_scroll_intensity_detail">%1$d scrolls · %2$.1f/min</string>
+    <string name="usage_stats_scroll_intensity_info">Combines total scroll count with the rate per minute (using a sqrt weighting) so brief bursts cannot outrank sustained doom-scrolling. Higher = more doom-scrolling.</string>
+    <string name="usage_stats_show_more">Show more</string>
+    <string name="usage_stats_show_less">Show less</string>
+    <string name="usage_stats_sort">Sort by</string>
+    <string name="usage_stats_sort_screen_time">By Screen Time</string>
+    <string name="usage_stats_sort_opens">By Opens</string>
+    <string name="usage_stats_sort_scroll_intensity">By Scroll Intensity</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="duration_hours_short">%dh</string>
+    <string name="duration_minutes_short">%dm</string>
+    <string name="duration_hours_compact">%1$dh%2$dm</string>
+    <string name="distance_meters">%d m</string>
+    <string name="distance_kilometers">%.1f km</string>
+    <string name="usage_stats_perspective">In Perspective</string>
+    <string name="usage_stats_perspective_subtitle">The same numbers, made tangible</string>
+    <string name="usage_stats_perspective_footer">No judgement — time just gets easier to feel this way.</string>
+    <string name="usage_stats_odometer_label">of content scrolled past</string>
+    <string name="usage_stats_odometer_comparison">≈ %1$s × %2$s</string>
+    <string name="usage_stats_odometer_floors">≈ %1$d floors of scrolling</string>
+    <string name="landmark_statue_of_liberty">the Statue of Liberty</string>
+    <string name="landmark_eiffel_tower">the Eiffel Tower</string>
+    <string name="landmark_empire_state">the Empire State Building</string>
+    <string name="landmark_burj_khalifa">the Burj Khalifa</string>
+    <string name="landmark_mount_everest">Mount Everest</string>
+    <string name="landmark_marathon">a marathon</string>
+    <string name="usage_stats_time_value_setup">What\'s an hour of your time worth?</string>
+    <string name="usage_stats_time_value_hint">Tap to see what your screen time is worth</string>
+    <string name="usage_stats_time_value_label">your screen time, valued at %1$s</string>
+    <string name="usage_stats_time_value_off">off</string>
+    <string name="usage_stats_rate_per_hour">%1$s/h</string>
+    <string name="chart_tooltip_opens">%1$02d:00 — %2$d opens</string>
+    <string name="chart_tooltip_unlocks">%1$02d:00 — %2$d unlocks</string>
+    <string name="chart_percent">%1$s %2$d%%</string>
+    <string name="usage_stats_category_other">Other</string>
+    <!-- endregion -->
+
+    <!-- region Premium -->
+    <string name="navigation.premium">DetoxDroid Premium</string>
+    <string name="premium.tile.subtitle">Support the project &amp; unlock power-user extras</string>
+    <!-- Sheet headline adapts to what opened it -->
+    <string name="premium.sheet.title.generic">Support DetoxDroid</string>
+    <string name="premium.sheet.title.nudge">Getting a lot out of DetoxDroid?</string>
+    <string name="premium.sheet.title.locked">Unlock %1$s</string>
+    <string name="premium.sheet.subtitle">Free, open-source and ad-free — maintained by one person.</string>
+    <!-- Personal impact card ("reciprocity beats feature lists") -->
+    <string name="premium.impact.title">Your detox so far</string>
+    <string name="premium.impact.interventions">times DetoxDroid stepped in</string>
+    <string name="premium.impact.grayscale">spent in grayscale</string>
+    <string name="premium.impact.days">days of stats</string>
+    <string name="premium.impact.count">%d×</string>
+    <string name="premium.extras.title">Less than a coffee, just once</string>
+    <string name="premium.extras.body">Just a nudge to unlock the power-user extras — a one-time tip costs almost nothing but goes a long way.</string>
+    <string name="premium.unlocked.title">Premium unlocked</string>
+    <string name="premium.unlocked.subtitle">Thank you for supporting DetoxDroid 💚</string>
+    <string name="premium.unlocked.body">All extras are on. If DetoxDroid keeps earning its place on your phone, the tip jar is right below.</string>
+    <string name="premium.action.donatedUnlock">I\'ve donated — unlock</string>
+    <string name="premium.action.freeUnlock">Unlock without donating</string>
+    <string name="premium.action.buy">Unlock Premium</string>
+    <string name="premium.action.relock">Reset</string>
+    <string name="premium.action.done">Done</string>
+    <string name="premium.locked.footer">The lock is just a nudge — no tracking, no strings attached.</string>
+    <string name="premium.feature.usageHistory">longer usage history</string>
+    <string name="premium.chip.lockedLabel">Premium</string>
     <!-- endregion -->
 </resources>

@@ -63,11 +63,12 @@ open class FeatureViewModel @Inject constructor(
     }
 
     /**
-     * Toggles the active state of the feature.
+     * Toggles the active state of the feature. Missing permissions only block *activation* —
+     * deactivating must always work, even if the permission was revoked in the meantime.
      * @return The new active state of the feature or null if the necessary permissions are missing
      */
     internal fun toggleFeatureActive(): Boolean? {
-        if (activationNeedsPermission()) {
+        if (!feature.isActivated && activationNeedsPermission()) {
             return null
         }
         feature.isActivated = !feature.isActivated

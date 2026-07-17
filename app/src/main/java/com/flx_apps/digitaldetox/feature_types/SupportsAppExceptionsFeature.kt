@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.feature_types
 
-import AppExceptionsListSettingsSheet
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStoreProperty
@@ -35,12 +34,21 @@ interface SupportsAppExceptionsFeature {
      * sense to have a list of apps that are *not* blocked.
      *
      * This property affects the UI of the app exceptions screen, cf.
-     * [AppExceptionsListSettingsSheet].
+     * [com.flx_apps.digitaldetox.ui.screens.app_exceptions.AppExceptionsListSettingsSheet].
      */
     val listTypes: List<AppExceptionListType>
         get() = listOf(
             AppExceptionListType.NOT_LIST, AppExceptionListType.ONLY_LIST
         )
+
+    /**
+     * Whether this feature currently applies to [packageName], given the exception list and its
+     * [appExceptionListType].
+     */
+    fun appliesTo(packageName: String): Boolean {
+        val isListed = appExceptions.contains(packageName)
+        return if (appExceptionListType == AppExceptionListType.ONLY_LIST) isListed else !isListed
+    }
 
     /**
      * The implementation of the [SupportsAppExceptionsFeature] interface.

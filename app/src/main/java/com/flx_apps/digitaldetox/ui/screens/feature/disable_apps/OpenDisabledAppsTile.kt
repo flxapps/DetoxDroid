@@ -1,10 +1,10 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
-import ManageAppExceptionsScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
+import com.flx_apps.digitaldetox.ui.screens.app_exceptions.ManageAppExceptionsScreen
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 
 /**

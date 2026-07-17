@@ -2,7 +2,6 @@ package com.flx_apps.digitaldetox.feature_types
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Rect
 import android.view.accessibility.AccessibilityEvent
 
 /**
@@ -36,28 +35,25 @@ interface OnAppOpenedSubscriptionFeature {
 interface OnScrollEventSubscriptionFeature {
     companion object {
         /**
-         * Calculates a unique ID for the scroll view that triggered the scroll event.
+         * Calculates a stable ID for the scroll view that triggered the scroll event.
          *
          * We do not want to use accessibilityEvent.source.hashCode(), because that would generate
          * new ids for e.g. different Twitter profile feeds. However, we want to treat different
-         * Twitter profile feeds as one scroll view though, because they belong to the same
-         * "infinitely scrolling" behavior triggering UI element.
+         * Twitter profile feeds as one scroll view, because they belong to the same "infinitely
+         * scrolling" behavior triggering UI element.
          *
-         * So instead, we do some elaborate calculation to get a unique ID for the scroll view
-         * that takes into account the class name, package name, bounds and view id resource name.
+         * The ID is therefore derived from the class name, package name and view-id resource name.
+         * The view bounds are deliberately *not* part of the ID: they shift with IME/layout changes
+         * and would reset the endless-feed tracking mid-session. (Historically the code appeared to
+         * hash the bounds, but actually hashed the `Unit` return value of `getBoundsInScreen` — a
+         * constant — so this is the behavior the detection has always had.)
          *
          * @param accessibilityEvent The accessibility event that triggered the scroll event.
          */
         fun calculateScrollViewId(accessibilityEvent: AccessibilityEvent): Int {
-            // we will not use accessibilityEvent.source.hashCode(), because that generates new ids
-            // for e.g. different Twitter profile feeds - we want to treat different Twitter profile
-            // feeds as one scroll view though, because they belong to the same "infinitely scrolling"
-            // behavior triggering UI element
-            // so instead, we do some elaborate calculation to get a unique ID for the scroll view
-            // that takes into account the class name, package name, bounds and view id resource name
-            return accessibilityEvent.className.hashCode() + accessibilityEvent.packageName.hashCode() + accessibilityEvent.source!!.getBoundsInScreen(
-                Rect()
-            ).hashCode() + (accessibilityEvent.source!!.viewIdResourceName?.hashCode() ?: 0)
+            return accessibilityEvent.className.hashCode() +
+                    accessibilityEvent.packageName.hashCode() +
+                    (accessibilityEvent.source?.viewIdResourceName?.hashCode() ?: 0)
         }
     }
 

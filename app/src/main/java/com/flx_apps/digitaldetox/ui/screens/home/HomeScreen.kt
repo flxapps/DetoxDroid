@@ -1,25 +1,25 @@
 package com.flx_apps.digitaldetox.ui.screens.home
 
-import StatusIndicator
-import android.annotation.SuppressLint
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
@@ -30,6 +30,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -46,7 +47,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
@@ -54,13 +61,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import co.yml.charts.common.components.Legends
-import co.yml.charts.common.model.AccessibilityConfig
-import co.yml.charts.common.model.PlotType
-import co.yml.charts.common.utils.DataUtils
-import co.yml.charts.ui.piechart.charts.DonutPieChart
-import co.yml.charts.ui.piechart.models.PieChartConfig
-import co.yml.charts.ui.piechart.models.PieChartData
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
@@ -74,13 +74,15 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
+import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.time.temporal.ChronoUnit
+import kotlin.math.atan2
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -117,13 +119,14 @@ private fun HomeScreenSnackbarContents(
     val context = LocalContext.current
     val snackbarState = homeViewModel.snackbarState.collectAsState().value
     if (snackbarState == HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually) {
-        LaunchedEffect(key1 = "", block = {
+        LaunchedEffect(key1 = snackbarState, block = {
             val result = snackbarHostState.showSnackbar(
                 message = context.getString(R.string.action_requestPermissions),
                 actionLabel = context.getString(R.string.action_go),
             )
+            // always reset, so the snackbar can be shown again on the next failed attempt
+            homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
             if (result == SnackbarResult.ActionPerformed) {
-                homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
                 NavigationUtil.openAccessibilitySettings(context)
             }
         })
@@ -167,11 +170,11 @@ private fun AppBar(
                                 DetoxDroidState.Inactive -> R.string.home_state_inactive
                                 DetoxDroidState.Paused -> R.string.home_state_paused
                             }, if (detoxDroidState == DetoxDroidState.Paused) {
-                                LocalDateTime.now().plus(
-                                    PauseButtonFeature.pauseDuration, ChronoUnit.MILLIS
-                                ).format(
-                                    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
-                                )
+                                // show the actual end of the running pause, not "now + duration"
+                                Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                                    .atZone(ZoneId.systemDefault()).toLocalTime().format(
+                                        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+                                    )
                             } else ""
                         ), style = MaterialTheme.typography.labelSmall
                     )
@@ -196,8 +199,11 @@ private fun AppBar(
 private fun StartStopActionButton(
     detoxDroidState: DetoxDroidState, homeViewModel: HomeViewModel = viewModel()
 ) {
-    val cpLocked = com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isActivated &&
-            !com.flx_apps.digitaldetox.features.CommitmentPasswordFeature.isSessionUnlocked()
+    // observed so the lock badge updates when the commitment password is (un)locked
+    val commitmentPasswordStateToken = CommitmentPasswordFeature.stateToken.collectAsState().value
+    val cpLocked = remember(commitmentPasswordStateToken) {
+        CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
+    }
 
     ExtendedFloatingActionButton(
         text = {
@@ -232,7 +238,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues, viewModel: HomeViewModel = viewModel()) {
+private fun HomeScreenContent(it: PaddingValues) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -284,7 +290,10 @@ fun OpenFeatureTile(
             )
         },
         trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxHeight()
+            ) {
                 if (feature.isActivated) {
                     StatusIndicator(indicatorColor = colorResource(id = R.color.green))
                 }
@@ -365,33 +374,20 @@ fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
  * A [DonutPieChart] that displays the screen time of the current day and the apps that were used
  * today.
  */
-@SuppressLint("UnusedBoxWithConstraintsScope")
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
-    // TODO simple workaround to re-render the chart when the lifecycle state changes; it would
-    //  perhaps be better to use rememberLauncherForActivityResult to request the usage stats
-    @Suppress("unused", "UnusedVariable") val lifecycleState =
-        LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    // observed so the chart re-renders when the user returns to the screen
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
 
     val context = LocalContext.current
-    val stats = UsageStatsProvider.getUpdatedUsageStatsToday()
-    val selectedSlice = remember { mutableStateOf<PieChartData.Slice?>(null) }
+    // keyed on the lifecycle state: refresh when the user returns to the screen, but never
+    // re-query the (blocking) UsageStatsManager on ordinary recompositions such as slice taps
+    val stats = remember(lifecycleState) { UsageStatsProvider.getUpdatedUsageStatsToday() }
+    val selectedIndex = remember { mutableStateOf(-1) }
 
-
-    // only show the top 5 apps in the chart
     val chartStats = stats.values.sortedByDescending { it.totalTimeInForeground }.take(5)
     val screenTime = stats.values.sumOf { it.totalTimeInForeground }
-    val donutChartConfig = PieChartConfig(
-        strokeWidth = 32f,
-        activeSliceAlpha = .9f,
-        isAnimationEnable = true,
-        backgroundColor = Color.Transparent,
-        isSumVisible = false,
-        accessibilityConfig = AccessibilityConfig(
-            chartDescription = "Screen time today: ${screenTime / 1000 / 60} minutes"
-        ),
-    )
     val colors = listOf(
         colorResource(id = R.color.pink),
         colorResource(id = R.color.orange),
@@ -401,64 +397,115 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
+    val otherLabel = stringResource(id = R.string.usage_stats_other)
     val otherTime =
-        (screenTime - chartStats.sumOf { it.totalTimeInForeground }.toFloat()).coerceAtLeast(1f);
-    val donutChartData = PieChartData(
-        slices = chartStats.mapIndexed { index, appStats ->
-            PieChartData.Slice(
-                packageManager.getApplicationInfo(appStats.packageName, 0).loadLabel(packageManager)
-                    .toString(),
-                appStats.totalTimeInForeground.toFloat(),
-                color = colors[index % colors.size]
-            )
-        }.plus(
-            PieChartData.Slice(
-                "Other", otherTime, color = colors[colors.size - 1]
-            )
-        ), plotType = PlotType.Donut
-    )
+        (screenTime - chartStats.sumOf { it.totalTimeInForeground }.toFloat()).coerceAtLeast(1f)
+
+    // apps can disappear from PackageManager while still being present in today's usage stats
+    val slices = chartStats.map { appStats ->
+        val label = runCatching {
+            packageManager.getApplicationInfo(appStats.packageName, 0)
+                .loadLabel(packageManager).toString()
+        }.getOrDefault(appStats.packageName)
+        label to appStats.totalTimeInForeground.toFloat()
+    }.plus(otherLabel to otherTime)
+
+    val totalValue = slices.fold(0f) { acc, pair -> acc + pair.second }.coerceAtLeast(1f)
+
+    val sweepAngles = slices.map { (it.second / totalValue) * 360f }
+
     Column {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            DonutPieChart(
-                modifier = Modifier
-                    .fillMaxSize(fraction = 0.75f)
-                    .padding(16.dp),
-                pieChartData = donutChartData,
-                pieChartConfig = donutChartConfig,
-                onSliceClick = {
-                    if (selectedSlice.value == it) selectedSlice.value = null
-                    else selectedSlice.value = it
-                })
+            if (stats.isNotEmpty()) {
+                Canvas(
+                    modifier = Modifier
+                        .size(200.dp)
+                        // keyed on the slice angles: tap detection must not keep using a stale
+                        // capture after the stats refresh
+                        .pointerInput(sweepAngles) {
+                            detectTapGestures { offset ->
+                                val canvasSize = this.size
+                                val centerX = canvasSize.width / 2f
+                                val centerY = canvasSize.height / 2f
+                                val dx = offset.x - centerX
+                                val dy = offset.y - centerY
+                                val dist = kotlin.math.sqrt(dx * dx + dy * dy)
+                                val strokePx = 32.dp.toPx()
+                                val minDim = if (canvasSize.width < canvasSize.height) canvasSize.width else canvasSize.height
+                                val outerRadius = (minDim - strokePx) / 2f
+                                val innerRadius = outerRadius - strokePx
+                                if (dist >= innerRadius && dist <= outerRadius) {
+                                    var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
+                                    if (angle < 0f) angle += 360f
+                                    var cumAngle = 0f
+                                    var found = -1
+                                    for (i in sweepAngles.indices) {
+                                        cumAngle += sweepAngles[i]
+                                        if (angle < cumAngle) {
+                                            found = i
+                                            break
+                                        }
+                                    }
+                                    selectedIndex.value = if (found == selectedIndex.value) -1 else found
+                                } else {
+                                    selectedIndex.value = -1
+                                }
+                            }
+                        }
+                ) {
+                    val strokeWidth = 32.dp.toPx()
+                    val radius = (size.minDimension - strokeWidth) / 2
+                    val topLeft = Offset(
+                        (size.width - radius * 2) / 2,
+                        (size.height - radius * 2) / 2
+                    )
+                    var startAngle = -90f
+                    slices.forEachIndexed { index, _ ->
+                        val sweepAngle = sweepAngles[index]
+                        drawArc(
+                            color = colors[index % colors.size].let { color ->
+                                if (selectedIndex.value == index) color.copy(alpha = 0.6f) else color
+                            },
+                            startAngle = startAngle,
+                            sweepAngle = sweepAngle,
+                            useCenter = false,
+                            topLeft = topLeft,
+                            size = Size(radius * 2, radius * 2),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                        )
+                        startAngle = startAngle + sweepAngle
+                    }
+                }
+            }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (stats.isNotEmpty()) {
-                    if (selectedSlice.value != null) {
-                        val selectedIndex = donutChartData.slices.indexOf(selectedSlice.value)
-                        if (selectedIndex >= 0 && selectedIndex < chartStats.count()) {
-                            val selectedStat = chartStats[selectedIndex]
-                            Text(
-                                text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(),
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = packageManager.getApplicationInfo(
-                                    selectedStat.packageName, 0
-                                ).loadLabel(packageManager).toString(),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        } else {
-                            Text(
-                                text = otherTime.toLong().milliseconds.toHrMinString(),
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = "Other", style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                    val idx = selectedIndex.value
+                    if (idx >= 0 && idx < chartStats.count()) {
+                        val selectedStat = chartStats[idx]
+                        Text(
+                            text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(context),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = slices[idx].first,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    } else if (idx == chartStats.count()) {
+                        Text(
+                            text = otherTime.toLong().milliseconds.toHrMinString(context),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = otherLabel, style = MaterialTheme.typography.labelSmall
+                        )
                     } else {
                         Text(
-                            text = screenTime.milliseconds.toHrMinString(),
+                            text = screenTime.milliseconds.toHrMinString(context),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
@@ -477,13 +524,53 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
         }
-        if (chartStats.isNotEmpty()) {
-            Legends(
+        if (slices.isNotEmpty()) {
+            FlowRow(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .heightIn(min = 100.dp, max = 200.dp),
-                legendsConfig = DataUtils.getLegendsConfigFromPieChartData(donutChartData, 3)
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                slices.forEachIndexed { index, slice ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { selectedIndex.value = if (selectedIndex.value == index) -1 else index }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .then(
+                                    Modifier.drawBehind {
+                                        drawCircle(color = colors[index % colors.size])
+                                    }
+                                )
+                        )
+                        Text(
+                            text = slice.first,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(start = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+        if (stats.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = {
+                    navViewModel.openRoute(NavigationRoutes.UsageStats)
+                }) {
+                    Text(stringResource(id = R.string.usage_stats_more))
+                    Icon(
+                        Icons.Default.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
 }

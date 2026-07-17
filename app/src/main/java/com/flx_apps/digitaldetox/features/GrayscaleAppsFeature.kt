@@ -1,17 +1,20 @@
 package com.flx_apps.digitaldetox.features
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsWriteSecureSettingsPermission
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -21,6 +24,8 @@ import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.eventuallyIncreaseUsedUpScreenTime
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.onAppOpened
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 
@@ -39,7 +44,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId),
-    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature {
+    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature, PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,
@@ -71,6 +76,12 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private var defaultDaltonizerEnabled: Int = 0
 
     /**
+     * Represents, whether the extra dim filter is currently active.
+     * We use this variable in order to avoid unnecessary calls to the system settings.
+     */
+    private var isCurrentlyExtraDim: Boolean = false
+
+    /**
      * Whether the extra dim filter should be turned on when the grayscale filter is active.
      */
     var extraDim: Boolean by DataStoreProperty(
@@ -95,15 +106,49 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
+     * Time actually spent with the grayscale filter applied today. Only the portion of tracked
+     * screen time above the [allowedDailyColorScreenTime] allowance counts — the allowance
+     * portion is spent in color.
+     */
+    fun currentGrayscaleTimeMs(): Long =
+        (currentUsedUpScreenTime() - allowedDailyColorScreenTime).coerceAtLeast(0L)
+
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+    /**
+     * Fires when the color-screen-time allowance is expected to run out mid-session. Without it,
+     * the filter would only engage on the next window change, so a user could stay inside a single
+     * color app indefinitely. [ScreenTimeTrackingFeature.trackingSinceTimestamp] doubles as the
+     * "still in a color app" signal: leaving the app or turning the screen off resets it.
+     */
+    private val allowanceExhaustedChecker = Runnable {
+        kotlin.runCatching {
+            if (!isActive() || trackingSinceTimestamp == 0L) return@Runnable
+            if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return@Runnable
+            if (allowedDailyColorScreenTime > 0 && currentUsedUpScreenTime() > allowedDailyColorScreenTime) {
+                setGrayscale(DetoxDroidApplication.appContext, true)
+            }
+        }
+    }
+
+    private fun scheduleAllowanceExhaustedCheck() {
+        mainHandler.removeCallbacks(allowanceExhaustedChecker)
+        val remainingMs = allowedDailyColorScreenTime - currentUsedUpScreenTime()
+        if (remainingMs <= 0) return
+        mainHandler.postDelayed(allowanceExhaustedChecker, remainingMs + 250)
+    }
+
+    /**
      * On start, we trigger [onAppOpened] once to turn the grayscale filter on or off depending on
-     * the current app. We also read the actual system state to initialize [isCurrentlyGrayscale],
-     * so that saved defaults are not overwritten if the service (re-) starts while grayscale is active.
+     * the current app. We also read the actual system state to initialize cached filter state, so
+     * saved defaults are not overwritten if the service (re-)starts while filters are active.
      */
     override fun onStart(context: Context) {
         val contentResolver = context.contentResolver
         isCurrentlyGrayscale =
             Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
             Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
+        isCurrentlyExtraDim = Settings.Secure.getInt(contentResolver, EXTRA_DIM, 0) == 1
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
     }
@@ -112,6 +157,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * On a pause, turn the grayscale filter off.
      */
     override fun onPause(context: Context) {
+        mainHandler.removeCallbacks(allowanceExhaustedChecker)
         setGrayscale(context, false)
     }
 
@@ -126,22 +172,24 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // we are not in full screen mode, so we do not want to interfere with the app
             return
         }
-        val exceptionsContainApp = appExceptions.contains(packageName)
-        // we want to turn the grayscale filter on if:
-        // - the allowed screen time is exceeded and
-        //   - either the app is not in the exceptions list and the exceptions list is a "not-list",
-        //   - or if the app is in the exceptions list and the exceptions list is an "only-list"
-        val shouldBeGrayscale =
-            (!exceptionsContainApp && appExceptionListType == AppExceptionListType.NOT_LIST) || (exceptionsContainApp && appExceptionListType == AppExceptionListType.ONLY_LIST)
+        // the grayscale filter should be on while an app covered by the exception list config is
+        // in the foreground (and the daily color allowance, if any, is used up)
+        val shouldBeGrayscale = appliesTo(packageName)
 
         if (!shouldBeGrayscale) {
             // the grayscale filter should not be turned on, so we increase the used up screen time
             eventuallyIncreaseUsedUpScreenTime()
         } else {
             eventuallyStartTracking()
-            if (allowedDailyColorScreenTime > 0 && usedUpScreenTime <= allowedDailyColorScreenTime) {
-                // the screen time has not been used up yet, so we do not need to turn the grayscale
-                // filter on
+            // currentUsedUpScreenTime() includes the running tracking session, so the allowance
+            // also runs out while the user stays inside a single color app
+            if (allowedDailyColorScreenTime > 0 && currentUsedUpScreenTime() <= allowedDailyColorScreenTime) {
+                // allowance available → the user gets color; also lift a still-active filter
+                // (e.g. right after the midnight reset or after the allowance was raised)
+                if (isCurrentlyGrayscale) setGrayscale(context, false)
+                // re-check when the allowance is expected to be used up, because no further
+                // window events arrive while the user stays in this app
+                scheduleAllowanceExhaustedCheck()
                 return
             }
         }
@@ -221,9 +269,12 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setExtraDim(
         context: Context, extraDim: Boolean
     ): Boolean {
+        if (isCurrentlyExtraDim == extraDim) return true
         val contentResolver = context.contentResolver
-        return Settings.Secure.putInt(
+        val result = Settings.Secure.putInt(
             contentResolver, EXTRA_DIM, if (extraDim) 1 else 0
         )
+        if (result) isCurrentlyExtraDim = extraDim
+        return result
     }
 }

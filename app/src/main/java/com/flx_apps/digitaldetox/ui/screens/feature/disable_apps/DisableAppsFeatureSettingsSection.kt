@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
-import OptionsRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -29,6 +28,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
+import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -49,7 +49,9 @@ fun AllowedDailyTimeTile(
 ) {
     val context = LocalContext.current
     val allowedDailyScreenTimeInMinutes = viewModel.allowedDailyTime.collectAsState().value
-    val usedUpScreenTime = DisableAppsFeature.usedUpScreenTime.milliseconds.inWholeMinutes.toInt()
+    // includes the still-running tracking session, so the display doesn't lag behind
+    val usedUpScreenTime =
+        DisableAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
@@ -70,12 +72,12 @@ fun AllowedDailyTimeTile(
         ),
         trailing = {
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                androidx.compose.material.Text(
+                Text(
                     stringResource(
                         id = R.string.time__minutes, allowedDailyScreenTimeInMinutes
                     )
                 )
-                androidx.compose.material.Text(
+                Text(
                     modifier = Modifier.padding(top = 8.dp), text = stringResource(
                         id = R.string.time__minutes, usedUpScreenTime
                     ) + "\n" + stringResource(

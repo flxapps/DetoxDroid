@@ -41,12 +41,12 @@ object ShizukuUtils {
         }
         Timber.d("Shizuku installed: $isInstalled")
         if (isInstalled) {
-            val shizukuRunning = try {
+            return try {
                 Shizuku.pingBinder()
             } catch (e: Exception) {
                 Timber.w("Shizuku binder not available: ${e.message}")
+                false
             }
-            return shizukuRunning == true
         }
         return false
     }
@@ -57,6 +57,14 @@ object ShizukuUtils {
      */
     fun isShizukuRunningButNotGranted(): Boolean {
         return isShizukuAvailable() && !checkSelfPermission()
+    }
+
+    /**
+     * True when Shizuku is running *and* permission is already granted, i.e. [executeCommand]
+     * will run without prompting the user with a permission dialog.
+     */
+    fun canExecuteCommandsSilently(): Boolean {
+        return isShizukuAvailable() && checkSelfPermission()
     }
 
     /**
@@ -112,13 +120,19 @@ object ShizukuUtils {
             if (isShizukuRunningButNotGranted()) {
                 requestShizukuPermission()
 
-                // Wait for permission to be granted and re-call the command
-                Shizuku.addRequestPermissionResultListener { requestCode, result ->
-                    if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE && result == PackageManager.PERMISSION_GRANTED) {
-                        Timber.d("Shizuku permission granted, re-executing command")
-                        executeCommand(command, onCompleted)
+                // Wait for permission to be granted, then re-call the command once. The listener
+                // removes itself so repeated calls don't accumulate listeners.
+                val listener = object : Shizuku.OnRequestPermissionResultListener {
+                    override fun onRequestPermissionResult(requestCode: Int, grantResult: Int) {
+                        if (requestCode != SHIZUKU_PERMISSION_REQUEST_CODE) return
+                        Shizuku.removeRequestPermissionResultListener(this)
+                        if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                            Timber.d("Shizuku permission granted, re-executing command")
+                            executeCommand(command, onCompleted)
+                        }
                     }
                 }
+                Shizuku.addRequestPermissionResultListener(listener)
 
                 onCompleted?.invoke(
                     false,

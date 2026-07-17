@@ -6,14 +6,13 @@
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission
-        android:name="android.permission.WRITE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
 
     <!-- SYSTEM_ALERT_WINDOW permission in order to show the overlay for disabling apps / breaking infinite scrolling -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- KILL_BACKGROUND_PROCESSES permission in order to kill apps from the overlay -->
+    <!-- KILL_BACKGROUND_PROCESSES permission for best-effort force-stopping a doom-scrolling app
+         from the overlay on Android 13 and below (see ForceStopUtil); a no-op for other packages
+         since Android 14 -->
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <!-- DEVICE_ADMIN permission in order to deactivate apps -->
@@ -44,14 +43,8 @@
         android:name="android.permission.BIND_QUICK_SETTINGS_TILE"
         tools:ignore="ProtectedPermissions" />
 
-    <!-- android.permission.KILL_BACKGROUND_PROCESSES permission to kill apps from the overlay -->
-    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
-
     <!-- Shizuku permission for non-root privileged operations -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
-
-    <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission to prevent the app from being killed by the system -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- FOREGROUND_SERVICE and POST_NOTIFICATIONS permissions to prevent the app from being killed by the system -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -130,13 +123,6 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".system_integration.ScreenTurnedOffReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.SCREEN_OFF" />
-            </intent-filter>
-        </receiver>
-        <receiver
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetProvider"
             android:exported="false"
             android:label="@string/widget.minimalLauncher.name">
@@ -155,7 +141,7 @@
         <service
             android:name="android.service.voice.VoiceInteractionService"
             android:exported="false"
-            android:label="Test Voice Interaction Service"
+            android:label="@string/app.name_"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:process=":interactor">
             <meta-data

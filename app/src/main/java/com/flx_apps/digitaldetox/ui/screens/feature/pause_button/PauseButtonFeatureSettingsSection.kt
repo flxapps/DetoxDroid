@@ -4,13 +4,21 @@ import android.os.Build
 import android.view.KeyEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AppShortcut
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timelapse
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,9 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,13 +59,90 @@ fun PauseButtonFeatureSettingsSection(
         PauseButtonFeatureSettingsViewModelDialog.PAUSE_DURATION -> PauseDurationDialog()
         PauseButtonFeatureSettingsViewModelDialog.TIME_BETWEEN_PAUSES_DURATION -> TimeBetweenPausesDialog()
         PauseButtonFeatureSettingsViewModelDialog.PICK_HARDWARE_KEY -> PickHardwareKeyDialog()
+        PauseButtonFeatureSettingsViewModelDialog.AFFECTED_FEATURES -> AffectedFeaturesDialog()
         else -> {} // No dialog is shown
     }
     PauseDurationTile()
     MinimumTimeBetweenPausesTile()
+    AffectedFeaturesTile()
     NotificationSettingsTile()
     PauseFromAssistantTile()
     PauseFromHardwareButtonTile()
+}
+
+/**
+ * A tile that opens a dialog for choosing which features a pause affects.
+ * @see PauseButtonFeature.pauseExemptFeatureIds
+ */
+@Composable
+private fun AffectedFeaturesTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
+    val exempt = viewModel.pauseExemptFeatureIds.collectAsState().value
+    val total = viewModel.pausableFeatures.size
+    val affected = total - viewModel.pausableFeatures.count { it.id in exempt }
+    SimpleListTile(
+        leadingIcon = Icons.Default.Tune,
+        titleText = stringResource(id = R.string.feature_pause_affectedFeatures),
+        subtitleText = if (affected == total) {
+            stringResource(id = R.string.feature_pause_affectedFeatures_all)
+        } else {
+            stringResource(id = R.string.feature_pause_affectedFeatures_count, affected, total)
+        },
+        onClick = {
+            viewModel.setVisibilityOfDialog(
+                PauseButtonFeatureSettingsViewModelDialog.AFFECTED_FEATURES
+            )
+        },
+    )
+}
+
+/**
+ * A dialog listing every pausable feature with a checkbox. Checked features are suspended during a
+ * pause; unchecked ones keep running.
+ */
+@Composable
+private fun AffectedFeaturesDialog(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
+    val exempt = viewModel.pauseExemptFeatureIds.collectAsState().value
+    AlertDialog(
+        onDismissRequest = {
+            viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
+        },
+        title = { Text(text = stringResource(id = R.string.feature_pause_affectedFeatures)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(id = R.string.feature_pause_affectedFeatures_dialogHint),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                viewModel.pausableFeatures.forEach { feature ->
+                    val affected = feature.id !in exempt
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.setFeatureAffectedByPause(feature.id, !affected)
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(checked = affected, onCheckedChange = {
+                            viewModel.setFeatureAffectedByPause(feature.id, it)
+                        })
+                        Text(
+                            text = stringResource(id = feature.texts.title),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
+            }) {
+                Text(text = stringResource(id = R.string.action_close))
+            }
+        },
+    )
 }
 
 /**
@@ -204,11 +292,9 @@ fun PickHardwareKeyDialog(
         )
     } ?: stringResource(id = R.string.feature_pause_fromHardwareButton_noButtonPressed)
     AlertDialog(
-        onDismissRequest = {
-        viewModel.setVisibilityOfDialog(
-            PauseButtonFeatureSettingsViewModelDialog.NONE
-        )
-    },
+        // dismissing (tap outside/back) must go through hideHardwareKeyDialog: it removes the
+        // service's key-event listener, which otherwise keeps swallowing every hardware key
+        onDismissRequest = { viewModel.hideHardwareKeyDialog(null) },
         title = { Text(text = stringResource(id = R.string.feature_pause_fromHardwareButton_press)) },
         text = { Text(text = dialogText) },
         confirmButton = {
@@ -219,10 +305,21 @@ fun PickHardwareKeyDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                viewModel.hideHardwareKeyDialog(KeyEvent.KEYCODE_UNKNOWN)
-            }) {
-                Text(text = stringResource(id = R.string.action_cancel))
+            Row {
+                if (viewModel.hardwareKey.collectAsState().value != KeyEvent.KEYCODE_UNKNOWN) {
+                    // un-assign the configured key (the only way to get rid of it)
+                    TextButton(onClick = {
+                        viewModel.hideHardwareKeyDialog(KeyEvent.KEYCODE_UNKNOWN)
+                    }) {
+                        Text(text = stringResource(id = R.string.action_delete))
+                    }
+                }
+                // null = keep the previously configured key (cancel must not clear it)
+                TextButton(onClick = {
+                    viewModel.hideHardwareKeyDialog(null)
+                }) {
+                    Text(text = stringResource(id = R.string.action_cancel))
+                }
             }
         })
 }

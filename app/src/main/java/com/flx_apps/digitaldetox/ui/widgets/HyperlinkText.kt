@@ -1,3 +1,5 @@
+package com.flx_apps.digitaldetox.ui.widgets
+
 import android.text.Annotation
 import androidx.annotation.StringRes
 import androidx.compose.foundation.text.ClickableText

@@ -1,11 +1,11 @@
 package com.flx_apps.digitaldetox.system_integration
 
-import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
@@ -21,6 +21,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import timber.log.Timber
 
 /**
  * Service that can display an overlay on top of other apps
@@ -41,7 +42,15 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         get() = savedStateRegistryController.savedStateRegistry
     private lateinit var contentView: View
 
-    private lateinit var runningAppPackageName: String
+    /** Guards against a second dismiss (e.g. double tap) removing an already-removed view. */
+    private var dismissed = false
+
+    /**
+     * The package name of the app that was in the foreground when the overlay was requested
+     * (empty if the launching intent did not carry [EXTRA_RUNNING_APP_PACKAGE_NAME]).
+     */
+    var runningAppPackageName: String = ""
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -66,32 +75,36 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
             animate().alpha(1f).duration = 250
         }
 
-        // add ComposeView to window
+        // add ComposeView to window; the layout flags make the overlay truly edge-to-edge, so it
+        // also covers the status/navigation bar areas instead of stopping above them
         val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
         params.gravity = Gravity.RIGHT or Gravity.TOP
-        windowManager.addView(contentView, params)
+        // addView throws (BadTokenException) if the overlay permission was revoked after the
+        // feature was activated — degrade to not showing the overlay instead of crashing
+        kotlin.runCatching { windowManager.addView(contentView, params) }.onFailure {
+            Timber.e(it, "Could not attach overlay window")
+            dismissed = true
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // get the package name of the app that is currently running in the foreground
         runningAppPackageName = intent?.getStringExtra(EXTRA_RUNNING_APP_PACKAGE_NAME) ?: ""
         return super.onStartCommand(intent, flags, startId)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (this::runningAppPackageName.isInitialized) {
-            // try to kill the app that was running in the foreground
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            activityManager.killBackgroundProcesses(packageName)
-        }
     }
 
     /**
@@ -109,19 +122,44 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
         } else {
             // use the AlarmManager to go to home screen after a certain amount of time
             val pendingIntentToHome = PendingIntent.getActivity(
-                this, 0, intentToHome, PendingIntent.FLAG_UPDATE_CURRENT
+                this,
+                0,
+                intentToHome,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             val triggerTime = SystemClock.elapsedRealtime() + secondsUntilGoToHomeScreen * 1000
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerTime, pendingIntentToHome)
         }
+        dismissOverlay()
+    }
+
+    /**
+     * Dismisses the overlay and stops the service without redirecting to the home screen.
+     */
+    fun dismissOverlay() {
+        if (dismissed) return
+        dismissed = true
         // remove overlay after animation and stop service
         contentView.animate().alpha(0f).setDuration(250L).withEndAction {
             contentView.visibility = View.GONE
             val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-            windowManager.removeView(contentView)
+            kotlin.runCatching { windowManager.removeView(contentView) }
             stopSelf()
         }.start()
+    }
+
+    /**
+     * If the service is stopped externally (system pressure, stopService) without going through
+     * [dismissOverlay], the window would outlive the service — remove it here so it cannot leak.
+     */
+    override fun onDestroy() {
+        if (!dismissed && ::contentView.isInitialized) {
+            dismissed = true
+            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            kotlin.runCatching { windowManager.removeView(contentView) }
+        }
+        super.onDestroy()
     }
 }
 

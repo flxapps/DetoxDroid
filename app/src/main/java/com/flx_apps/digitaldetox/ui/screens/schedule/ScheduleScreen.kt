@@ -3,7 +3,6 @@ package com.flx_apps.digitaldetox.ui.screens.schedule
 import android.app.AlertDialog
 import android.app.TimePickerDialog
 import android.content.Context
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -76,9 +75,7 @@ fun FeatureScheduleScreen(
         }) {
             Column(modifier = Modifier.padding(paddingValues = it)) {
                 SettingsLockBannerIfNeeded(featureId = featureId)
-                Box {
-                    ScheduleRulesList(rules = scheduleViewModel.rules.collectAsState().value)
-                }
+                ScheduleRulesList(rules = scheduleViewModel.rules.collectAsState().value)
             }
             if (bottomSheetVisible) {
                 FeatureScheduleRuleBottomSheet()
@@ -88,23 +85,24 @@ fun FeatureScheduleScreen(
 }
 
 /**
- * The list of schedule rules for a feature.
+ * The list of schedule rules for a feature. The info card scrolls away together with the rules.
  */
 @Composable
 fun ScheduleRulesList(rules: Map<ScheduleRuleId, FeatureScheduleRule>) {
-    InfoCard(infoText = stringResource(id = R.string.feature_settings_schedule_description))
-    if (rules.isEmpty()) {
-        Center {
-            Text(
-                text = stringResource(id = R.string.feature_settings_schedule_empty),
-                textAlign = TextAlign.Center
-            )
+    LazyColumn {
+        item {
+            InfoCard(infoText = stringResource(id = R.string.feature_settings_schedule_description))
         }
-    } else {
-        LazyColumn {
+        if (rules.isEmpty()) {
             item {
-                InfoCard(infoText = stringResource(id = R.string.feature_settings_schedule_description))
+                Center {
+                    Text(
+                        text = stringResource(id = R.string.feature_settings_schedule_empty),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
+        } else {
             items(items = rules.toList()) { ruleItem ->
                 ScheduleRuleListItem(ruleItem)
             }

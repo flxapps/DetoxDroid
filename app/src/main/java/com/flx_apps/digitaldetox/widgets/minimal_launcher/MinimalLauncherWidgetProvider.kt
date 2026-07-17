@@ -40,7 +40,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
         val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        widgetScope.launch {
             try {
                 appWidgetIds.forEach { appWidgetId ->
                     MinimalLauncherWidgetConfigRepository.deleteSelectedPackagesAsync(appWidgetId)
@@ -57,7 +57,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         val pendingResult = goAsync()
-        CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+        widgetScope.launch {
             try {
                 appWidgetIds.forEach { appWidgetId ->
                     updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
@@ -69,11 +69,14 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        /** One process-wide scope for all widget work instead of a fresh scope per broadcast. */
+        private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, MinimalLauncherWidgetProvider::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+            widgetScope.launch {
                 appWidgetIds.forEach { appWidgetId ->
                     updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
                 }
@@ -85,7 +88,7 @@ class MinimalLauncherWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
+            widgetScope.launch {
                 updateAppWidgetInternal(context, appWidgetManager, appWidgetId)
             }
         }

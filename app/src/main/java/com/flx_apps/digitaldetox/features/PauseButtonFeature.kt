@@ -1,16 +1,22 @@
 package com.flx_apps.digitaldetox.features
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import com.flx_apps.digitaldetox.OneMinuteInMs
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
@@ -68,12 +74,62 @@ object PauseButtonFeature : Feature(), LockableFeature {
     )
 
     /**
-     * Holds the time until the pause is over.
+     * The ids of the [PausableFeature]s that a pause should *not* affect (i.e. features that keep
+     * running through a pause). Stored as an exclusion set so the default — an empty set — means "a
+     * pause affects every pausable feature", and features added in future are pausable by default.
+     * @see pausableFeatures
+     * @see isFeaturePaused
      */
-    private var pauseUntil = 0L
+    var pauseExemptFeatureIds: Set<FeatureId> by DataStoreProperty(
+        stringSetPreferencesKey("${id}_exemptFeatureIds"), setOf()
+    )
 
+    /** All features a pause can suspend, i.e. every [PausableFeature], in UI order. */
+    val pausableFeatures: List<Feature>
+        get() = FeaturesProvider.featureList.filter { it is PausableFeature }
+
+    /**
+     * Whether [feature] is currently suspended by an active pause — true only while a pause is
+     * running, for pausable features the user has not exempted. Consulted by the accessibility
+     * service before dispatching events to a feature.
+     */
+    fun isFeaturePaused(feature: Feature): Boolean =
+        isPausing() && feature is PausableFeature && feature.id !in pauseExemptFeatureIds
+
+    /**
+     * Holds the time until the pause is over. Also read by the UI to display the actual end time
+     * of a running pause.
+     */
+    var pauseUntil = 0L
+        private set
+
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+    /**
+     * Fires when the pause expires on its own, so features restart and the notification/tile stop
+     * claiming a pause is still running (previously the stale "Resume" action would silently start
+     * a new pause).
+     */
+    private val autoResumeRunnable = Runnable {
+        kotlin.runCatching { if (!isPausing()) resume() }
+    }
+
+    /**
+     * Called when the feature itself is deactivated or paused as a feature (NOT when the user
+     * presses the pause button — that is [beginPause]). A running pause must not survive the
+     * feature being switched off, otherwise DetoxDroid would stay paused with no way to resume.
+     */
     override fun onPause(context: Context) {
+        if (isPausing()) resume() else mainHandler.removeCallbacks(autoResumeRunnable)
+    }
+
+    /**
+     * Starts a user-initiated pause: all active features are suspended until [pauseUntil].
+     */
+    private fun beginPause(context: Context) {
         pauseUntil = System.currentTimeMillis() + pauseDuration
+        mainHandler.removeCallbacks(autoResumeRunnable)
+        mainHandler.postDelayed(autoResumeRunnable, pauseDuration + 250)
         Toast.makeText(
             context, context.getString(
                 R.string.app_quickSettingsTile_paused,
@@ -91,12 +147,16 @@ object PauseButtonFeature : Feature(), LockableFeature {
             resume()
             return
         }
-        if (System.currentTimeMillis() - pauseUntil < timeBetweenPausesDuration) {
-            val timeUntilNextPauseInMinutes =
-                TimeUnit.MILLISECONDS.toMinutes(timeBetweenPausesDuration - (System.currentTimeMillis() - pauseUntil))
-            // ignore pause
-            Toast.makeText(context, R.string.app_quickSettingsTile_noPause, Toast.LENGTH_SHORT)
-                .show()
+        val timeSincePauseEnd = System.currentTimeMillis() - pauseUntil
+        if (pauseUntil > 0 && timeSincePauseEnd < timeBetweenPausesDuration) {
+            // ignore pause and tell the user how long they have to wait (rounded up)
+            val minutesUntilNextPause =
+                (timeBetweenPausesDuration - timeSincePauseEnd + OneMinuteInMs - 1) / OneMinuteInMs
+            Toast.makeText(
+                context,
+                context.getString(R.string.app_quickSettingsTile_noPause, minutesUntilNextPause),
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
         pauseFeatures(context)
@@ -104,18 +164,28 @@ object PauseButtonFeature : Feature(), LockableFeature {
 
     fun pauseFeatures(context: Context, stop: Boolean = false) {
         if (!isActivated && !stop) return
+        if (!stop) beginPause(context) // a user pause; a stop just suspends the features
         FeaturesProvider.featureList.forEach {
-            if ((stop && it == this) || !it.isActive()) return@forEach // call onPause() only for active features
+            // call onPause() only for active features; this feature manages itself via beginPause
+            if (it == this || !it.isActive()) return@forEach
+            // a user pause leaves exempt features running; a full stop suspends everything
+            if (!stop && it.id in pauseExemptFeatureIds) return@forEach
             it.onPause(context)
         }
         DetoxDroidAccessibilityService.updateState()
     }
 
     fun resume() {
-        pauseUntil = 0
-        DetoxDroidAccessibilityService.instance.takeIf { it != null }?.let { service ->
-            // call onStart() for all active features if we have an instance of the service
-            FeaturesProvider.activeFeatures.onEach { it.onStart(service) }
+        // keep the actual end of the pause so the "minimum time between pauses" cooldown starts
+        // from the resume instead of being skipped entirely
+        pauseUntil = pauseUntil.coerceAtMost(System.currentTimeMillis())
+        mainHandler.removeCallbacks(autoResumeRunnable)
+        DetoxDroidAccessibilityService.instance?.let { service ->
+            // restart the features the pause suspended; exempt features were never paused
+            FeaturesProvider.activeFeatures.forEach {
+                if (it.id in pauseExemptFeatureIds) return@forEach
+                it.onStart(service)
+            }
             // Update the foreground notification to reflect resumed state
             service.updateForegroundNotification()
         }

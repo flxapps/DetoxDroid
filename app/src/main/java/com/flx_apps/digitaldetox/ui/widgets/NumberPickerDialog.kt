@@ -1,18 +1,21 @@
 package com.flx_apps.digitaldetox.ui.widgets
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.chargemap.compose.numberpicker.NumberPicker
 import com.flx_apps.digitaldetox.R
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * A dialog that displays a number picker. It is basically just a wrapper for [AlertDialog] and
@@ -35,23 +38,28 @@ fun NumberPickerDialog(
     onValueSelected: (Int) -> Unit,
     onDismissRequest: () -> Unit = {}
 ) {
-    val numberPickerValue = MutableStateFlow(initialValue)
+    // remembered so a recomposition of the caller (or a config change) cannot reset the value
+    // the user has already scrolled to
+    var pickerValue by rememberSaveable { mutableIntStateOf(initialValue) }
     AlertDialog(onDismissRequest = onDismissRequest, title = {
         Text(text = titleText)
     }, confirmButton = {
-        Text(text = stringResource(id = R.string.action_save), modifier = Modifier.clickable {
-            onValueSelected(numberPickerValue.value)
+        TextButton(onClick = {
+            onValueSelected(pickerValue)
             onDismissRequest()
-        })
+        }) {
+            Text(text = stringResource(id = R.string.action_save))
+        }
     }, dismissButton = {
-        Text(
-            text = stringResource(id = R.string.action_cancel),
-            modifier = Modifier.clickable { onDismissRequest() })
+        TextButton(onClick = onDismissRequest) {
+            Text(text = stringResource(id = R.string.action_cancel))
+        }
     }, text = {
         Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-            NumberPicker(value = numberPickerValue.collectAsState().value, onValueChange = {
-                numberPickerValue.value = it
-            }, range = range, label = label)
+            NumberPicker(value = pickerValue, onValueChange = {
+                pickerValue = it
+            }, range = range, label = label, dividersColor = MaterialTheme.colorScheme.onSurface,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface))
         }
     })
 }

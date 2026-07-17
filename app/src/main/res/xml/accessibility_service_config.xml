@@ -1,8 +1,8 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeViewScrolled|typeWindowStateChanged|typeAssistReadingContext"
-    android:accessibilityFeedbackType="feedbackAllMask"
+    android:accessibilityEventTypes="typeViewScrolled|typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRequestFilterKeyEvents|flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:canRequestFilterKeyEvents="true"
     android:notificationTimeout="100"
-    android:settingsActivity="com.example.android.accessibility.ServiceSettingsActivity" />
+    android:settingsActivity="com.flx_apps.digitaldetox.MainActivity" />
