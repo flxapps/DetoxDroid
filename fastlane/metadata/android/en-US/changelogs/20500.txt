@@ -1,0 +1,26 @@
+### Release v2.5.0
+
+✨ New Features
+- add daily and weekly usage stats with charts and per-app breakdowns
+- add optional supporter mode to unlock extra features on an honor basis
+- allow limiting pause to specific features instead of disabling everything
+- show expiration time on the pause notification
+- add sensitivity settings and better explanatory text to break screens
+- improve app picker to float selected apps to the top and allow copying selections between features
+
+🐛 Bug Fixes
+- restore previous interruption filter instead of defaulting to all when finished
+- ensure pauses auto resume and respect the minimum time interval
+- enforce screen time limits consistently within single apps
+- continue tracking usage stats during a pause
+- fix timing issues with schedule rules and prevent duplicate info cards
+- fix crashes on Android 12+ and resolve window leaks or double dismissals
+- improve handling when permissions are revoked and switch root grant to shell
+- prevent stale taps on the donut chart and reduce redundant stats queries
+- optimize password checks and cleanup nodes when the scan cap is hit
+- fix number picker behavior and ensure hardware keys stop capturing after dismissal
+- re-enable color immediately when the allowance is back
+- move heavy tasks like password hashing and root checks off the main thread to stop screen freezing
+- improve background process safety and fix broken settings links
+- fix layout issues with chips and make them readable on cards
+
