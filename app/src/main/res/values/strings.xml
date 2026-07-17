@@ -10,6 +10,9 @@
     <string name="app.notification.paused">Paused</string>
     <string name="app.notification.action.pause">Pause</string>
     <string name="app.notification.action.resume">Resume</string>
+    <string name="app.notification.channelName">DetoxDroid Service</string>
+    <string name="app.notification.channelDescription">Keeps DetoxDroid active in the background</string>
+    <string name="app.notification.pausedUntil">Paused until %s</string>
     <string name="action.go">Go</string>
     <string name="action.save">Save</string>
     <string name="action.delete">Delete</string>

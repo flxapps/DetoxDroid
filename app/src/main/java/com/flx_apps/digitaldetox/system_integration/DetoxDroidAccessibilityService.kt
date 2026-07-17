@@ -28,6 +28,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -355,17 +359,30 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
+        val isPausing = PauseButtonFeature.isPausing()
         val notification: Notification =
             NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
                 .setContentTitle(getString(R.string.app_name_)).setContentText(
-                    getString(
-                        if (PauseButtonFeature.isPausing()) R.string.app_notification_paused
-                        else R.string.app_notification_active
-                    )
+                    if (isPausing) {
+                        // show the actual end of the pause instead of a bare "Paused"
+                        getString(
+                            R.string.app_notification_pausedUntil,
+                            Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                                .atZone(ZoneId.systemDefault()).toLocalTime()
+                                .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+                        )
+                    } else getString(R.string.app_notification_active)
                 ).setSmallIcon(R.drawable.ic_pause).setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOngoing(true).addAction(
+                .setOngoing(true).apply {
+                    if (isPausing) {
+                        // live countdown to the end of the pause in the collapsed notification
+                        setWhen(PauseButtonFeature.pauseUntil)
+                        setUsesChronometer(true)
+                        setChronometerCountDown(true)
+                    }
+                }.addAction(
                     R.drawable.ic_pause, getString(
-                        if (PauseButtonFeature.isPausing()) R.string.app_notification_action_resume
+                        if (isPausing) R.string.app_notification_action_resume
                         else R.string.app_notification_action_pause
                     ), pausePendingIntent
                 ).build()
