@@ -292,11 +292,9 @@ fun PickHardwareKeyDialog(
         )
     } ?: stringResource(id = R.string.feature_pause_fromHardwareButton_noButtonPressed)
     AlertDialog(
-        onDismissRequest = {
-        viewModel.setVisibilityOfDialog(
-            PauseButtonFeatureSettingsViewModelDialog.NONE
-        )
-    },
+        // dismissing (tap outside/back) must go through hideHardwareKeyDialog: it removes the
+        // service's key-event listener, which otherwise keeps swallowing every hardware key
+        onDismissRequest = { viewModel.hideHardwareKeyDialog(null) },
         title = { Text(text = stringResource(id = R.string.feature_pause_fromHardwareButton_press)) },
         text = { Text(text = dialogText) },
         confirmButton = {
@@ -307,10 +305,21 @@ fun PickHardwareKeyDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                viewModel.hideHardwareKeyDialog(KeyEvent.KEYCODE_UNKNOWN)
-            }) {
-                Text(text = stringResource(id = R.string.action_cancel))
+            Row {
+                if (viewModel.hardwareKey.collectAsState().value != KeyEvent.KEYCODE_UNKNOWN) {
+                    // un-assign the configured key (the only way to get rid of it)
+                    TextButton(onClick = {
+                        viewModel.hideHardwareKeyDialog(KeyEvent.KEYCODE_UNKNOWN)
+                    }) {
+                        Text(text = stringResource(id = R.string.action_delete))
+                    }
+                }
+                // null = keep the previously configured key (cancel must not clear it)
+                TextButton(onClick = {
+                    viewModel.hideHardwareKeyDialog(null)
+                }) {
+                    Text(text = stringResource(id = R.string.action_cancel))
+                }
             }
         })
 }
