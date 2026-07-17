@@ -284,7 +284,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         }
 
         // dispose scroll events that contain too less information
-        if (accessibilityEvent.source == null || scrollViewSize == -1 || accessibilityEvent.className == null) {
+        if (accessibilityEvent.source == null || scrollViewSize == -1 ||
+            accessibilityEvent.className == null || accessibilityEvent.packageName == null
+        ) {
             return
         }
 
