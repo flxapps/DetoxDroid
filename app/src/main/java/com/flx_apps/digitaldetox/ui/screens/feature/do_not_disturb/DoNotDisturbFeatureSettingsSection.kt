@@ -1,6 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.do_not_disturb
 
-import androidx.compose.material.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings

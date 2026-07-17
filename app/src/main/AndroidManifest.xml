@@ -6,9 +6,6 @@
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission
-        android:name="android.permission.WRITE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
 
     <!-- SYSTEM_ALERT_WINDOW permission in order to show the overlay for disabling apps / breaking infinite scrolling -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -48,9 +45,6 @@
 
     <!-- Shizuku permission for non-root privileged operations -->
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
-
-    <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS permission to prevent the app from being killed by the system -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- FOREGROUND_SERVICE and POST_NOTIFICATIONS permissions to prevent the app from being killed by the system -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

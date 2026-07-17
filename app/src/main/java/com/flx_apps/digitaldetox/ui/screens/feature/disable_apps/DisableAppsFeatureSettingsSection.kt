@@ -72,12 +72,12 @@ fun AllowedDailyTimeTile(
         ),
         trailing = {
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                androidx.compose.material.Text(
+                Text(
                     stringResource(
                         id = R.string.time__minutes, allowedDailyScreenTimeInMinutes
                     )
                 )
-                androidx.compose.material.Text(
+                Text(
                     modifier = Modifier.padding(top = 8.dp), text = stringResource(
                         id = R.string.time__minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
