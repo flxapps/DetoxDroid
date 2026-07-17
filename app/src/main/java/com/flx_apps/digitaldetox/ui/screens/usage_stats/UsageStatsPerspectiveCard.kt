@@ -95,7 +95,7 @@ fun PerspectiveCardContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = stringResource(R.string.usage_stats_thumb_travel),
+                    text = stringResource(R.string.usage_stats_odometer_label),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -158,7 +158,7 @@ class StoreScreenshotTest {
             composeRule.onNodeWithText("7 Days").performClick()
             settle()
             // Advance the trends carousel to its "In Perspective" page — scroll distance reframed as
-            // physical thumb travel against a landmark, a far stronger visual than the raw summary.
+            // a physical distance against a landmark, a far stronger visual than the raw summary.
             // Swipe the carousel node itself, not the root: a root swipe lands at the screen's
             // vertical centre (below the carousel) and scrolls nothing.
             composeRule.onNodeWithTag(TrendsCarouselTestTag).performTouchInput { swipeLeft() }

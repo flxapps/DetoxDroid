@@ -376,7 +376,7 @@
     <string name="usage_stats_perspective">In Perspective</string>
     <string name="usage_stats_perspective_subtitle">The same numbers, made tangible</string>
     <string name="usage_stats_perspective_footer">No judgement — time just gets easier to feel this way.</string>
-    <string name="usage_stats_thumb_travel">of thumb travel</string>
+    <string name="usage_stats_odometer_label">of content scrolled past</string>
     <string name="usage_stats_odometer_comparison">≈ %1$s × %2$s</string>
     <string name="usage_stats_odometer_floors">≈ %1$d floors of scrolling</string>
     <string name="landmark_statue_of_liberty">the Statue of Liberty</string>
