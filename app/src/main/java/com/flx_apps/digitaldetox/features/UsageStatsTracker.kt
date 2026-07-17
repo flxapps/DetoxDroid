@@ -83,12 +83,12 @@ object UsageStatsTracker {
     }
 
     /**
-     * Takes a final snapshot to preserve any in-memory scroll counts accumulated since
-     * the last debounced snapshot. Call from [android.app.Service.onDestroy].
+     * Takes a final counters-only snapshot to preserve any in-memory scroll counts accumulated
+     * since the last debounced snapshot. Call from [android.app.Service.onDestroy].
      */
     fun shutdown() {
         scope.launch {
-            runCatching { entryPoint?.repository()?.snapshotToday() }
+            runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
                 .onFailure { Timber.w(it, "Final scroll snapshot on shutdown failed") }
         }
     }
@@ -111,7 +111,9 @@ object UsageStatsTracker {
         if (now - lastSnapshotMs >= SCROLL_SNAPSHOT_DEBOUNCE_MS) {
             lastSnapshotMs = now
             scope.launch {
-                runCatching { entryPoint?.repository()?.snapshotToday() }
+                // counters-only: this ran every few minutes of active scrolling and walking the
+                // whole day's OS event log for it made DetoxDroid *itself* the battery drain
+                runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
                     .onFailure { Timber.w(it, "Scroll-triggered snapshot failed") }
             }
         }

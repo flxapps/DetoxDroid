@@ -129,6 +129,76 @@ class UsageStatsRepository @Inject constructor(
         grayscaleDao.upsert(DailyGrayscaleStats(date = today, grayscaleTimeMs = mergedMs))
     }
 
+    /**
+     * Persists only the live in-memory counters (scrolls, distance, breaks, blocks) into today's
+     * rows. Unlike [snapshotToday] this touches *no* OS APIs — no usage-stats query and no walk
+     * over the day's event log — so it is cheap enough for the scroll-debounce path and service
+     * shutdown, whose only job is making the counters survive a process kill. The full derivation
+     * stays with the periodic worker and screen refreshes.
+     */
+    suspend fun snapshotTodayCountersOnly() = snapshotCounters(
+        scrollCounts = UsageStatsTracker.scrollEventCounter.snapshot(),
+        scrollDistances = UsageStatsTracker.scrollDistanceCounter.snapshot(),
+        breakCounts = BreakDoomScrollingFeature.breakCounter.snapshot(),
+        blockCounts = DisableAppsFeature.blockCounter.snapshot()
+    )
+
+    internal suspend fun snapshotCounters(
+        scrollCounts: Map<String, Int>,
+        scrollDistances: Map<String, Int>,
+        breakCounts: Map<String, Int>,
+        blockCounts: Map<String, Int>
+    ) = snapshotMutex.withLock {
+        val today = LocalDate.now()
+        resetCounterBaselinesIfNeeded(today)
+        // only packages with live counter values need a write; everything else is already correct
+        val packageNames = buildSet {
+            addAll(scrollCounts.keys)
+            addAll(scrollDistances.keys)
+            addAll(breakCounts.keys)
+            addAll(blockCounts.keys)
+        }
+        if (packageNames.isEmpty()) return@withLock
+
+        val existing = dao.getForDate(today).associateBy { it.packageName }
+        val rows = packageNames.map { pkg ->
+            val prior = existing[pkg]
+            DailyAppUsage(
+                rowId = DailyAppUsage.createRowId(today, pkg),
+                date = today,
+                packageName = pkg,
+                totalTimeMs = prior?.totalTimeMs ?: 0L,
+                sessionCount = prior?.sessionCount ?: 0,
+                launchCount = prior?.launchCount ?: 0,
+                scrollCount = mergeCounter(
+                    packageName = pkg,
+                    currentCount = scrollCounts[pkg] ?: 0,
+                    persistedCount = prior?.scrollCount ?: 0,
+                    baselines = scrollCounterBaselines
+                ),
+                scrollDistancePx = mergeCounter(
+                    packageName = pkg,
+                    currentCount = scrollDistances[pkg] ?: 0,
+                    persistedCount = prior?.scrollDistancePx ?: 0,
+                    baselines = scrollDistanceBaselines
+                ),
+                breakCount = mergeCounter(
+                    packageName = pkg,
+                    currentCount = breakCounts[pkg] ?: 0,
+                    persistedCount = prior?.breakCount ?: 0,
+                    baselines = breakCounterBaselines
+                ),
+                blockCount = mergeCounter(
+                    packageName = pkg,
+                    currentCount = blockCounts[pkg] ?: 0,
+                    persistedCount = prior?.blockCount ?: 0,
+                    baselines = blockCounterBaselines
+                )
+            )
+        }
+        dao.upsertAll(rows)
+    }
+
     private fun resetCounterBaselinesIfNeeded(today: LocalDate) {
         if (counterBaselineDate == today) return
         counterBaselineDate = today
