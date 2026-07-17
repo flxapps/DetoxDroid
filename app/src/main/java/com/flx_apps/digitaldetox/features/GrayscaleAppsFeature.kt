@@ -184,8 +184,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // currentUsedUpScreenTime() includes the running tracking session, so the allowance
             // also runs out while the user stays inside a single color app
             if (allowedDailyColorScreenTime > 0 && currentUsedUpScreenTime() <= allowedDailyColorScreenTime) {
-                // the screen time has not been used up yet; re-check when it is expected to be,
-                // because no further window events arrive while the user stays in this app
+                // allowance available → the user gets color; also lift a still-active filter
+                // (e.g. right after the midnight reset or after the allowance was raised)
+                if (isCurrentlyGrayscale) setGrayscale(context, false)
+                // re-check when the allowance is expected to be used up, because no further
+                // window events arrive while the user stays in this app
                 scheduleAllowanceExhaustedCheck()
                 return
             }
