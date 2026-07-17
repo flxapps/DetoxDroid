@@ -1,9 +1,6 @@
 package com.flx_apps.digitaldetox.ui.widgets.apps
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 
 /**
  * Bottom sheet with the app-type and category filters for an app list. One implementation for the
@@ -28,7 +26,7 @@ import com.flx_apps.digitaldetox.R
  * @param categories category name → whether it is currently selected. What an empty selection
  * means (nothing vs. everything) is up to the caller's filter logic — the sheet only displays.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppFilterSheet(
     showSystemApps: Boolean,
@@ -47,7 +45,7 @@ fun AppFilterSheet(
             ListItem(
                 headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
                 supportingContent = {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    ChipFlowRow {
                         FilterChip(
                             selected = showSystemApps,
                             onClick = onToggleSystemApps,
@@ -69,7 +67,7 @@ fun AppFilterSheet(
                             style = MaterialTheme.typography.bodySmall
                         )
                     } else {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        ChipFlowRow {
                             categories.forEach { (category, selected) ->
                                 FilterChip(
                                     selected = selected,

@@ -4,8 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +39,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -226,11 +225,7 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
         return
     }
 
-    @OptIn(ExperimentalLayoutApi::class)
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+    ChipFlowRow {
         key(version) {
             if (grayscaleActive) {
                 val isInGrayscale = GrayscaleAppsFeature.appliesTo(app.packageName)
@@ -296,7 +291,6 @@ private fun FeatureActionChip(
     label: String, color: Color, isActive: Boolean, onClick: () -> Unit
 ) {
     FilterChip(
-        modifier = Modifier.height(32.dp),
         selected = isActive,
         onClick = onClick,
         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
