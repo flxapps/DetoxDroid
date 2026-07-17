@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -30,7 +31,7 @@ private const val POWER_USE_APP_EXCEPTIONS_THRESHOLD = 8
  * @param isException Whether the app is an exception for the current feature.
  */
 data class AppExceptionItem(
-    val appInfo: ApplicationInfoData, var isException: Boolean
+    val appInfo: ApplicationInfoData, val isException: Boolean
 )
 
 /**
@@ -157,6 +158,7 @@ class AppExceptionsViewModel @Inject constructor(
                 appCategories += it.appCategory
                 AppExceptionItem(it, isException)
             }
+            .sortedBy { it.appInfo.appName.lowercase(Locale.getDefault()) }
         _toggledItemsSize.value = apps.count { it.isException }
         _appExceptionItems = apps
         _selectedAppCategories.value = appCategories.associateWith {
@@ -167,47 +169,51 @@ class AppExceptionsViewModel @Inject constructor(
 
     /**
      * Filters the [_appExceptionItems] live data by the given query.
+     *
+     * Selected apps are only filtered by the search query — the type/category filters must never
+     * hide the user's own selection (same behavior as the widget configurator's list).
      * @param query The query to filter the apps by.
      */
     fun filterApps(query: String = this.query.value) {
         this.query.value = query
         if (this::_appExceptionItems.isInitialized.not()) return // apps not loaded yet
         val showAllCategories = _selectedAppCategories.value.values.all { !it }
-        // filter apps by query, system/user apps and app categories
         val filteredApps = _appExceptionItems.filter { item ->
             val appNameContainsQuery = query.isBlank() || item.appInfo.appName.contains(
                 query, ignoreCase = true
             )
+            if (!appNameContainsQuery) return@filter false
+            if (item.isException) return@filter true
             val appTypeShouldBeShown =
                 item.appInfo.isSystemApp && _showSystemApps.value || !item.appInfo.isSystemApp && _showUserApps.value
             val appCategoryShouldBeShown =
-                showAllCategories || _selectedAppCategories.value[item.appInfo.appCategory]!!
-            appNameContainsQuery && appTypeShouldBeShown && appCategoryShouldBeShown
+                showAllCategories || _selectedAppCategories.value[item.appInfo.appCategory] == true
+            appTypeShouldBeShown && appCategoryShouldBeShown
         }
         _filteredAppExceptionItems.value = filteredApps
     }
 
     /**
-     * Toggles the exception state of the given app.
+     * Toggles the exception state of the given app. The master list is rebuilt with the toggled
+     * item and re-filtered, so the UI regroups it into the right section immediately.
      * @param packageName The package name of the app.
-     * @return The new exception state of the app or null if the app was not found.
      */
-    fun toggleAppException(packageName: String): Boolean? {
-        _filteredAppExceptionItems.value?.find { app -> app.appInfo.packageName == packageName }
-            ?.apply {
-                isException = !isException
-                if (isException) appExceptionsFeature.appExceptions += packageName
-                else appExceptionsFeature.appExceptions -= packageName
-                _filteredAppExceptionItems.value = _filteredAppExceptionItems.value
-                _toggledItemsSize.value = appExceptionsFeature.appExceptions.size
-                if (isException &&
-                    appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
-                ) {
-                    PremiumSheetController.notifyPowerUse()
-                }
-                return isException
-            }
-        return null
+    fun toggleAppException(packageName: String) {
+        if (this::_appExceptionItems.isInitialized.not()) return
+        val index =
+            _appExceptionItems.indexOfFirst { it.appInfo.packageName == packageName }
+        if (index == -1) return
+        val toggled = _appExceptionItems[index].let { it.copy(isException = !it.isException) }
+        if (toggled.isException) appExceptionsFeature.appExceptions += packageName
+        else appExceptionsFeature.appExceptions -= packageName
+        _appExceptionItems = _appExceptionItems.toMutableList().also { it[index] = toggled }
+        _toggledItemsSize.value = appExceptionsFeature.appExceptions.size
+        if (toggled.isException &&
+            appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
+        ) {
+            PremiumSheetController.notifyPowerUse()
+        }
+        filterApps()
     }
 
     /**

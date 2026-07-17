@@ -286,9 +286,10 @@
     <string name="widget.minimalLauncher.configure.title">Configure Launcher Widget</string>
     <string name="widget.minimalLauncher.available.emptyFiltered">No apps match your filters.</string>
     <string name="widget.minimalLauncher.search.clear">Clear search</string>
-    <string name="widget.minimalLauncher.section.selected">Selected apps</string>
-    <string name="widget.minimalLauncher.selected.empty">No apps selected yet.</string>
-    <string name="widget.minimalLauncher.section.available">Available apps</string>
+    <!-- shared between the widget configurator and the app exception lists -->
+    <string name="appList.section.selected">Selected apps</string>
+    <string name="appList.selected.empty">No apps selected yet.</string>
+    <string name="appList.section.available">Available apps</string>
     <string name="widget.minimalLauncher.filter.category.empty">No categories available</string>
     <string name="widget.minimalLauncher.label.display">Display label</string>
     <string name="widget.minimalLauncher.label.display.hint">Leave empty to use the original app name.</string>

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,14 +29,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -67,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppFilterSheet
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppListSectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionTopBar
 import kotlinx.coroutines.Dispatchers
@@ -294,17 +291,13 @@ private fun MinimalLauncherWidgetConfigureScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     item {
-                        Text(
-                            text = stringResource(id = R.string.widget_minimalLauncher_section_selected),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        AppListSectionHeader(stringResource(id = R.string.appList_section_selected))
                     }
 
                     if (selectedSectionItems.isEmpty()) {
                         item {
                             Text(
-                                text = stringResource(id = R.string.widget_minimalLauncher_selected_empty),
+                                text = stringResource(id = R.string.appList_selected_empty),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -330,11 +323,7 @@ private fun MinimalLauncherWidgetConfigureScreen(
                     }
 
                     item {
-                        Text(
-                            text = stringResource(id = R.string.widget_minimalLauncher_section_available),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        AppListSectionHeader(stringResource(id = R.string.appList_section_available))
                     }
 
                     if (unselectedSectionItems.isEmpty()) {
@@ -354,6 +343,7 @@ private fun MinimalLauncherWidgetConfigureScreen(
                                 appCategory = app.appCategory,
                                 isSystemApp = app.isSystemApp,
                                 checked = false,
+                                modifier = Modifier.animateItem(),
                                 onCheckedChange = { checked -> updateSelected(app.packageName, checked) }
                             )
                         }
@@ -364,65 +354,17 @@ private fun MinimalLauncherWidgetConfigureScreen(
     }
 
     if (showFiltersSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showFiltersSheet = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ListItem(
-                    headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByAppType)) },
-                    supportingContent = {
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            FilterChip(
-                                selected = showSystemApps,
-                                onClick = { showSystemApps = !showSystemApps },
-                                label = { Text(stringResource(id = R.string.exceptionsList_filter_systemApps)) }
-                            )
-                            FilterChip(
-                                selected = showUserApps,
-                                onClick = { showUserApps = !showUserApps },
-                                label = { Text(stringResource(id = R.string.exceptionsList_filter_userApps)) }
-                            )
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                )
-
-                ListItem(
-                    headlineContent = { Text(stringResource(id = R.string.feature_settings_exceptions_filterByCategory)) },
-                    supportingContent = {
-                        if (availableCategories.isEmpty()) {
-                            Text(
-                                text = stringResource(id = R.string.widget_minimalLauncher_filter_category_empty),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        } else {
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                availableCategories.forEach { category ->
-                                    FilterChip(
-                                        selected = selectedCategories.contains(category),
-                                        onClick = {
-                                            if (selectedCategories.contains(category)) {
-                                                selectedCategories.remove(category)
-                                            } else {
-                                                selectedCategories.add(category)
-                                            }
-                                        },
-                                        label = { Text(category) }
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                )
-            }
-        }
+        AppFilterSheet(
+            showSystemApps = showSystemApps,
+            showUserApps = showUserApps,
+            categories = availableCategories.associateWith { selectedCategories.contains(it) },
+            onToggleSystemApps = { showSystemApps = !showSystemApps },
+            onToggleUserApps = { showUserApps = !showUserApps },
+            onToggleCategory = { category ->
+                if (!selectedCategories.remove(category)) selectedCategories.add(category)
+            },
+            onDismiss = { showFiltersSheet = false },
+        )
     }
 
     if (renameTargetPackage != null) {
@@ -486,6 +428,7 @@ private fun LazyItemScope.SelectedAppListItem(
 
     Surface(
         modifier = Modifier
+            .animateItem()
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 1.dp)
             .animateContentSize(),
