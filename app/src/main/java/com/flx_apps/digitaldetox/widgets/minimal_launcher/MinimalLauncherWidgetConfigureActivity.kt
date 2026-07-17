@@ -64,11 +64,13 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionTopBar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private data class AppLoadState(
@@ -96,33 +98,39 @@ class MinimalLauncherWidgetConfigureActivity : ComponentActivity() {
             return
         }
 
-        val initiallySelectedApps =
-            MinimalLauncherWidgetConfigRepository.getSelectedApps(appWidgetId)
-
         setContent {
             DetoxDroidTheme {
-                MinimalLauncherWidgetConfigureScreen(
-                    initiallySelectedApps = initiallySelectedApps,
-                    onCancel = { finish() },
-                    onSave = { selectedApps ->
-                        MinimalLauncherWidgetConfigRepository.saveSelectedApps(
-                            appWidgetId = appWidgetId,
-                            selectedApps = selectedApps
-                        )
-                        val appWidgetManager = AppWidgetManager.getInstance(this)
-                        MinimalLauncherWidgetProvider.updateAppWidget(
-                            context = this,
-                            appWidgetManager = appWidgetManager,
-                            appWidgetId = appWidgetId
-                        )
-                        setResult(
-                            RESULT_OK,
-                            Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                        )
-                        finish()
-                    }
-                )
+                // the persisted selection is loaded off the main thread; the screen shows its
+                // (already async) app-list loading state until both are ready
+                val initiallySelectedApps by produceState<List<WidgetSelectedApp>?>(
+                    initialValue = null, appWidgetId
+                ) {
+                    value = MinimalLauncherWidgetConfigRepository.getSelectedAppsAsync(appWidgetId)
+                }
+                initiallySelectedApps?.let { selection ->
+                    MinimalLauncherWidgetConfigureScreen(
+                        initiallySelectedApps = selection,
+                        onCancel = { finish() },
+                        onSave = { selectedApps -> saveAndFinish(appWidgetId, selectedApps) }
+                    )
+                }
             }
+        }
+    }
+
+    private fun saveAndFinish(appWidgetId: Int, selectedApps: List<WidgetSelectedApp>) {
+        lifecycleScope.launch {
+            MinimalLauncherWidgetConfigRepository.saveSelectedAppsAsync(appWidgetId, selectedApps)
+            MinimalLauncherWidgetProvider.updateAppWidget(
+                context = this@MinimalLauncherWidgetConfigureActivity,
+                appWidgetManager = AppWidgetManager.getInstance(this@MinimalLauncherWidgetConfigureActivity),
+                appWidgetId = appWidgetId
+            )
+            setResult(
+                RESULT_OK,
+                Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            )
+            finish()
         }
     }
 }
