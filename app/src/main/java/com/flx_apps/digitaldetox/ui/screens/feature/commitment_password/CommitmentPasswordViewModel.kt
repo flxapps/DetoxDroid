@@ -8,9 +8,11 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -138,7 +140,11 @@ class CommitmentPasswordViewModel @Inject constructor(
         viewModelScope.launch {
             val password = CommitmentPasswordFeature.generatePassphrase()
             _generatedPassword.value = password
-            if (CommitmentPasswordFeature.setPassword(context, password)) {
+            // BCrypt with work factor 12 takes a few hundred ms — keep it off the main thread
+            val passwordSet = withContext(Dispatchers.Default) {
+                CommitmentPasswordFeature.setPassword(context, password)
+            }
+            if (passwordSet) {
                 _showDialog.value = CommitmentPasswordDialog.GENERATED_PASSWORD
             } else {
                 Timber.e("Failed to set password")
@@ -162,7 +168,9 @@ class CommitmentPasswordViewModel @Inject constructor(
 
     fun verifyPassword() {
         viewModelScope.launch {
-            val isValid = CommitmentPasswordFeature.verifyPassword(context, _passwordInput.value)
+            val isValid = withContext(Dispatchers.Default) {
+                CommitmentPasswordFeature.verifyPassword(context, _passwordInput.value)
+            }
             if (isValid) {
                 CommitmentPasswordFeature.unlockSession()
                 _showDialog.value = CommitmentPasswordDialog.NONE
@@ -213,7 +221,10 @@ class CommitmentPasswordViewModel @Inject constructor(
                 CommitmentPasswordFeature.updateActivationState(false, dispatchLifecycle = true)
                 val password = CommitmentPasswordFeature.generatePassphrase()
                 _generatedPassword.value = password
-                if (CommitmentPasswordFeature.setPassword(context, password)) {
+                val passwordSet = withContext(Dispatchers.Default) {
+                    CommitmentPasswordFeature.setPassword(context, password)
+                }
+                if (passwordSet) {
                     _showDialog.value = CommitmentPasswordDialog.GENERATED_PASSWORD
                 } else {
                     _showDialog.value = CommitmentPasswordDialog.NONE
@@ -231,7 +242,9 @@ class CommitmentPasswordViewModel @Inject constructor(
 
     fun verifyAndDisable(onDisabled: () -> Unit) {
         viewModelScope.launch {
-            val isValid = CommitmentPasswordFeature.verifyPassword(context, _passwordInput.value)
+            val isValid = withContext(Dispatchers.Default) {
+                CommitmentPasswordFeature.verifyPassword(context, _passwordInput.value)
+            }
             if (isValid) {
                 CommitmentPasswordFeature.clearPasswordData(context)
                 CommitmentPasswordFeature.lockSession()

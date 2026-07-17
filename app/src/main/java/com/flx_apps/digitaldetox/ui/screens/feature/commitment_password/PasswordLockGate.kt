@@ -33,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +44,9 @@ import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private data class LockGateState(
     val isPasswordActive: Boolean,
@@ -193,9 +197,11 @@ private fun SettingsLockBanner(isLocked: Boolean) {
 @Composable
 private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
     var passwordInput by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    var isVerifying by remember { mutableStateOf(false) }
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
     val failedAttempts = remember(stateToken) { CommitmentPasswordFeature.failedAttempts }
     val isLockedOut = remember(stateToken) { CommitmentPasswordFeature.isLockedOut() }
@@ -268,17 +274,24 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
                             return@TextButton
                         }
 
-                        val isValid = CommitmentPasswordFeature.verifyPassword(context, passwordInput)
-                        if (isValid) {
-                            CommitmentPasswordFeature.unlockSession()
-                            passwordInput = ""
-                            onUnlocked()
-                        } else {
-                            errorMessage =
-                                context.getString(R.string.feature_commitmentPassword_incorrect)
+                        // BCrypt (work factor 12) takes a few hundred ms — off the main thread
+                        isVerifying = true
+                        scope.launch {
+                            val isValid = withContext(Dispatchers.Default) {
+                                CommitmentPasswordFeature.verifyPassword(context, passwordInput)
+                            }
+                            isVerifying = false
+                            if (isValid) {
+                                CommitmentPasswordFeature.unlockSession()
+                                passwordInput = ""
+                                onUnlocked()
+                            } else {
+                                errorMessage =
+                                    context.getString(R.string.feature_commitmentPassword_incorrect)
+                            }
                         }
                     },
-                    enabled = passwordInput.isNotEmpty()
+                    enabled = passwordInput.isNotEmpty() && !isVerifying
                 ) {
                     Text(stringResource(R.string.feature_commitmentPassword_verify))
                 }
