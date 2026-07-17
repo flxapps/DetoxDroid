@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -44,8 +45,9 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         super.onCreate()
         appContext = this
 
-        // Only enable caching debug tree for debug builds
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG && isMainProcess()) {
+            // file-backed log store only in the main process — a second process (see the
+            // `:interactor` voice-interaction service) must not fight over the same log file
             val logFile = File(filesDir, "app_logs.txt")
             InMemoryLogStore.init(logFile)
             Timber.plant(CachingDebugTree())
@@ -56,16 +58,40 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
                 Timber.e(throwable, "Uncaught Exception on thread ${thread.name}")
                 defaultExceptionHandler?.uncaughtException(thread, throwable)
             }
-        } else {
+        } else if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            // release builds: keep warnings/errors in logcat, drop the verbose event chatter
+            // (the accessibility service logs on every scroll/window event otherwise)
+            Timber.plant(object : Timber.DebugTree() {
+                override fun isLoggable(tag: String?, priority: Int): Boolean =
+                    priority >= Log.WARN
+            })
         }
 
         createNotificationChannel()
+
+        // Everything below must only run in the main process. The `:interactor` process hosting
+        // the voice-interaction shell would otherwise open DataStore/Room a second time (both are
+        // single-process) and double-schedule WorkManager.
+        if (!isMainProcess()) return
+
         scheduleUsageStatsSnapshot()
         UsageStatsTracker.init(this)
         // Re-render all minimal launcher widgets on startup — after a process kill
         // (e.g. hot restart) the system may have reset them to the initial layout.
         MinimalLauncherWidgetProvider.updateAllWidgets(this)
+    }
+
+    private fun isMainProcess(): Boolean {
+        val processName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getProcessName()
+        } else {
+            val myPid = android.os.Process.myPid()
+            (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager)
+                .runningAppProcesses?.firstOrNull { it.pid == myPid }?.processName
+        }
+        return processName == null || processName == packageName
     }
 
     private fun scheduleUsageStatsSnapshot() {
@@ -84,8 +110,8 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "DetoxDroid Service"
-            val descriptionText = "Keeps DetoxDroid active in the background"
+            val name = getString(R.string.app_notification_channelName)
+            val descriptionText = getString(R.string.app_notification_channelDescription)
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(SERVICE_CHANNEL_ID, name, importance).apply {
                 description = descriptionText
