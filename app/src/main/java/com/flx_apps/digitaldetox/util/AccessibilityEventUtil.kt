@@ -23,9 +23,10 @@ class AccessibilityEventUtil {
          * Returns the scroll delta of the given [accessibilityEvent] in the y direction.
          * This is only available for API level 28 and above, otherwise, 1 is returned.
          *
-         * Note: [AccessibilityEvent.scrollDeltaY] does **not** represent pixels. It is an abstract
-         * scroll-unit count reported by the framework. Typical values are 1, –1, or 0. A threshold
-         * based on pixels is therefore meaningless here.
+         * Note: the unit of [AccessibilityEvent.scrollDeltaY] is framework-dependent — pixels for
+         * RecyclerView and Compose, list positions (values like 1, –1) for legacy list widgets,
+         * and always 0 for frameworks that don't populate the field. See [ScrollDistanceEstimator]
+         * for how these flavors are disambiguated when a physical distance is needed.
          */
         fun getScrollDeltaY(accessibilityEvent: AccessibilityEvent): Int {
             var result = 1 // assume a positive scroll delta by default

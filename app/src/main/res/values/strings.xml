@@ -88,6 +88,13 @@
     <string name="feature.doomScrolling.timeUntilWarning.description">Shows a warning when doom scrolling is detected for this duration.</string>
     <string name="feature.doomScrolling.exceptions.summary.notList">Doom-scrolling checks are skipped in %d apps.</string>
     <string name="feature.doomScrolling.exceptions.summary.onlyList">Doom-scrolling checks are active in %d apps.</string>
+    <string name="feature.doomScrolling.cooldownTime">Cooldown Period</string>
+    <string name="feature.doomScrolling.cooldownTime.description">After a doom-scrolling break, the app (or just the feed that caused it) stays locked for this long.</string>
+    <string name="feature.doomScrolling.sensitivity">Detection Sensitivity</string>
+    <string name="feature.doomScrolling.sensitivity.description">How easily fast feed-scrolling triggers a break. \"Strict\" intervenes soonest. Endless feeds are always detected.</string>
+    <string name="feature.doomScrolling.sensitivity.relaxed">Relaxed</string>
+    <string name="feature.doomScrolling.sensitivity.balanced">Balanced</string>
+    <string name="feature.doomScrolling.sensitivity.strict">Strict</string>
 
     <string name="feature.settings.exceptions">App Exceptions</string>
     <string name="feature.settings.exceptions._notListed">Active in all apps except %d selected.</string>
@@ -141,7 +148,15 @@
     <string name="infiniteScroll.warning.title">Wake Up!</string>
     <string name="infiniteScroll.warning.message">Looks like you are stuck in a doom-scrolling loop.</string>
     <string name="infiniteScroll.warning.exit">Get me out of here</string>
-    <string name="infiniteScroll.warning.snooze">Give me a bit more time</string>
+    <string name="infiniteScroll.warning.finishFirst">I\'ll finish this one, then leave</string>
+    <string name="infiniteScroll.warning.context.intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
+    <string name="infiniteScroll.warning.context.endless">This feed just keeps loading more — you\'ve been scrolling it for %1$d minutes.</string>
+    <string name="infiniteScroll.guideOut.title">A deal\'s a deal</string>
+    <string name="infiniteScroll.guideOut.message">Hope it was a good one — taking you home now.</string>
+    <string name="infiniteScroll.cooldown.title">Still cooling down</string>
+    <string name="infiniteScroll.cooldown.message">Nothing here runs away — enjoy a few more minutes to yourself.</string>
+    <string name="infiniteScroll.cooldown.context.app">%1$s will be back in %2$d min.</string>
+    <string name="infiniteScroll.cooldown.context.surface">This feed in %1$s will be back in %2$d min.</string>
 
     <!-- region About -->
     <string name="about.coffee">Buy me a coffee</string>
