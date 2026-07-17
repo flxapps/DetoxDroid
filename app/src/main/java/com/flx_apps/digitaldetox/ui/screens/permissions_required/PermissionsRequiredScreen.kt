@@ -25,6 +25,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +39,8 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.topjohnwu.superuser.Shell
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
 import timber.log.Timber
 
@@ -98,9 +102,14 @@ fun PermissionsRequiredScreenContent(
     grantPermissionsCommand: GrantPermissionsCommand,
     navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
-    // both checks talk to the system (root check even spawns a process) — run them once per
-    // screen, not on every recomposition
-    val isRootAvailable = remember { runCatching { Shell.getShell().isRoot }.getOrDefault(false) }
+    // the root check spawns an `su` process and can block for a long time (up to a su-prompt
+    // timeout) — run it once per screen on a background thread; the card simply appears when
+    // the check comes back positive
+    val isRootAvailable by produceState(initialValue = false) {
+        value = withContext(Dispatchers.IO) {
+            runCatching { Shell.getShell().isRoot }.getOrDefault(false)
+        }
+    }
     val isShizukuAvailable = remember { ShizukuUtils.isShizukuAvailable() }
 
     Column(
