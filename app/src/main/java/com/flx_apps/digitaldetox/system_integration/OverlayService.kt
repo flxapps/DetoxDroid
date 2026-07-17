@@ -21,6 +21,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import timber.log.Timber
 
 /**
  * Service that can display an overlay on top of other apps
@@ -91,7 +92,13 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         params.gravity = Gravity.RIGHT or Gravity.TOP
-        windowManager.addView(contentView, params)
+        // addView throws (BadTokenException) if the overlay permission was revoked after the
+        // feature was activated — degrade to not showing the overlay instead of crashing
+        kotlin.runCatching { windowManager.addView(contentView, params) }.onFailure {
+            Timber.e(it, "Could not attach overlay window")
+            dismissed = true
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -140,6 +147,19 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
             kotlin.runCatching { windowManager.removeView(contentView) }
             stopSelf()
         }.start()
+    }
+
+    /**
+     * If the service is stopped externally (system pressure, stopService) without going through
+     * [dismissOverlay], the window would outlive the service — remove it here so it cannot leak.
+     */
+    override fun onDestroy() {
+        if (!dismissed && ::contentView.isInitialized) {
+            dismissed = true
+            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            kotlin.runCatching { windowManager.removeView(contentView) }
+        }
+        super.onDestroy()
     }
 }
 
