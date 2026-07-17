@@ -87,7 +87,7 @@ class BreakDoomScrollingOverlayService :
         const val EXTRA_CONTEXT_TEXT: String = "contextText"
 
         /** How long the guide-out screen stays before it takes the user to the home screen. */
-        const val GUIDE_OUT_AUTO_EXIT_MS = 2_500L
+        const val GUIDE_OUT_AUTO_EXIT_MS = 3_500L
     }
 
     /**
