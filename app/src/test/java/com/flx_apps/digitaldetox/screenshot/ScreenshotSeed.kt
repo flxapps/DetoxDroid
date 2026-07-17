@@ -125,7 +125,7 @@ object ScreenshotSeed {
                             sessionCount = launches,
                             launchCount = launches,
                             scrollCount = scrolls,
-                            scrollDistancePx = scrolls * 900,
+                            scrollDistancePx = scrolls * 1700,
                             breakCount = if (index == 1) dayOffset % 3 else 0,
                             blockCount = 0,
                         )

@@ -5,14 +5,14 @@ import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.lifecycle.ViewModelProvider
 import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
@@ -22,6 +22,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDo
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavHostScreen
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.usage_stats.TrendsCarouselTestTag
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -49,8 +50,8 @@ import javax.inject.Inject
  * Real app screens (home, usage-stats) are driven through the real [MainActivity]/[NavHostScreen]
  * — they cannot be instantiated standalone because `NavViewModel.navViewModel()` casts the local
  * activity to [MainActivity] and reimagined `hiltViewModel()` needs a nav-entry scope. The
- * grayscale / exceptions / doomscrolling / pause beats are static mock scenes (see [MockScenes]),
- * per product decision, since Roborazzi can only render DetoxDroid's own UI.
+ * grayscale / exceptions / doomscrolling / minimal-launcher beats are static mock scenes (see
+ * [MockScenes]), per product decision, since Roborazzi can only render DetoxDroid's own UI.
  *
  * Run with:
  *   ./gradlew :app:generateScreenshots
@@ -144,39 +145,33 @@ class StoreScreenshotTest {
         }
     }
 
-    // ── 5 · Pause, not lockout ───────────────────────────────────────────────
+    // ── 5 · Usage stats — In Perspective ─────────────────────────────────────
     @Test
-    fun screenshot_5_pause() = captureScene(
+    fun screenshot_5_usageStats() = captureApp(
         index = 5,
         titleRes = R.string.screenshot_5_title,
         subtitleRes = R.string.screenshot_5_subtitle,
-    ) {
-        // Pausing DetoxDroid disables every feature, so the feed is back in full colour — that's
-        // the whole point of a pause (a deliberate break, not a lockout).
-        Box(Modifier.fillMaxSize()) {
-            MockSocialFeed()
-            PauseToast(
-                text = "DetoxDroid paused — 3 min left",
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(24.dp),
-            )
-        }
-    }
+        navigate = { navVm -> navVm.openRoute(NavigationRoutes.UsageStats) },
+        interact = {
+            // Switch to the 7-day timeframe (premium is unlocked in the seed) so the weekly history
+            // backed by the seeded Room data is shown instead of today's summary.
+            composeRule.onNodeWithText("7 Days").performClick()
+            settle()
+            // Advance the trends carousel to its "In Perspective" page — scroll distance reframed as
+            // physical thumb travel against a landmark, a far stronger visual than the raw summary.
+            // Swipe the carousel node itself, not the root: a root swipe lands at the screen's
+            // vertical centre (below the carousel) and scrolls nothing.
+            composeRule.onNodeWithTag(TrendsCarouselTestTag).performTouchInput { swipeLeft() }
+        },
+    )
 
-    // ── 6 · Usage stats (weekly charts) ──────────────────────────────────────
+    // ── 6 · Minimal launcher (text-only home screen) ─────────────────────────
     @Test
-    fun screenshot_6_usageStats() = captureApp(
+    fun screenshot_6_minimalLauncher() = captureScene(
         index = 6,
         titleRes = R.string.screenshot_6_title,
         subtitleRes = R.string.screenshot_6_subtitle,
-        navigate = { navVm -> navVm.openRoute(NavigationRoutes.UsageStats) },
-        interact = {
-            // Switch to the 7-day timeframe (premium is unlocked in the seed) so the weekly bar
-            // charts backed by the seeded Room history are shown instead of today's summary.
-            composeRule.onNodeWithText("7 Days").performClick()
-        },
-    )
+    ) { MockMinimalLauncher() }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 

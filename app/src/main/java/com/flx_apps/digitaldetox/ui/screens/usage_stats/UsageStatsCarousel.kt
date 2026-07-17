@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
@@ -36,6 +37,12 @@ import java.time.LocalDate
 val CAROUSEL_CARD_HEIGHT = 280.dp
 val CARD_SHAPE = RoundedCornerShape(16.dp)
 val CARD_INNER_PADDING = 12.dp
+
+/**
+ * Test tag on the trends [HorizontalPager]. Lets the store-screenshot generator swipe the carousel
+ * to a specific page (e.g. "In Perspective") by targeting the pager itself rather than the root.
+ */
+const val TrendsCarouselTestTag = "trendsCarousel"
 
 private enum class TrendsPage(val titleRes: Int?) {
     SUMMARY(titleRes = null),
@@ -74,7 +81,9 @@ fun TrendsCarousel(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(TrendsCarouselTestTag),
             pageSpacing = 8.dp,
         ) { pageIndex ->
             val page = pages[pageIndex]

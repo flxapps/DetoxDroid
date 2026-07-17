@@ -4,8 +4,8 @@
 
      Screenshot order (fastlane phoneScreenshots/1.png … 6.png):
        1  Home            4  Break doomscrolling
-       2  Grayscale       5  Pause, not lockout
-       3  App exceptions  6  Usage stats
+       2  Grayscale       5  Usage stats (In Perspective)
+       3  App exceptions  6  Minimal launcher
 
      To add a marketing locale, drop a translated copy of this file into the matching
      res/values-XX/ folder — the next `./gradlew :app:generateScreenshots` run will
@@ -23,9 +23,9 @@
     <string name="screenshot_4_title">Break infinite scrolling.</string>
     <string name="screenshot_4_subtitle">Caught doomscrolling? DetoxDroid gently interrupts and sends you on your way.</string>
 
-    <string name="screenshot_5_title">Pause — don\'t lock yourself out.</string>
-    <string name="screenshot_5_subtitle">Take a deliberate break for a few minutes instead of blocking apps outright.</string>
+    <string name="screenshot_5_title">Understand your habits.</string>
+    <string name="screenshot_5_subtitle">See where your time really goes — screen time, app opens, even how far your thumb has scrolled.</string>
 
-    <string name="screenshot_6_title">Understand your habits.</string>
-    <string name="screenshot_6_subtitle">See screen time, app opens and scroll distance across days and weeks.</string>
+    <string name="screenshot_6_title">A calmer home screen.</string>
+    <string name="screenshot_6_subtitle">Swap the busy icon grid for a quiet, text-only app list.</string>
 </resources>

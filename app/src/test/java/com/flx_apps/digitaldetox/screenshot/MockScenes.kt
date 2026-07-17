@@ -494,23 +494,52 @@ private fun EngagementStat(icon: androidx.compose.ui.graphics.vector.ImageVector
     }
 }
 
+// A calm, text-only home screen for the "minimal launcher" scene. Ordinary phone apps, no icons —
+// the opposite of the loud, colourful feed in the other scenes. First entry is highlighted as a
+// "favourite"; the rest recede so the whole screen reads as quiet.
+private val mockLauncherApps = listOf(
+    "Phone" to true,
+    "Messages" to true,
+    "Maps" to false,
+    "Camera" to false,
+    "Calendar" to false,
+    "Notes" to false,
+    "Settings" to false,
+)
+
 /**
- * A small "toast" reproducing DetoxDroid's pause confirmation ("DetoxDroid has been paused for N
- * minutes"), overlaid on a mock feed for the pause-not-lockout scene.
+ * A minimal, text-only launcher home screen (no external assets): a soft twilight wallpaper, the
+ * time, and a plain list of app names instead of a grid of colourful icons — DetoxDroid's Minimal
+ * Launcher widget. Deliberately calm and low-contrast so it reads as the antidote to the busy feed.
  */
 @Composable
-fun PauseToast(text: String, modifier: Modifier = Modifier) {
-    Box(
+fun MockMinimalLauncher(modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier
-            .clip(RoundedCornerShape(28.dp))
-            .background(Color(0xF2FFFFFF))
-            .padding(horizontal = 22.dp, vertical = 14.dp),
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(listOf(Color(0xFF20262F), Color(0xFF39434F)))
+            )
+            .padding(horizontal = 32.dp, vertical = 40.dp),
     ) {
+        Text("9:41", color = Color(0xFFF2F4F7), fontSize = 56.sp, fontWeight = FontWeight.Light)
         Text(
-            text = text,
-            color = Color(0xFF1B2430),
+            "Saturday, 18 July",
+            color = Color(0xFF9AA6B2),
             fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.padding(top = 2.dp),
         )
+        Spacer(Modifier.height(48.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            mockLauncherApps.forEach { (name, favourite) ->
+                Text(
+                    text = name,
+                    color = if (favourite) Color(0xFFF2F4F7) else Color(0xFFB4BDC7),
+                    fontSize = 26.sp,
+                    fontWeight = if (favourite) FontWeight.SemiBold else FontWeight.Normal,
+                )
+            }
+        }
     }
 }
