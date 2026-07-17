@@ -398,11 +398,18 @@
     <string name="premium.sheet.title.generic">Support DetoxDroid</string>
     <string name="premium.sheet.title.nudge">Getting a lot out of DetoxDroid?</string>
     <string name="premium.sheet.title.locked">Unlock %1$s</string>
-    <string name="premium.sheet.subtitle">DetoxDroid is free, open-source and ad-free — built and maintained by one person. A one-time tip costs almost nothing but goes a long way.</string>
-    <string name="premium.value.title">Less than a coffee, just once</string>
-    <string name="premium.value.body">No ads, no tracking — your support is what keeps DetoxDroid going. Chip in what feels right, or simply unlock below. Either way helps.</string>
+    <string name="premium.sheet.subtitle">Free, open-source and ad-free — maintained by one person.</string>
+    <!-- Personal impact card ("reciprocity beats feature lists") -->
+    <string name="premium.impact.title">Your detox so far</string>
+    <string name="premium.impact.interventions">times DetoxDroid stepped in</string>
+    <string name="premium.impact.grayscale">spent in grayscale</string>
+    <string name="premium.impact.days">days of stats</string>
+    <string name="premium.impact.count">%d×</string>
+    <string name="premium.extras.title">Less than a coffee, just once</string>
+    <string name="premium.extras.body">Just a nudge to unlock the power-user extras — a one-time tip costs almost nothing but goes a long way.</string>
     <string name="premium.unlocked.title">Premium unlocked</string>
     <string name="premium.unlocked.subtitle">Thank you for supporting DetoxDroid 💚</string>
+    <string name="premium.unlocked.body">All extras are on. If DetoxDroid keeps earning its place on your phone, the tip jar is right below.</string>
     <string name="premium.action.donatedUnlock">I\'ve donated — unlock</string>
     <string name="premium.action.freeUnlock">Unlock without donating</string>
     <string name="premium.action.buy">Unlock Premium</string>
