@@ -152,6 +152,11 @@ internal class CommitmentPasswordTamperGuard(
                 }
                 node.recycle()
             }
+            // recycle the nodes still queued when the node cap was hit (recycle() is a no-op on
+            // API 33+, but leaks real native memory on older devices)
+            while (queue.isNotEmpty()) {
+                kotlin.runCatching { queue.removeFirst().recycle() }
+            }
         }
 
         return WindowSnapshot(
