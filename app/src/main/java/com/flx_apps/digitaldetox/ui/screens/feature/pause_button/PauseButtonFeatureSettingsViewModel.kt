@@ -134,11 +134,13 @@ class PauseButtonFeatureSettingsViewModel @Inject constructor(application: Appli
      * @param newHardwareKeyCode The new hardware key code.
      */
     fun hideHardwareKeyDialog(newHardwareKeyCode: Int? = null) {
-        DetoxDroidAccessibilityService.instance?.onKeyEventListener = null
         if (newHardwareKeyCode != null) {
             _hardwareKey.value = newHardwareKeyCode
             PauseButtonFeature.hardwareKey = newHardwareKeyCode
         }
+        // clear the listener only after the key is persisted — its setter re-evaluates whether
+        // the service still needs to filter hardware key events at all
+        DetoxDroidAccessibilityService.instance?.onKeyEventListener = null
         setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
     }
 

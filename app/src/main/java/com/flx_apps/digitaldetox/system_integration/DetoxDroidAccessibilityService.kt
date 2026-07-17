@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.system_integration
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
@@ -117,6 +118,33 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     var onKeyEventListener: ((KeyEvent) -> Boolean)? = null
+        set(value) {
+            field = value
+            updateKeyEventFiltering()
+        }
+
+    /**
+     * Requests hardware-key filtering only while it is actually needed — a configured pause key,
+     * or the settings dialog listening for one. With the flag set, *every* hardware key press on
+     * the device does a binder round-trip through [onKeyEvent], so it must not stay on for the
+     * majority of users who never configure a key. The flag is declared in the service XML (so a
+     * failure here degrades to today's behavior) and switched off as soon as the service connects.
+     */
+    fun updateKeyEventFiltering() {
+        val info = serviceInfo ?: return
+        val needed =
+            onKeyEventListener != null || PauseButtonFeature.hardwareKey != KeyEvent.KEYCODE_UNKNOWN
+        val hasFlag =
+            info.flags and AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS != 0
+        if (needed == hasFlag) return
+        info.flags = if (needed) {
+            info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        } else {
+            info.flags and AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS.inv()
+        }
+        kotlin.runCatching { serviceInfo = info }
+            .onFailure { Timber.w(it, "Could not update key event filtering") }
+    }
 
     /**
      * The view model/logic holder for the [DetoxDroidAccessibilityService].
@@ -162,6 +190,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         Timber.i("DetoxDroidAccessibilityService: onServiceConnected")
         super.onServiceConnected()
 
+        updateKeyEventFiltering()
         startForegroundService()
     }
 
