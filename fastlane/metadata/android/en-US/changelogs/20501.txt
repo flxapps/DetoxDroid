@@ -1,0 +1,5 @@
+### Release v2.5.1
+
+🐛 Bug Fixes
+- crash when reading the extra dim state on ROMs that restrict hidden settings
+
