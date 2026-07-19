@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.features
 
+import android.content.ContentResolver
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -146,9 +147,9 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onStart(context: Context) {
         val contentResolver = context.contentResolver
         isCurrentlyGrayscale =
-            Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
-            Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
-        isCurrentlyExtraDim = Settings.Secure.getInt(contentResolver, EXTRA_DIM, 0) == 1
+            getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
+            getSecureInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
+        isCurrentlyExtraDim = getSecureInt(contentResolver, EXTRA_DIM, 0) == 1
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
     }
@@ -227,10 +228,10 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         if (grayscale && !isCurrentlyGrayscale) {
             // save the current color correction state (enabled + mode)
             // Only do this when currently not in grayscale, to not save grayscale as a default.
-            defaultDaltonizerEnabled = Settings.Secure.getInt(
+            defaultDaltonizerEnabled = getSecureInt(
                 contentResolver, DISPLAY_DALTONIZER_ENABLED, 0
             )
-            defaultDaltonizer = Settings.Secure.getInt(
+            defaultDaltonizer = getSecureInt(
                 contentResolver, DISPLAY_DALTONIZER, -1
             )
         }
@@ -277,4 +278,17 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         if (result) isCurrentlyExtraDim = extraDim
         return result
     }
+
+    /**
+     * Reads a secure settings key, falling back to [default] if the key is not readable.
+     * Since Android 12, hidden settings keys that are not explicitly marked as readable (such as
+     * [EXTRA_DIM]) cannot be read by third-party apps and throw a [SecurityException] instead —
+     * even if the app holds the WRITE_SECURE_SETTINGS permission. Writing them still works.
+     */
+    private fun getSecureInt(contentResolver: ContentResolver, key: String, default: Int): Int =
+        try {
+            Settings.Secure.getInt(contentResolver, key, default)
+        } catch (e: SecurityException) {
+            default
+        }
 }
