@@ -424,4 +424,108 @@
     <string name="premium.feature.usageHistory">longer usage history</string>
     <string name="premium.chip.lockedLabel">Premium</string>
     <!-- endregion -->
+
+    <!-- region Onboarding -->
+    <string name="onboarding.action.getStarted">Get started</string>
+    <string name="onboarding.action.next">Continue</string>
+    <string name="onboarding.action.finish">Start DetoxDroid</string>
+    <string name="onboarding.action.skipSetup">Skip setup</string>
+    <string name="onboarding.skipSetup.dialog.title">Skip the setup?</string>
+    <string name="onboarding.skipSetup.dialog.message">Nothing will be configured. You can set up every feature later on its own screen, or replay this setup from the About screen.</string>
+    <string name="onboarding.skipSetup.dialog.confirm">Skip</string>
+    <string name="onboarding.welcome.title">Take back your attention</string>
+    <string name="onboarding.welcome.message">DetoxDroid helps you break autopilot habits: it can gray out distracting apps, interrupt endless scrolling and block apps once your daily budget is used up. In the next steps, we\'ll tailor it to how you actually use your phone.</string>
+    <string name="onboarding.welcome.privacy">Everything stays on your device. DetoxDroid is open source, has no ads and collects nothing.</string>
+    <string name="onboarding.usageAccess.title">See where your time goes</string>
+    <string name="onboarding.usageAccess.message">To suggest which apps to tame — and realistic daily goals — DetoxDroid needs the system\'s "usage access". It also powers your usage statistics. The data never leaves your phone.</string>
+    <string name="onboarding.usageAccess.grant">Grant usage access</string>
+    <string name="onboarding.usageAccess.granted">Usage access granted — we can now make personal suggestions.</string>
+    <string name="onboarding.usageAccess.skipHint">You can skip this — we\'ll suggest apps by category instead.</string>
+    <string name="onboarding.progress.stepOf">Step %1$d of %2$d</string>
+    <string name="onboarding.apps.title">Your distracting apps</string>
+    <string name="onboarding.apps.message">Based on your usage and app categories, these are likely your biggest time sinks. Adjust the selection — the next steps act on the selected apps.</string>
+    <string name="onboarding.apps.loading">Analyzing your app usage…</string>
+    <string name="onboarding.apps.empty">No suitable apps were found on this device. You can still pick apps for every feature later on.</string>
+    <string name="onboarding.apps.avgUsage">%s / day</string>
+    <plurals name="onboarding.apps.selectedCount">
+        <item quantity="one">%d app selected</item>
+        <item quantity="other">%d apps selected</item>
+    </plurals>
+    <string name="onboarding.preset.title">How strict should it be?</string>
+    <string name="onboarding.preset.message">Pick a starting point — every detail can be changed later.</string>
+    <string name="onboarding.preset.gentle">Gentle</string>
+    <string name="onboarding.preset.gentle.description">Interrupts endless scrolling in the selected apps with a break screen.</string>
+    <string name="onboarding.preset.balanced">Balanced</string>
+    <string name="onboarding.preset.balanced.badge">Recommended</string>
+    <string name="onboarding.preset.balanced.description">Gentle, plus: the selected apps turn grayscale once your daily budget is used up — without color, they lose much of their pull.</string>
+    <string name="onboarding.preset.strict">Strict</string>
+    <string name="onboarding.preset.strict.description">Balanced, plus: the selected apps are blocked entirely once the daily budget is spent — grayscale already warns you shortly before.</string>
+    <string name="onboarding.preset.budget">Daily budget</string>
+    <string name="onboarding.preset.budget.description">Your daily allowance for the selected apps before DetoxDroid steps in.</string>
+    <string name="onboarding.preset.budget.suggested">Suggested from your last 7 days of usage</string>
+    <string name="onboarding.preset.preview">See it in action</string>
+    <string name="onboarding.preset.preview.description">Preview grayscale on your screen for a few seconds.</string>
+    <string name="onboarding.permissions.title">A few permissions</string>
+    <string name="onboarding.permissions.message">Your setup needs the permissions below. Grant what you like — anything missing can be granted later from the feature screens.</string>
+    <string name="onboarding.permissions.overlay">Display over other apps</string>
+    <string name="onboarding.permissions.overlay.description">Needed to show break screens and to block apps.</string>
+    <string name="onboarding.permissions.notifications">Notifications</string>
+    <string name="onboarding.permissions.notifications.description">Status and reminders while a detox feature is active.</string>
+    <string name="onboarding.permissions.secureSettings">Grayscale permission</string>
+    <string name="onboarding.permissions.secureSettings.description">A special permission that lets DetoxDroid control the system\'s color filters.</string>
+    <string name="onboarding.permissions.secureSettings.oneTap">Tap to grant — Shizuku or root was detected on your device.</string>
+    <string name="onboarding.permissions.secureSettings.later">Tap for a guided setup — or finish this later; we\'ll remind you on the home screen.</string>
+    <string name="onboarding.permissions.accessibility">Accessibility service</string>
+    <string name="onboarding.permissions.accessibility.description">DetoxDroid\'s engine: the accessibility service detects which app is in the foreground and applies your rules. No data leaves your device.</string>
+    <string name="onboarding.permissions.accessibility.auto">Tap to enable it automatically.</string>
+    <string name="onboarding.permissions.accessibility.manual">Tap to open the accessibility settings and enable DetoxDroid there.</string>
+    <string name="onboarding.permissions.state.granted">Granted</string>
+    <string name="onboarding.done.title">You\'re all set</string>
+    <string name="onboarding.done.message">DetoxDroid is configured. You can fine-tune every feature — app lists, schedules and budgets — from the home screen at any time.</string>
+    <plurals name="onboarding.done.summary.scrollBreaks">
+        <item quantity="one">Scroll breaks in %d app</item>
+        <item quantity="other">Scroll breaks in %d apps</item>
+    </plurals>
+    <string name="onboarding.done.summary.scrollBreaksPending">Scroll breaks are ready, but need the \"display over other apps\" permission before they can appear.</string>
+    <string name="onboarding.done.summary.grayscale">Grayscale after %s of daily use</string>
+    <string name="onboarding.done.summary.grayscalePending">Grayscale is prepared — one small step remains. We\'ll remind you on the home screen.</string>
+    <string name="onboarding.done.summary.blocking">Apps blocked after %s of daily use</string>
+    <string name="onboarding.done.summary.blockingPending">App blocking is ready, but needs the \"display over other apps\" permission to work.</string>
+    <string name="onboarding.done.summary.accessibilityPending">DetoxDroid\'s accessibility service is not enabled yet — you can start it from the home screen.</string>
+    <string name="onboarding.done.summary.nothing">No apps were selected, so nothing was configured. Explore the features from the home screen.</string>
+    <string name="onboarding.done.summary.rerunHint">Finishing replaces the app lists and daily budgets of the affected features with this selection.</string>
+    <string name="onboarding.done.summary.permissionsHint">Grant the missing permissions to switch these on — or do it later from the home screen; we\'ll remind you.</string>
+    <string name="about.onboarding">Set up DetoxDroid again</string>
+    <string name="about.onboarding.subtitle">Replay the welcome tour and starter presets</string>
+    <!-- endregion -->
+
+    <!-- region Shizuku setup wizard -->
+    <string name="shizukuSetup.title">Set up grayscale</string>
+    <string name="shizukuSetup.intro">Grayscale needs a one-time special permission. Without a computer, the easiest way is Shizuku — a free, trusted helper app. This takes about five minutes, and the permission survives reboots.</string>
+    <string name="shizukuSetup.rooted">Your device appears to be rooted — you can skip Shizuku and grant the permission directly.</string>
+    <string name="shizukuSetup.rooted.go">Grant via root</string>
+    <string name="shizukuSetup.step1.title">Install Shizuku</string>
+    <string name="shizukuSetup.step1.description">Get the free Shizuku app from Google Play.</string>
+    <string name="shizukuSetup.step1.go">Open Play Store</string>
+    <string name="shizukuSetup.step2.title">Start the Shizuku service</string>
+    <string name="shizukuSetup.step2.description">Open Shizuku and follow "Start via Wireless debugging". If Developer options are not enabled yet: in the phone settings, find "Build number" (usually under About phone) and tap it seven times, then enable "Wireless debugging" in the Developer options. Shizuku guides you through the pairing.</string>
+    <string name="shizukuSetup.step2.openShizuku">Open Shizuku</string>
+    <string name="shizukuSetup.step2.openDeveloperSettings">Developer settings</string>
+    <string name="shizukuSetup.step2.rebootHint">Note: after every reboot, Shizuku has to be started again — the permission it grants stays, though.</string>
+    <string name="shizukuSetup.step3.title">Allow DetoxDroid to use Shizuku</string>
+    <string name="shizukuSetup.step3.description">Shizuku will ask for your confirmation in a dialog.</string>
+    <string name="shizukuSetup.step3.go">Request access</string>
+    <string name="shizukuSetup.step4.title">Grant the grayscale permission</string>
+    <string name="shizukuSetup.step4.description">One tap — DetoxDroid grants itself the color-filter permission through Shizuku.</string>
+    <string name="shizukuSetup.step4.go">Grant permission</string>
+    <string name="shizukuSetup.completed.title">All done!</string>
+    <string name="shizukuSetup.completed.message">The permission is granted and grayscale is ready. If it was waiting from your setup, it is now active.</string>
+    <string name="shizukuSetup.completed.done">Done</string>
+    <string name="noPermissions.text.shizukuWizard">No computer at hand? Set up Shizuku directly on this phone, step by step.</string>
+    <string name="noPermissions.text.shizukuWizard.go">Guided setup</string>
+    <string name="home.finishSetup.title">Finish your setup</string>
+    <string name="home.finishSetup.message">Grayscale from your setup is waiting for one small permission step.</string>
+    <string name="home.finishSetup.message.overlay">Scroll breaks and app blocking are waiting for the \"display over other apps\" permission.</string>
+    <string name="home.finishSetup.action">Finish</string>
+    <!-- endregion -->
 </resources>

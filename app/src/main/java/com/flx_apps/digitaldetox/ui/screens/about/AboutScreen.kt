@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -39,6 +40,7 @@ import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +61,8 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val patronSubtitle = stringResource(id = R.string.about_patron_subtitle)
     val premiumTitle = stringResource(id = R.string.navigation_premium)
     val premiumSubtitle = stringResource(id = R.string.premium_tile_subtitle)
+    val onboardingTitle = stringResource(id = R.string.about_onboarding)
+    val onboardingSubtitle = stringResource(id = R.string.about_onboarding_subtitle)
 
     Scaffold(
         topBar = {
@@ -149,6 +153,12 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 title = patronTitle,
                 subtitle = patronSubtitle,
                 onClick = { uriHandler.openUri(patronLink) }
+            )
+            linkItem(
+                icon = Icons.Default.RestartAlt,
+                title = onboardingTitle,
+                subtitle = onboardingSubtitle,
+                onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
             )
         }
     }

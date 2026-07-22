@@ -46,4 +46,31 @@ object NavigationUtil {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         })
     }
+
+    /**
+     * Opens the developer options settings screen (e.g. for enabling wireless debugging).
+     */
+    @JvmStatic
+    fun openDeveloperSettings(context: Context) {
+        runCatching {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+        }
+    }
+
+    /**
+     * Opens the app's notification settings screen, e.g. after the runtime notification
+     * permission has been permanently denied and can no longer be requested via a dialog.
+     */
+    @JvmStatic
+    fun openAppNotificationSettings(context: Context) {
+        runCatching {
+            context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }
+    }
 }

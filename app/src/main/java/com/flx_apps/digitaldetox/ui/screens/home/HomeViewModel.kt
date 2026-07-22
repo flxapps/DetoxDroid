@@ -2,11 +2,11 @@ package com.flx_apps.digitaldetox.ui.screens.home
 
 import android.app.Application
 import android.content.Intent
-import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
-import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
+import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
@@ -15,14 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
 import javax.inject.Inject
-
-/**
- * The component name of the accessibility service. This is used to enable and disable the service.
- * @see HomeViewModel.activateAccessibilityService
- * @see HomeViewModel.disableAccessibilityService
- */
-val AccessibilityServiceComponent =
-    DetoxDroidApplication::class.java.`package`!!.name + "/" + DetoxDroidAccessibilityService::class.java.name
 
 /**
  * The state of the snackbar on the home screen.
@@ -35,8 +27,6 @@ enum class HomeScreenSnackbarState {
 class HomeViewModel @Inject constructor(
     private val application: Application
 ) : AndroidViewModel(application) {
-    private val contentResolver = application.contentResolver
-
     /**
      * The current state of the accessibility service. This is a [StateFlow], so it can be observed
      * by other components.
@@ -68,9 +58,9 @@ class HomeViewModel @Inject constructor(
 
         val shouldBeRunning = detoxDroidState.value != DetoxDroidState.Active
         kotlin.runCatching {
-            if (shouldBeRunning && activateAccessibilityService()) {
+            if (shouldBeRunning && AccessibilityServiceController.activate(application)) {
                 return DetoxDroidState.Active
-            } else if (!shouldBeRunning && disableAccessibilityService()) {
+            } else if (!shouldBeRunning && AccessibilityServiceController.deactivate(application)) {
                 return DetoxDroidState.Inactive
             }
         }
@@ -84,55 +74,22 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * The currently enabled accessibility services as a clean component list (the OS stores them
-     * as a `:`-separated string).
+     * Called when the home screen (re)appears: if onboarding configured features it could not
+     * activate for lack of a permission, and that permission showed up in the meantime (Shizuku
+     * wizard, root, adb or the system settings), finish the pending activations.
+     * @return whether the "finish setup" reminder card should be visible
      */
-    private fun enabledAccessibilityServices(): List<String> {
-        return Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ).orEmpty().split(':').filter { it.isNotBlank() }
-    }
+    fun resolvePendingOnboardingSetup(): Boolean =
+        OnboardingState.resolvePendingFeatureActivations()
 
     /**
-     * Activates the accessibility service. This is done by adding the service to the list of
-     * enabled accessibility services and starting the service. The service is then triggered
-     * manually once to make sure it is running.
-     * @see DetoxDroidAccessibilityService
+     * Which permission the pending onboarding setup is still waiting for, so the "finish setup"
+     * card can route the user to the right place. Grayscale (WRITE_SECURE_SETTINGS) needs the
+     * guided Shizuku/adb wizard and takes precedence; everything else needs the overlay permission,
+     * which the user can grant from the system settings directly.
      */
-    private fun activateAccessibilityService(): Boolean {
-        val services = enabledAccessibilityServices()
-        Settings.Secure.putString(
-            contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            (services + AccessibilityServiceComponent).distinct().joinToString(":")
-        )
-        Settings.Secure.putString(
-            contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1"
-        )
-        return application.startService(
-            Intent(
-                application, DetoxDroidAccessibilityService::class.java
-            )
-        ) != null
-    }
-
-    /**
-     * Disables the accessibility service.
-     * @see DetoxDroidAccessibilityService
-     */
-    private fun disableAccessibilityService(): Boolean {
-        Settings.Secure.putString(
-            contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            enabledAccessibilityServices().filterNot { it == AccessibilityServiceComponent }
-                .joinToString(":")
-        )
-        return application.stopService(
-            Intent(
-                application, DetoxDroidAccessibilityService::class.java
-            )
-        )
-    }
+    fun pendingSetupNeedsGrayscalePermission(): Boolean =
+        OnboardingState.isGrayscaleActivationPending
 
     /**
      * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.
@@ -144,7 +101,7 @@ class HomeViewModel @Inject constructor(
             return false
         }
         DetoxDroidAccessibilityService.instance?.onDestroy()
-        kotlin.runCatching { disableAccessibilityService() }
+        kotlin.runCatching { AccessibilityServiceController.deactivate(application) }
         kotlin.runCatching { DetoxDroidDeviceAdminReceiver.revokePermission(application) }
         val intent = Intent(Intent.ACTION_DELETE)
         intent.data = "package:${application.packageName}".toUri()

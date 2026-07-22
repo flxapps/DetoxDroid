@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.topjohnwu.superuser.Shell
@@ -179,6 +180,15 @@ fun PermissionsRequiredScreenContent(
                             navViewModel.onBackPress()
                         }
                     }
+                })
+        }
+
+        if (grantPermissionsCommand.supportsShizuku && !isShizukuAvailable) {
+            GrantPermissionsCard(
+                description = stringResource(id = R.string.noPermissions_text_shizukuWizard),
+                buttonText = stringResource(id = R.string.noPermissions_text_shizukuWizard_go),
+                onGrantPermissions = {
+                    navViewModel.openRoute(NavigationRoutes.ShizukuSetup)
                 })
         }
 

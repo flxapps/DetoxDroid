@@ -247,6 +247,9 @@ private fun HomeScreenContent(it: PaddingValues) {
             ScreenTimeChart()
             InfoCard(infoText = stringResource(id = R.string.home_hint))
         }
+        item {
+            FinishSetupCard()
+        }
         items(FeaturesProvider.featureList) { feature ->
             OpenFeatureTile(feature = feature)
         }

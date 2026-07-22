@@ -16,14 +16,16 @@ import timber.log.Timber
  */
 object ShizukuUtils {
     private const val SHIZUKU_PERMISSION_REQUEST_CODE = 1001
-    private const val SHIZUKU_PACKAGE_NAME = "moe.shizuku.privileged.api"
+    const val SHIZUKU_PACKAGE_NAME = "moe.shizuku.privileged.api"
+
+    /** The legacy "Shizuku Manager" package name some installs still use. */
+    const val SHIZUKU_MANAGER_PACKAGE_NAME = "moe.shizuku.manager"
 
     /**
-     * Checks if Shizuku is available and permission is granted.
-     * @return true if Shizuku can be used to execute commands
+     * Checks if the Shizuku app is installed (regardless of whether its service is running).
      */
-    fun isShizukuAvailable(): Boolean {
-        val isInstalled = try {
+    fun isShizukuInstalled(): Boolean {
+        return try {
             val packageManager = DetoxDroidApplication.appContext.packageManager
             packageManager.getPackageInfo(SHIZUKU_PACKAGE_NAME, 0)
             true
@@ -31,7 +33,7 @@ object ShizukuUtils {
             // Also try the manager package
             try {
                 val packageManager = DetoxDroidApplication.appContext.packageManager
-                packageManager.getPackageInfo("moe.shizuku.manager", 0)
+                packageManager.getPackageInfo(SHIZUKU_MANAGER_PACKAGE_NAME, 0)
                 true
             } catch (_: PackageManager.NameNotFoundException) {
                 false
@@ -39,6 +41,14 @@ object ShizukuUtils {
         } catch (_: Exception) {
             false
         }
+    }
+
+    /**
+     * Checks if Shizuku is available and permission is granted.
+     * @return true if Shizuku can be used to execute commands
+     */
+    fun isShizukuAvailable(): Boolean {
+        val isInstalled = isShizukuInstalled()
         Timber.d("Shizuku installed: $isInstalled")
         if (isInstalled) {
             return try {
@@ -56,7 +66,7 @@ object ShizukuUtils {
      * @return true if Shizuku is running but we don't have permission
      */
     fun isShizukuRunningButNotGranted(): Boolean {
-        return isShizukuAvailable() && !checkSelfPermission()
+        return isShizukuAvailable() && !hasShizukuPermission()
     }
 
     /**
@@ -64,14 +74,14 @@ object ShizukuUtils {
      * will run without prompting the user with a permission dialog.
      */
     fun canExecuteCommandsSilently(): Boolean {
-        return isShizukuAvailable() && checkSelfPermission()
+        return isShizukuAvailable() && hasShizukuPermission()
     }
 
     /**
      * Checks if we have permission to use Shizuku.
      * @return true if permission is granted
      */
-    private fun checkSelfPermission(): Boolean {
+    fun hasShizukuPermission(): Boolean {
         return try {
             val permissionResult = Shizuku.checkSelfPermission()
             val hasPermission = permissionResult == PackageManager.PERMISSION_GRANTED
@@ -94,7 +104,7 @@ object ShizukuUtils {
                 Timber.d("Shizuku is pre-v11, cannot request permission")
                 return
             }
-            if (checkSelfPermission()) {
+            if (hasShizukuPermission()) {
                 Timber.d("Shizuku permission already granted")
                 return
             }
