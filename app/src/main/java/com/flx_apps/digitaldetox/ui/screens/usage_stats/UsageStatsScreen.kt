@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.activity.compose.LocalActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
+import com.flx_apps.digitaldetox.review.AppReviewController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
@@ -83,6 +85,15 @@ fun UsageStatsScreen(
     }
 
     LaunchedEffect(Unit) { viewModel.refresh(force = true) }
+
+    // Looking at a week+ of usage stats is the moment the app's value is most visible — a good,
+    // frequency-capped time to ask for a store review (no-op in the FOSS build).
+    val activity = LocalActivity.current
+    LaunchedEffect(state.availableHistoryDays) {
+        if (state.availableHistoryDays >= 7 && activity != null) {
+            AppReviewController.maybeAskForReview(activity)
+        }
+    }
 
     val context = LocalContext.current
     val pm = context.packageManager

@@ -15,9 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,9 +34,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.LocalActivity
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
+import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 
@@ -46,19 +46,19 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 @Composable
 fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val uriHandler = LocalUriHandler.current
+    val activity = LocalActivity.current
     val reportIssueLink = stringResource(id = R.string.about_reportIssue_link)
     val githubLink = stringResource(id = R.string.about_github_link)
     val contactLink = stringResource(id = R.string.about_contact_link)
-    val coffeeLink = stringResource(id = R.string.about_coffee_link)
-    val patronLink = stringResource(id = R.string.about_patron_link)
     val reportIssueTitle = stringResource(id = R.string.navigation_reportIssue)
     val githubTitle = stringResource(id = R.string.about_github)
     val contactTitle = stringResource(id = R.string.about_contact)
-    val coffeeTitle = stringResource(id = R.string.about_coffee)
-    val patronTitle = stringResource(id = R.string.about_patron)
     val contactSubtitle = stringResource(id = R.string.about_contact_subtitle)
-    val coffeeSubtitle = stringResource(id = R.string.about_coffee_subtitle)
-    val patronSubtitle = stringResource(id = R.string.about_patron_subtitle)
+    // Donation links come from the flavor's PremiumSupport: Ko-Fi/Liberapay in FOSS, none on
+    // Google Play (external payment links would violate Play's anti-steering rules).
+    val supportLinkItems = PremiumSupport.supportLinks.map {
+        Triple(it.icon, stringResource(it.labelRes) to stringResource(it.subtitleRes), stringResource(it.urlRes))
+    }
     val premiumTitle = stringResource(id = R.string.navigation_premium)
     val premiumSubtitle = stringResource(id = R.string.premium_tile_subtitle)
     val onboardingTitle = stringResource(id = R.string.about_onboarding)
@@ -142,18 +142,16 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 subtitle = contactSubtitle,
                 onClick = { uriHandler.openUri(contactLink) }
             )
-            linkItem(
-                icon = Icons.Default.Favorite,
-                title = coffeeTitle,
-                subtitle = coffeeSubtitle,
-                onClick = { uriHandler.openUri(coffeeLink) }
-            )
-            linkItem(
-                icon = Icons.Default.VolunteerActivism,
-                title = patronTitle,
-                subtitle = patronSubtitle,
-                onClick = { uriHandler.openUri(patronLink) }
-            )
+            supportLinkItems.forEach { (icon, texts, url) ->
+                linkItem(
+                    icon = icon,
+                    title = texts.first,
+                    subtitle = texts.second,
+                    onClick = { uriHandler.openUri(url) }
+                )
+            }
+            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
+            storeReviewAboutItem(activity)
             linkItem(
                 icon = Icons.Default.RestartAlt,
                 title = onboardingTitle,

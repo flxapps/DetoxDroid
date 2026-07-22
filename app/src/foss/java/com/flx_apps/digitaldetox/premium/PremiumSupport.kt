@@ -12,10 +12,10 @@ import com.flx_apps.digitaldetox.R
  * for free — the lock is a nudge, not DRM (see PREMIUM_TIER_PLAN.md §1). There is no in-app
  * purchase here.
  *
- * NOTE: when the Google Play flavor is added, this file moves to `src/foss/…/premium/` unchanged,
- * and a sibling `src/googlePlay/…/premium/PremiumSupport.kt` provides the Billing-backed variant.
- * Shared code must therefore keep referring to it as `PremiumSupport` only. Link URLs are shared
- * with the About screen ([R.string.about_coffee_link] / [R.string.about_patron_link]).
+ * NOTE: the sibling `src/googlePlay/…/premium/PremiumSupport.kt` (private overlay, gitignored)
+ * provides the Billing-backed variant under the same fully-qualified name. Shared code must
+ * therefore keep referring to it as `PremiumSupport` only. Link URLs are shared with the About
+ * screen ([R.string.about_coffee_link] / [R.string.about_patron_link]).
  */
 object PremiumSupport : PremiumSupportProvider {
     override val supportsInAppPurchase = false

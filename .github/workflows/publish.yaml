@@ -194,14 +194,17 @@ jobs:
           # Show the changelog
           cat "$changelog_file"
 
+      # Only the `foss` flavor is built here: the `googlePlay` flavor needs the gitignored private
+      # overlay (app/googlePlay.gradle.kts + app/src/googlePlay/) and is released separately via
+      # the Play Console (see PREMIUM_TIER_PLAN.md §8).
       - name: Build APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleFossRelease
 
       - name: Sign APK
         uses: ilharp/sign-android-release@nightly
         id: sign_app
         with:
-          releaseDir: app/build/outputs/apk/release
+          releaseDir: app/build/outputs/apk/foss/release
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}

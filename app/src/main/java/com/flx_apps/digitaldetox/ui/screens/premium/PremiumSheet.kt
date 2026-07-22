@@ -23,15 +23,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,6 +51,7 @@ import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSheetTrigger
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.review.AppReviewController
 import com.flx_apps.digitaldetox.util.formatDurationMsShort
 
 /**
@@ -68,6 +68,7 @@ import com.flx_apps.digitaldetox.util.formatDurationMsShort
 fun PremiumSheetHost(viewModel: PremiumSheetViewModel = viewModel()) {
     val trigger by PremiumSheetController.trigger.collectAsState()
     val currentTrigger = trigger
+    val activity = LocalActivity.current
     if (currentTrigger != null) {
         val isUnlocked by PremiumManager.isPremiumUnlocked.collectAsState()
         val impactStats by viewModel.impactStats.collectAsState()
@@ -85,7 +86,12 @@ fun PremiumSheetHost(viewModel: PremiumSheetViewModel = viewModel()) {
                 if (unlocked) {
                     PremiumUnlockedContent(
                         onReset = { PremiumManager.relock() },
-                        onDone = { PremiumSheetController.hide() },
+                        onDone = {
+                            PremiumSheetController.hide()
+                            // Peak-goodwill moment (often right after a purchase/unlock) — worth a
+                            // capped store-review ask. No-op in the FOSS build.
+                            activity?.let { AppReviewController.maybeAskForReview(it) }
+                        },
                     )
                 } else {
                     PremiumLockedContent(
@@ -105,7 +111,6 @@ private fun PremiumLockedContent(
     impactStats: PremiumImpactStats?,
     onUnlock: () -> Unit,
 ) {
-    val uriHandler = LocalUriHandler.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,6 +129,7 @@ private fun PremiumLockedContent(
         )
         Spacer(Modifier.height(8.dp))
         Text(
+            // the Google Play flavor overrides this string's value (src/googlePlay/res)
             text = stringResource(R.string.premium_sheet_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -139,25 +145,9 @@ private fun PremiumLockedContent(
         ExtrasCard()
 
         Spacer(Modifier.height(16.dp))
-        SupportButtons(uriHandler)
-
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedButton(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_donatedUnlock))
-        }
-        TextButton(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_freeUnlock))
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.premium_locked_footer),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        // Flavor seam (same fully-qualified function in src/foss and src/googlePlay): donation
+        // links + honor-system unlocks in FOSS, the Play Billing purchase actions on Google Play.
+        PremiumLockedSheetActions(onUnlock = onUnlock)
     }
 }
 
@@ -191,19 +181,24 @@ private fun PremiumUnlockedContent(
         )
         Spacer(Modifier.height(8.dp))
         Text(
+            // the Google Play flavor overrides this string's value (src/googlePlay/res)
             text = stringResource(R.string.premium_unlocked_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(20.dp))
+        // renders nothing on Google Play (no external payment links there)
         SupportButtons(uriHandler)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.premium_action_done))
         }
-        TextButton(onClick = onReset, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_relock))
+        if (PremiumSupport.allowsFreeUnlock) {
+            // resetting a *paid* entitlement makes no sense, so this is FOSS-only
+            TextButton(onClick = onReset, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.premium_action_relock))
+            }
         }
     }
 }
@@ -334,6 +329,7 @@ private fun ExtrasCard() {
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
+                    // the Google Play flavor overrides this string's value (src/googlePlay/res)
                     text = stringResource(R.string.premium_extras_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
@@ -351,7 +347,7 @@ private fun ExtrasCard() {
 }
 
 @Composable
-private fun SupportButtons(uriHandler: UriHandler) {
+internal fun SupportButtons(uriHandler: UriHandler) {
     PremiumSupport.supportLinks.forEachIndexed { index, link ->
         val url = stringResource(link.urlRes)
         val content: @Composable () -> Unit = {

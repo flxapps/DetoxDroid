@@ -417,7 +417,6 @@
     <string name="premium.unlocked.body">All extras are on. If DetoxDroid keeps earning its place on your phone, the tip jar is right below.</string>
     <string name="premium.action.donatedUnlock">I\'ve donated — unlock</string>
     <string name="premium.action.freeUnlock">Unlock without donating</string>
-    <string name="premium.action.buy">Unlock Premium</string>
     <string name="premium.action.relock">Reset</string>
     <string name="premium.action.done">Done</string>
     <string name="premium.locked.footer">The lock is just a nudge — no tracking, no strings attached.</string>

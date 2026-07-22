@@ -12,6 +12,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
@@ -78,6 +79,9 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
 
         scheduleUsageStatsSnapshot()
         UsageStatsTracker.init(this)
+        // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
+        // the premium entitlement here.
+        PremiumSupport.initialize(this)
         // Re-render all minimal launcher widgets on startup — after a process kill
         // (e.g. hot restart) the system may have reset them to the initial layout.
         MinimalLauncherWidgetProvider.updateAllWidgets(this)

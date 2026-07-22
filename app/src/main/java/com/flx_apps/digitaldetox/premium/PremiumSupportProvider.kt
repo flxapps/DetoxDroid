@@ -2,6 +2,11 @@ package com.flx_apps.digitaldetox.premium
 
 import android.content.Context
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+/** Shared "no price" flow for builds without an in-app purchase (FOSS). */
+private val NoPurchasePrice: StateFlow<String?> = MutableStateFlow(null)
 
 /**
  * An external "support the developer" link (e.g. Ko-Fi, Liberapay). The URL is a string resource so
@@ -47,6 +52,18 @@ interface PremiumSupportProvider {
      * flavor, which may not steer users to outside payment methods.
      */
     val supportLinks: List<SupportLink>
+
+    /**
+     * The localized display price of the premium unlock (e.g. "€4.99"), once known. Stays `null`
+     * in builds without an in-app purchase and while the price has not been fetched yet.
+     */
+    val purchasePriceText: StateFlow<String?> get() = NoPurchasePrice
+
+    /**
+     * One-time initialization at app start (application context). The Google Play flavor connects
+     * its billing client and restores the entitlement here; FOSS needs nothing.
+     */
+    fun initialize(context: Context) {}
 
     /**
      * Launches the in-app purchase flow. No-op in the FOSS flavor; the Google Play flavor will
