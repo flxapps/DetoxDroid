@@ -6,10 +6,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.MainActivity
+import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.olshevski.navigation.reimagined.navController
 import dev.olshevski.navigation.reimagined.navigate
 import dev.olshevski.navigation.reimagined.pop
+import dev.olshevski.navigation.reimagined.replaceAll
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -32,8 +34,13 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
     /**
      * The navigation controller that manages the navigation state.
      */
-    private val navController =
-        navController<NavigationRoutes>(startDestination = NavigationRoutes.Home)
+    private val navController = navController<NavigationRoutes>(
+        startDestination = if (OnboardingState.shouldShowOnboarding()) {
+            NavigationRoutes.Onboarding
+        } else {
+            NavigationRoutes.Home
+        }
+    )
 
     // You may either make navController public or just its backstack. The latter is convenient
     // when you don't want to expose navigation methods in the UI layer.
@@ -45,6 +52,19 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
      */
     fun onBackPress() {
         navController.pop()
+    }
+
+    /**
+     * Leaves the onboarding flow: pops back when it was opened on top of another screen (e.g.
+     * from the About screen), otherwise replaces it with the home screen (first run, where
+     * onboarding is the only backstack entry).
+     */
+    fun exitOnboarding() {
+        if (navController.backstack.entries.size > 1) {
+            navController.pop()
+        } else {
+            navController.replaceAll(NavigationRoutes.Home)
+        }
     }
 
     /**

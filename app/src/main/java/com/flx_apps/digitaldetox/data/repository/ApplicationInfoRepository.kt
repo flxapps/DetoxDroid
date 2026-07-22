@@ -9,7 +9,13 @@ import com.flx_apps.digitaldetox.util.isSystemApp
  * Holds the list of all installed apps and the set of all app categories.
  */
 data class ApplicationInfoData(
-    val packageName: String, val appName: String, val appCategory: String, val isSystemApp: Boolean
+    val packageName: String,
+    val appName: String,
+    val appCategory: String,
+    val isSystemApp: Boolean,
+    /** The OS-assigned [android.content.pm.ApplicationInfo.category] (CATEGORY_UNDEFINED if none). */
+    val osCategory: Int,
+    val hasLaunchIntent: Boolean
 )
 
 /**
@@ -29,7 +35,9 @@ object ApplicationInfoRepository {
                         packageName = appInfo.packageName,
                         appName = appInfo.loadLabel(packageManager).toString(),
                         appCategory = appInfo.getAppCategoryTitle(context),
-                        isSystemApp = appInfo.isSystemApp()
+                        isSystemApp = appInfo.isSystemApp(),
+                        osCategory = appInfo.category,
+                        hasLaunchIntent = packageManager.getLaunchIntentForPackage(appInfo.packageName) != null
                     )
                 }
         return installedApps

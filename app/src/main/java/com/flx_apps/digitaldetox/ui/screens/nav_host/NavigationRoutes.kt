@@ -15,6 +15,12 @@ sealed class NavigationRoutes : Parcelable {
     data object Home : NavigationRoutes()
 
     @Parcelize
+    data object Onboarding : NavigationRoutes()
+
+    @Parcelize
+    data object ShizukuSetup : NavigationRoutes()
+
+    @Parcelize
     data class ManageFeature(
         val featureId: FeatureId
     ) : NavigationRoutes()
