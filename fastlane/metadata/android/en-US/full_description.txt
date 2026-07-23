@@ -1,17 +1,20 @@
-Usually, "Digital Detoxing" apps in Android are about opting-in for a contract to not use our phones for the next X minutes. Or that we will not use the app Y for more than Z minutes. These contracts are often reinforced with financial incentives, i.e. if we fail we will have to pay a fee of a few dollars to the developers.
+Most "digital detox" apps ask you to sign a contract with yourself: no phone for the next X minutes, no more than Z minutes in app Y — and some even charge you money when you fail. DetoxDroid takes a different approach. Instead of relying on willpower, it removes the attention-grabbing tricks from your phone so that calm, healthy phone use becomes the default. You don't have to decide when to "detox" — protection is always on, and you deliberately pause it when you actually need something.
 
-This app follows a different approach by stripping away all the attention-grabbing and manipulative features of other apps. DetoxDroid does not require you to choose a time and place when you want to "detox", or punish you if you fail. Instead, it aims to enable you to use your phone rather than letting your phone use you.
+Use your phone. Don't let your phone use you.
 
 FEATURES
-* Grayscale: Going grayscale removes positive reinforcements and dampens compulsive smartphone use.
-* Exceptions: Exclude apps like your camera or gallery from the grayscale feature.
-* Automatic Do Not Disturb: Never forget to enter the "Do Not Disturb" mode.
-* Opt-out > Opt-in: Deliberately pause DetoxDroid rather than deliberately switching it on.
+
+* Automatic Grayscale: A colorless screen is far less addictive. Exclude apps that need color (camera, gallery, maps), set an optional daily budget of colored screen time, or dim the screen further with Extra Dim.
+* Break Doom Scrolling: Detects when you are stuck in an endless feed (Shorts, Reels & co.) and steps in with a prompt to stop. After a break, the feed stays locked for a cooldown period.
+* Disable Apps: Block or fully deactivate distracting apps — including their launcher icons and notifications — or give them a daily time budget after which they lock until the next day.
+* Automatic Do Not Disturb: DetoxDroid keeps Do Not Disturb switched on while it is active, so notifications wait for you — not the other way around.
+* Pause Button: Take intentional breaks from Quick Settings, your assistant, or by long-pressing a hardware button. DetoxDroid resumes automatically afterwards, and a minimum time between pauses keeps "just one more pause" in check.
+* Commitment Password: Lock DetoxDroid's settings behind a password — keep it yourself, or hand it to a partner or friend for extra accountability.
 
 INSTALLATION
-Unfortunately, installing the app on your phone is not enough for the grayscale feature to work. If your phone is rooted, you can grant the necessary permissions from the app. Otherwise, you need to grant the WRITE_SECURE_SETTINGS permission from your computer.
-Don't worry though, this usually will not take you more than a few minutes. Find out how to do it on GitHub: https://github.com/flxapps/DetoxDroid#installation
 
-SUPPORT DETOXDROID
-If you like the project, please consider becoming a patron on LiberaPay or buying me a coffee via Ko-Fi/PayPal. I would love to invest more time into it.
-Furthermore, always feel free to write me a mail or discuss the app on GitHub.
+Installing the app alone is not enough for the grayscale feature: Android only exposes the color-mode setting to apps holding the WRITE_SECURE_SETTINGS permission. On a rooted phone you can grant it directly from the app; otherwise you grant it once from a computer. It usually takes only a few minutes — a step-by-step guide is on GitHub: https://github.com/flxapps/DetoxDroid#installation
+
+FREE & OPEN SOURCE
+
+DetoxDroid is free software with no ads and no tracking. All features are available to everyone — the power-user extras are unlocked on the honor system: donate if you can, or unlock them for free. If DetoxDroid earns its place on your phone, you can support development via LiberaPay or Ko-fi, and report issues or contribute on GitHub.
