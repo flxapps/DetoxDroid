@@ -6,10 +6,12 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
@@ -417,8 +419,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
                 ).build()
 
         try {
-            // ID 101 is just an arbitrary constant integration ID
-            startForeground(101, notification)
+            // ID 101 is just an arbitrary constant integration ID; the specialUse type matches the
+            // manifest declaration (required on targetSdk >= 34, ignored on older devices)
+            ServiceCompat.startForeground(
+                this, 101, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
             Timber.i("Service moved to foreground")
         } catch (e: Exception) {
             Timber.e(e, "Failed to start foreground service")
