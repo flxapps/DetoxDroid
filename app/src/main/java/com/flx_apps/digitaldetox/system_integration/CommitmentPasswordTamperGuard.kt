@@ -39,7 +39,7 @@ internal class CommitmentPasswordTamperGuard(
         "com.miui.packageinstaller"
     )
 
-    private val appName by lazy { service.getString(R.string.app_name_).lowercase() }
+    private val appName by lazy { service.getString(R.string.app_displayName).lowercase() }
     private val accessibilityServiceName by lazy {
         service.getString(R.string.app_accessibilityService_name).lowercase()
     }

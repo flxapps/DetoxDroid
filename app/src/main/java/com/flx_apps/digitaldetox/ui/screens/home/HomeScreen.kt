@@ -152,7 +152,7 @@ private fun AppBar(
     TopAppBar(
         title = {
             Column {
-                Text(text = stringResource(id = R.string.app_name_))
+                Text(text = stringResource(id = R.string.app_displayName))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StatusIndicator(
                         indicatorColor = colorResource(
@@ -400,7 +400,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
-    val otherLabel = stringResource(id = R.string.usage_stats_other)
+    val otherLabel = stringResource(id = R.string.usageStats_other)
     val otherTime =
         (screenTime - chartStats.sumOf { it.totalTimeInForeground }.toFloat()).coerceAtLeast(1f)
 
@@ -566,7 +566,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 TextButton(onClick = {
                     navViewModel.openRoute(NavigationRoutes.UsageStats)
                 }) {
-                    Text(stringResource(id = R.string.usage_stats_more))
+                    Text(stringResource(id = R.string.usageStats_more))
                     Icon(
                         Icons.Default.KeyboardArrowRight,
                         contentDescription = null,

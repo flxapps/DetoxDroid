@@ -98,7 +98,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         modifier = Modifier.size(84.dp)
                     )
                     Text(
-                        text = stringResource(id = R.string.app_name_),
+                        text = stringResource(id = R.string.app_displayName),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp)

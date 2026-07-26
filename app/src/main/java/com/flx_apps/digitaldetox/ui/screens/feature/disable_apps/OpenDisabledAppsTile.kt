@@ -15,7 +15,7 @@ fun ManageDisabledAppsListTile() {
     OpenAppExceptionsTile(
         titleText = stringResource(id = R.string.feature_disableApps_manage),
         subtitleText = stringResource(
-            id = R.string.feature_disableApps_manage__defined, DisableAppsFeature.appExceptions.size
+            id = R.string.feature_disableApps_manage_defined, DisableAppsFeature.appExceptions.size
         ),
     )
 }

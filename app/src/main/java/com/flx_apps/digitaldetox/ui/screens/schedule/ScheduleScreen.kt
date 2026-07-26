@@ -240,7 +240,7 @@ fun timeSpanText(context: Context, start: LocalTime, end: LocalTime): String {
     if (start == end) return context.getString(R.string.feature_settings_schedule_allDay)
     val dtf = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
     val nextDayString = if (start.isAfter(end)) {
-        context.getString(R.string.feature_settings_schedule__nextDay)
+        context.getString(R.string.feature_settings_schedule_nextDay)
     } else {
         ""
     }

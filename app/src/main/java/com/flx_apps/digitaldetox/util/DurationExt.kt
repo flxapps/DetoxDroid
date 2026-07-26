@@ -9,7 +9,7 @@ fun Duration.toHrMinString(context: Context): String {
     val hours = this.inWholeHours
     val minutes = this.inWholeMinutes % 60
     return if (hours > 0) {
-        context.getString(R.string.duration_hours_minutes, hours, minutes)
+        context.getString(R.string.duration_hoursMinutes, hours, minutes)
     } else {
         context.getString(R.string.duration_minutes, minutes)
     }
@@ -22,7 +22,7 @@ fun Duration.toShortDurationString(context: Context): String {
         totalSeconds >= 3600 -> {
             val hours = totalSeconds / 3600
             val minutes = (totalSeconds % 3600) / 60
-            context.getString(R.string.duration_hours_minutes, hours, minutes)
+            context.getString(R.string.duration_hoursMinutes, hours, minutes)
         }
         totalSeconds >= 60 -> context.getString(R.string.duration_minutes, totalSeconds / 60)
         totalSeconds > 0 -> "${totalSeconds}s"
@@ -47,7 +47,7 @@ fun formatDurationMsCompact(context: Context, ms: Long): String {
     val hours = totalMinutes / 60
     val remainingMinutes = totalMinutes % 60
     return if (hours > 0 && remainingMinutes > 0) {
-        context.getString(R.string.duration_hours_compact, hours, remainingMinutes)
+        context.getString(R.string.duration_hoursCompact, hours, remainingMinutes)
     } else if (hours > 0) {
         context.getString(R.string.duration_hours_short, hours)
     } else {

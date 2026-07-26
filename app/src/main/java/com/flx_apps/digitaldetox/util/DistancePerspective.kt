@@ -20,11 +20,11 @@ object DistancePerspective {
 
     /** Reference heights/lengths in meters, ascending. Names include their article ("the …"). */
     private val LANDMARKS = listOf(
-        93.0 to R.string.landmark_statue_of_liberty,
-        324.0 to R.string.landmark_eiffel_tower,
-        443.0 to R.string.landmark_empire_state,
-        828.0 to R.string.landmark_burj_khalifa,
-        8_849.0 to R.string.landmark_mount_everest,
+        93.0 to R.string.landmark_statueOfLiberty,
+        324.0 to R.string.landmark_eiffelTower,
+        443.0 to R.string.landmark_empireState,
+        828.0 to R.string.landmark_burjKhalifa,
+        8_849.0 to R.string.landmark_mountEverest,
         42_195.0 to R.string.landmark_marathon
     )
 

@@ -53,7 +53,7 @@ fun BreakDoomScrollingFeatureSettingsSection(
                 viewModel.setTimeUntilNumberPickerDialogVisible(false)
             },
             label = {
-                context.getString(R.string.time__minutes, it)
+                context.getString(R.string.time_minutes, it)
             },
             range = 1..60
         )
@@ -65,7 +65,7 @@ fun BreakDoomScrollingFeatureSettingsSection(
         trailing = {
             Text(
                 text = stringResource(
-                    id = R.string.time__minutes, viewModel.timeUntilWarning.collectAsState().value
+                    id = R.string.time_minutes, viewModel.timeUntilWarning.collectAsState().value
                 )
             )
         },
@@ -100,7 +100,7 @@ fun CooldownTimeTile(
                 viewModel.setCooldownTimeNumberPickerDialogVisible(false)
             },
             label = {
-                context.getString(R.string.time__minutes, it)
+                context.getString(R.string.time_minutes, it)
             },
             range = 1..60
         )
@@ -110,7 +110,7 @@ fun CooldownTimeTile(
         titleText = stringResource(id = R.string.feature_doomScrolling_cooldownTime),
         subtitleText = stringResource(id = R.string.feature_doomScrolling_cooldownTime_description),
         trailing = {
-            Text(text = stringResource(id = R.string.time__minutes, cooldownTime))
+            Text(text = stringResource(id = R.string.time_minutes, cooldownTime))
         },
         onClick = {
             viewModel.setCooldownTimeNumberPickerDialogVisible(true)

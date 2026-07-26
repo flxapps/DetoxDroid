@@ -64,14 +64,14 @@ fun PerspectiveCardContent(
     var showRatePicker by remember { mutableStateOf(false) }
 
     if (showRatePicker) {
-        val offLabel = stringResource(R.string.usage_stats_time_value_off)
+        val offLabel = stringResource(R.string.usageStats_timeValue_off)
         NumberPickerDialog(
-            titleText = stringResource(R.string.usage_stats_time_value_setup),
+            titleText = stringResource(R.string.usageStats_timeValue_setup),
             initialValue = hourlyRate,
             range = 0..500 step 5,
             label = { rate ->
                 if (rate == 0) offLabel
-                else context.getString(R.string.usage_stats_rate_per_hour, formatMoney(rate.toDouble()))
+                else context.getString(R.string.usageStats_ratePerHour, formatMoney(rate.toDouble()))
             },
             onValueSelected = onHourlyRateChanged,
             onDismissRequest = { showRatePicker = false }
@@ -95,7 +95,7 @@ fun PerspectiveCardContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = stringResource(R.string.usage_stats_odometer_label),
+                    text = stringResource(R.string.usageStats_odometer_label),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -123,9 +123,9 @@ fun PerspectiveCardContent(
                 )
                 Text(
                     text = stringResource(
-                        R.string.usage_stats_time_value_label,
+                        R.string.usageStats_timeValue_label,
                         context.getString(
-                            R.string.usage_stats_rate_per_hour, formatMoney(hourlyRate.toDouble())
+                            R.string.usageStats_ratePerHour, formatMoney(hourlyRate.toDouble())
                         )
                     ),
                     style = MaterialTheme.typography.labelSmall,
@@ -140,12 +140,12 @@ fun PerspectiveCardContent(
                 trailingIcon = Icons.Default.ChevronRight
             ) {
                 Text(
-                    text = stringResource(R.string.usage_stats_time_value_setup),
+                    text = stringResource(R.string.usageStats_timeValue_setup),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = stringResource(R.string.usage_stats_time_value_hint),
+                    text = stringResource(R.string.usageStats_timeValue_hint),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -153,7 +153,7 @@ fun PerspectiveCardContent(
         }
 
         Text(
-            text = stringResource(R.string.usage_stats_perspective_footer),
+            text = stringResource(R.string.usageStats_perspective_footer),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
@@ -200,7 +200,7 @@ private fun PerspectiveTile(
             if (trailingIcon != null) {
                 Icon(
                     trailingIcon,
-                    contentDescription = stringResource(R.string.usage_stats_time_value_setup),
+                    contentDescription = stringResource(R.string.usageStats_timeValue_setup),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
@@ -219,12 +219,12 @@ private const val MS_PER_HOUR = 3_600_000.0
 private fun comparisonText(context: Context, meters: Double): String? {
     return when (val comparison = DistancePerspective.comparisonFor(meters)) {
         is DistancePerspective.Comparison.Landmark -> context.getString(
-            R.string.usage_stats_odometer_comparison,
+            R.string.usageStats_odometer_comparison,
             formatMultiplier(comparison.multiplier),
             context.getString(comparison.nameRes)
         )
         is DistancePerspective.Comparison.Floors ->
-            context.getString(R.string.usage_stats_odometer_floors, comparison.floors)
+            context.getString(R.string.usageStats_odometer_floors, comparison.floors)
         null -> null
     }
 }

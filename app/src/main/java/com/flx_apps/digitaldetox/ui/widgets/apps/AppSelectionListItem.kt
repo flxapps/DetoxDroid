@@ -110,9 +110,9 @@ fun AppSelectionListItem(
                         Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                             Text(
                                 text = if (isSystemApp) {
-                                    stringResource(id = R.string.app_badge_system)
+                                    stringResource(id = R.string.appList_badge_system)
                                 } else {
-                                    stringResource(id = R.string.app_badge_user)
+                                    stringResource(id = R.string.appList_badge_user)
                                 },
                                 style = MaterialTheme.typography.bodySmall
                             )

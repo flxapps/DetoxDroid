@@ -55,7 +55,7 @@ fun AllowedDailyTimeTile(
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
-            label = { context.getString(R.string.time__minutes, it) },
+            label = { context.getString(R.string.time_minutes, it) },
             initialValue = allowedDailyScreenTimeInMinutes.toInt(),
             onValueSelected = {
                 viewModel.setAllowedDailyScreenTime(it.toLong())
@@ -74,14 +74,14 @@ fun AllowedDailyTimeTile(
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                 Text(
                     stringResource(
-                        id = R.string.time__minutes, allowedDailyScreenTimeInMinutes
+                        id = R.string.time_minutes, allowedDailyScreenTimeInMinutes
                     )
                 )
                 Text(
                     modifier = Modifier.padding(top = 8.dp), text = stringResource(
-                        id = R.string.time__minutes, usedUpScreenTime
+                        id = R.string.time_minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
-                        id = R.string.time__minutes_used
+                        id = R.string.time_minutes_used
                     ), style = MaterialTheme.typography.labelVerySmall, textAlign = TextAlign.Center
                 )
             }

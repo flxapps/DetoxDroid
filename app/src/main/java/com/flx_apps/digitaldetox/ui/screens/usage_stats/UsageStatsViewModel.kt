@@ -458,7 +458,7 @@ class UsageStatsViewModel @Inject constructor(
     ): Map<String, Long> {
         val context = getApplication<Application>()
         val pm = context.packageManager
-        val fallbackLabel = context.getString(R.string.usage_stats_category_other)
+        val fallbackLabel = context.getString(R.string.usageStats_category_other)
         val byCategory = mutableMapOf<String, Long>()
         for ((pkg, stat) in perApp) {
             val category = runCatching {

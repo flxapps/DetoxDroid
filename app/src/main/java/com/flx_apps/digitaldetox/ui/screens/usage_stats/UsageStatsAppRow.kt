@@ -80,7 +80,7 @@ fun AppUsageRow(
             )
             if (showScrollInfo && app.scrollEventCount > 0) {
                 val scrollInfo = stringResource(
-                    R.string.usage_stats_scroll_intensity_detail,
+                    R.string.usageStats_scrollIntensity_detail,
                     app.scrollEventCount,
                     app.scrollsPerMinute
                 )
@@ -95,7 +95,7 @@ fun AppUsageRow(
                 )
             } else if (!showScrollInfo && app.launchCount > 0) {
                 Text(
-                    stringResource(R.string.usage_stats_launches, app.launchCount),
+                    stringResource(R.string.usageStats_launches, app.launchCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -108,13 +108,13 @@ fun AppUsageRow(
 fun BadgeChip(badge: DetoxBadge) {
     val bgAlpha = if (isSystemInDarkTheme()) 0.25f else 0.15f
     val (label, color) = when (badge) {
-        DetoxBadge.GRAYSCALE -> stringResource(R.string.usage_stats_badge_grayscale) to colorResource(
+        DetoxBadge.GRAYSCALE -> stringResource(R.string.usageStats_badge_grayscale) to colorResource(
             id = R.color.purple
         )
-        DetoxBadge.DISABLED -> stringResource(R.string.usage_stats_badge_disabled) to colorResource(
+        DetoxBadge.DISABLED -> stringResource(R.string.usageStats_badge_disabled) to colorResource(
             id = R.color.pink
         )
-        DetoxBadge.DOOM_SCROLL -> stringResource(R.string.usage_stats_badge_doom_scroll) to colorResource(
+        DetoxBadge.DOOM_SCROLL -> stringResource(R.string.usageStats_badge_doomScroll) to colorResource(
             id = R.color.orange
         )
     }

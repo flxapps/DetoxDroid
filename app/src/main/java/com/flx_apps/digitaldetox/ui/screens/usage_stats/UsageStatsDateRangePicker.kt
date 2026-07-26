@@ -87,14 +87,14 @@ fun UsageStatsDateRangePicker(
     val parsedEnd = if (isInputMode) parseInputDate(endText) else selectedEnd
     val confirmEnabled = parsedStart != null && parsedEnd != null && !parsedEnd.isBefore(parsedStart)
 
-    val selectStart = stringResource(R.string.usage_stats_timeframe_custom_start)
-    val selectEnd = stringResource(R.string.usage_stats_timeframe_custom_end)
-    val inputFormat = stringResource(R.string.usage_stats_timeframe_custom_input_format)
+    val selectStart = stringResource(R.string.usageStats_timeframe_custom_start)
+    val selectEnd = stringResource(R.string.usageStats_timeframe_custom_end)
+    val inputFormat = stringResource(R.string.usageStats_timeframe_custom_inputFormat)
     val inputModeContentDescription = stringResource(
         if (isInputMode) {
-            R.string.usage_stats_timeframe_custom_switch_to_calendar
+            R.string.usageStats_timeframe_custom_switchToCalendar
         } else {
-            R.string.usage_stats_timeframe_custom_switch_to_input
+            R.string.usageStats_timeframe_custom_switchToInput
         }
     )
 
@@ -136,7 +136,7 @@ fun UsageStatsDateRangePicker(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        stringResource(R.string.usage_stats_timeframe_custom_title),
+                        stringResource(R.string.usageStats_timeframe_custom_title),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
@@ -240,7 +240,7 @@ fun UsageStatsDateRangePicker(
                             onConfirm(parsedStart, parsedEnd)
                         }
                     }) {
-                        Text(stringResource(R.string.usage_stats_timeframe_custom_apply))
+                        Text(stringResource(R.string.usageStats_timeframe_custom_apply))
                     }
                 }
             }

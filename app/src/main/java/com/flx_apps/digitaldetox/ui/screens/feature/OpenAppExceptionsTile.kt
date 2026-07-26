@@ -35,8 +35,8 @@ fun OpenAppExceptionsTile(
     val feature = featureViewModel.feature as SupportsAppExceptionsFeature
     SimpleListTile(
         titleText = titleText, subtitleText = subtitleText ?: stringResource(
-        id = if (feature.appExceptionListType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions__notListed
-        else R.string.feature_settings_exceptions__onlyListed, feature.appExceptions.size
+        id = if (feature.appExceptionListType == AppExceptionListType.NOT_LIST) R.string.feature_settings_exceptions_notListed
+        else R.string.feature_settings_exceptions_onlyListed, feature.appExceptions.size
     ), trailing = {
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,

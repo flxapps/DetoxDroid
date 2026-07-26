@@ -501,7 +501,7 @@ fun ScreenUnlocksChart(unlockCount: Int, unlockDelta: Int?, unlockHourBuckets: I
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = stringResource(R.string.usage_stats_unlocks_short),
+                text = stringResource(R.string.usageStats_unlocks_short),
                 style = subtitleStyle
             )
             if (unlockDelta != null) {
@@ -754,7 +754,7 @@ fun ScrollIntensityChart(topApps: List<AppUsageStat>) {
             val app = sorted[tappedIndex]
             val tooltipLayout = textMeasurer.measure(
                 context.getString(
-                    R.string.usage_stats_scroll_intensity_detail,
+                    R.string.usageStats_scrollIntensity_detail,
                     app.scrollEventCount,
                     app.scrollsPerMinute
                 ),

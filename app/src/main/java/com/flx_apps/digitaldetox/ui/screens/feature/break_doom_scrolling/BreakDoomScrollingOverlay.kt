@@ -168,9 +168,9 @@ fun BreakDoomScrollingOverlayContent(
             Text(
                 text = stringResource(
                     id = when (mode) {
-                        BreakScreenMode.WARNING -> R.string.infiniteScroll_warning_title
-                        BreakScreenMode.COOLDOWN -> R.string.infiniteScroll_cooldown_title
-                        BreakScreenMode.GUIDE_OUT -> R.string.infiniteScroll_guideOut_title
+                        BreakScreenMode.WARNING -> R.string.feature_doomScrolling_warning_title
+                        BreakScreenMode.COOLDOWN -> R.string.feature_doomScrolling_cooldown_title
+                        BreakScreenMode.GUIDE_OUT -> R.string.feature_doomScrolling_guideOut_title
                     }
                 ),
                 style = MaterialTheme.typography.displaySmall,
@@ -181,9 +181,9 @@ fun BreakDoomScrollingOverlayContent(
             Text(
                 text = stringResource(
                     id = when (mode) {
-                        BreakScreenMode.WARNING -> R.string.infiniteScroll_warning_message
-                        BreakScreenMode.COOLDOWN -> R.string.infiniteScroll_cooldown_message
-                        BreakScreenMode.GUIDE_OUT -> R.string.infiniteScroll_guideOut_message
+                        BreakScreenMode.WARNING -> R.string.feature_doomScrolling_warning_message
+                        BreakScreenMode.COOLDOWN -> R.string.feature_doomScrolling_cooldown_message
+                        BreakScreenMode.GUIDE_OUT -> R.string.feature_doomScrolling_guideOut_message
                     }
                 ),
                 style = MaterialTheme.typography.titleMedium,
@@ -216,7 +216,7 @@ fun BreakDoomScrollingOverlayContent(
                 modifier = Modifier.padding(top = 32.dp)
             ) {
                 Text(
-                    text = stringResource(id = R.string.infiniteScroll_warning_exit),
+                    text = stringResource(id = R.string.feature_doomScrolling_warning_exit),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -225,7 +225,7 @@ fun BreakDoomScrollingOverlayContent(
                     modifier = Modifier.padding(top = 8.dp), onClick = onFinishFirst
                 ) {
                     Text(
-                        text = stringResource(id = R.string.infiniteScroll_warning_finishFirst),
+                        text = stringResource(id = R.string.feature_doomScrolling_warning_finishFirst),
                         color = Color.White.copy(alpha = 0.7f)
                     )
                 }

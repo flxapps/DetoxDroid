@@ -50,7 +50,7 @@ fun SummaryCardContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.usage_stats_screen_time),
+                    text = stringResource(R.string.usageStats_screenTime),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -87,7 +87,7 @@ fun SummaryCardContent(
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = stringResource(R.string.usage_stats_daily_average_short),
+                            text = stringResource(R.string.usageStats_dailyAverage_short),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
@@ -117,8 +117,8 @@ fun SummaryCardContent(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = stringResource(
-                        if (timeFrame == TimeFrame.TODAY) R.string.usage_stats_vs_yesterday
-                        else R.string.usage_stats_vs_previous_period
+                        if (timeFrame == TimeFrame.TODAY) R.string.usageStats_vsYesterday
+                        else R.string.usageStats_vsPreviousPeriod
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -132,7 +132,7 @@ fun SummaryCardContent(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
-                    stringResource(R.string.usage_stats_detox_impact),
+                    stringResource(R.string.usageStats_detoxImpact),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -144,28 +144,28 @@ fun SummaryCardContent(
                     detoxImpact.grayscaleTimeMs?.let {
                         DetoxMetricChip(
                             value = it.milliseconds.toHrMinString(context),
-                            label = stringResource(R.string.usage_stats_grayscale_time),
+                            label = stringResource(R.string.usageStats_grayscaleTime),
                             color = colorResource(id = R.color.purple)
                         )
                     }
                     detoxImpact.colorScreenTimeRemainingMs?.let {
                         DetoxMetricChip(
                             value = it.milliseconds.toHrMinString(context),
-                            label = stringResource(R.string.usage_stats_color_remaining),
+                            label = stringResource(R.string.usageStats_colorRemaining),
                             color = colorResource(id = R.color.green)
                         )
                     }
                     detoxImpact.doomScrollBreakCount?.let {
                         DetoxMetricChip(
                             value = it.toString(),
-                            label = stringResource(R.string.usage_stats_scroll_breaks),
+                            label = stringResource(R.string.usageStats_scrollBreaks),
                             color = colorResource(id = R.color.orange)
                         )
                     }
                     detoxImpact.appsBlockedCount?.let {
                         DetoxMetricChip(
                             value = it.toString(),
-                            label = stringResource(R.string.usage_stats_blocks),
+                            label = stringResource(R.string.usageStats_blocks),
                             color = colorResource(id = R.color.pink)
                         )
                     }

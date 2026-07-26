@@ -233,7 +233,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             )
             warn(
                 context, pkg, surfaceId, contextText = context.getString(
-                    R.string.infiniteScroll_warning_context_intensity,
+                    R.string.feature_doomScrolling_warning_context_intensity,
                     intensity.sessionScreenHeights.roundToInt(),
                     TimeUnit.MILLISECONDS.toMinutes(intensity.sessionDurationMs).coerceAtLeast(1)
                 )
@@ -277,7 +277,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
                     scrollViewInfo.warned = true
                     warn(
                         context, pkg, surfaceId, contextText = context.getString(
-                            R.string.infiniteScroll_warning_context_endless,
+                            R.string.feature_doomScrolling_warning_context_endless,
                             TimeUnit.MILLISECONDS.toMinutes(scrollingTime).coerceAtLeast(1)
                         )
                     )
@@ -385,9 +385,9 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             ((cooldown.endsAtMs - System.currentTimeMillis() + 59_999) / 60_000).coerceAtLeast(1)
         val text = context.getString(
             if (cooldown.wholeApp) {
-                R.string.infiniteScroll_cooldown_context_app
+                R.string.feature_doomScrolling_cooldown_context_app
             } else {
-                R.string.infiniteScroll_cooldown_context_surface
+                R.string.feature_doomScrolling_cooldown_context_surface
             },
             appLabel(context, packageName),
             remainingMinutes

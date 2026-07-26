@@ -90,7 +90,7 @@ fun AppDetailContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            stringResource(R.string.usage_stats_app_details),
+            stringResource(R.string.usageStats_appDetails),
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -105,7 +105,7 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usage_stats_opens_short),
+                        text = stringResource(R.string.usageStats_opens_short),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -118,7 +118,7 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usage_stats_sessions_short),
+                        text = stringResource(R.string.usageStats_sessions_short),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -132,7 +132,7 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usage_stats_avg_session),
+                        text = stringResource(R.string.usageStats_avgSession),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -148,7 +148,7 @@ fun AppDetailContent(
                         IconButton(
                             onClick = {
                                 val scrollInfo = context.getString(
-                                    R.string.usage_stats_scroll_intensity_detail,
+                                    R.string.usageStats_scrollIntensity_detail,
                                     app.scrollEventCount,
                                     app.scrollsPerMinute
                                 )
@@ -164,14 +164,14 @@ fun AppDetailContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Info,
-                                contentDescription = stringResource(R.string.usage_stats_scroll_intensity_info),
+                                contentDescription = stringResource(R.string.usageStats_scrollIntensity_info),
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     Text(
-                        text = stringResource(R.string.usage_stats_scroll_intensity_score),
+                        text = stringResource(R.string.usageStats_scrollIntensity_score),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -182,7 +182,7 @@ fun AppDetailContent(
         if (trendData.size >= 2) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                stringResource(R.string.usage_stats_trend_7d),
+                stringResource(R.string.usageStats_trend7d),
                 style = MaterialTheme.typography.titleSmall
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -194,7 +194,7 @@ fun AppDetailContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            stringResource(R.string.usage_stats_quick_actions),
+            stringResource(R.string.usageStats_quickActions),
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -218,7 +218,7 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
 
     if (!grayscaleActive && !doomScrollingActive && !disableAppsActive) {
         Text(
-            stringResource(R.string.usage_stats_no_active_features),
+            stringResource(R.string.usageStats_noActiveFeatures),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -230,8 +230,8 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
             if (grayscaleActive) {
                 val isInGrayscale = GrayscaleAppsFeature.appliesTo(app.packageName)
                 FeatureActionChip(
-                    label = if (isInGrayscale) stringResource(R.string.usage_stats_remove_grayscale)
-                    else stringResource(R.string.usage_stats_add_grayscale),
+                    label = if (isInGrayscale) stringResource(R.string.usageStats_removeGrayscale)
+                    else stringResource(R.string.usageStats_addGrayscale),
                     color = colorResource(id = R.color.purple),
                     isActive = isInGrayscale,
                     onClick = {
@@ -242,8 +242,8 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
             if (doomScrollingActive) {
                 val isInDoomScroll = BreakDoomScrollingFeature.appliesTo(app.packageName)
                 FeatureActionChip(
-                    label = if (isInDoomScroll) stringResource(R.string.usage_stats_remove_scroll_guard)
-                    else stringResource(R.string.usage_stats_add_scroll_guard),
+                    label = if (isInDoomScroll) stringResource(R.string.usageStats_removeScrollGuard)
+                    else stringResource(R.string.usageStats_addScrollGuard),
                     color = colorResource(id = R.color.orange),
                     isActive = isInDoomScroll,
                     onClick = {
@@ -254,8 +254,8 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
             if (disableAppsActive) {
                 val isDisabled = DisableAppsFeature.disableableApps.contains(app.packageName)
                 FeatureActionChip(
-                    label = if (isDisabled) stringResource(R.string.usage_stats_enable_app)
-                    else stringResource(R.string.usage_stats_disable_app),
+                    label = if (isDisabled) stringResource(R.string.usageStats_enableApp)
+                    else stringResource(R.string.usageStats_disableApp),
                     color = colorResource(id = R.color.pink),
                     isActive = isDisabled,
                     onClick = {

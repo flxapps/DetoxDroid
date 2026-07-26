@@ -1,530 +1,556 @@
 <resources>
-    <!-- region Global Strings -->
-    <string name="app.name_">DetoxDroid</string> <!-- added a underscore to this string name, as some library reserved a string with the name "app.name" already -->
-    <string name="app.quickSettingsTile">Pause DetoxDroid</string>
-    <string name="app.quickSettingsTile.paused">DetoxDroid has been paused for %d minutes.</string>
-    <string name="app.quickSettingsTile.noPause">Take another pause in %d minutes.</string>
-    <string name="app.accessibilityService.name">DetoxDroid Accessibility Service</string>
-    <string name="app.accessibilityService.description">Applies your DetoxDroid rules in real time based on the app you are using.</string>
-    <string name="app.notification.active">Digital Detox is active</string>
-    <string name="app.notification.paused">Paused</string>
-    <string name="app.notification.action.pause">Pause</string>
-    <string name="app.notification.action.resume">Resume</string>
-    <string name="app.notification.channelName">DetoxDroid Service</string>
-    <string name="app.notification.channelDescription">Keeps DetoxDroid active in the background</string>
-    <string name="app.notification.pausedUntil">Paused until %s</string>
-    <string name="action.go">Go</string>
-    <string name="action.save">Save</string>
-    <string name="action.delete">Delete</string>
-    <string name="action.back">Back</string>
-    <string name="action.cancel">Cancel</string>
-    <string name="action.close">Close</string>
-    <string name="action.grantPermission">Grant Permission</string>
-    <string name="action.requestPermissions">This feature needs additional permissions.</string>
-    <string name="action.search">Search</string>
-    <string name="action.search.close">Close Search</string>
-    <string name="action.filter">Filter</string>
-    <string name="time._minutes">%d min</string>
-    <string name="time._minutes.used">used</string>
+    <!-- Naming convention: "_" separates scopes, camelCase within a scope.
+         e.g. feature_doomScrolling_timeUntilWarning_description -->
+
+    <!-- region App & Services -->
+    <!-- not named "app_name": that resource name is already taken by a library -->
+    <string name="app_displayName">DetoxDroid</string>
+    <string name="app_quickSettingsTile">Pause DetoxDroid</string>
+    <string name="app_quickSettingsTile_paused">DetoxDroid has been paused for %d minutes.</string>
+    <string name="app_quickSettingsTile_noPause">Take another pause in %d minutes.</string>
+    <string name="app_accessibilityService_name">DetoxDroid Accessibility Service</string>
+    <string name="app_accessibilityService_description">Applies your DetoxDroid rules in real time based on the app you are using.</string>
+    <string name="app_notification_active">Digital Detox is active</string>
+    <string name="app_notification_action_pause">Pause</string>
+    <string name="app_notification_action_resume">Resume</string>
+    <string name="app_notification_channelName">DetoxDroid Service</string>
+    <string name="app_notification_channelDescription">Keeps DetoxDroid active in the background</string>
+    <string name="app_notification_pausedUntil">Paused until %s</string>
     <!-- endregion -->
 
-    <!-- region Navigation -->
-    <string name="navigation.reportIssue">Report Issue</string>
-    <string name="navigation.about">About</string>
+    <!-- region Common Actions -->
+    <string name="action_go">Go</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_grantPermission">Grant Permission</string>
+    <string name="action_requestPermissions">This feature needs additional permissions.</string>
+    <string name="action_search">Search</string>
+    <string name="action_search_close">Close Search</string>
+    <string name="action_filter">Filter</string>
     <!-- endregion -->
 
-    <string name="home.start">Start DetoxDroid</string>
-    <string name="home.stop">Stop DetoxDroid</string>
-    <string name="home.state.active">Running</string>
-    <string name="home.state.paused">Paused until %s</string>
-    <string name="home.state.inactive">Stopped</string>
-    <string name="home.hint">DetoxDroid helps you reduce distracting smartphone use.</string>
-    <string name="home.screenTime.today">Screen time today</string>
-    <string name="home.screenTime.unavailable">Screen time unavailable</string>
-    <string name="home.uninstall">Uninstall DetoxDroid</string>
-    <string name="home.uninstall.hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
-    <string name="home.uninstall.blocked.hint">Disabled while Commitment Password is active.</string>
-    <string name="home.uninstall.dialog.title">Are you sure?</string>
-    <string name="home.uninstall.dialog.message">This revokes DetoxDroid permissions so you can uninstall it normally.\n\nIf you install DetoxDroid again, you will need to grant these permissions again.</string>
-
-    <string name="feature.doNotDisturb">\"Do Not Disturb\" Mode</string>
-    <string name="feature.doNotDisturb.subtitle">Make it your new default</string>
-    <string name="feature.doNotDisturb.description">Automatically turns Do Not Disturb on while DetoxDroid is active. Configure exceptions in system settings.</string>
-    <string name="feature.doNotDisturb.systemSettings">System Settings</string>
-    <string name="feature.doNotDisturb.systemSettings.description">Open Android settings to fine-tune Do Not Disturb.</string>
-
-    <string name="feature.grayscale">Automatic Grayscale</string>
-    <string name="feature.grayscale.subtitle">Less color, less distraction</string>
-    <string name="feature.grayscale.description">Removes color from distracting apps while allowing exceptions where needed.</string>
-    <string name="feature.grayscale.allowedColorScreenTime">Allowed Daily Color Screen Time</string>
-    <string name="feature.grayscale.extraDim">Extra Dim</string>
-    <string name="feature.grayscale.extraDim.description.description">Dims your screen in grayscale mode. (Long-press to adjust intensity.)</string>
-    <string name="feature.grayscale.ignoreNonFullScreen">Ignore Non-Fullscreen Elements</string>
-    <string name="feature.grayscale.ignoreNonFullScreen.description">Ignores temporary overlays (for example volume panel or status bar) so they do not change color mode.</string>
-
-    <string name="feature.pause">Pause Button</string>
-    <string name="feature.pause.subtitle">Take intentional breaks</string>
-    <string name="feature.pause.description">Pause DetoxDroid for a defined time when needed. You can start a pause from Quick Settings, Assistant, or a hardware button shortcut.</string>
-    <string name="feature.pause.duration">Pause Duration</string>
-    <string name="feature.pause.duration.description">When the pause ends, DetoxDroid automatically resumes.</string>
-    <string name="feature.pause.minimumTimeBetween">Minimum Time Between Pauses</string>
-    <string name="feature.pause.minimumTimeBetween.description">Set a minimum gap between pauses to avoid habitual pausing.</string>
-    <string name="feature.pause.fromAssistant">Pause from Assistant</string>
-    <string name="feature.pause.fromAssistant.description">Set DetoxDroid as your default assistant app to start a pause. (Assistant is often opened by long-pressing Home.)</string>
-    <string name="feature.pause.fromHardwareButton">Pause from Hardware Button</string>
-    <string name="feature.pause.fromHardwareButton.description">Choose a hardware button to long-press for 2 seconds to pause DetoxDroid.</string>
-    <string name="feature.pause.fromHardwareButton.press">Press any hardware button on your phone</string>
-    <string name="feature.pause.fromHardwareButton.noButtonPressed">No button pressed yet</string>
-    <string name="feature.pause.fromHardwareButton.selected">Selected button: %s</string>
-    <string name="feature.pause.fromHardwareButton.appNotRunning">DetoxDroid must be running to assign a hardware button.</string>
-    <string name="feature.pause.notification.settings">Foreground Notification</string>
-    <string name="feature.pause.notification.settings.description">Show a foreground notification with a pause action. Requires notification permission.</string>
-    <string name="feature.pause.affectedFeatures">Affected Features</string>
-    <string name="feature.pause.affectedFeatures.all">All features</string>
-    <string name="feature.pause.affectedFeatures.count">%1$d of %2$d features</string>
-    <string name="feature.pause.affectedFeatures.dialogHint">Choose which features a pause turns off. Unchecked features keep running during a pause.</string>
-
-    <string name="feature.doomScrolling">Break \"Doom Scrolling\"</string>
-    <string name="feature.doomScrolling.subtitle">Avoid getting stuck in endless feeds</string>
-    <string name="feature.doomScrolling.description">EXPERIMENTAL — Detects long scrolling sessions and offers a prompt to stop.</string>
-    <string name="feature.doomScrolling.timeUntilWarning">Time Until Warning</string>
-    <string name="feature.doomScrolling.timeUntilWarning.description">Shows a warning when doom scrolling is detected for this duration.</string>
-    <string name="feature.doomScrolling.exceptions.summary.notList">Doom-scrolling checks are skipped in %d apps.</string>
-    <string name="feature.doomScrolling.exceptions.summary.onlyList">Doom-scrolling checks are active in %d apps.</string>
-    <string name="feature.doomScrolling.cooldownTime">Cooldown Period</string>
-    <string name="feature.doomScrolling.cooldownTime.description">After a doom-scrolling break, the app (or just the feed that caused it) stays locked for this long.</string>
-    <string name="feature.doomScrolling.sensitivity">Detection Sensitivity</string>
-    <string name="feature.doomScrolling.sensitivity.description">How easily fast feed-scrolling triggers a break. \"Strict\" intervenes soonest. Endless feeds are always detected.</string>
-    <string name="feature.doomScrolling.sensitivity.relaxed">Relaxed</string>
-    <string name="feature.doomScrolling.sensitivity.balanced">Balanced</string>
-    <string name="feature.doomScrolling.sensitivity.strict">Strict</string>
-
-    <string name="feature.settings.exceptions">App Exceptions</string>
-    <string name="feature.settings.exceptions._notListed">Active in all apps except %d selected.</string>
-    <string name="feature.settings.exceptions._onlyListed">Active only in %d selected apps.</string>
-    <string name="feature.settings.exceptions.empty">No apps found.</string>
-    <string name="feature.settings.exceptions.filterByAppType">Filter by app type</string>
-    <string name="feature.settings.exceptions.filterByCategory">Filter by app category</string>
-    <string name="feature.settings.exceptions.listType">Feature applies to</string>
-    <string name="feature.settings.exceptions.listType.description">Pick the scope.</string>
-    <string name="feature.settings.exceptions.listType.description.notList">Example: select YouTube to exclude it.</string>
-    <string name="feature.settings.exceptions.listType.description.onlyList">Example: select YouTube to include only it.</string>
-    <string name="feature.settings.exceptions.listType.notList">All apps except selected</string>
-    <string name="feature.settings.exceptions.listType.onlyList">Only selected apps</string>
-    <string name="feature.settings.exceptions.copyFrom">Copy from…</string>
-    <string name="feature.settings.exceptions.copyFrom.dialogTitle">Copy selection from</string>
-    <string name="feature.settings.exceptions.copyFrom.dialogHint">Takes over another feature\'s app selection. This replaces the current selection.</string>
-    <string name="feature.settings.exceptions.copyFrom.appCount">%d apps</string>
-
-    <string name="feature.grayscale.exceptions.summary.notList">Colors are allowed in %d apps.</string>
-    <string name="feature.grayscale.exceptions.summary.onlyList">Grayscale is active in %d apps.</string>
-
-    <string name="feature.settings.schedule">Feature Schedule</string>
-    <string name="feature.settings.schedule.hint">%d rules are set.</string>
-    <string name="feature.settings.schedule.hint.activeAllTheTime">The feature is active all the time.</string>
-    <string name="feature.settings.schedule.description">Limit this feature to specific days and time ranges.</string>
-    <string name="feature.settings.schedule.empty">No rules yet.\n\nThis feature is active all the time.</string>
-    <string name="feature.settings.schedule.everyDay">Every day</string>
-    <string name="feature.settings.schedule.allDay">all day</string>
-    <string name="feature.settings.schedule._nextDay">next day</string>
-    <string name="feature.settings.schedule.weekdays">Weekdays</string>
-    <string name="feature.settings.schedule.from">From</string>
-    <string name="feature.settings.schedule.to">To</string>
-
-    <string name="feature.disableApps">Disable Apps</string>
-    <string name="feature.disableApps.subtitle">Forget about them</string>
-    <string name="feature.disableApps.description">Blocks or deactivates selected apps while DetoxDroid is active, including launcher access and notifications.</string>
-    <string name="feature.disableApps.deactivatedApps">Deactivated Apps</string>
-    <string name="feature.disableApps.manage">Manage Deactivated Apps</string>
-    <string name="feature.disableApps.manage._defined">%d apps listed for deactivation</string>
-    <string name="feature.disableApps.allowedDailyTime">Allowed Daily Screen Time</string>
-    <string name="feature.disableApps.allowedDailyTime.description">Set allowed daily screen time for these apps. After that, they are deactivated until the next day. (DetoxDroid must be running to track screen time.)</string>
-    <string name="feature.disableApps.operationMode">Operation Mode</string>
-    <string name="feature.disableApps.operationMode.description">Choose whether to block apps with a warning screen or fully deactivate them. Deactivate mode needs extra permissions.</string>
-    <string name="feature.disableApps.operationMode.block">Block</string>
-    <string name="feature.disableApps.operationMode.deactivate">Deactivate</string>
-    <string name="feature.disableApps.overlay.title">Time\'s Up!</string>
-    <string name="feature.disableApps.overlay.message">You have used up your daily screen time for this app.</string>
-    <string name="feature.disableApps.overlay.message2">Take a break and come back tomorrow.</string>
-
-    <string name="exceptionsList.filter.userApps">User Apps</string>
-    <string name="exceptionsList.filter.systemApps">System Apps</string>
-    <string name="app.badge.user">User</string>
-    <string name="app.badge.system">System</string>
-
-    <string name="infiniteScroll.warning.title">Wake Up!</string>
-    <string name="infiniteScroll.warning.message">Looks like you are stuck in a doom-scrolling loop.</string>
-    <string name="infiniteScroll.warning.exit">Get me out of here</string>
-    <string name="infiniteScroll.warning.finishFirst">I\'ll finish this one, then leave</string>
-    <string name="infiniteScroll.warning.context.intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
-    <string name="infiniteScroll.warning.context.endless">This feed just keeps loading more — you\'ve been scrolling it for %1$d minutes.</string>
-    <string name="infiniteScroll.guideOut.title">A deal\'s a deal</string>
-    <string name="infiniteScroll.guideOut.message">Hope it was a good one — taking you home now.</string>
-    <string name="infiniteScroll.cooldown.title">Still cooling down</string>
-    <string name="infiniteScroll.cooldown.message">Nothing here runs away — enjoy a few more minutes to yourself.</string>
-    <string name="infiniteScroll.cooldown.context.app">%1$s will be back in %2$d min.</string>
-    <string name="infiniteScroll.cooldown.context.surface">This feed in %1$s will be back in %2$d min.</string>
-
-    <!-- region About -->
-    <string name="about.coffee">Buy me a coffee</string>
-    <string name="about.coffee.link">https://ko-fi.com/flxapps</string>
-    <string name="about.coffee.subtitle">Every coffee helps keep DetoxDroid improving.</string>
-    <string name="about.patron">Become a patron</string>
-    <string name="about.patron.link">https://liberapay.com/DetoxDroid/donate</string>
-    <string name="about.patron.subtitle">Even a small monthly pledge goes a long way.</string>
-    <string name="about.contact">Contact me</string>
-    <string name="about.contact.link">mailto:detoxdroid@flx-apps.com</string>
-    <string name="about.contact.subtitle">Happy to receive feature requests and ideas.</string>
-    <string name="about.github">Contribute on GitHub</string>
-    <string name="about.github.link">https://github.com/flxapps/DetoxDroid</string>
-    <string name="about.summary">Make digital detox your default.</string>
-    <string name="about.tile.subtitle">Project info, support, and contact.</string>
-    <string name="about.version">Version %1$s</string>
-    <string name="about.reportIssue.link">https://github.com/flxapps/DetoxDroid/issues/new</string>
-    <!-- endregion -->
-
-    <string name="noPermissions">Permissions Required</string>
-    <string name="noPermissions.text">To use this feature, grant elevated permissions from a computer with ADB:</string>
-    <string name="noPermissions.text.command">adb shell \"%s\"</string>
-    <string name="noPermissions.text.visitGitHub">See <annotation type="GITHUB">GitHub</annotation> for setup steps.</string>
-    <string name="noPermissions.text.rooted">Your device appears rooted. You can try granting permissions with root.</string>
-    <string name="noPermissions.text.rooted.go">Grant via Root</string>
-    <string name="noPermissions.text.shizuku">Shizuku is available. You can try granting permissions with it.</string>
-    <string name="noPermissions.text.shizuku.go">Grant via Shizuku</string>
-
-    <string name="appCategories.video">Video</string>
-    <string name="appCategories.music">Music</string>
-    <string name="appCategories.audio">Audio</string>
-    <string name="appCategories.shopping">Shopping</string>
-    <string name="appCategories.travel">Travel</string>
-    <string name="appCategories.workout">Workout</string>
-    <string name="appCategories.dating">Dating</string>
-    <string name="appCategories.news">News</string>
-    <string name="appCategories.maps">Maps</string>
-    <string name="appCategories.social">Social</string>
-    <string name="appCategories.productivity">Productivity</string>
-    <string name="appCategories.games">Games</string>
-    <string name="appCategories.image">Image</string>
-    <string name="appCategories.other">Other</string>
-
-    <string name="rootCommand.grantWriteSecuritySettingsPermission" translatable="false">pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS</string>
-    <string name="rootCommand.grantDeviceAdminPermission" translatable="false">dpm set-device-owner com.flx_apps.digitaldetox/.system_integration.DetoxDroidDeviceAdminReceiver</string>
-
-    <!-- region Commitment Password Feature -->
-    <string name="feature.commitmentPassword">Commitment Password</string>
-    <string name="feature.commitmentPassword.subtitle">Lock settings with a passphrase</string>
-    <string name="feature.commitmentPassword.description">Protect selected DetoxDroid settings with a passphrase so they cannot be changed impulsively. Requires Device Admin.</string>
-    <string name="feature.commitmentPassword.requiresDeviceAdmin">Device Admin required</string>
-    <string name="feature.commitmentPassword.requiresDeviceAdmin.message">Grant Device Admin to enable Commitment Password.</string>
-    <string name="feature.commitmentPassword.walkthrough.title">Before You Enable This</string>
-    <string name="feature.commitmentPassword.walkthrough.message">Enabling Commitment Password will:\n\n• Lock selected settings\n• Require your passphrase for changes\n• Prevent stopping DetoxDroid while locked\n• Allow 3 attempts, then a 5-minute cooldown\n• Offer 24-hour recovery if forgotten\n\nOnly enable this if you stored your passphrase safely.\n\nContinue?</string>
-    <string name="feature.commitmentPassword.walkthrough.proceed">I Understand</string>
-    <string name="feature.commitmentPassword.generated.title">Your Passphrase</string>
-    <string name="feature.commitmentPassword.generated.message">Save this passphrase now. You need it to change protected settings:\n\n%s\n\nWrite it down or store it in a secure place before continuing.</string>
-    <string name="feature.commitmentPassword.generated.copied">Passphrase copied to clipboard</string>
-    <string name="feature.commitmentPassword.generated.confirm">I Saved the Passphrase</string>
-    <string name="feature.commitmentPassword.copy">Copy Passphrase</string>
-    <string name="feature.commitmentPassword.unlock">Unlock Settings</string>
-    <string name="feature.commitmentPassword.unlock.description">Enter your passphrase to unlock settings for this session.</string>
-    <string name="feature.commitmentPassword.enter">Enter Passphrase</string>
-    <string name="feature.commitmentPassword.verify">Verify</string>
-    <string name="feature.commitmentPassword.incorrect">Wrong passphrase</string>
-    <string name="feature.commitmentPassword.attemptsRemaining">%d attempts remaining</string>
-    <string name="feature.commitmentPassword.lockedOut">Too many failed attempts. Try again in %s.</string>
-    <string name="feature.commitmentPassword.forgot">Forgot Passphrase?</string>
-    <string name="feature.commitmentPassword.recovery.title">Passphrase Recovery</string>
-    <string name="feature.commitmentPassword.recovery.message">If you forgot your passphrase, start a 24-hour recovery timer. After it ends, you can reset the passphrase.\n\nSettings stay locked during recovery.</string>
-    <string name="feature.commitmentPassword.recovery.initiate">Start 24-Hour Recovery</string>
-    <string name="feature.commitmentPassword.recovery.inProgress">Recovery in Progress</string>
-    <string name="feature.commitmentPassword.recovery.timeRemaining">Time remaining: %s</string>
-    <string name="feature.commitmentPassword.recovery.ready">Recovery ready</string>
-    <string name="feature.commitmentPassword.recovery.ready.message">The 24-hour waiting period is complete. You can now reset your passphrase.</string>
-    <string name="feature.commitmentPassword.recovery.channelName">Password recovery</string>
-    <string name="feature.commitmentPassword.recovery.channelDescription">Notifications about commitment password recovery</string>
-    <string name="feature.commitmentPassword.recovery.cancel">Cancel Recovery</string>
-    <string name="feature.commitmentPassword.recovery.complete">Reset Passphrase</string>
-    <string name="feature.commitmentPassword.disable.title">Disable protection?</string>
-    <string name="feature.commitmentPassword.disable.enterPassword">Enter your passphrase to disable commitment password.</string>
-    <string name="feature.commitmentPassword.disable">Disable Protection</string>
-    <string name="feature.commitmentPassword.banner.locked">Settings are locked. Enter passphrase to edit.</string>
-    <string name="feature.commitmentPassword.banner.unlocked">Settings unlocked for this session.</string>
-    <string name="feature.commitmentPassword.lockAgain">Lock Again</string>
-    <string name="feature.commitmentPassword.lockedBadge">Locked by commitment password</string>
-    <string name="feature.commitmentPassword.selectFeatures">Select Features to Lock</string>
-    <string name="feature.commitmentPassword.selectAll">All</string>
-    <string name="feature.commitmentPassword.selectNone">None</string>
-    <string name="feature.commitmentPassword.featuresSelected">%1$d of %2$d features selected</string>
-    <string name="feature.commitmentPassword.deviceOwner.hint.title">Optional: strengthen with Device Owner</string>
-    <string name="feature.commitmentPassword.deviceOwner.hint.subtitle">Commitment Password works with Device Admin. Device Owner also blocks uninstalling DetoxDroid. Tap to view the ADB command.</string>
-    <string name="feature.commitmentPassword.stop.locked">Stop is locked by Commitment Password. Unlock settings first.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.title">Attempt blocked</string>
-    <string name="feature.commitmentPassword.tamper.overlay.message">A protected system setting was changed while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.message.uninstall">Blocked: uninstall flow while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.message.deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.message.accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.reassurance">DetoxDroid blocked the action and returned you to Home. Your protection settings are still active.</string>
-    <string name="feature.commitmentPassword.tamper.overlay.action.backHome">Back to Home</string>
-    <string name="feature.commitmentPassword.tamper.iconDescription">Security warning icon</string>
-    <string name="feature.commitmentPassword.tamper.toast.uninstall">Blocked: uninstall while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.toast.deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature.commitmentPassword.tamper.toast.accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
-    <!-- endregion -->
-
-    <!-- region Device Admin Revoked Warning -->
-    <string name="deviceAdminRevoked.title">Device Admin was deactivated</string>
-    <string name="deviceAdminRevoked.message">Commitment Password was active when Device Admin was removed. This weakens protection and may allow uninstall or bypass.</string>
-    <string name="accessibilityDisabledWarning.title">Accessibility Service was disabled</string>
-    <string name="accessibilityDisabledWarning.message">DetoxDroid Accessibility Service was disabled while Commitment Password is active. Re-enable it to keep your commitment settings enforced.</string>
-    <string name="deviceAdminRevoked.prompt">To continue, type this sentence exactly:</string>
-    <string name="deviceAdminRevoked.requiredPhrase">I am making a short-term decision that I will regret</string>
-    <string name="deviceAdminRevoked.inputLabel">Type the sentence</string>
-    <string name="deviceAdminRevoked.continue">I understand, continue</string>
-    <string name="deviceAdminRevoked.reenable.explanation">Device Admin makes your commitment harder to bypass. Re-enable it to restore full protection.</string>
-    <string name="deviceAdminRevoked.disableRequestedWarning">Commitment Password is active. Disabling Device Admin makes DetoxDroid easier to uninstall and bypass.</string>
-    <!-- endregion -->
-
-    <!-- region Minimal Launcher Widget -->
-    <string name="widget.minimalLauncher.name">DetoxDroid Launcher Widget</string>
-    <string name="widget.minimalLauncher.description">Text-only launcher widget for selected apps.</string>
-    <string name="widget.minimalLauncher.empty">Tap here to select apps</string>
-    <string name="widget.minimalLauncher.configure.title">Configure Launcher Widget</string>
-    <string name="widget.minimalLauncher.available.emptyFiltered">No apps match your filters.</string>
-    <string name="widget.minimalLauncher.search.clear">Clear search</string>
-    <!-- shared between the widget configurator and the app exception lists -->
-    <string name="appList.section.selected">Selected apps</string>
-    <string name="appList.selected.empty">No apps selected yet.</string>
-    <string name="appList.section.available">Available apps</string>
-    <string name="widget.minimalLauncher.filter.category.empty">No categories available</string>
-    <string name="widget.minimalLauncher.label.display">Display label</string>
-    <string name="widget.minimalLauncher.label.display.hint">Leave empty to use the original app name.</string>
-    <string name="widget.minimalLauncher.label.original">Original: %1$s</string>
-    <string name="widget.minimalLauncher.label.edit">Edit label</string>
-    <string name="widget.minimalLauncher.reorder.drag">Drag to reorder</string>
-    <string name="widget.minimalLauncher.app.unavailable">This app is no longer available.</string>
-    <!-- endregion -->
-
-    <!-- region Usage Stats -->
-    <string name="usage_stats_more">More</string>
-    <string name="usage_stats_title">App Usage</string>
-    <string name="usage_stats_timeframe_today">Today</string>
-    <string name="usage_stats_timeframe_last7days">7 Days</string>
-    <string name="usage_stats_timeframe_last30days">30 Days</string>
-    <string name="usage_stats_timeframe_last90days">90 Days</string>
-    <string name="usage_stats_timeframe_custom">Custom</string>
-    <string name="usage_stats_timeframe_custom_title">Select date range</string>
-    <string name="usage_stats_timeframe_custom_start">Start date</string>
-    <string name="usage_stats_timeframe_custom_end">End date</string>
-    <string name="usage_stats_timeframe_custom_apply">Apply</string>
-    <string name="usage_stats_timeframe_custom_input_format">d/M/yyyy</string>
-    <string name="usage_stats_timeframe_custom_switch_to_calendar">Switch to calendar selection</string>
-    <string name="usage_stats_timeframe_custom_switch_to_input">Switch to text input</string>
-    <string name="usage_stats_improves_over_time">Stats improve over time — keep DetoxDroid active for scroll events &amp; more detailed data.</string>
-    <string name="usage_stats_daily_average">Daily avg: %s</string>
-    <string name="usage_stats_daily_average_short">daily avg</string>
-    <string name="usage_stats_vs_yesterday">vs yesterday</string>
-    <string name="usage_stats_vs_previous_period">vs previous period</string>
-    <string name="usage_stats_top_apps">Top Apps</string>
-    <string name="usage_stats_time_of_day">App Opens by Hour</string>
-    <string name="usage_stats_by_day">By Day</string>
-    <string name="usage_stats_weekday_averages">Weekday Averages</string>
-    <string name="usage_stats_detox_impact">Detox Impact</string>
-    <string name="usage_stats_badge_grayscale">Grayscale</string>
-    <string name="usage_stats_badge_disabled">Disabled</string>
-    <string name="usage_stats_badge_doom_scroll">Scroll Guard</string>
-    <string name="usage_stats_grayscale_time">In Grayscale</string>
-    <string name="usage_stats_color_remaining">Color Left</string>
-    <string name="usage_stats_scroll_breaks">Scroll Breaks</string>
-    <string name="usage_stats_blocks">Blocked</string>
-    <string name="usage_stats_launches">%d opens</string>
-    <string name="usage_stats_opens_short">opens</string>
-    <string name="usage_stats_sessions_short">sessions</string>
-    <string name="usage_stats_avg_session">avg session</string>
-    <string name="usage_stats_unlocks_short">unlocks</string>
-    <string name="usage_stats_other">Other</string>
-    <string name="usage_stats_app_details">Details</string>
-    <string name="usage_stats_quick_actions">Quick Actions</string>
-    <string name="usage_stats_no_active_features">No active features to manage</string>
-    <string name="usage_stats_add_grayscale">Add to grayscale</string>
-    <string name="usage_stats_remove_grayscale">Remove from grayscale</string>
-    <string name="usage_stats_add_scroll_guard">Add doom scroll guard</string>
-    <string name="usage_stats_remove_scroll_guard">Remove doom scroll guard</string>
-    <string name="usage_stats_disable_app">Disable app</string>
-    <string name="usage_stats_enable_app">Enable app</string>
-    <string name="usage_stats_no_data">No data for this period</string>
-    <string name="usage_stats_screen_time">Screen Time</string>
-    <string name="usage_stats_trend_7d">7-Day Trend</string>
-    <string name="usage_stats_screen_unlocks">Screen Unlocks</string>
-    <string name="usage_stats_app_categories">App Categories</string>
-    <string name="usage_stats_scroll_intensity">Scroll Intensity</string>
-    <string name="usage_stats_scroll_intensity_subtitle">Combines scroll volume with scroll speed</string>
-    <string name="usage_stats_scroll_intensity_score">scroll intensity</string>
-    <string name="usage_stats_scroll_intensity_detail">%1$d scrolls · %2$.1f/min</string>
-    <string name="usage_stats_scroll_intensity_info">Combines total scroll count with the rate per minute (using a sqrt weighting) so brief bursts cannot outrank sustained doom-scrolling. Higher = more doom-scrolling.</string>
-    <string name="usage_stats_show_more">Show more</string>
-    <string name="usage_stats_show_less">Show less</string>
-    <string name="usage_stats_sort">Sort by</string>
-    <string name="usage_stats_sort_screen_time">By Screen Time</string>
-    <string name="usage_stats_sort_opens">By Opens</string>
-    <string name="usage_stats_sort_scroll_intensity">By Scroll Intensity</string>
-    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <!-- region Common Formats -->
+    <string name="time_minutes">%d min</string>
+    <string name="time_minutes_used">used</string>
+    <string name="duration_hoursMinutes">%1$d h %2$d min</string>
     <string name="duration_minutes">%d min</string>
     <string name="duration_hours_short">%dh</string>
     <string name="duration_minutes_short">%dm</string>
-    <string name="duration_hours_compact">%1$dh%2$dm</string>
+    <string name="duration_hoursCompact">%1$dh%2$dm</string>
     <string name="distance_meters">%d m</string>
     <string name="distance_kilometers">%.1f km</string>
-    <string name="usage_stats_perspective">In Perspective</string>
-    <string name="usage_stats_perspective_subtitle">The same numbers, made tangible</string>
-    <string name="usage_stats_perspective_footer">No judgement — time just gets easier to feel this way.</string>
-    <string name="usage_stats_odometer_label">of content scrolled past</string>
-    <string name="usage_stats_odometer_comparison">≈ %1$s × %2$s</string>
-    <string name="usage_stats_odometer_floors">≈ %1$d floors of scrolling</string>
-    <string name="landmark_statue_of_liberty">the Statue of Liberty</string>
-    <string name="landmark_eiffel_tower">the Eiffel Tower</string>
-    <string name="landmark_empire_state">the Empire State Building</string>
-    <string name="landmark_burj_khalifa">the Burj Khalifa</string>
-    <string name="landmark_mount_everest">Mount Everest</string>
+    <!-- endregion -->
+
+    <!-- region Navigation -->
+    <string name="navigation_reportIssue">Report Issue</string>
+    <string name="navigation_about">About</string>
+    <string name="navigation_premium">DetoxDroid Premium</string>
+    <!-- endregion -->
+
+    <!-- region Home -->
+    <string name="home_start">Start DetoxDroid</string>
+    <string name="home_stop">Stop DetoxDroid</string>
+    <string name="home_state_active">Running</string>
+    <string name="home_state_paused">Paused until %s</string>
+    <string name="home_state_inactive">Stopped</string>
+    <string name="home_hint">DetoxDroid helps you reduce distracting smartphone use.</string>
+    <string name="home_screenTime_today">Screen time today</string>
+    <string name="home_screenTime_unavailable">Screen time unavailable</string>
+    <string name="home_uninstall">Uninstall DetoxDroid</string>
+    <string name="home_uninstall_hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
+    <string name="home_uninstall_blocked_hint">Disabled while Commitment Password is active.</string>
+    <string name="home_uninstall_dialog_title">Are you sure?</string>
+    <string name="home_uninstall_dialog_message">This revokes DetoxDroid permissions so you can uninstall it normally.\n\nIf you install DetoxDroid again, you will need to grant these permissions again.</string>
+    <string name="home_finishSetup_title">Finish your setup</string>
+    <string name="home_finishSetup_message">Grayscale from your setup is waiting for one small permission step.</string>
+    <string name="home_finishSetup_message_overlay">Scroll breaks and app blocking are waiting for the \"display over other apps\" permission.</string>
+    <string name="home_finishSetup_action">Finish</string>
+    <!-- endregion -->
+
+    <!-- region App Lists & Categories -->
+    <!-- shared between the widget configurator and the app exception lists -->
+    <string name="appList_section_selected">Selected apps</string>
+    <string name="appList_section_available">Available apps</string>
+    <string name="appList_selected_empty">No apps selected yet.</string>
+    <string name="appList_badge_user">User</string>
+    <string name="appList_badge_system">System</string>
+    <string name="exceptionsList_filter_userApps">User Apps</string>
+    <string name="exceptionsList_filter_systemApps">System Apps</string>
+    <string name="appCategories_video">Video</string>
+    <string name="appCategories_music">Music</string>
+    <string name="appCategories_audio">Audio</string>
+    <string name="appCategories_shopping">Shopping</string>
+    <string name="appCategories_travel">Travel</string>
+    <string name="appCategories_workout">Workout</string>
+    <string name="appCategories_dating">Dating</string>
+    <string name="appCategories_news">News</string>
+    <string name="appCategories_maps">Maps</string>
+    <string name="appCategories_social">Social</string>
+    <string name="appCategories_productivity">Productivity</string>
+    <string name="appCategories_games">Games</string>
+    <string name="appCategories_image">Image</string>
+    <string name="appCategories_other">Other</string>
+    <!-- endregion -->
+
+    <!-- region Shared Feature Settings -->
+    <string name="feature_settings_exceptions">App Exceptions</string>
+    <string name="feature_settings_exceptions_notListed">Active in all apps except %d selected.</string>
+    <string name="feature_settings_exceptions_onlyListed">Active only in %d selected apps.</string>
+    <string name="feature_settings_exceptions_empty">No apps found.</string>
+    <string name="feature_settings_exceptions_filterByAppType">Filter by app type</string>
+    <string name="feature_settings_exceptions_filterByCategory">Filter by app category</string>
+    <string name="feature_settings_exceptions_listType">Feature applies to</string>
+    <string name="feature_settings_exceptions_listType_description">Pick the scope.</string>
+    <string name="feature_settings_exceptions_listType_description_notList">Example: select YouTube to exclude it.</string>
+    <string name="feature_settings_exceptions_listType_description_onlyList">Example: select YouTube to include only it.</string>
+    <string name="feature_settings_exceptions_listType_notList">All apps except selected</string>
+    <string name="feature_settings_exceptions_listType_onlyList">Only selected apps</string>
+    <string name="feature_settings_exceptions_copyFrom">Copy from…</string>
+    <string name="feature_settings_exceptions_copyFrom_dialogTitle">Copy selection from</string>
+    <string name="feature_settings_exceptions_copyFrom_dialogHint">Takes over another feature\'s app selection. This replaces the current selection.</string>
+    <string name="feature_settings_exceptions_copyFrom_appCount">%d apps</string>
+
+    <string name="feature_settings_schedule">Feature Schedule</string>
+    <string name="feature_settings_schedule_hint">%d rules are set.</string>
+    <string name="feature_settings_schedule_hint_activeAllTheTime">The feature is active all the time.</string>
+    <string name="feature_settings_schedule_description">Limit this feature to specific days and time ranges.</string>
+    <string name="feature_settings_schedule_empty">No rules yet.\n\nThis feature is active all the time.</string>
+    <string name="feature_settings_schedule_everyDay">Every day</string>
+    <string name="feature_settings_schedule_allDay">all day</string>
+    <string name="feature_settings_schedule_nextDay">next day</string>
+    <string name="feature_settings_schedule_weekdays">Weekdays</string>
+    <string name="feature_settings_schedule_from">From</string>
+    <string name="feature_settings_schedule_to">To</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Do Not Disturb -->
+    <string name="feature_doNotDisturb">\"Do Not Disturb\" Mode</string>
+    <string name="feature_doNotDisturb_subtitle">Make it your new default</string>
+    <string name="feature_doNotDisturb_description">Automatically turns Do Not Disturb on while DetoxDroid is active. Configure exceptions in system settings.</string>
+    <string name="feature_doNotDisturb_systemSettings">System Settings</string>
+    <string name="feature_doNotDisturb_systemSettings_description">Open Android settings to fine-tune Do Not Disturb.</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Grayscale -->
+    <string name="feature_grayscale">Automatic Grayscale</string>
+    <string name="feature_grayscale_subtitle">Less color, less distraction</string>
+    <string name="feature_grayscale_description">Removes color from distracting apps while allowing exceptions where needed.</string>
+    <string name="feature_grayscale_allowedColorScreenTime">Allowed Daily Color Screen Time</string>
+    <string name="feature_grayscale_extraDim">Extra Dim</string>
+    <string name="feature_grayscale_extraDim_description">Dims your screen in grayscale mode. (Long-press to adjust intensity.)</string>
+    <string name="feature_grayscale_ignoreNonFullScreen">Ignore Non-Fullscreen Elements</string>
+    <string name="feature_grayscale_ignoreNonFullScreen_description">Ignores temporary overlays (for example volume panel or status bar) so they do not change color mode.</string>
+    <string name="feature_grayscale_exceptions_summary_notList">Colors are allowed in %d apps.</string>
+    <string name="feature_grayscale_exceptions_summary_onlyList">Grayscale is active in %d apps.</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Pause -->
+    <string name="feature_pause">Pause Button</string>
+    <string name="feature_pause_subtitle">Take intentional breaks</string>
+    <string name="feature_pause_description">Pause DetoxDroid for a defined time when needed. You can start a pause from Quick Settings, Assistant, or a hardware button shortcut.</string>
+    <string name="feature_pause_duration">Pause Duration</string>
+    <string name="feature_pause_duration_description">When the pause ends, DetoxDroid automatically resumes.</string>
+    <string name="feature_pause_minimumTimeBetween">Minimum Time Between Pauses</string>
+    <string name="feature_pause_minimumTimeBetween_description">Set a minimum gap between pauses to avoid habitual pausing.</string>
+    <string name="feature_pause_fromAssistant">Pause from Assistant</string>
+    <string name="feature_pause_fromAssistant_description">Set DetoxDroid as your default assistant app to start a pause. (Assistant is often opened by long-pressing Home.)</string>
+    <string name="feature_pause_fromHardwareButton">Pause from Hardware Button</string>
+    <string name="feature_pause_fromHardwareButton_description">Choose a hardware button to long-press for 2 seconds to pause DetoxDroid.</string>
+    <string name="feature_pause_fromHardwareButton_press">Press any hardware button on your phone</string>
+    <string name="feature_pause_fromHardwareButton_noButtonPressed">No button pressed yet</string>
+    <string name="feature_pause_fromHardwareButton_selected">Selected button: %s</string>
+    <string name="feature_pause_fromHardwareButton_appNotRunning">DetoxDroid must be running to assign a hardware button.</string>
+    <string name="feature_pause_notification_settings">Foreground Notification</string>
+    <string name="feature_pause_notification_settings_description">Show a foreground notification with a pause action. Requires notification permission.</string>
+    <string name="feature_pause_affectedFeatures">Affected Features</string>
+    <string name="feature_pause_affectedFeatures_all">All features</string>
+    <string name="feature_pause_affectedFeatures_count">%1$d of %2$d features</string>
+    <string name="feature_pause_affectedFeatures_dialogHint">Choose which features a pause turns off. Unchecked features keep running during a pause.</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Break Doom Scrolling -->
+    <string name="feature_doomScrolling">Break \"Doom Scrolling\"</string>
+    <string name="feature_doomScrolling_subtitle">Avoid getting stuck in endless feeds</string>
+    <string name="feature_doomScrolling_description">EXPERIMENTAL — Detects long scrolling sessions and offers a prompt to stop.</string>
+    <string name="feature_doomScrolling_timeUntilWarning">Time Until Warning</string>
+    <string name="feature_doomScrolling_timeUntilWarning_description">Shows a warning when doom scrolling is detected for this duration.</string>
+    <string name="feature_doomScrolling_exceptions_summary_notList">Doom-scrolling checks are skipped in %d apps.</string>
+    <string name="feature_doomScrolling_exceptions_summary_onlyList">Doom-scrolling checks are active in %d apps.</string>
+    <string name="feature_doomScrolling_cooldownTime">Cooldown Period</string>
+    <string name="feature_doomScrolling_cooldownTime_description">After a doom-scrolling break, the app (or just the feed that caused it) stays locked for this long.</string>
+    <string name="feature_doomScrolling_sensitivity">Detection Sensitivity</string>
+    <string name="feature_doomScrolling_sensitivity_description">How easily fast feed-scrolling triggers a break. \"Strict\" intervenes soonest. Endless feeds are always detected.</string>
+    <string name="feature_doomScrolling_sensitivity_relaxed">Relaxed</string>
+    <string name="feature_doomScrolling_sensitivity_balanced">Balanced</string>
+    <string name="feature_doomScrolling_sensitivity_strict">Strict</string>
+
+    <!-- overlay shown when a doom-scrolling session is detected -->
+    <string name="feature_doomScrolling_warning_title">Wake Up!</string>
+    <string name="feature_doomScrolling_warning_message">Looks like you are stuck in a doom-scrolling loop.</string>
+    <string name="feature_doomScrolling_warning_exit">Get me out of here</string>
+    <string name="feature_doomScrolling_warning_finishFirst">I\'ll finish this one, then leave</string>
+    <string name="feature_doomScrolling_warning_context_intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
+    <string name="feature_doomScrolling_warning_context_endless">This feed just keeps loading more — you\'ve been scrolling it for %1$d minutes.</string>
+    <string name="feature_doomScrolling_guideOut_title">A deal\'s a deal</string>
+    <string name="feature_doomScrolling_guideOut_message">Hope it was a good one — taking you home now.</string>
+    <string name="feature_doomScrolling_cooldown_title">Still cooling down</string>
+    <string name="feature_doomScrolling_cooldown_message">Nothing here runs away — enjoy a few more minutes to yourself.</string>
+    <string name="feature_doomScrolling_cooldown_context_app">%1$s will be back in %2$d min.</string>
+    <string name="feature_doomScrolling_cooldown_context_surface">This feed in %1$s will be back in %2$d min.</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Disable Apps -->
+    <string name="feature_disableApps">Disable Apps</string>
+    <string name="feature_disableApps_subtitle">Forget about them</string>
+    <string name="feature_disableApps_description">Blocks or deactivates selected apps while DetoxDroid is active, including launcher access and notifications.</string>
+    <string name="feature_disableApps_deactivatedApps">Deactivated Apps</string>
+    <string name="feature_disableApps_manage">Manage Deactivated Apps</string>
+    <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
+    <string name="feature_disableApps_allowedDailyTime">Allowed Daily Screen Time</string>
+    <string name="feature_disableApps_allowedDailyTime_description">Set allowed daily screen time for these apps. After that, they are deactivated until the next day. (DetoxDroid must be running to track screen time.)</string>
+    <string name="feature_disableApps_operationMode">Operation Mode</string>
+    <string name="feature_disableApps_operationMode_description">Choose whether to block apps with a warning screen or fully deactivate them. Deactivate mode needs extra permissions.</string>
+    <string name="feature_disableApps_operationMode_block">Block</string>
+    <string name="feature_disableApps_operationMode_deactivate">Deactivate</string>
+    <string name="feature_disableApps_overlay_title">Time\'s Up!</string>
+    <string name="feature_disableApps_overlay_message">You have used up your daily screen time for this app.</string>
+    <string name="feature_disableApps_overlay_message2">Take a break and come back tomorrow.</string>
+    <!-- endregion -->
+
+    <!-- region Feature: Commitment Password -->
+    <string name="feature_commitmentPassword">Commitment Password</string>
+    <string name="feature_commitmentPassword_subtitle">Lock settings with a passphrase</string>
+    <string name="feature_commitmentPassword_description">Protect selected DetoxDroid settings with a passphrase so they cannot be changed impulsively. Requires Device Admin.</string>
+    <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Grant Device Admin to enable Commitment Password.</string>
+    <string name="feature_commitmentPassword_walkthrough_title">Before You Enable This</string>
+    <string name="feature_commitmentPassword_walkthrough_message">Enabling Commitment Password will:\n\n• Lock selected settings\n• Require your passphrase for changes\n• Prevent stopping DetoxDroid while locked\n• Allow 3 attempts, then a 5-minute cooldown\n• Offer 24-hour recovery if forgotten\n\nOnly enable this if you stored your passphrase safely.\n\nContinue?</string>
+    <string name="feature_commitmentPassword_walkthrough_proceed">I Understand</string>
+    <string name="feature_commitmentPassword_generated_title">Your Passphrase</string>
+    <string name="feature_commitmentPassword_generated_message">Save this passphrase now. You need it to change protected settings:\n\n%s\n\nWrite it down or store it in a secure place before continuing.</string>
+    <string name="feature_commitmentPassword_generated_copied">Passphrase copied to clipboard</string>
+    <string name="feature_commitmentPassword_generated_confirm">I Saved the Passphrase</string>
+    <string name="feature_commitmentPassword_copy">Copy Passphrase</string>
+    <string name="feature_commitmentPassword_unlock">Unlock Settings</string>
+    <string name="feature_commitmentPassword_unlock_description">Enter your passphrase to unlock settings for this session.</string>
+    <string name="feature_commitmentPassword_enter">Enter Passphrase</string>
+    <string name="feature_commitmentPassword_verify">Verify</string>
+    <string name="feature_commitmentPassword_incorrect">Wrong passphrase</string>
+    <string name="feature_commitmentPassword_attemptsRemaining">%d attempts remaining</string>
+    <string name="feature_commitmentPassword_lockedOut">Too many failed attempts. Try again in %s.</string>
+    <string name="feature_commitmentPassword_forgot">Forgot Passphrase?</string>
+    <string name="feature_commitmentPassword_recovery_title">Passphrase Recovery</string>
+    <string name="feature_commitmentPassword_recovery_message">If you forgot your passphrase, start a 24-hour recovery timer. After it ends, you can reset the passphrase.\n\nSettings stay locked during recovery.</string>
+    <string name="feature_commitmentPassword_recovery_initiate">Start 24-Hour Recovery</string>
+    <string name="feature_commitmentPassword_recovery_inProgress">Recovery in Progress</string>
+    <string name="feature_commitmentPassword_recovery_timeRemaining">Time remaining: %s</string>
+    <string name="feature_commitmentPassword_recovery_ready">Recovery ready</string>
+    <string name="feature_commitmentPassword_recovery_ready_message">The 24-hour waiting period is complete. You can now reset your passphrase.</string>
+    <string name="feature_commitmentPassword_recovery_channelName">Password recovery</string>
+    <string name="feature_commitmentPassword_recovery_channelDescription">Notifications about commitment password recovery</string>
+    <string name="feature_commitmentPassword_recovery_cancel">Cancel Recovery</string>
+    <string name="feature_commitmentPassword_recovery_complete">Reset Passphrase</string>
+    <string name="feature_commitmentPassword_disable_title">Disable protection?</string>
+    <string name="feature_commitmentPassword_disable_enterPassword">Enter your passphrase to disable commitment password.</string>
+    <string name="feature_commitmentPassword_disable">Disable Protection</string>
+    <string name="feature_commitmentPassword_banner_locked">Settings are locked. Enter passphrase to edit.</string>
+    <string name="feature_commitmentPassword_banner_unlocked">Settings unlocked for this session.</string>
+    <string name="feature_commitmentPassword_lockAgain">Lock Again</string>
+    <string name="feature_commitmentPassword_lockedBadge">Locked by commitment password</string>
+    <string name="feature_commitmentPassword_selectFeatures">Select Features to Lock</string>
+    <string name="feature_commitmentPassword_selectAll">All</string>
+    <string name="feature_commitmentPassword_selectNone">None</string>
+    <string name="feature_commitmentPassword_featuresSelected">%1$d of %2$d features selected</string>
+    <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: strengthen with Device Owner</string>
+    <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Commitment Password works with Device Admin. Device Owner also blocks uninstalling DetoxDroid. Tap to view the ADB command.</string>
+    <string name="feature_commitmentPassword_stop_locked">Stop is locked by Commitment Password. Unlock settings first.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Attempt blocked</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Blocked: uninstall flow while Commitment Password is locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_reassurance">DetoxDroid blocked the action and returned you to Home. Your protection settings are still active.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Back to Home</string>
+    <string name="feature_commitmentPassword_tamper_iconDescription">Security warning icon</string>
+    <string name="feature_commitmentPassword_tamper_toast_uninstall">Blocked: uninstall while Commitment Password is locked.</string>
+    <string name="feature_commitmentPassword_tamper_toast_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
+    <string name="feature_commitmentPassword_tamper_toast_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
+    <!-- endregion -->
+
+    <!-- region Device Admin & Accessibility Warnings -->
+    <string name="deviceAdminRevoked_title">Device Admin was deactivated</string>
+    <string name="deviceAdminRevoked_message">Commitment Password was active when Device Admin was removed. This weakens protection and may allow uninstall or bypass.</string>
+    <string name="deviceAdminRevoked_prompt">To continue, type this sentence exactly:</string>
+    <string name="deviceAdminRevoked_requiredPhrase">I am making a short-term decision that I will regret</string>
+    <string name="deviceAdminRevoked_inputLabel">Type the sentence</string>
+    <string name="deviceAdminRevoked_continue">I understand, continue</string>
+    <string name="deviceAdminRevoked_reenable_explanation">Device Admin makes your commitment harder to bypass. Re-enable it to restore full protection.</string>
+    <string name="deviceAdminRevoked_disableRequestedWarning">Commitment Password is active. Disabling Device Admin makes DetoxDroid easier to uninstall and bypass.</string>
+    <string name="accessibilityDisabledWarning_title">Accessibility Service was disabled</string>
+    <string name="accessibilityDisabledWarning_message">DetoxDroid Accessibility Service was disabled while Commitment Password is active. Re-enable it to keep your commitment settings enforced.</string>
+    <!-- endregion -->
+
+    <!-- region Minimal Launcher Widget -->
+    <string name="widget_minimalLauncher_name">DetoxDroid Launcher Widget</string>
+    <string name="widget_minimalLauncher_description">Text-only launcher widget for selected apps.</string>
+    <string name="widget_minimalLauncher_empty">Tap here to select apps</string>
+    <string name="widget_minimalLauncher_configure_title">Configure Launcher Widget</string>
+    <string name="widget_minimalLauncher_available_emptyFiltered">No apps match your filters.</string>
+    <string name="widget_minimalLauncher_search_clear">Clear search</string>
+    <string name="widget_minimalLauncher_filter_category_empty">No categories available</string>
+    <string name="widget_minimalLauncher_label_display">Display label</string>
+    <string name="widget_minimalLauncher_label_display_hint">Leave empty to use the original app name.</string>
+    <string name="widget_minimalLauncher_label_original">Original: %1$s</string>
+    <string name="widget_minimalLauncher_label_edit">Edit label</string>
+    <string name="widget_minimalLauncher_reorder_drag">Drag to reorder</string>
+    <string name="widget_minimalLauncher_app_unavailable">This app is no longer available.</string>
+    <!-- endregion -->
+
+    <!-- region Usage Stats -->
+    <string name="usageStats_more">More</string>
+    <string name="usageStats_title">App Usage</string>
+    <string name="usageStats_timeframe_today">Today</string>
+    <string name="usageStats_timeframe_last7Days">7 Days</string>
+    <string name="usageStats_timeframe_last30Days">30 Days</string>
+    <string name="usageStats_timeframe_last90Days">90 Days</string>
+    <string name="usageStats_timeframe_custom">Custom</string>
+    <string name="usageStats_timeframe_custom_title">Select date range</string>
+    <string name="usageStats_timeframe_custom_start">Start date</string>
+    <string name="usageStats_timeframe_custom_end">End date</string>
+    <string name="usageStats_timeframe_custom_apply">Apply</string>
+    <string name="usageStats_timeframe_custom_inputFormat">d/M/yyyy</string>
+    <string name="usageStats_timeframe_custom_switchToCalendar">Switch to calendar selection</string>
+    <string name="usageStats_timeframe_custom_switchToInput">Switch to text input</string>
+    <string name="usageStats_improvesOverTime">Stats improve over time — keep DetoxDroid active for scroll events &amp; more detailed data.</string>
+    <string name="usageStats_dailyAverage">Daily avg: %s</string>
+    <string name="usageStats_dailyAverage_short">daily avg</string>
+    <string name="usageStats_vsYesterday">vs yesterday</string>
+    <string name="usageStats_vsPreviousPeriod">vs previous period</string>
+    <string name="usageStats_topApps">Top Apps</string>
+    <string name="usageStats_timeOfDay">App Opens by Hour</string>
+    <string name="usageStats_byDay">By Day</string>
+    <string name="usageStats_weekdayAverages">Weekday Averages</string>
+    <string name="usageStats_detoxImpact">Detox Impact</string>
+    <string name="usageStats_badge_grayscale">Grayscale</string>
+    <string name="usageStats_badge_disabled">Disabled</string>
+    <string name="usageStats_badge_doomScroll">Scroll Guard</string>
+    <string name="usageStats_grayscaleTime">In Grayscale</string>
+    <string name="usageStats_colorRemaining">Color Left</string>
+    <string name="usageStats_scrollBreaks">Scroll Breaks</string>
+    <string name="usageStats_blocks">Blocked</string>
+    <string name="usageStats_launches">%d opens</string>
+    <string name="usageStats_opens_short">opens</string>
+    <string name="usageStats_sessions_short">sessions</string>
+    <string name="usageStats_avgSession">avg session</string>
+    <string name="usageStats_unlocks_short">unlocks</string>
+    <string name="usageStats_other">Other</string>
+    <string name="usageStats_appDetails">Details</string>
+    <string name="usageStats_quickActions">Quick Actions</string>
+    <string name="usageStats_noActiveFeatures">No active features to manage</string>
+    <string name="usageStats_addGrayscale">Add to grayscale</string>
+    <string name="usageStats_removeGrayscale">Remove from grayscale</string>
+    <string name="usageStats_addScrollGuard">Add doom scroll guard</string>
+    <string name="usageStats_removeScrollGuard">Remove doom scroll guard</string>
+    <string name="usageStats_disableApp">Disable app</string>
+    <string name="usageStats_enableApp">Enable app</string>
+    <string name="usageStats_noData">No data for this period</string>
+    <string name="usageStats_screenTime">Screen Time</string>
+    <string name="usageStats_trend7d">7-Day Trend</string>
+    <string name="usageStats_screenUnlocks">Screen Unlocks</string>
+    <string name="usageStats_appCategories">App Categories</string>
+    <string name="usageStats_category_other">Other</string>
+    <string name="usageStats_scrollIntensity">Scroll Intensity</string>
+    <string name="usageStats_scrollIntensity_subtitle">Combines scroll volume with scroll speed</string>
+    <string name="usageStats_scrollIntensity_score">scroll intensity</string>
+    <string name="usageStats_scrollIntensity_detail">%1$d scrolls · %2$.1f/min</string>
+    <string name="usageStats_scrollIntensity_info">Combines total scroll count with the rate per minute (using a sqrt weighting) so brief bursts cannot outrank sustained doom-scrolling. Higher = more doom-scrolling.</string>
+    <string name="usageStats_showMore">Show more</string>
+    <string name="usageStats_showLess">Show less</string>
+    <string name="usageStats_sort">Sort by</string>
+    <string name="usageStats_sort_screenTime">By Screen Time</string>
+    <string name="usageStats_sort_opens">By Opens</string>
+    <string name="usageStats_sort_scrollIntensity">By Scroll Intensity</string>
+    <string name="usageStats_perspective">In Perspective</string>
+    <string name="usageStats_perspective_subtitle">The same numbers, made tangible</string>
+    <string name="usageStats_perspective_footer">No judgement — time just gets easier to feel this way.</string>
+    <string name="usageStats_odometer_label">of content scrolled past</string>
+    <string name="usageStats_odometer_comparison">≈ %1$s × %2$s</string>
+    <string name="usageStats_odometer_floors">≈ %1$d floors of scrolling</string>
+    <string name="usageStats_timeValue_setup">What\'s an hour of your time worth?</string>
+    <string name="usageStats_timeValue_hint">Tap to see what your screen time is worth</string>
+    <string name="usageStats_timeValue_label">your screen time, valued at %1$s</string>
+    <string name="usageStats_timeValue_off">off</string>
+    <string name="usageStats_ratePerHour">%1$s/h</string>
+
+    <!-- landmarks used by the "In Perspective" scroll-distance comparisons -->
+    <string name="landmark_statueOfLiberty">the Statue of Liberty</string>
+    <string name="landmark_eiffelTower">the Eiffel Tower</string>
+    <string name="landmark_empireState">the Empire State Building</string>
+    <string name="landmark_burjKhalifa">the Burj Khalifa</string>
+    <string name="landmark_mountEverest">Mount Everest</string>
     <string name="landmark_marathon">a marathon</string>
-    <string name="usage_stats_time_value_setup">What\'s an hour of your time worth?</string>
-    <string name="usage_stats_time_value_hint">Tap to see what your screen time is worth</string>
-    <string name="usage_stats_time_value_label">your screen time, valued at %1$s</string>
-    <string name="usage_stats_time_value_off">off</string>
-    <string name="usage_stats_rate_per_hour">%1$s/h</string>
+
     <string name="chart_tooltip_opens">%1$02d:00 — %2$d opens</string>
     <string name="chart_tooltip_unlocks">%1$02d:00 — %2$d unlocks</string>
     <string name="chart_percent">%1$s %2$d%%</string>
-    <string name="usage_stats_category_other">Other</string>
-    <!-- endregion -->
-
-    <!-- region Premium -->
-    <string name="navigation.premium">DetoxDroid Premium</string>
-    <string name="premium.tile.subtitle">Support the project &amp; unlock power-user extras</string>
-    <!-- Sheet headline adapts to what opened it -->
-    <string name="premium.sheet.title.generic">Support DetoxDroid</string>
-    <string name="premium.sheet.title.nudge">Getting a lot out of DetoxDroid?</string>
-    <string name="premium.sheet.title.locked">Unlock %1$s</string>
-    <string name="premium.sheet.subtitle">Free, open-source and ad-free — maintained by one person.</string>
-    <!-- Personal impact card ("reciprocity beats feature lists") -->
-    <string name="premium.impact.title">Your detox so far</string>
-    <string name="premium.impact.interventions">times DetoxDroid stepped in</string>
-    <string name="premium.impact.grayscale">spent in grayscale</string>
-    <string name="premium.impact.days">days of stats</string>
-    <string name="premium.impact.count">%d×</string>
-    <string name="premium.extras.title">Less than a coffee, just once</string>
-    <string name="premium.extras.body">Just a nudge to unlock the power-user extras — a one-time tip costs almost nothing but goes a long way.</string>
-    <string name="premium.unlocked.title">Premium unlocked</string>
-    <string name="premium.unlocked.subtitle">Thank you for supporting DetoxDroid 💚</string>
-    <string name="premium.unlocked.body">All extras are on. If DetoxDroid keeps earning its place on your phone, the tip jar is right below.</string>
-    <string name="premium.action.donatedUnlock">I\'ve donated — unlock</string>
-    <string name="premium.action.freeUnlock">Unlock without donating</string>
-    <string name="premium.action.relock">Reset</string>
-    <string name="premium.action.done">Done</string>
-    <string name="premium.locked.footer">The lock is just a nudge — no tracking, no strings attached.</string>
-    <string name="premium.feature.usageHistory">longer usage history</string>
-    <string name="premium.chip.lockedLabel">Premium</string>
     <!-- endregion -->
 
     <!-- region Onboarding -->
-    <string name="onboarding.action.getStarted">Get started</string>
-    <string name="onboarding.action.next">Continue</string>
-    <string name="onboarding.action.finish">Start DetoxDroid</string>
-    <string name="onboarding.action.skipSetup">Skip setup</string>
-    <string name="onboarding.skipSetup.dialog.title">Skip the setup?</string>
-    <string name="onboarding.skipSetup.dialog.message">Nothing will be configured. You can set up every feature later on its own screen, or replay this setup from the About screen.</string>
-    <string name="onboarding.skipSetup.dialog.confirm">Skip</string>
-    <string name="onboarding.welcome.title">Take back your attention</string>
-    <string name="onboarding.welcome.message">DetoxDroid helps you break autopilot habits: it can gray out distracting apps, interrupt endless scrolling and block apps once your daily budget is used up. In the next steps, we\'ll tailor it to how you actually use your phone.</string>
-    <string name="onboarding.welcome.privacy">Everything stays on your device. DetoxDroid is open source, has no ads and collects nothing.</string>
-    <string name="onboarding.usageAccess.title">See where your time goes</string>
-    <string name="onboarding.usageAccess.message">To suggest which apps to tame — and realistic daily goals — DetoxDroid needs the system\'s "usage access". It also powers your usage statistics. The data never leaves your phone.</string>
-    <string name="onboarding.usageAccess.grant">Grant usage access</string>
-    <string name="onboarding.usageAccess.granted">Usage access granted — we can now make personal suggestions.</string>
-    <string name="onboarding.usageAccess.skipHint">You can skip this — we\'ll suggest apps by category instead.</string>
-    <string name="onboarding.progress.stepOf">Step %1$d of %2$d</string>
-    <string name="onboarding.apps.title">Your distracting apps</string>
-    <string name="onboarding.apps.message">Based on your usage and app categories, these are likely your biggest time sinks. Adjust the selection — the next steps act on the selected apps.</string>
-    <string name="onboarding.apps.loading">Analyzing your app usage…</string>
-    <string name="onboarding.apps.empty">No suitable apps were found on this device. You can still pick apps for every feature later on.</string>
-    <string name="onboarding.apps.avgUsage">%s / day</string>
-    <plurals name="onboarding.apps.selectedCount">
+    <string name="onboarding_action_getStarted">Get started</string>
+    <string name="onboarding_action_next">Continue</string>
+    <string name="onboarding_action_finish">Start DetoxDroid</string>
+    <string name="onboarding_action_skipSetup">Skip setup</string>
+    <string name="onboarding_skipSetup_dialog_title">Skip the setup?</string>
+    <string name="onboarding_skipSetup_dialog_message">Nothing will be configured. You can set up every feature later on its own screen, or replay this setup from the About screen.</string>
+    <string name="onboarding_skipSetup_dialog_confirm">Skip</string>
+    <string name="onboarding_progress_stepOf">Step %1$d of %2$d</string>
+    <string name="onboarding_welcome_title">Take back your attention</string>
+    <string name="onboarding_welcome_message">DetoxDroid helps you break autopilot habits: it can gray out distracting apps, interrupt endless scrolling and block apps once your daily budget is used up. In the next steps, we\'ll tailor it to how you actually use your phone.</string>
+    <string name="onboarding_welcome_privacy">Everything stays on your device. DetoxDroid is open source, has no ads and collects nothing.</string>
+    <string name="onboarding_usageAccess_title">See where your time goes</string>
+    <string name="onboarding_usageAccess_message">To suggest which apps to tame — and realistic daily goals — DetoxDroid needs the system\'s "usage access". It also powers your usage statistics. The data never leaves your phone.</string>
+    <string name="onboarding_usageAccess_grant">Grant usage access</string>
+    <string name="onboarding_usageAccess_granted">Usage access granted — we can now make personal suggestions.</string>
+    <string name="onboarding_usageAccess_skipHint">You can skip this — we\'ll suggest apps by category instead.</string>
+    <string name="onboarding_apps_title">Your distracting apps</string>
+    <string name="onboarding_apps_message">Based on your usage and app categories, these are likely your biggest time sinks. Adjust the selection — the next steps act on the selected apps.</string>
+    <string name="onboarding_apps_loading">Analyzing your app usage…</string>
+    <string name="onboarding_apps_empty">No suitable apps were found on this device. You can still pick apps for every feature later on.</string>
+    <string name="onboarding_apps_avgUsage">%s / day</string>
+    <plurals name="onboarding_apps_selectedCount">
         <item quantity="one">%d app selected</item>
         <item quantity="other">%d apps selected</item>
     </plurals>
-    <string name="onboarding.preset.title">How strict should it be?</string>
-    <string name="onboarding.preset.message">Pick a starting point — every detail can be changed later.</string>
-    <string name="onboarding.preset.gentle">Gentle</string>
-    <string name="onboarding.preset.gentle.description">Interrupts endless scrolling in the selected apps with a break screen.</string>
-    <string name="onboarding.preset.balanced">Balanced</string>
-    <string name="onboarding.preset.balanced.badge">Recommended</string>
-    <string name="onboarding.preset.balanced.description">Gentle, plus: the selected apps turn grayscale once your daily budget is used up — without color, they lose much of their pull.</string>
-    <string name="onboarding.preset.strict">Strict</string>
-    <string name="onboarding.preset.strict.description">Balanced, plus: the selected apps are blocked entirely once the daily budget is spent — grayscale already warns you shortly before.</string>
-    <string name="onboarding.preset.budget">Daily budget</string>
-    <string name="onboarding.preset.budget.description">Your daily allowance for the selected apps before DetoxDroid steps in.</string>
-    <string name="onboarding.preset.budget.suggested">Suggested from your last 7 days of usage</string>
-    <string name="onboarding.preset.preview">See it in action</string>
-    <string name="onboarding.preset.preview.description">Preview grayscale on your screen for a few seconds.</string>
-    <string name="onboarding.permissions.title">A few permissions</string>
-    <string name="onboarding.permissions.message">Your setup needs the permissions below. Grant what you like — anything missing can be granted later from the feature screens.</string>
-    <string name="onboarding.permissions.overlay">Display over other apps</string>
-    <string name="onboarding.permissions.overlay.description">Needed to show break screens and to block apps.</string>
-    <string name="onboarding.permissions.notifications">Notifications</string>
-    <string name="onboarding.permissions.notifications.description">Status and reminders while a detox feature is active.</string>
-    <string name="onboarding.permissions.secureSettings">Grayscale permission</string>
-    <string name="onboarding.permissions.secureSettings.description">A special permission that lets DetoxDroid control the system\'s color filters.</string>
-    <string name="onboarding.permissions.secureSettings.oneTap">Tap to grant — Shizuku or root was detected on your device.</string>
-    <string name="onboarding.permissions.secureSettings.later">Tap for a guided setup — or finish this later; we\'ll remind you on the home screen.</string>
-    <string name="onboarding.permissions.accessibility">Accessibility service</string>
-    <string name="onboarding.permissions.accessibility.description">DetoxDroid\'s engine: the accessibility service detects which app is in the foreground and applies your rules. No data leaves your device.</string>
-    <string name="onboarding.permissions.accessibility.auto">Tap to enable it automatically.</string>
-    <string name="onboarding.permissions.accessibility.manual">Tap to open the accessibility settings and enable DetoxDroid there.</string>
-    <string name="onboarding.permissions.state.granted">Granted</string>
-    <string name="onboarding.done.title">You\'re all set</string>
-    <string name="onboarding.done.message">DetoxDroid is configured. You can fine-tune every feature — app lists, schedules and budgets — from the home screen at any time.</string>
-    <plurals name="onboarding.done.summary.scrollBreaks">
+    <string name="onboarding_preset_title">How strict should it be?</string>
+    <string name="onboarding_preset_message">Pick a starting point — every detail can be changed later.</string>
+    <string name="onboarding_preset_gentle">Gentle</string>
+    <string name="onboarding_preset_gentle_description">Interrupts endless scrolling in the selected apps with a break screen.</string>
+    <string name="onboarding_preset_balanced">Balanced</string>
+    <string name="onboarding_preset_balanced_badge">Recommended</string>
+    <string name="onboarding_preset_balanced_description">Gentle, plus: the selected apps turn grayscale once your daily budget is used up — without color, they lose much of their pull.</string>
+    <string name="onboarding_preset_strict">Strict</string>
+    <string name="onboarding_preset_strict_description">Balanced, plus: the selected apps are blocked entirely once the daily budget is spent — grayscale already warns you shortly before.</string>
+    <string name="onboarding_preset_budget">Daily budget</string>
+    <string name="onboarding_preset_budget_description">Your daily allowance for the selected apps before DetoxDroid steps in.</string>
+    <string name="onboarding_preset_budget_suggested">Suggested from your last 7 days of usage</string>
+    <string name="onboarding_preset_preview">See it in action</string>
+    <string name="onboarding_preset_preview_description">Preview grayscale on your screen for a few seconds.</string>
+    <string name="onboarding_permissions_title">A few permissions</string>
+    <string name="onboarding_permissions_message">Your setup needs the permissions below. Grant what you like — anything missing can be granted later from the feature screens.</string>
+    <string name="onboarding_permissions_overlay">Display over other apps</string>
+    <string name="onboarding_permissions_overlay_description">Needed to show break screens and to block apps.</string>
+    <string name="onboarding_permissions_notifications">Notifications</string>
+    <string name="onboarding_permissions_notifications_description">Status and reminders while a detox feature is active.</string>
+    <string name="onboarding_permissions_secureSettings">Grayscale permission</string>
+    <string name="onboarding_permissions_secureSettings_description">A special permission that lets DetoxDroid control the system\'s color filters.</string>
+    <string name="onboarding_permissions_secureSettings_oneTap">Tap to grant — Shizuku or root was detected on your device.</string>
+    <string name="onboarding_permissions_secureSettings_later">Tap for a guided setup — or finish this later; we\'ll remind you on the home screen.</string>
+    <string name="onboarding_permissions_accessibility">Accessibility service</string>
+    <string name="onboarding_permissions_accessibility_description">DetoxDroid\'s engine: the accessibility service detects which app is in the foreground and applies your rules. No data leaves your device.</string>
+    <string name="onboarding_permissions_accessibility_auto">Tap to enable it automatically.</string>
+    <string name="onboarding_permissions_accessibility_manual">Tap to open the accessibility settings and enable DetoxDroid there.</string>
+    <string name="onboarding_permissions_state_granted">Granted</string>
+    <string name="onboarding_done_title">You\'re all set</string>
+    <string name="onboarding_done_message">DetoxDroid is configured. You can fine-tune every feature — app lists, schedules and budgets — from the home screen at any time.</string>
+    <plurals name="onboarding_done_summary_scrollBreaks">
         <item quantity="one">Scroll breaks in %d app</item>
         <item quantity="other">Scroll breaks in %d apps</item>
     </plurals>
-    <string name="onboarding.done.summary.scrollBreaksPending">Scroll breaks are ready, but need the \"display over other apps\" permission before they can appear.</string>
-    <string name="onboarding.done.summary.grayscale">Grayscale after %s of daily use</string>
-    <string name="onboarding.done.summary.grayscalePending">Grayscale is prepared — one small step remains. We\'ll remind you on the home screen.</string>
-    <string name="onboarding.done.summary.blocking">Apps blocked after %s of daily use</string>
-    <string name="onboarding.done.summary.blockingPending">App blocking is ready, but needs the \"display over other apps\" permission to work.</string>
-    <string name="onboarding.done.summary.accessibilityPending">DetoxDroid\'s accessibility service is not enabled yet — you can start it from the home screen.</string>
-    <string name="onboarding.done.summary.nothing">No apps were selected, so nothing was configured. Explore the features from the home screen.</string>
-    <string name="onboarding.done.summary.rerunHint">Finishing replaces the app lists and daily budgets of the affected features with this selection.</string>
-    <string name="onboarding.done.summary.permissionsHint">Grant the missing permissions to switch these on — or do it later from the home screen; we\'ll remind you.</string>
-    <string name="about.onboarding">Set up DetoxDroid again</string>
-    <string name="about.onboarding.subtitle">Replay the welcome tour and starter presets</string>
+    <string name="onboarding_done_summary_scrollBreaksPending">Scroll breaks are ready, but need the \"display over other apps\" permission before they can appear.</string>
+    <string name="onboarding_done_summary_grayscale">Grayscale after %s of daily use</string>
+    <string name="onboarding_done_summary_grayscalePending">Grayscale is prepared — one small step remains. We\'ll remind you on the home screen.</string>
+    <string name="onboarding_done_summary_blocking">Apps blocked after %s of daily use</string>
+    <string name="onboarding_done_summary_blockingPending">App blocking is ready, but needs the \"display over other apps\" permission to work.</string>
+    <string name="onboarding_done_summary_accessibilityPending">DetoxDroid\'s accessibility service is not enabled yet — you can start it from the home screen.</string>
+    <string name="onboarding_done_summary_nothing">No apps were selected, so nothing was configured. Explore the features from the home screen.</string>
+    <string name="onboarding_done_summary_rerunHint">Finishing replaces the app lists and daily budgets of the affected features with this selection.</string>
+    <string name="onboarding_done_summary_permissionsHint">Grant the missing permissions to switch these on — or do it later from the home screen; we\'ll remind you.</string>
     <!-- endregion -->
 
-    <!-- region Shizuku setup wizard -->
-    <string name="shizukuSetup.title">Set up grayscale</string>
-    <string name="shizukuSetup.intro">Grayscale needs a one-time special permission. Without a computer, the easiest way is Shizuku — a free, trusted helper app. This takes about five minutes, and the permission survives reboots.</string>
-    <string name="shizukuSetup.rooted">Your device appears to be rooted — you can skip Shizuku and grant the permission directly.</string>
-    <string name="shizukuSetup.rooted.go">Grant via root</string>
-    <string name="shizukuSetup.step1.title">Install Shizuku</string>
-    <string name="shizukuSetup.step1.description">Get the free Shizuku app from Google Play.</string>
-    <string name="shizukuSetup.step1.go">Open Play Store</string>
-    <string name="shizukuSetup.step2.title">Start the Shizuku service</string>
-    <string name="shizukuSetup.step2.description">Open Shizuku and follow "Start via Wireless debugging". If Developer options are not enabled yet: in the phone settings, find "Build number" (usually under About phone) and tap it seven times, then enable "Wireless debugging" in the Developer options. Shizuku guides you through the pairing.</string>
-    <string name="shizukuSetup.step2.openShizuku">Open Shizuku</string>
-    <string name="shizukuSetup.step2.openDeveloperSettings">Developer settings</string>
-    <string name="shizukuSetup.step2.rebootHint">Note: after every reboot, Shizuku has to be started again — the permission it grants stays, though.</string>
-    <string name="shizukuSetup.step3.title">Allow DetoxDroid to use Shizuku</string>
-    <string name="shizukuSetup.step3.description">Shizuku will ask for your confirmation in a dialog.</string>
-    <string name="shizukuSetup.step3.go">Request access</string>
-    <string name="shizukuSetup.step4.title">Grant the grayscale permission</string>
-    <string name="shizukuSetup.step4.description">One tap — DetoxDroid grants itself the color-filter permission through Shizuku.</string>
-    <string name="shizukuSetup.step4.go">Grant permission</string>
-    <string name="shizukuSetup.completed.title">All done!</string>
-    <string name="shizukuSetup.completed.message">The permission is granted and grayscale is ready. If it was waiting from your setup, it is now active.</string>
-    <string name="shizukuSetup.completed.done">Done</string>
-    <string name="noPermissions.text.shizukuWizard">No computer at hand? Set up Shizuku directly on this phone, step by step.</string>
-    <string name="noPermissions.text.shizukuWizard.go">Guided setup</string>
-    <string name="home.finishSetup.title">Finish your setup</string>
-    <string name="home.finishSetup.message">Grayscale from your setup is waiting for one small permission step.</string>
-    <string name="home.finishSetup.message.overlay">Scroll breaks and app blocking are waiting for the \"display over other apps\" permission.</string>
-    <string name="home.finishSetup.action">Finish</string>
+    <!-- region Shizuku Setup Wizard -->
+    <string name="shizukuSetup_title">Set up grayscale</string>
+    <string name="shizukuSetup_intro">Grayscale needs a one-time special permission. Without a computer, the easiest way is Shizuku — a free, trusted helper app. This takes about five minutes, and the permission survives reboots.</string>
+    <string name="shizukuSetup_rooted">Your device appears to be rooted — you can skip Shizuku and grant the permission directly.</string>
+    <string name="shizukuSetup_rooted_go">Grant via root</string>
+    <string name="shizukuSetup_step1_title">Install Shizuku</string>
+    <string name="shizukuSetup_step1_description">Get the free Shizuku app from Google Play.</string>
+    <string name="shizukuSetup_step1_go">Open Play Store</string>
+    <string name="shizukuSetup_step2_title">Start the Shizuku service</string>
+    <string name="shizukuSetup_step2_description">Open Shizuku and follow "Start via Wireless debugging". If Developer options are not enabled yet: in the phone settings, find "Build number" (usually under About phone) and tap it seven times, then enable "Wireless debugging" in the Developer options. Shizuku guides you through the pairing.</string>
+    <string name="shizukuSetup_step2_openShizuku">Open Shizuku</string>
+    <string name="shizukuSetup_step2_openDeveloperSettings">Developer settings</string>
+    <string name="shizukuSetup_step2_rebootHint">Note: after every reboot, Shizuku has to be started again — the permission it grants stays, though.</string>
+    <string name="shizukuSetup_step3_title">Allow DetoxDroid to use Shizuku</string>
+    <string name="shizukuSetup_step3_description">Shizuku will ask for your confirmation in a dialog.</string>
+    <string name="shizukuSetup_step3_go">Request access</string>
+    <string name="shizukuSetup_step4_title">Grant the grayscale permission</string>
+    <string name="shizukuSetup_step4_description">One tap — DetoxDroid grants itself the color-filter permission through Shizuku.</string>
+    <string name="shizukuSetup_step4_go">Grant permission</string>
+    <string name="shizukuSetup_completed_title">All done!</string>
+    <string name="shizukuSetup_completed_message">The permission is granted and grayscale is ready. If it was waiting from your setup, it is now active.</string>
+    <string name="shizukuSetup_completed_done">Done</string>
+    <!-- endregion -->
+
+    <!-- region Elevated Permissions -->
+    <string name="noPermissions">Permissions Required</string>
+    <string name="noPermissions_text">To use this feature, grant elevated permissions from a computer with ADB:</string>
+    <string name="noPermissions_text_command">adb shell \"%s\"</string>
+    <string name="noPermissions_text_visitGitHub">See <annotation type="GITHUB">GitHub</annotation> for setup steps.</string>
+    <string name="noPermissions_text_rooted">Your device appears rooted. You can try granting permissions with root.</string>
+    <string name="noPermissions_text_rooted_go">Grant via Root</string>
+    <string name="noPermissions_text_shizuku">Shizuku is available. You can try granting permissions with it.</string>
+    <string name="noPermissions_text_shizuku_go">Grant via Shizuku</string>
+    <string name="noPermissions_text_shizukuWizard">No computer at hand? Set up Shizuku directly on this phone, step by step.</string>
+    <string name="noPermissions_text_shizukuWizard_go">Guided setup</string>
+    <string name="rootCommand_grantWriteSecuritySettingsPermission" translatable="false">pm grant com.flx_apps.digitaldetox android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="rootCommand_grantDeviceAdminPermission" translatable="false">dpm set-device-owner com.flx_apps.digitaldetox/.system_integration.DetoxDroidDeviceAdminReceiver</string>
+    <!-- endregion -->
+
+    <!-- region Premium -->
+    <string name="premium_tile_subtitle">Support the project &amp; unlock power-user extras</string>
+    <!-- Sheet headline adapts to what opened it -->
+    <string name="premium_sheet_title_generic">Support DetoxDroid</string>
+    <string name="premium_sheet_title_nudge">Getting a lot out of DetoxDroid?</string>
+    <string name="premium_sheet_title_locked">Unlock %1$s</string>
+    <string name="premium_sheet_subtitle">Free, open-source and ad-free — maintained by one person.</string>
+    <!-- Personal impact card ("reciprocity beats feature lists") -->
+    <string name="premium_impact_title">Your detox so far</string>
+    <string name="premium_impact_interventions">times DetoxDroid stepped in</string>
+    <string name="premium_impact_grayscale">spent in grayscale</string>
+    <string name="premium_impact_days">days of stats</string>
+    <string name="premium_impact_count">%d×</string>
+    <string name="premium_extras_title">Less than a coffee, just once</string>
+    <string name="premium_extras_body">Just a nudge to unlock the power-user extras — a one-time tip costs almost nothing but goes a long way.</string>
+    <string name="premium_unlocked_title">Premium unlocked</string>
+    <string name="premium_unlocked_subtitle">Thank you for supporting DetoxDroid 💚</string>
+    <string name="premium_unlocked_body">All extras are on. If DetoxDroid keeps earning its place on your phone, the tip jar is right below.</string>
+    <string name="premium_action_donatedUnlock">I\'ve donated — unlock</string>
+    <string name="premium_action_freeUnlock">Unlock without donating</string>
+    <string name="premium_action_relock">Reset</string>
+    <string name="premium_action_done">Done</string>
+    <string name="premium_locked_footer">The lock is just a nudge — no tracking, no strings attached.</string>
+    <string name="premium_feature_usageHistory">longer usage history</string>
+    <string name="premium_chip_lockedLabel">Premium</string>
+    <!-- endregion -->
+
+    <!-- region About -->
+    <string name="about_summary">Make digital detox your default.</string>
+    <string name="about_tile_subtitle">Project info, support, and contact.</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_coffee">Buy me a coffee</string>
+    <string name="about_coffee_link">https://ko-fi.com/flxapps</string>
+    <string name="about_coffee_subtitle">Every coffee helps keep DetoxDroid improving.</string>
+    <string name="about_patron">Become a patron</string>
+    <string name="about_patron_link">https://liberapay.com/DetoxDroid/donate</string>
+    <string name="about_patron_subtitle">Even a small monthly pledge goes a long way.</string>
+    <string name="about_contact">Contact me</string>
+    <string name="about_contact_link">mailto:detoxdroid@flx-apps.com</string>
+    <string name="about_contact_subtitle">Happy to receive feature requests and ideas.</string>
+    <string name="about_github">Contribute on GitHub</string>
+    <string name="about_github_link">https://github.com/flxapps/DetoxDroid</string>
+    <string name="about_reportIssue_link">https://github.com/flxapps/DetoxDroid/issues/new</string>
+    <string name="about_onboarding">Set up DetoxDroid again</string>
+    <string name="about_onboarding_subtitle">Replay the welcome tour and starter presets</string>
     <!-- endregion -->
 </resources>

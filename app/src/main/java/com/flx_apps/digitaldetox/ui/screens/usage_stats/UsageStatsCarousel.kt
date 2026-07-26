@@ -46,13 +46,13 @@ const val TrendsCarouselTestTag = "trendsCarousel"
 
 private enum class TrendsPage(val titleRes: Int?) {
     SUMMARY(titleRes = null),
-    PERSPECTIVE(R.string.usage_stats_perspective),
-    BY_DAY(R.string.usage_stats_by_day),
-    TIME_OF_DAY(R.string.usage_stats_time_of_day),
-    WEEKDAY(R.string.usage_stats_weekday_averages),
-    UNLOCKS(R.string.usage_stats_screen_unlocks),
-    CATEGORIES(R.string.usage_stats_app_categories),
-    SCROLL_INTENSITY(R.string.usage_stats_scroll_intensity)
+    PERSPECTIVE(R.string.usageStats_perspective),
+    BY_DAY(R.string.usageStats_byDay),
+    TIME_OF_DAY(R.string.usageStats_timeOfDay),
+    WEEKDAY(R.string.usageStats_weekdayAverages),
+    UNLOCKS(R.string.usageStats_screenUnlocks),
+    CATEGORIES(R.string.usageStats_appCategories),
+    SCROLL_INTENSITY(R.string.usageStats_scrollIntensity)
 }
 
 @Composable
@@ -100,14 +100,14 @@ fun TrendsCarousel(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            stringResource(R.string.usage_stats_by_day),
+                            stringResource(R.string.usageStats_byDay),
                             style = MaterialTheme.typography.titleSmall
                         )
                         if (state.effectiveDays > 1) {
                             val avgMs = state.totalScreenTime / state.effectiveDays
                             Text(
                                 text = stringResource(
-                                    R.string.usage_stats_daily_average,
+                                    R.string.usageStats_dailyAverage,
                                     formatDurationMsShort(context, avgMs)
                                 ),
                                 style = MaterialTheme.typography.labelSmall,
@@ -118,11 +118,11 @@ fun TrendsCarousel(
 
                     TrendsPage.PERSPECTIVE -> Column {
                         Text(
-                            stringResource(R.string.usage_stats_perspective),
+                            stringResource(R.string.usageStats_perspective),
                             style = MaterialTheme.typography.titleSmall
                         )
                         Text(
-                            stringResource(R.string.usage_stats_perspective_subtitle),
+                            stringResource(R.string.usageStats_perspective_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -130,11 +130,11 @@ fun TrendsCarousel(
 
                     TrendsPage.SCROLL_INTENSITY -> Column {
                         Text(
-                            stringResource(R.string.usage_stats_scroll_intensity),
+                            stringResource(R.string.usageStats_scrollIntensity),
                             style = MaterialTheme.typography.titleSmall
                         )
                         Text(
-                            stringResource(R.string.usage_stats_scroll_intensity_subtitle),
+                            stringResource(R.string.usageStats_scrollIntensity_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

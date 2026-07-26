@@ -59,7 +59,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app.name_"
+        android:label="@string/app_displayName"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DetoxDroid"
@@ -67,7 +67,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app.name_"
+            android:label="@string/app_displayName"
             android:theme="@style/Theme.DetoxDroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -86,7 +86,7 @@
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:label="@string/widget.minimalLauncher.configure.title"
+            android:label="@string/widget_minimalLauncher_configure_title"
             android:theme="@style/Theme.DetoxDroid">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
@@ -95,10 +95,10 @@
 
         <service
             android:name=".system_integration.DetoxDroidAccessibilityService"
-            android:description="@string/app.accessibilityService.description"
+            android:description="@string/app_accessibilityService_description"
             android:exported="false"
             android:foregroundServiceType="specialUse"
-            android:label="@string/app.accessibilityService.name"
+            android:label="@string/app_accessibilityService_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
@@ -136,7 +136,7 @@
         <receiver
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetProvider"
             android:exported="false"
-            android:label="@string/widget.minimalLauncher.name">
+            android:label="@string/widget_minimalLauncher_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -152,7 +152,7 @@
         <service
             android:name="android.service.voice.VoiceInteractionService"
             android:exported="false"
-            android:label="@string/app.name_"
+            android:label="@string/app_displayName"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:process=":interactor">
             <meta-data
@@ -169,7 +169,7 @@
             android:name=".system_integration.PauseTileService"
             android:exported="true"
             android:icon="@drawable/ic_launcher_foreground_outlined"
-            android:label="@string/app.quickSettingsTile"
+            android:label="@string/app_quickSettingsTile"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
                 android:name="android.service.quicksettings.TOGGLEABLE_TILE"

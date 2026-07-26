@@ -316,9 +316,9 @@ fun AppExceptionsListTypeSection(
         Text(
             text = stringResource(
                 id = if (selectedListType == AppExceptionListType.NOT_LIST) {
-                    R.string.feature_settings_exceptions__notListed
+                    R.string.feature_settings_exceptions_notListed
                 } else {
-                    R.string.feature_settings_exceptions__onlyListed
+                    R.string.feature_settings_exceptions_onlyListed
                 }, toggledItemsSize
             ), modifier = Modifier.padding(top = 6.dp)
         )

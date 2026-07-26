@@ -92,7 +92,7 @@ private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewM
 fun ExtraDimTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_extraDim),
-        subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description_description),
+        subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description),
         trailing = {
             Checkbox(checked = viewModel.extraDimActivated.collectAsState().value,
                 onCheckedChange = {
@@ -149,13 +149,13 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
         subtitleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime_description),
         trailing = {
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                Text(stringResource(id = R.string.time__minutes, allowedDailyColorScreenTime))
+                Text(stringResource(id = R.string.time_minutes, allowedDailyColorScreenTime))
                 Text(
                     modifier = Modifier.padding(top = 8.dp),
                     text = stringResource(
-                        id = R.string.time__minutes, usedUpScreenTime
+                        id = R.string.time_minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
-                        id = R.string.time__minutes_used
+                        id = R.string.time_minutes_used
                     ),
                     style = androidx.compose.material3.MaterialTheme.typography.labelVerySmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center

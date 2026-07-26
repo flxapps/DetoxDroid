@@ -232,7 +232,7 @@ class DistancePerspectiveTest {
         val eiffel = DistancePerspective.comparisonFor(420.0)
         assertTrue(eiffel is DistancePerspective.Comparison.Landmark)
         eiffel as DistancePerspective.Comparison.Landmark
-        assertEquals(R.string.landmark_eiffel_tower, eiffel.nameRes)
+        assertEquals(R.string.landmark_eiffelTower, eiffel.nameRes)
         assertEquals(420.0 / 324.0, eiffel.multiplier, 1e-9)
 
         val marathon = DistancePerspective.comparisonFor(100_000.0)

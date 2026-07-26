@@ -169,7 +169,7 @@ internal fun PresetStep(viewModel: OnboardingViewModel) {
                 },
                 trailing = {
                     Text(
-                        text = stringResource(id = R.string.time__minutes, budgetMinutes),
+                        text = stringResource(id = R.string.time_minutes, budgetMinutes),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

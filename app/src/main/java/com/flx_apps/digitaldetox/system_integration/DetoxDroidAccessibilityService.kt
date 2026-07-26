@@ -401,7 +401,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val isPausing = PauseButtonFeature.isPausing()
         val notification: Notification =
             NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-                .setContentTitle(getString(R.string.app_name_)).setContentText(
+                .setContentTitle(getString(R.string.app_displayName)).setContentText(
                     if (isPausing) {
                         // show the actual end of the pause instead of a bare "Paused"
                         getString(
