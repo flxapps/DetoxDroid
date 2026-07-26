@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.flx_apps.digitaldetox.util.formatCountdown
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -222,7 +223,7 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
                         Text(
                             text = stringResource(
                                 R.string.feature_commitmentPassword_lockedOut,
-                                formatDuration(remainingLockoutTime)
+                                formatCountdown(context, remainingLockoutTime)
                             ),
                             color = MaterialTheme.colorScheme.error
                         )
@@ -269,7 +270,7 @@ private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) 
                         if (CommitmentPasswordFeature.isLockedOut()) {
                             errorMessage = context.getString(
                                 R.string.feature_commitmentPassword_lockedOut,
-                                formatDuration(CommitmentPasswordFeature.getRemainingLockoutTime())
+                                formatCountdown(context, CommitmentPasswordFeature.getRemainingLockoutTime())
                             )
                             return@TextButton
                         }
@@ -351,7 +352,7 @@ private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
                 Text(
                     stringResource(
                         R.string.feature_commitmentPassword_recovery_timeRemaining,
-                        formatDuration(remainingRecoveryTime)
+                        formatCountdown(context, remainingRecoveryTime)
                     )
                 )
             },
@@ -388,17 +389,5 @@ private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
                 }
             }
         )
-    }
-}
-
-private fun formatDuration(milliseconds: Long): String {
-    val totalSeconds = milliseconds / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return when {
-        hours > 0 -> String.format("%dh %dm", hours, minutes)
-        minutes > 0 -> String.format("%dm %ds", minutes, seconds)
-        else -> String.format("%ds", seconds)
     }
 }

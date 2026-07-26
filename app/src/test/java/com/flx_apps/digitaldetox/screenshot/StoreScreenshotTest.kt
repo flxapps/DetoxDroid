@@ -41,6 +41,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -155,7 +156,9 @@ class StoreScreenshotTest {
         interact = {
             // Switch to the 7-day timeframe (premium is unlocked in the seed) so the weekly history
             // backed by the seeded Room data is shown instead of today's summary.
-            composeRule.onNodeWithText("7 Days").performClick()
+            composeRule.onNodeWithText(
+                composeRule.activity.getString(R.string.usageStats_timeframe_last7Days)
+            ).performClick()
             settle()
             // Advance the trends carousel to its "In Perspective" page — scroll distance reframed as
             // a physical distance against a landmark, a far stronger visual than the raw summary.
@@ -221,9 +224,18 @@ class StoreScreenshotTest {
     }
 
     private inline fun forEachLocale(block: (MarketingLocale) -> Unit) {
-        MARKETING_LOCALES.forEach { locale ->
-            RuntimeEnvironment.setQualifiers("${locale.qualifier}-$PHONE_QUALIFIERS")
-            block(locale)
+        val originalLocale = Locale.getDefault()
+        try {
+            MARKETING_LOCALES.forEach { locale ->
+                RuntimeEnvironment.setQualifiers("${locale.qualifier}-$PHONE_QUALIFIERS")
+                // setQualifiers only swaps resource resolution. Code that formats numbers against
+                // Locale.getDefault() (e.g. the "≈ 1,2 ×" landmark multiplier) would still render
+                // en-US and put an English decimal point into a translated screenshot.
+                Locale.setDefault(Locale.forLanguageTag(locale.bcp47))
+                block(locale)
+            }
+        } finally {
+            Locale.setDefault(originalLocale)
         }
     }
 

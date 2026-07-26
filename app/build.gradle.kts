@@ -48,6 +48,13 @@ android {
             dimension = "distribution"
         }
     }
+    // Generates locales_config.xml from the res/values-* folders and wires it into the manifest,
+    // so Android 13+ offers DetoxDroid in the system per-app language picker. New translations are
+    // picked up automatically — the default locale is declared in res/resources.properties.
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

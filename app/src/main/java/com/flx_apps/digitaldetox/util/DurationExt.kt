@@ -30,6 +30,22 @@ fun Duration.toShortDurationString(context: Context): String {
     }
 }
 
+/**
+ * "2h 5m" / "5m 3s" / "12s" — countdown format for commitment-password lockouts and the recovery
+ * timer. Unit labels come from resources, so locales that would misread "m" as metres can differ.
+ */
+fun formatCountdown(context: Context, milliseconds: Long): String {
+    val totalSeconds = milliseconds / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return when {
+        hours > 0 -> context.getString(R.string.duration_hoursMinutes_short, hours, minutes)
+        minutes > 0 -> context.getString(R.string.duration_minutesSeconds_short, minutes, seconds)
+        else -> context.getString(R.string.duration_seconds_short, seconds)
+    }
+}
+
 /** "2h" / "45m" — single-unit format for cramped spots like chart axis labels. */
 fun formatDurationMsShort(context: Context, ms: Long): String {
     val totalMinutes = ms / 60000

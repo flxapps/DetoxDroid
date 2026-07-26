@@ -1,0 +1,4 @@
+### Release v2.5.1
+
+🐛 Fehlerbehebungen
+- Absturz beim Auslesen des Status von "Extra dunkel" auf ROMs, die versteckte Einstellungen einschränken

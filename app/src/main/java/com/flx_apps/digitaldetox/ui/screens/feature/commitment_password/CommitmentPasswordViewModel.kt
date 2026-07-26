@@ -276,15 +276,4 @@ class CommitmentPasswordViewModel @Inject constructor(
         clipboard.setPrimaryClip(clip)
     }
 
-    fun formatDuration(milliseconds: Long): String {
-        val totalSeconds = milliseconds / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-        return when {
-            hours > 0 -> String.format("%dh %dm", hours, minutes)
-            minutes > 0 -> String.format("%dm %ds", minutes, seconds)
-            else -> String.format("%ds", seconds)
-        }
-    }
 }

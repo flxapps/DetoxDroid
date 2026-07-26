@@ -1,0 +1,20 @@
+Die meisten "Digital Detox"-Apps wollen, dass du einen Vertrag mit dir selbst schließt: kein Handy für die nächsten X Minuten, nicht mehr als Z Minuten in App Y – manche kassieren sogar Geld, wenn du scheiterst. DetoxDroid geht einen anderen Weg. Statt auf Willenskraft zu setzen, nimmt es deinem Handy die Tricks, mit denen es deine Aufmerksamkeit einfängt – damit ruhige, gesunde Handynutzung zum Normalzustand wird. Du musst nicht entscheiden, wann du "detoxen" willst: Der Schutz ist immer an, und du pausierst ihn bewusst, wenn du wirklich etwas brauchst.
+
+Nutze dein Handy – nicht umgekehrt.
+
+FUNKTIONEN
+
+* Automatische Graustufen: Ein farbloser Bildschirm macht deutlich weniger süchtig. Nimm Apps aus, die Farbe brauchen (Kamera, Galerie, Karten), setze ein optionales Tagesbudget für farbige Bildschirmzeit oder dunkle den Bildschirm mit "Extra dunkel" zusätzlich ab.
+* Doom Scrolling durchbrechen: Erkennt, wenn du in einem endlosen Feed feststeckst (Shorts, Reels & Co.), und bietet dir einen Ausstieg an. Nach einer Pause bleibt der Feed für eine Abkühlphase gesperrt.
+* Apps deaktivieren: Blockiere oder deaktiviere ablenkende Apps vollständig – samt Launcher-Symbol und Benachrichtigungen – oder gib ihnen ein Tagesbudget, nach dem sie bis zum nächsten Tag gesperrt sind.
+* Automatisches "Bitte nicht stören": DetoxDroid hält "Bitte nicht stören" aktiv, solange es läuft. So warten Benachrichtigungen auf dich – nicht umgekehrt.
+* Pause-Taste: Leg bewusste Pausen ein – über die Schnelleinstellungen, deinen Assistenten oder durch langes Drücken einer Hardware-Taste. Danach läuft DetoxDroid automatisch weiter, und ein Mindestabstand zwischen Pausen hält "nur noch eine Pause" im Zaum.
+* Commitment-Passwort: Sperre DetoxDroids Einstellungen hinter einem Passwort – behalte es selbst oder gib es jemandem, dem du vertraust, für etwas mehr Verbindlichkeit.
+
+INSTALLATION
+
+Die App allein zu installieren, reicht für die Graustufen-Funktion nicht: Android gibt die Farbmodus-Einstellung nur an Apps mit der Berechtigung WRITE_SECURE_SETTINGS frei. Auf einem gerooteten Handy kannst du sie direkt aus der App heraus erteilen, ansonsten einmalig von einem Computer aus. Das dauert meist nur ein paar Minuten – eine Schritt-für-Schritt-Anleitung findest du auf GitHub: https://github.com/flxapps/DetoxDroid#installation
+
+FREI & QUELLOFFEN
+
+DetoxDroid ist freie Software, ohne Werbung und ohne Tracking. Alle Funktionen stehen allen offen – die Extras für Power-User laufen auf Vertrauensbasis: Spende, wenn du kannst – oder schalte sie einfach kostenlos frei. Wenn sich DetoxDroid seinen Platz auf deinem Handy verdient, kannst du die Entwicklung über LiberaPay oder Ko-fi unterstützen sowie Probleme melden oder auf GitHub mitwirken.
