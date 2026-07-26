@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import com.flx_apps.digitaldetox.util.formatCountdown
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -208,7 +209,7 @@ private fun RecoveryStatusTile(viewModel: CommitmentPasswordViewModel) {
             titleText = stringResource(R.string.feature_commitmentPassword_recovery_inProgress),
             subtitleText = stringResource(
                 R.string.feature_commitmentPassword_recovery_timeRemaining,
-                viewModel.formatDuration(remainingRecoveryTime)
+                formatCountdown(LocalContext.current, remainingRecoveryTime)
             ),
             onClick = { viewModel.showRecoveryInProgressDialog() })
     }
@@ -309,7 +310,7 @@ private fun RecoveryInProgressDialog(viewModel: CommitmentPasswordViewModel) {
             Text(
                 stringResource(
                     R.string.feature_commitmentPassword_recovery_timeRemaining,
-                    viewModel.formatDuration(remainingRecoveryTime)
+                    formatCountdown(LocalContext.current, remainingRecoveryTime)
                 )
             )
         },
@@ -366,7 +367,7 @@ private fun UnlockToDisableDialog(
                     Text(
                         text = stringResource(
                             R.string.feature_commitmentPassword_lockedOut,
-                            viewModel.formatDuration(remainingLockoutTime)
+                            formatCountdown(LocalContext.current, remainingLockoutTime)
                         ), color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))

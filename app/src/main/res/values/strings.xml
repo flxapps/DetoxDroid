@@ -4,7 +4,7 @@
 
     <!-- region App & Services -->
     <!-- not named "app_name": that resource name is already taken by a library -->
-    <string name="app_displayName">DetoxDroid</string>
+    <string name="app_displayName" translatable="false">DetoxDroid</string>
     <string name="app_quickSettingsTile">Pause DetoxDroid</string>
     <string name="app_quickSettingsTile_paused">DetoxDroid has been paused for %d minutes.</string>
     <string name="app_quickSettingsTile_noPause">Take another pause in %d minutes.</string>
@@ -40,6 +40,9 @@
     <string name="duration_hours_short">%dh</string>
     <string name="duration_minutes_short">%dm</string>
     <string name="duration_hoursCompact">%1$dh%2$dm</string>
+    <string name="duration_hoursMinutes_short">%1$dh %2$dm</string>
+    <string name="duration_minutesSeconds_short">%1$dm %2$ds</string>
+    <string name="duration_seconds_short">%ds</string>
     <string name="distance_meters">%d m</string>
     <string name="distance_kilometers">%.1f km</string>
     <!-- endregion -->
@@ -539,17 +542,17 @@
     <string name="about_tile_subtitle">Project info, support, and contact.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_coffee">Buy me a coffee</string>
-    <string name="about_coffee_link">https://ko-fi.com/flxapps</string>
+    <string name="about_coffee_link" translatable="false">https://ko-fi.com/flxapps</string>
     <string name="about_coffee_subtitle">Every coffee helps keep DetoxDroid improving.</string>
     <string name="about_patron">Become a patron</string>
-    <string name="about_patron_link">https://liberapay.com/DetoxDroid/donate</string>
+    <string name="about_patron_link" translatable="false">https://liberapay.com/DetoxDroid/donate</string>
     <string name="about_patron_subtitle">Even a small monthly pledge goes a long way.</string>
     <string name="about_contact">Contact me</string>
-    <string name="about_contact_link">mailto:detoxdroid@flx-apps.com</string>
+    <string name="about_contact_link" translatable="false">mailto:detoxdroid@flx-apps.com</string>
     <string name="about_contact_subtitle">Happy to receive feature requests and ideas.</string>
     <string name="about_github">Contribute on GitHub</string>
-    <string name="about_github_link">https://github.com/flxapps/DetoxDroid</string>
-    <string name="about_reportIssue_link">https://github.com/flxapps/DetoxDroid/issues/new</string>
+    <string name="about_github_link" translatable="false">https://github.com/flxapps/DetoxDroid</string>
+    <string name="about_reportIssue_link" translatable="false">https://github.com/flxapps/DetoxDroid/issues/new</string>
     <string name="about_onboarding">Set up DetoxDroid again</string>
     <string name="about_onboarding_subtitle">Replay the welcome tour and starter presets</string>
     <!-- endregion -->
