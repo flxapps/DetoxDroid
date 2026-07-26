@@ -105,6 +105,14 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private var lastPackage = ""
 
     /**
+     * The package that window events last reported as foreground ("" before the first event).
+     * Features can re-evaluate against it when they (re)start without a fresh window event —
+     * e.g. resuming from a pause while the user is still inside an affected app, where no new
+     * window event will arrive until the next app switch.
+     */
+    val currentForegroundPackage: String get() = lastPackage
+
+    /**
      * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
      * window events must not be treated as "an app was opened".
      */

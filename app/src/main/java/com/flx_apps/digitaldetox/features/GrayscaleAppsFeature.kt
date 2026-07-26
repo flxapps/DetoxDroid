@@ -45,7 +45,8 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
     SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId),
-    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature, PausableFeature {
+    NeedsPermissionsFeature by NeedsWriteSecureSettingsPermission(), LockableFeature,
+    PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,
@@ -147,11 +148,19 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onStart(context: Context) {
         val contentResolver = context.contentResolver
         isCurrentlyGrayscale =
-            getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 &&
-            getSecureInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
+            getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 && getSecureInt(
+                contentResolver, DISPLAY_DALTONIZER, -1
+            ) == 0
         isCurrentlyExtraDim = getSecureInt(contentResolver, EXTRA_DIM, 0) == 1
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
-        onAppOpened(context, accessibilityEvent.packageName.toString(), accessibilityEvent)
+        // Evaluate against the actual foreground app when the service knows it: after a resume
+        // (or feature toggle) no new window event arrives while the user stays inside the current
+        // app, so dispatching the synthetic event's own package would leave the filter off until
+        // the next app switch.
+        val foregroundPackage =
+            DetoxDroidAccessibilityService.instance?.currentForegroundPackage?.takeIf { it.isNotEmpty() }
+                ?: accessibilityEvent.packageName.toString()
+        onAppOpened(context, foregroundPackage, accessibilityEvent)
     }
 
     /**
