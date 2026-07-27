@@ -194,6 +194,7 @@
     <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann höre ich auf</string>
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach – du bist schon %1$d Minuten dabei.</string>
+    <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei – diesmal pausiert die ganze App.</string>
     <string name="feature_doomScrolling_guideOut_title">Abgemacht ist abgemacht</string>
     <string name="feature_doomScrolling_guideOut_message">Hoffentlich hat sich\'s gelohnt – zurück zum Startbildschirm.</string>
     <string name="feature_doomScrolling_cooldown_title">Noch in der Abkühlphase</string>
