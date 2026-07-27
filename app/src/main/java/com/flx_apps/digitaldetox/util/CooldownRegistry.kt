@@ -49,6 +49,17 @@ class CooldownRegistry(private val nowMs: () -> Long = { System.currentTimeMilli
     }
 
     /**
+     * True while any cooldown of [packageName] — whole-app or surface-scoped — is running, i.e.
+     * the app had a doom-scrolling incident just now. Detection treats such an app as being on
+     * probation: stricter thresholds, and further incidents escalate to a whole-app cooldown.
+     */
+    @Synchronized
+    fun hasAnyCooldown(packageName: String): Boolean {
+        prune()
+        return endTimes.keys.any { it.packageName == packageName }
+    }
+
+    /**
      * Returns the end time of a whole-app cooldown of [packageName], or null. Checked when the
      * app is opened; surface-scoped cooldowns deliberately don't lock the app itself.
      */

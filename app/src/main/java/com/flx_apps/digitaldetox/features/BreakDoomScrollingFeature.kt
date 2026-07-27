@@ -67,6 +67,12 @@ enum class DoomScrollingSensitivity(
         snapshot.sessionDurationMs >= minSessionDurationMs &&
                 snapshot.screenHeightsPerMinute >= minScreenHeightsPerMinute &&
                 snapshot.downScrollRatio >= minDownScrollRatio
+
+    /** The next-stricter level; applied while an app is on probation after an incident. */
+    fun stricter(): DoomScrollingSensitivity = when (this) {
+        RELAXED -> BALANCED
+        else -> STRICT
+    }
 }
 
 /**
@@ -80,13 +86,21 @@ enum class DoomScrollingSensitivity(
  * The break screen offers two ways out:
  * - **"Get me out of here"**: leave immediately (home screen, best-effort force-stop).
  * - **"I'll finish this one, then leave"**: a bounded grace ([FinishGraceTracker]) to finish the
- *   item currently on screen; once the user scrolls on a few more times or the grace times out,
- *   they are guided out automatically.
+ *   item currently on screen — including reading its comments/thread, which extends the grace a
+ *   bit; once the user scrolls on to new content or the grace times out, they are guided out
+ *   automatically.
  *
  * Either way the app enters a *cooldown* ([cooldownTime], [CooldownRegistry]) during which
  * re-entry is blocked. When the triggering scroll view had a view-id resource name, the cooldown
  * is scoped to that surface — e.g. Instagram's reels stay locked while the DM list remains
  * usable; otherwise the whole app is locked, including on app open.
+ *
+ * While any cooldown of an app is running, the app is on *probation*: its other surfaces stay
+ * usable, but detection there runs with stricter thresholds ([DoomScrollingSensitivity.stricter])
+ * and a much shorter time gate ([PROBATION_SESSION_GATE_MS]). A trigger firing during probation
+ * proves that surface scoping was too permissive for this incident — the user just moved their
+ * scrolling elsewhere (e.g. from the feed to a reel opened from a DM) — so the new cooldown
+ * escalates to the whole app.
  */
 object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     OnAppOpenedSubscriptionFeature, OnScreenTurnedOffSubscriptionFeature,
@@ -175,8 +189,12 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     /** The pending grace-timeout runnable per app, so it can be cancelled when the grace ends. */
     private val graceTimeouts = HashMap<String, Runnable>()
 
-    /** The scroll surface (view-id resource name) each app's last warning was triggered on. */
-    private val lastTriggerSurfaceIds = HashMap<String, String?>()
+    /**
+     * The cooldown scope each app's last warning decided on: the triggering surface's view-id
+     * resource name, or null for the whole app (no id, or escalated on probation). A subsequent
+     * finish-grace inherits this scope.
+     */
+    private val lastCooldownScopes = HashMap<String, String?>()
 
     /**
      * Last time any break screen was shown per app. Scroll-momentum events arriving right after
@@ -188,9 +206,9 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     /**
      * Feeds every scroll event into both doom-scrolling triggers (see the class docs): the
      * app-level intensity session and the per-scroll-view endless-screen heuristic. Whichever
-     * finds sustained doom scrolling first (≥ [timeUntilWarning]) opens the break screen.
-     * Before detection runs, the event is checked against a running finish-grace and against
-     * active cooldowns.
+     * finds sustained doom scrolling first (≥ [timeUntilWarning], or the much shorter probation
+     * gate while a cooldown of the app is still running) opens the break screen. Before detection
+     * runs, the event is checked against a running finish-grace and against active cooldowns.
      */
     override fun onScrollEvent(
         context: Context,
@@ -202,11 +220,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         val surfaceId = accessibilityEvent.source?.viewIdResourceName
 
         if (finishGrace.isInGrace(pkg)) {
-            // the user is finishing their last item after a warning; guide them out once they
-            // start scrolling on again or the grace times out
-            if (finishGrace.onScrollEvent(pkg)) {
-                guideOut(context, pkg)
-            }
+            onGraceScrollEvent(context, pkg, surfaceId, accessibilityEvent)
             return
         }
 
@@ -217,13 +231,20 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
         if (!appliesTo(pkg)) return
 
+        // while another surface of this app is still cooling down, the app is on probation:
+        // detection fires sooner and at stricter thresholds, so moving the scrolling to a
+        // different surface right after a break is caught quickly (see the class docs)
+        val onProbation = cooldowns.hasAnyCooldown(pkg)
+        val sensitivity = if (onProbation) detectionSensitivity.stricter() else detectionSensitivity
+        val minSessionMs = if (onProbation) probationSessionGateMs() else timeUntilWarning
+
         // trigger 1: scroll intensity — sustained, fast, mostly-downward scrolling in this app
         val isDownScroll = AccessibilityEventUtil.isDownScrollEvent(accessibilityEvent)
         val deltaMagnitude = abs(AccessibilityEventUtil.getScrollDeltaY(accessibilityEvent))
         val intensity = scrollSessionMonitor.onScrollEvent(
             pkg, scrollDistanceEstimator.distancePxFor(pkg, deltaMagnitude), isDownScroll
         )
-        if (detectionSensitivity.isDoomScrolling(intensity, timeUntilWarning)) {
+        if (sensitivity.isDoomScrolling(intensity, minSessionMs)) {
             Timber.i(
                 "Intensity break triggered for pkg=%s (%.1f screens/min, downRatio=%.2f, %d ms)",
                 pkg,
@@ -270,7 +291,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             if (scrollViewInfo.timesGrown >= 3 && !scrollViewInfo.warned) {
                 // assume that a scroll view is infinite, if its size has grown three times
                 val scrollingTime = System.currentTimeMillis() - scrollViewInfo.added
-                if (scrollingTime >= timeUntilWarning) {
+                if (scrollingTime >= minSessionMs) {
                     // if the scroll view is seemingly infinite and the user has been too long on it,
                     // we assume that they are doomscrolling and open the break screen
                     Timber.i("Break screen triggered after %d ms for pkg=%s", scrollingTime, pkg)
@@ -283,6 +304,39 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Handles a scroll event while [packageName] is in a finish-grace. The user is finishing
+     * their last item after a warning: reading a different surface (e.g. the item's comments) is
+     * fine and keeps the grace alive, but scrolling on within the triggering surface — or
+     * resuming outright doom scrolling anywhere in the app — uses the grace up and guides them
+     * out (see [FinishGraceTracker]).
+     */
+    private fun onGraceScrollEvent(
+        context: Context,
+        packageName: String,
+        surfaceId: String?,
+        accessibilityEvent: AccessibilityEvent
+    ) {
+        if (finishGrace.onScrollEvent(packageName, surfaceId)) {
+            guideOut(context, packageName)
+            return
+        }
+        // off-surface scrolling is still measured: if it adds up to doom scrolling again (under
+        // the stricter probation thresholds), the "one last item" deal is off — and since the
+        // user moved their scrolling elsewhere, the whole app takes the cooldown
+        val isDownScroll = AccessibilityEventUtil.isDownScrollEvent(accessibilityEvent)
+        val deltaMagnitude = abs(AccessibilityEventUtil.getScrollDeltaY(accessibilityEvent))
+        val intensity = scrollSessionMonitor.onScrollEvent(
+            packageName,
+            scrollDistanceEstimator.distancePxFor(packageName, deltaMagnitude),
+            isDownScroll
+        )
+        if (detectionSensitivity.stricter().isDoomScrolling(intensity, probationSessionGateMs())) {
+            Timber.i("Doom scrolling resumed during finish-grace of %s", packageName)
+            guideOut(context, packageName, escalateToWholeApp = true)
         }
     }
 
@@ -313,7 +367,10 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
     /**
      * A doom-scrolling trigger fired: count the break, lock the offending app/surface (choosing
-     * "I'll finish this one" lifts the lock again) and show the warning screen.
+     * "I'll finish this one" lifts the lock again) and show the warning screen. Firing again
+     * while a cooldown of this app was still running means the user moved their scrolling to
+     * another surface — surface scoping was too permissive for this incident, so the new
+     * cooldown covers the whole app.
      */
     private fun warn(
         context: Context,
@@ -321,11 +378,18 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         surfaceId: String?,
         contextText: String
     ) {
+        val escalateToWholeApp = cooldowns.hasAnyCooldown(packageName)
+        val cooldownScope = if (escalateToWholeApp) null else surfaceId
         breakCounter.increment(packageName)
         scrollSessionMonitor.reset(packageName)
-        lastTriggerSurfaceIds[packageName] = surfaceId
-        cooldowns.start(packageName, surfaceId, cooldownTime)
-        openBreakScreen(context, packageName, BreakScreenMode.WARNING, contextText)
+        lastCooldownScopes[packageName] = cooldownScope
+        cooldowns.start(packageName, cooldownScope, cooldownTime)
+        val text = if (escalateToWholeApp) {
+            contextText + "\n" + context.getString(
+                R.string.feature_doomScrolling_warning_context_probation
+            )
+        } else contextText
+        openBreakScreen(context, packageName, BreakScreenMode.WARNING, text)
     }
 
     /**
@@ -337,22 +401,49 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         val appContext = context.applicationContext
         cooldowns.clear(packageName)
         activeScrollViews.clear()
-        finishGrace.start(packageName, lastTriggerSurfaceIds[packageName])
+        finishGrace.start(packageName, lastCooldownScopes[packageName])
         cancelGraceTimeout(packageName)
-        val timeout = Runnable { guideOut(appContext, packageName) }
+        scheduleGraceTimeout(appContext, packageName, FinishGraceTracker.DEFAULT_TIMEOUT_MS)
+    }
+
+    /**
+     * Posts the grace timeout for [packageName]. When it fires, the deadline may have moved on —
+     * the grace extends while the user reads a discussion (see [FinishGraceTracker]) — in which
+     * case the timeout is re-posted for the remainder instead of guiding out.
+     */
+    private fun scheduleGraceTimeout(context: Context, packageName: String, delayMs: Long) {
+        val timeout = object : Runnable {
+            override fun run() {
+                graceTimeouts.remove(packageName)
+                val remainingMs = finishGrace.remainingMs(packageName) ?: return
+                if (remainingMs <= 0) {
+                    guideOut(context, packageName)
+                } else {
+                    graceTimeouts[packageName] = this
+                    graceHandler.postDelayed(this, remainingMs)
+                }
+            }
+        }
         graceTimeouts[packageName] = timeout
-        graceHandler.postDelayed(timeout, FinishGraceTracker.DEFAULT_TIMEOUT_MS)
+        graceHandler.postDelayed(timeout, delayMs)
     }
 
     /**
      * The finish-grace is over while the user is still in the app: start the cooldown and show
-     * the guide-out screen, which takes them to the home screen automatically.
+     * the guide-out screen, which takes them to the home screen automatically. If the grace ended
+     * because doom scrolling resumed on another surface, the cooldown covers the whole app.
      */
-    private fun guideOut(context: Context, packageName: String) {
+    private fun guideOut(
+        context: Context,
+        packageName: String,
+        escalateToWholeApp: Boolean = false
+    ) {
         cancelGraceTimeout(packageName)
         val grace = finishGrace.end(packageName) ?: return
         if (!isActivated || PauseButtonFeature.isFeaturePaused(this)) return
-        cooldowns.start(packageName, grace.surfaceId, cooldownTime)
+        val cooldownScope = if (escalateToWholeApp) null else grace.surfaceId
+        lastCooldownScopes[packageName] = cooldownScope
+        cooldowns.start(packageName, cooldownScope, cooldownTime)
         scrollSessionMonitor.reset(packageName)
         openBreakScreen(context, packageName, BreakScreenMode.GUIDE_OUT)
     }
@@ -368,6 +459,12 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     private fun cancelGraceTimeout(packageName: String) {
         graceTimeouts.remove(packageName)?.let { graceHandler.removeCallbacks(it) }
     }
+
+    /**
+     * The session-duration gate for detection while an app is on probation — much shorter than
+     * [timeUntilWarning], but never longer (in case the user configured something tiny).
+     */
+    private fun probationSessionGateMs(): Long = minOf(timeUntilWarning, PROBATION_SESSION_GATE_MS)
 
     /**
      * (Re-)shows the break screen in cooldown mode, telling the user how long the app or surface
@@ -419,6 +516,9 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
     /** How often the cooldown screen may re-open per app. */
     private const val COOLDOWN_SCREEN_THROTTLE_MS = 3_000L
+
+    /** Upper bound of the session-duration gate while an app is on probation. */
+    private const val PROBATION_SESSION_GATE_MS = 30_000L
 
     /**
      * Contains information about a scroll view, i.e. when it was added, how often it has grown

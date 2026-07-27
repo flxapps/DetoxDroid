@@ -197,6 +197,7 @@
     <string name="feature_doomScrolling_warning_finishFirst">I\'ll finish this one, then leave</string>
     <string name="feature_doomScrolling_warning_context_intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_endless">This feed just keeps loading more — you\'ve been scrolling it for %1$d minutes.</string>
+    <string name="feature_doomScrolling_warning_context_probation">Back at it right after a break — this time the whole app will pause.</string>
     <string name="feature_doomScrolling_guideOut_title">A deal\'s a deal</string>
     <string name="feature_doomScrolling_guideOut_message">Hope it was a good one — taking you home now.</string>
     <string name="feature_doomScrolling_cooldown_title">Still cooling down</string>

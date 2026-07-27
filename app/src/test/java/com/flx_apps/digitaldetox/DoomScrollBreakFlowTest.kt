@@ -58,6 +58,16 @@ class CooldownRegistryTest {
         registry.start("app", surfaceId = null, durationMs = 10_000)
         assertEquals(15_000L, registry.appLockEndMs("app"))
     }
+
+    @Test
+    fun `hasAnyCooldown sees surface cooldowns and honors expiry`() {
+        assertFalse(registry.hasAnyCooldown("app"))
+        registry.start("app", surfaceId = "reels", durationMs = 10_000)
+        assertTrue(registry.hasAnyCooldown("app"))
+        assertFalse(registry.hasAnyCooldown("other"))
+        now = 10_000
+        assertFalse(registry.hasAnyCooldown("app"))
+    }
 }
 
 class FinishGraceTrackerTest {
@@ -66,6 +76,7 @@ class FinishGraceTrackerTest {
         timeoutMs = 90_000,
         maxScrollBursts = 3,
         burstSpacingMs = 800,
+        maxTotalMs = 300_000,
         nowMs = { now }
     )
 
@@ -118,5 +129,82 @@ class FinishGraceTrackerTest {
         assertEquals(setOf("a", "b"), tracker.activePackages())
         tracker.end("a")
         assertEquals(setOf("b"), tracker.activePackages())
+    }
+
+    @Test
+    fun `scrolling on within the triggering surface uses the grace up`() {
+        tracker.start("app", surfaceId = "feed")
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "feed")) // gesture 1
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "feed")) // gesture 2
+        now += 5_000
+        assertTrue(tracker.onScrollEvent("app", "feed")) // gesture 3 → guide out
+    }
+
+    @Test
+    fun `reading a different surface does not use the grace up`() {
+        tracker.start("app", surfaceId = "feed")
+        // scrolling the comments at leisure: never counts as "moving on"
+        repeat(10) {
+            now += 5_000
+            assertFalse(tracker.onScrollEvent("app", "comments"))
+        }
+        // ...but paging on in the feed still does
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "feed"))
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "feed"))
+        now += 5_000
+        assertTrue(tracker.onScrollEvent("app", "feed"))
+    }
+
+    @Test
+    fun `reading a different surface extends the timeout up to the hard cap`() {
+        tracker.start("app", surfaceId = "feed")
+        // each comments gesture re-arms the 90 s window, far past the base timeout...
+        for (time in 60_000L..240_000L step 60_000L) {
+            now = time
+            assertFalse("still reading at ${time / 1000} s", tracker.onScrollEvent("app", "comments"))
+        }
+        // ...until the 300 s hard cap ends the grace regardless
+        now = 300_000
+        assertTrue(tracker.onScrollEvent("app", "comments"))
+    }
+
+    @Test
+    fun `unidentified surfaces neither count nor extend when the trigger surface is known`() {
+        tracker.start("app", surfaceId = "feed")
+        repeat(5) {
+            now += 5_000
+            assertFalse(tracker.onScrollEvent("app", null))
+        }
+        // the base timeout was not re-armed by the null-surface events
+        now = 90_000
+        assertTrue(tracker.onScrollEvent("app", null))
+    }
+
+    @Test
+    fun `without a trigger surface every scroll gesture counts`() {
+        tracker.start("app", surfaceId = null)
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "comments"))
+        now += 5_000
+        assertFalse(tracker.onScrollEvent("app", "feed"))
+        now += 5_000
+        assertTrue(tracker.onScrollEvent("app", null))
+    }
+
+    @Test
+    fun `remainingMs tracks the extended deadline`() {
+        assertNull(tracker.remainingMs("app"))
+        tracker.start("app", surfaceId = "feed")
+        assertEquals(90_000L, tracker.remainingMs("app"))
+        now = 60_000
+        assertFalse(tracker.onScrollEvent("app", "comments"))
+        // the deadline moved to 60 s + 90 s
+        assertEquals(90_000L, tracker.remainingMs("app"))
+        now = 150_000
+        assertEquals(0L, tracker.remainingMs("app"))
     }
 }
