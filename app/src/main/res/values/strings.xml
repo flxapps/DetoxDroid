@@ -16,6 +16,14 @@
     <string name="app_notification_channelName">DetoxDroid Service</string>
     <string name="app_notification_channelDescription">Keeps DetoxDroid active in the background</string>
     <string name="app_notification_pausedUntil">Paused until %s</string>
+    <string name="reliability_serviceDown_title">DetoxDroid stopped</string>
+    <string name="reliability_serviceDown_message">Your phone stopped DetoxDroid in the background. Tap to start it again.</string>
+    <string name="reliability_keepAlive_title">Keep DetoxDroid running</string>
+    <string name="reliability_keepAlive_subtitle">Show an ongoing notification so the system is less likely to stop DetoxDroid in the background.</string>
+    <string name="reliability_battery_title">Allow unrestricted battery</string>
+    <string name="reliability_battery_subtitle">Stops the system from putting DetoxDroid to sleep. Recommended if your phone aggressively closes background apps.</string>
+    <string name="reliability_onboarding_title">Stay reliable</string>
+    <string name="reliability_onboarding_message">Some phones stop background apps to save battery, which can silently switch DetoxDroid off. These optional settings help it keep running.</string>
     <!-- endregion -->
 
     <!-- region Common Actions -->

@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
+import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.workers.UsageStatsSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -78,6 +79,7 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         if (!isMainProcess()) return
 
         scheduleUsageStatsSnapshot()
+        ServiceReliabilityScheduler.schedule(this)
         UsageStatsTracker.init(this)
         // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
         // the premium entitlement here.

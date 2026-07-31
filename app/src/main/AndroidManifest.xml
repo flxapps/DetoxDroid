@@ -53,6 +53,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- RECEIVE_BOOT_COMPLETED so the reliability watchdog can be re-armed after a reboot. Normal
+         permission - no Play declaration or justification required. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".DetoxDroidApplication"
         android:allowBackup="true"
@@ -148,6 +152,17 @@
         <receiver
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetClickReceiver"
             android:exported="false" />
+
+        <!-- Re-arms the reliability watchdog after a reboot / app update. -->
+        <receiver
+            android:name=".system_integration.BootCompletedReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name="android.service.voice.VoiceInteractionService"

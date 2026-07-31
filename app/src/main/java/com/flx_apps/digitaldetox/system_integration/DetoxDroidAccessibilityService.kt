@@ -25,7 +25,6 @@ import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
-import com.flx_apps.digitaldetox.util.NotificationHelper
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -201,7 +200,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
 
         updateKeyEventFiltering()
-        startForegroundService()
+        updateForegroundNotification()
     }
 
     /**
@@ -378,57 +377,54 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     private fun startForegroundService() {
-        // Only show notification if PauseButtonFeature is activated and notifications are enabled
-        if (!PauseButtonFeature.isActivated) {
-            return
-        }
-
-        // Check if notifications are fully enabled (permission + channel settings)
-        if (!NotificationHelper.areNotificationsEnabled(this)) {
-            return
-        }
-
-        val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
-            action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
-        }
-        val pausePendingIntent = android.app.PendingIntent.getService(
-            this,
-            0,
-            pauseIntent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-        )
-
         val isPausing = PauseButtonFeature.isPausing()
-        val notification: Notification =
-            NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-                .setContentTitle(getString(R.string.app_displayName)).setContentText(
-                    if (isPausing) {
-                        // show the actual end of the pause instead of a bare "Paused"
-                        getString(
-                            R.string.app_notification_pausedUntil,
-                            Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                                .atZone(ZoneId.systemDefault()).toLocalTime()
-                                .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                        )
-                    } else getString(R.string.app_notification_active)
-                ).setSmallIcon(R.drawable.ic_pause).setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOngoing(true).apply {
-                    if (isPausing) {
-                        // live countdown to the end of the pause in the collapsed notification
-                        setWhen(PauseButtonFeature.pauseUntil)
-                        setUsesChronometer(true)
-                        setChronometerCountDown(true)
-                    }
-                }.addAction(
-                    R.drawable.ic_pause, getString(
-                        if (isPausing) R.string.app_notification_action_resume
-                        else R.string.app_notification_action_pause
-                    ), pausePendingIntent
-                ).build()
+        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+            .setContentTitle(getString(R.string.app_displayName))
+            .setContentText(
+                if (isPausing) {
+                    // show the actual end of the pause instead of a bare "Paused"
+                    getString(
+                        R.string.app_notification_pausedUntil,
+                        Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                            .atZone(ZoneId.systemDefault()).toLocalTime()
+                            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+                    )
+                } else getString(R.string.app_notification_active)
+            )
+            .setSmallIcon(R.drawable.ic_pause)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+        if (isPausing) {
+            // live countdown to the end of the pause in the collapsed notification
+            builder.setWhen(PauseButtonFeature.pauseUntil)
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+        }
+        // Only offer the pause/resume action when the Pause feature is actually enabled.
+        if (PauseButtonFeature.isActivated) {
+            val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
+                action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
+            }
+            val pausePendingIntent = android.app.PendingIntent.getService(
+                this,
+                0,
+                pauseIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(
+                R.drawable.ic_pause,
+                getString(
+                    if (isPausing) R.string.app_notification_action_resume
+                    else R.string.app_notification_action_pause
+                ),
+                pausePendingIntent
+            )
+        }
 
+        val notification: Notification = builder.build()
         try {
-            // ID 101 is just an arbitrary constant integration ID; the specialUse type matches the
-            // manifest declaration (required on targetSdk >= 34, ignored on older devices)
+            // ID 101 is an arbitrary constant; the specialUse type matches the manifest declaration
+            // (required on targetSdk >= 34, ignored on older devices).
             ServiceCompat.startForeground(
                 this, 101, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
@@ -442,15 +438,12 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * Updates the foreground notification (e.g., when pause state changes)
      */
     fun updateForegroundNotification() {
-        if (NotificationHelper.areNotificationsEnabled(this) && PauseButtonFeature.isActivated) {
+        // Run as a foreground service only when the user opted into the keepalive, or while a pause
+        // is active (the pause notification needs it). Otherwise stay a plain bound service.
+        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated) {
             startForegroundService()
         } else {
-            try {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                Timber.i("Service removed from foreground due to setting change or missing permission")
-            } catch (_: Exception) {
-                // Ignore - service might not have been in foreground
-            }
+            runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
         }
     }
 }
