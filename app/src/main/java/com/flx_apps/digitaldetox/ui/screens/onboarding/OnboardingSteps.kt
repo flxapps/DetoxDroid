@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -37,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -342,6 +344,43 @@ internal fun PermissionsStep(
                     NavigationUtil.openAccessibilitySettings(context)
                 }
             })
+    }
+}
+
+/**
+ * Onboarding step: optional settings that help DetoxDroid keep running in the background. Nothing
+ * here is required - the user can skip straight past it.
+ */
+@Composable
+internal fun ReliabilityStep(viewModel: OnboardingViewModel) {
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.Event.ON_RESUME) viewModel.refreshPermissionStates()
+    }
+    val keepAlive by viewModel.keepServiceAliveEnabled.collectAsState()
+    val batteryIgnored by viewModel.batteryOptimizationIgnored.collectAsState()
+
+    OnboardingStepColumn(
+        title = stringResource(id = R.string.reliability_onboarding_title),
+        message = stringResource(id = R.string.reliability_onboarding_message)
+    ) {
+        OnboardingTile(
+            icon = Icons.Default.Notifications,
+            title = stringResource(id = R.string.reliability_keepAlive_title),
+            subtitle = stringResource(id = R.string.reliability_keepAlive_subtitle),
+            highlighted = keepAlive,
+            onClick = { viewModel.setKeepServiceAlive(!keepAlive) },
+            trailing = {
+                Switch(checked = keepAlive, onCheckedChange = { viewModel.setKeepServiceAlive(it) })
+            }
+        )
+        PermissionTile(
+            icon = Icons.Default.Warning,
+            title = stringResource(id = R.string.reliability_battery_title),
+            description = stringResource(id = R.string.reliability_battery_subtitle),
+            granted = batteryIgnored,
+            onClick = { viewModel.openBatteryOptimizationSettings() }
+        )
     }
 }
 

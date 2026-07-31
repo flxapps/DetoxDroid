@@ -20,7 +20,9 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
+import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.DistractionCandidate
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -46,7 +48,7 @@ import javax.inject.Inject
  * The steps of the onboarding flow, in order.
  */
 enum class OnboardingStep {
-    WELCOME, USAGE_ACCESS, PICK_APPS, PRESET, PERMISSIONS, DONE
+    WELCOME, USAGE_ACCESS, PICK_APPS, PRESET, PERMISSIONS, RELIABILITY, DONE
 }
 
 /**
@@ -280,6 +282,8 @@ class OnboardingViewModel @Inject constructor(
         _overlayGranted.value = Settings.canDrawOverlays(application)
         _notificationsGranted.value = NotificationHelper.hasNotificationPermission(application)
         _writeSecureSettingsGranted.value = hasWriteSecureSettings()
+        _batteryOptimizationIgnored.value =
+            BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application)
         viewModelScope.launch(Dispatchers.IO) {
             val isShizukuAvailable = ShizukuUtils.isShizukuAvailable()
             // publish the fast probe first so a stalling root check cannot delay the one-tap offer
@@ -357,6 +361,26 @@ class OnboardingViewModel @Inject constructor(
             }
         }
     }
+    // endregion
+
+    // region reliability (optional)
+    private val _keepServiceAliveEnabled =
+        MutableStateFlow(ReliabilitySettings.keepServiceAliveEnabled)
+    val keepServiceAliveEnabled: StateFlow<Boolean> = _keepServiceAliveEnabled
+
+    private val _batteryOptimizationIgnored =
+        MutableStateFlow(BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application))
+    val batteryOptimizationIgnored: StateFlow<Boolean> = _batteryOptimizationIgnored
+
+    /** Enables/disables the foreground-service keepalive and refreshes the running service. */
+    fun setKeepServiceAlive(enabled: Boolean) {
+        ReliabilitySettings.keepServiceAliveEnabled = enabled
+        _keepServiceAliveEnabled.value = enabled
+        DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+    }
+
+    fun openBatteryOptimizationSettings() =
+        BatteryOptimizationHelper.openBatteryOptimizationSettings(application)
     // endregion
 
     /**

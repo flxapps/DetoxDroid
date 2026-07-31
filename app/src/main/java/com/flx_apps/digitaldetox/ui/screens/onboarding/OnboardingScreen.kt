@@ -161,6 +161,7 @@ fun OnboardingScreen(
                 OnboardingStep.PICK_APPS -> PickAppsStep(viewModel)
                 OnboardingStep.PRESET -> PresetStep(viewModel)
                 OnboardingStep.PERMISSIONS -> PermissionsStep(viewModel)
+                OnboardingStep.RELIABILITY -> ReliabilityStep(viewModel)
                 OnboardingStep.DONE -> DoneStep(viewModel)
             }
         }

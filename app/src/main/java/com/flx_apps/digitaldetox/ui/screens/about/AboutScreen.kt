@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,9 +25,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -37,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.activity.compose.LocalActivity
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -63,6 +71,9 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val premiumSubtitle = stringResource(id = R.string.premium_tile_subtitle)
     val onboardingTitle = stringResource(id = R.string.about_onboarding)
     val onboardingSubtitle = stringResource(id = R.string.about_onboarding_subtitle)
+    val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
+    val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
+    var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
 
     Scaffold(
         topBar = {
@@ -152,6 +163,17 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
             }
             // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
             storeReviewAboutItem(activity)
+            switchItem(
+                icon = Icons.Default.Notifications,
+                title = keepAliveTitle,
+                subtitle = keepAliveSubtitle,
+                checked = keepAlive,
+                onCheckedChange = {
+                    keepAlive = it
+                    ReliabilitySettings.keepServiceAliveEnabled = it
+                    DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+                }
+            )
             linkItem(
                 icon = Icons.Default.RestartAlt,
                 title = onboardingTitle,
@@ -174,6 +196,24 @@ private fun LazyListScope.linkItem(
             supportingContent = subtitle?.let { { Text(it) } },
             leadingContent = { Icon(icon, contentDescription = null) },
             modifier = Modifier.clickable(onClick = onClick)
+        )
+    }
+}
+
+private fun LazyListScope.switchItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    item {
+        ListItem(
+            headlineContent = { Text(title) },
+            supportingContent = subtitle?.let { { Text(it) } },
+            leadingContent = { Icon(icon, contentDescription = null) },
+            trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+            modifier = Modifier.clickable { onCheckedChange(!checked) }
         )
     }
 }
