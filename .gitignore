@@ -14,13 +14,13 @@
 .cxx
 local.properties
 /.idea/
+/.kotlin/
 
-# Google Play private overlay — the public repo stays a clean FOSS tree
-# (see PREMIUM_TIER_PLAN.md §8.5); keep a backup of these outside the repo
+# Google Play private overlay — the public repo stays a clean FOSS tree;
+# keep a backup of these outside the repo
 /app/googlePlay.gradle
 /app/src/googlePlay/
 /app/src/testGooglePlay/
 /app/play-account.json
 /app/upload-keystore.properties
 /private-plugins.txt
-/PLAY_STORE_REMAINING_STEPS.md

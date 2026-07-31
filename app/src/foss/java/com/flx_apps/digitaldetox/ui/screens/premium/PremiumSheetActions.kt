@@ -20,7 +20,7 @@ import com.flx_apps.digitaldetox.R
 
 /**
  * FOSS bottom section of the locked premium sheet: the external donation links plus the
- * honor-system unlocks — the lock is a nudge, not DRM (PREMIUM_TIER_PLAN.md §1).
+ * honor-system unlocks — the lock is a nudge, not DRM.
  *
  * The sibling `src/googlePlay/…/PremiumSheetActions.kt` (private overlay, gitignored) renders the
  * Play Billing purchase actions instead, under the same fully-qualified name — [PremiumSheetHost]

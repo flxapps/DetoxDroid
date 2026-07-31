@@ -196,7 +196,7 @@ jobs:
 
       # Only the `foss` flavor is built here: the `googlePlay` flavor needs the gitignored private
       # overlay (app/googlePlay.gradle.kts + app/src/googlePlay/) and is released separately via
-      # the Play Console (see PREMIUM_TIER_PLAN.md §8).
+      # the Play Console.
       - name: Build APK
         run: ./gradlew assembleFossRelease
 
