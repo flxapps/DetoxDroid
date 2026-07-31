@@ -79,6 +79,11 @@
     <string name="home_finishSetup_message">Grayscale from your setup is waiting for one small permission step.</string>
     <string name="home_finishSetup_message_overlay">Scroll breaks and app blocking are waiting for the \"display over other apps\" permission.</string>
     <string name="home_finishSetup_action">Finish</string>
+    <string name="home_batteryOptimization_title">Keep DetoxDroid running</string>
+    <string name="home_batteryOptimization_message">Your phone may stop DetoxDroid in the background. Allow it to run without battery restrictions so your rules keep working.</string>
+    <string name="home_batteryOptimization_action">Allow</string>
+    <string name="home_batteryOptimization_why">Why?</string>
+    <string name="home_batteryOptimization_dismiss">Not now</string>
     <!-- endregion -->
 
     <!-- region App Lists & Categories -->

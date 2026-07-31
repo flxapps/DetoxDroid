@@ -77,6 +77,11 @@
     <string name="home_finishSetup_message">Für die Graustufen fehlt nur noch ein kleiner Berechtigungsschritt.</string>
     <string name="home_finishSetup_message_overlay">Scroll-Pausen und App-Sperre brauchen noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
     <string name="home_finishSetup_action">Abschließen</string>
+    <string name="home_batteryOptimization_title">DetoxDroid aktiv halten</string>
+    <string name="home_batteryOptimization_message">Dein Telefon stoppt DetoxDroid möglicherweise im Hintergrund. Erlaube die Ausführung ohne Akku-Einschränkungen, damit deine Regeln weiter greifen.</string>
+    <string name="home_batteryOptimization_action">Erlauben</string>
+    <string name="home_batteryOptimization_why">Warum?</string>
+    <string name="home_batteryOptimization_dismiss">Nicht jetzt</string>
     <!-- endregion -->
 
     <!-- region App Lists & Categories -->

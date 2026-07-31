@@ -249,6 +249,7 @@ private fun HomeScreenContent(it: PaddingValues) {
         }
         item {
             FinishSetupCard()
+            BatteryOptimizationCard()
         }
         items(FeaturesProvider.featureList) { feature ->
             OpenFeatureTile(feature = feature)
