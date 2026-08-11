@@ -23,8 +23,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -186,6 +186,12 @@ private fun AppBar(
                 IconButton(onClick = { navViewModel.openRoute(NavigationRoutes.LogViewer) }) {
                     Icon(Icons.Default.FilterList, contentDescription = "View Logs")
                 }
+            }
+            IconButton(onClick = { navViewModel.openRoute(NavigationRoutes.About) }) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(id = R.string.navigation_about)
+                )
             }
         },
     )
@@ -367,7 +373,7 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
 @Composable
 fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     SimpleListTile(
-        leadingIcon = Icons.Default.Info,
+        leadingIcon = Icons.Default.Settings,
         titleText = stringResource(id = R.string.navigation_about),
         subtitleText = stringResource(id = R.string.about_tile_subtitle),
         onClick = { navViewModel.openRoute(NavigationRoutes.About) }

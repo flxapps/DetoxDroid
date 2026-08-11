@@ -73,6 +73,9 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val onboardingSubtitle = stringResource(id = R.string.about_onboarding_subtitle)
     val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
     val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
+    val settingsSection = stringResource(id = R.string.about_section_settings)
+    val supportSection = stringResource(id = R.string.about_section_support)
+    val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
 
     Scaffold(
@@ -131,38 +134,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
 
-            linkItem(
-                icon = Icons.Default.WorkspacePremium,
-                title = premiumTitle,
-                subtitle = premiumSubtitle,
-                onClick = { PremiumSheetController.show() }
-            )
-            linkItem(
-                icon = Icons.Default.BugReport,
-                title = reportIssueTitle,
-                onClick = { uriHandler.openUri(reportIssueLink) }
-            )
-            linkItem(
-                icon = Icons.Default.Code,
-                title = githubTitle,
-                onClick = { uriHandler.openUri(githubLink) }
-            )
-            linkItem(
-                icon = Icons.Default.AlternateEmail,
-                title = contactTitle,
-                subtitle = contactSubtitle,
-                onClick = { uriHandler.openUri(contactLink) }
-            )
-            supportLinkItems.forEach { (icon, texts, url) ->
-                linkItem(
-                    icon = icon,
-                    title = texts.first,
-                    subtitle = texts.second,
-                    onClick = { uriHandler.openUri(url) }
-                )
-            }
-            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
-            storeReviewAboutItem(activity)
+            sectionHeader(settingsSection)
             switchItem(
                 icon = Icons.Default.Notifications,
                 title = keepAliveTitle,
@@ -180,7 +152,54 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 subtitle = onboardingSubtitle,
                 onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
             )
+
+            sectionHeader(supportSection)
+            linkItem(
+                icon = Icons.Default.WorkspacePremium,
+                title = premiumTitle,
+                subtitle = premiumSubtitle,
+                onClick = { PremiumSheetController.show() }
+            )
+            supportLinkItems.forEach { (icon, texts, url) ->
+                linkItem(
+                    icon = icon,
+                    title = texts.first,
+                    subtitle = texts.second,
+                    onClick = { uriHandler.openUri(url) }
+                )
+            }
+            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
+            storeReviewAboutItem(activity)
+
+            sectionHeader(projectSection)
+            linkItem(
+                icon = Icons.Default.BugReport,
+                title = reportIssueTitle,
+                onClick = { uriHandler.openUri(reportIssueLink) }
+            )
+            linkItem(
+                icon = Icons.Default.Code,
+                title = githubTitle,
+                onClick = { uriHandler.openUri(githubLink) }
+            )
+            linkItem(
+                icon = Icons.Default.AlternateEmail,
+                title = contactTitle,
+                subtitle = contactSubtitle,
+                onClick = { uriHandler.openUri(contactLink) }
+            )
         }
+    }
+}
+
+private fun LazyListScope.sectionHeader(title: String) {
+    item {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
+        )
     }
 }
 
