@@ -451,8 +451,6 @@
     <string name="onboarding_preset_budget">Daily budget</string>
     <string name="onboarding_preset_budget_description">Your daily allowance for the selected apps before DetoxDroid steps in.</string>
     <string name="onboarding_preset_budget_suggested">Suggested from your last 7 days of usage</string>
-    <string name="onboarding_preset_preview">See it in action</string>
-    <string name="onboarding_preset_preview_description">Preview grayscale on your screen for a few seconds.</string>
     <string name="onboarding_permissions_title">A few permissions</string>
     <string name="onboarding_permissions_message">Your setup needs the permissions below. Grant what you like — anything missing can be granted later from the feature screens.</string>
     <string name="onboarding_permissions_overlay">Display over other apps</string>

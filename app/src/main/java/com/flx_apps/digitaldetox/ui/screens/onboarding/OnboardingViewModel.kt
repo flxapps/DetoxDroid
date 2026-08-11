@@ -12,8 +12,6 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
-import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER
-import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER_ENABLED
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -32,15 +30,12 @@ import com.flx_apps.digitaldetox.util.knownCategoryOf
 import com.topjohnwu.superuser.Shell
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -88,9 +83,6 @@ class OnboardingViewModel @Inject constructor(
 
         /** System apps without a known category are hidden below this average daily usage. */
         val MIN_SYSTEM_APP_USAGE_MS: Long = TimeUnit.MINUTES.toMillis(5)
-
-        /** How long the grayscale preview stays on screen. */
-        const val GRAYSCALE_PREVIEW_DURATION_MS = 2500L
     }
 
     /**
@@ -321,46 +313,6 @@ class OnboardingViewModel @Inject constructor(
         runCatching { AccessibilityServiceController.activate(application) }
     }
 
-    private val _isPreviewingGrayscale = MutableStateFlow(false)
-    val isPreviewingGrayscale: StateFlow<Boolean> = _isPreviewingGrayscale
-
-    /**
-     * Turns the whole screen grayscale for a few seconds so the user can feel what the Balanced
-     * and Strict presets will do. Only possible with WRITE_SECURE_SETTINGS; the previous
-     * daltonizer state (e.g. a color-blindness filter) is restored afterwards.
-     */
-    fun previewGrayscale() {
-        if (!_writeSecureSettingsGranted.value) return
-        if (!_isPreviewingGrayscale.compareAndSet(expect = false, update = true)) return
-        viewModelScope.launch(Dispatchers.IO) {
-            val contentResolver = application.contentResolver
-            val previousEnabled = runCatching {
-                Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0)
-            }.getOrDefault(0)
-            val previousDaltonizer = runCatching {
-                Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1)
-            }.getOrDefault(-1)
-            try {
-                Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
-                Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER, 0)
-                delay(GRAYSCALE_PREVIEW_DURATION_MS)
-            } finally {
-                // never strand the user in gray: restore even when the view model is torn down
-                // mid-preview (leaving onboarding cancels this scope)
-                withContext(NonCancellable) {
-                    runCatching {
-                        Settings.Secure.putInt(
-                            contentResolver, DISPLAY_DALTONIZER_ENABLED, previousEnabled
-                        )
-                        Settings.Secure.putInt(
-                            contentResolver, DISPLAY_DALTONIZER, previousDaltonizer
-                        )
-                    }
-                    _isPreviewingGrayscale.value = false
-                }
-            }
-        }
-    }
     // endregion
 
     // region reliability (optional)
