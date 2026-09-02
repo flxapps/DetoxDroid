@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -156,14 +157,21 @@ fun FeatureActivationSwitch(
             checked = featureViewModel.featureIsActive.collectAsState().value,
             onCheckedChange = {
                 if (featureViewModel.toggleFeatureActive() == null) {
+                    val blockedFeature = featureViewModel.feature as NeedsPermissionsFeature
+                    val hasAction = blockedFeature.activationBlockedHasAction(context)
                     featureViewModel.showSnackbar(
-                        message = context.getString(R.string.action_requestPermissions),
-                        actionLabel = context.getString(R.string.action_go),
+                        message = context.getString(blockedFeature.activationBlockedMessage(context)),
+                        actionLabel = if (hasAction) context.getString(R.string.action_go) else null,
+                        // without an action to tap there is nothing to wait for, and an indefinite
+                        // snackbar would sit there until it is swiped away
+                        duration = if (hasAction) {
+                            SnackbarDuration.Indefinite
+                        } else {
+                            SnackbarDuration.Long
+                        },
                         onResult = { snackbarResult ->
                             if (snackbarResult == SnackbarResult.ActionPerformed) {
-                                (featureViewModel.feature as NeedsPermissionsFeature).requestPermissions(
-                                    context, navViewModel
-                                )
+                                blockedFeature.requestPermissions(context, navViewModel)
                             }
                         }
                     )
