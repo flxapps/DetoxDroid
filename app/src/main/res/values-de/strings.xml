@@ -484,7 +484,7 @@
     </plurals>
     <string name="onboarding_done_summary_scrollBreaksPending">Scroll-Pausen sind eingerichtet – sie brauchen nur noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
     <string name="onboarding_done_summary_grayscale">Graustufen nach %s täglicher Nutzung</string>
-    <string name="onboarding_done_summary_grayscalePending">Graustufen stehen bereit – ein kleiner Schritt fehlt noch. Wir erinnern dich auf dem Startbildschirm.</string>
+    <string name="onboarding_done_summary_grayscaleFilter">Ablenkende Apps werden nach %s täglicher Nutzung stumpf und unscharf. Echte Graustufen brauchen noch einen einmaligen Schritt.</string>
     <string name="onboarding_done_summary_blocking">Apps gesperrt nach %s täglicher Nutzung</string>
     <string name="onboarding_done_summary_blockingPending">Die App-Sperre ist eingerichtet – ihr fehlt nur noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
     <string name="onboarding_done_summary_accessibilityPending">DetoxDroids Bedienungshilfe läuft noch nicht – du kannst sie über den Startbildschirm starten.</string>

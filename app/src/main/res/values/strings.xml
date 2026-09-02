@@ -486,7 +486,7 @@
     </plurals>
     <string name="onboarding_done_summary_scrollBreaksPending">Scroll breaks are ready, but need the \"display over other apps\" permission before they can appear.</string>
     <string name="onboarding_done_summary_grayscale">Grayscale after %s of daily use</string>
-    <string name="onboarding_done_summary_grayscalePending">Grayscale is prepared — one small step remains. We\'ll remind you on the home screen.</string>
+    <string name="onboarding_done_summary_grayscaleFilter">Distracting apps get dull and blurry after %s of daily use. Real grayscale needs a one-time setup.</string>
     <string name="onboarding_done_summary_blocking">Apps blocked after %s of daily use</string>
     <string name="onboarding_done_summary_blockingPending">App blocking is ready, but needs the \"display over other apps\" permission to work.</string>
     <string name="onboarding_done_summary_accessibilityPending">DetoxDroid\'s accessibility service is not enabled yet — you can start it from the home screen.</string>
