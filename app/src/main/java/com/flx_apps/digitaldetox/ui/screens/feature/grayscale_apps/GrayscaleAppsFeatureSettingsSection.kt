@@ -8,9 +8,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.InvertColors
+import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -25,6 +29,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
+import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -41,7 +47,9 @@ import kotlin.time.Duration.Companion.minutes
  * A tile for the grayscale apps feature settings screen.
  */
 @Composable
-fun GrayscaleAppsFeatureSettingsSection() {
+fun GrayscaleAppsFeatureSettingsSection(
+    viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()
+) {
     ShizukuWizardTile()
     OpenAppExceptionsTile(subtitleText = stringResource(
         id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
@@ -52,9 +60,124 @@ fun GrayscaleAppsFeatureSettingsSection() {
         GrayscaleAppsFeature.appExceptions.size
     ))
     OpenScheduleTile()
-    ExtraDimTile()
+    // grayscale and extra dim are secure settings, so without the permission they can only be
+    // offered as something to set up (see the Shizuku tile), not as something to switch
+    if (hasWriteSecureSettingsPermission()) {
+        SystemGrayscaleTile()
+        ExtraDimTile()
+    }
+    ScreenFilterTile()
+    if (viewModel.screenFilterEnabled.collectAsState().value) {
+        ScreenFilterIntensityTile()
+        ScreenFilterBlurTile()
+    }
     IgnoreFullScreenAppsTile()
     AllowedDailyColorScreenTimeTile()
+}
+
+/**
+ * Whether DetoxDroid may write secure settings, re-checked whenever the screen comes back so a
+ * permission granted in the meantime (Shizuku wizard, adb) is picked up without a restart.
+ */
+@Composable
+private fun hasWriteSecureSettingsPermission(): Boolean {
+    val context = LocalContext.current
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    return remember(lifecycleState) {
+        context.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+    }
+}
+
+/**
+ * The UI element for toggling the system grayscale filter. Separate from the feature's own switch,
+ * because the feature can just as well run on the screen filter alone.
+ */
+@Composable
+fun SystemGrayscaleTile(
+    viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel(),
+    featureViewModel: FeatureViewModel = viewModel()
+) {
+    SimpleListTile(
+        titleText = stringResource(id = R.string.feature_grayscale_systemGrayscale),
+        subtitleText = stringResource(id = R.string.feature_grayscale_systemGrayscale_description),
+        trailing = {
+            Checkbox(checked = viewModel.systemGrayscale.collectAsState().value,
+                onCheckedChange = {
+                    if (viewModel.toggleSystemGrayscale()) featureViewModel.refreshActiveState()
+                })
+        },
+        leadingIcon = Icons.Default.InvertColors
+    )
+}
+
+/**
+ * The UI element for toggling the screen filter, which stands in for the system grayscale filter
+ * where that one cannot be reached.
+ */
+@Composable
+fun ScreenFilterTile(
+    viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel(),
+    featureViewModel: FeatureViewModel = viewModel()
+) {
+    SimpleListTile(
+        titleText = stringResource(id = R.string.feature_grayscale_screenFilter),
+        subtitleText = stringResource(
+            id = if (hasWriteSecureSettingsPermission()) {
+                R.string.feature_grayscale_screenFilter_description_granted
+            } else {
+                R.string.feature_grayscale_screenFilter_description
+            }
+        ),
+        trailing = {
+            Checkbox(checked = viewModel.screenFilterEnabled.collectAsState().value,
+                onCheckedChange = {
+                    if (viewModel.toggleScreenFilter()) featureViewModel.refreshActiveState()
+                })
+        },
+        leadingIcon = Icons.Default.FilterAlt
+    )
+}
+
+/**
+ * The UI element for setting the screen filter strength.
+ */
+@Composable
+fun ScreenFilterIntensityTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+    val context = LocalContext.current
+    val intensity = viewModel.screenFilterIntensity.collectAsState().value
+    if (viewModel.showScreenFilterIntensityDialog.collectAsState().value) {
+        NumberPickerDialog(titleText = stringResource(id = R.string.feature_grayscale_screenFilter_intensity),
+            initialValue = intensity,
+            onValueSelected = { viewModel.setScreenFilterIntensity(it) },
+            onDismissRequest = { viewModel.setShowScreenFilterIntensityDialog(false) },
+            range = MinScreenFilterIntensity..100 step 10,
+            label = { context.getString(R.string.feature_grayscale_screenFilter_percent, it) })
+    }
+    SimpleListTile(
+        titleText = stringResource(id = R.string.feature_grayscale_screenFilter_intensity),
+        subtitleText = stringResource(id = R.string.feature_grayscale_screenFilter_intensity_description),
+        trailing = {
+            Text(stringResource(id = R.string.feature_grayscale_screenFilter_percent, intensity))
+        },
+        onClick = { viewModel.setShowScreenFilterIntensityDialog(true) },
+        leadingIcon = Icons.Default.Opacity
+    )
+}
+
+/**
+ * The UI element for toggling the blur part of the screen filter.
+ */
+@Composable
+fun ScreenFilterBlurTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+    SimpleListTile(
+        titleText = stringResource(id = R.string.feature_grayscale_screenFilter_blur),
+        subtitleText = stringResource(id = R.string.feature_grayscale_screenFilter_blur_description),
+        trailing = {
+            Checkbox(checked = viewModel.screenFilterBlur.collectAsState().value,
+                onCheckedChange = { viewModel.toggleScreenFilterBlur() })
+        },
+        leadingIcon = Icons.Default.BlurOn
+    )
 }
 
 /**
@@ -65,12 +188,7 @@ fun GrayscaleAppsFeatureSettingsSection() {
  */
 @Composable
 private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
-    val context = LocalContext.current
-    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
-    val hasPermission = remember(lifecycleState) {
-        context.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
-    }
-    if (hasPermission) return
+    if (hasWriteSecureSettingsPermission()) return
     SimpleListTile(
         titleText = stringResource(id = R.string.noPermissions_text_shizukuWizard_go),
         subtitleText = stringResource(id = R.string.noPermissions_text_shizukuWizard),
@@ -89,14 +207,17 @@ private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewM
  * The UI element for toggling the extra dim setting.
  */
 @Composable
-fun ExtraDimTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+fun ExtraDimTile(
+    viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel(),
+    featureViewModel: FeatureViewModel = viewModel()
+) {
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_extraDim),
         subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description),
         trailing = {
             Checkbox(checked = viewModel.extraDimActivated.collectAsState().value,
                 onCheckedChange = {
-                    viewModel.toggleExtraDim()
+                    if (viewModel.toggleExtraDim()) featureViewModel.refreshActiveState()
                 })
         },
         leadingIcon = Icons.Default.BrightnessLow
