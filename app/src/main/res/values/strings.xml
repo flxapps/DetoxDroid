@@ -151,16 +151,28 @@
     <!-- endregion -->
 
     <!-- region Feature: Grayscale -->
-    <string name="feature_grayscale">Automatic Grayscale</string>
-    <string name="feature_grayscale_subtitle">Less color, less distraction</string>
-    <string name="feature_grayscale_description">Removes color from distracting apps while allowing exceptions where needed.</string>
+    <string name="feature_grayscale">Make Apps Boring</string>
+    <string name="feature_grayscale_subtitle">Grayscale, dimmed, blurred</string>
+    <string name="feature_grayscale_description">Takes the color out of distracting apps. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Allowed Daily Color Screen Time</string>
     <string name="feature_grayscale_extraDim">Extra Dim</string>
-    <string name="feature_grayscale_extraDim_description">Dims your screen in grayscale mode. (Long-press to adjust intensity.)</string>
+    <string name="feature_grayscale_extraDim_description">Dims the screen below its normal minimum while a listed app is open. (Long-press to adjust intensity.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Ignore Non-Fullscreen Elements</string>
     <string name="feature_grayscale_ignoreNonFullScreen_description">Ignores temporary overlays (for example volume panel or status bar) so they do not change color mode.</string>
-    <string name="feature_grayscale_exceptions_summary_notList">Colors are allowed in %d apps.</string>
-    <string name="feature_grayscale_exceptions_summary_onlyList">Grayscale is active in %d apps.</string>
+    <string name="feature_grayscale_exceptions_summary_notList">%d apps are left alone.</string>
+    <string name="feature_grayscale_exceptions_summary_onlyList">Active in %d apps.</string>
+    <string name="feature_grayscale_noEffects">Switch on grayscale, extra dim or the screen filter first.</string>
+    <string name="feature_grayscale_noEffects_noPermission">Switch on the screen filter first, or set up real grayscale.</string>
+    <string name="feature_grayscale_systemGrayscale">Grayscale</string>
+    <string name="feature_grayscale_systemGrayscale_description">Switches the system color filter to grayscale while a listed app is open. Costs nothing in battery.</string>
+    <string name="feature_grayscale_screenFilter">Screen Filter</string>
+    <string name="feature_grayscale_screenFilter_description">Real grayscale needs a one-time setup from a computer or via Shizuku. Until then, a filter washes the color out and blurs distracting apps.</string>
+    <string name="feature_grayscale_screenFilter_description_granted">Runs on top of the system grayscale filter. You already have the real thing, so this is only worth it if grayscale alone is too easy to ignore.</string>
+    <string name="feature_grayscale_screenFilter_intensity">Filter Strength</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">How dull and how blurry. Stronger settings make text harder to read.</string>
+    <string name="feature_grayscale_screenFilter_blur">Blur</string>
+    <string name="feature_grayscale_screenFilter_blur_description">Blurs everything behind the filter. Needs Android 12 or newer and is skipped while battery saver is on.</string>
+    <string name="feature_grayscale_screenFilter_percent">%d%%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->

@@ -148,16 +148,28 @@
     <!-- endregion -->
 
     <!-- region Feature: Grayscale -->
-    <string name="feature_grayscale">Automatische Graustufen</string>
-    <string name="feature_grayscale_subtitle">Weniger Farbe, weniger Ablenkung</string>
-    <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe – mit Ausnahmen dort, wo du sie brauchst.</string>
+    <string name="feature_grayscale">Apps langweilig machen</string>
+    <string name="feature_grayscale_subtitle">Grau, gedimmt, verschwommen</string>
+    <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
-    <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm im Graustufenmodus zusätzlich ab. (Lange drücken, um die Stärke einzustellen.)</string>
+    <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm unter das normale Minimum ab, solange eine App aus der Liste offen ist. (Lange drücken, um die Stärke einzustellen.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Eingeblendete Elemente ignorieren</string>
     <string name="feature_grayscale_ignoreNonFullScreen_description">Kurz eingeblendete Elemente wie Lautstärkeregler oder Statusleiste schalten den Farbmodus dann nicht mehr um.</string>
-    <string name="feature_grayscale_exceptions_summary_notList">In %d Apps bleibt die Farbe erhalten.</string>
-    <string name="feature_grayscale_exceptions_summary_onlyList">Graustufen greifen in %d Apps.</string>
+    <string name="feature_grayscale_exceptions_summary_notList">%d Apps bleiben unangetastet.</string>
+    <string name="feature_grayscale_exceptions_summary_onlyList">Greift in %d Apps.</string>
+    <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extra dunkel oder den Bildschirmfilter ein.</string>
+    <string name="feature_grayscale_noEffects_noPermission">Schalte erst den Bildschirmfilter ein oder richte echte Graustufen ein.</string>
+    <string name="feature_grayscale_systemGrayscale">Graustufen</string>
+    <string name="feature_grayscale_systemGrayscale_description">Stellt den Farbfilter des Systems auf Graustufen, solange eine App aus der Liste offen ist. Kostet keinen Akku.</string>
+    <string name="feature_grayscale_screenFilter">Bildschirmfilter</string>
+    <string name="feature_grayscale_screenFilter_description">Echte Graustufen brauchen einmalig einen Computer oder Shizuku. Bis dahin zieht ein Filter ablenkenden Apps die Farbe ab und macht sie unscharf.</string>
+    <string name="feature_grayscale_screenFilter_description_granted">Läuft zusätzlich zum Graustufenfilter des Systems. Du hast das Original schon, das hier lohnt sich also nur, wenn dich Graustufen allein zu wenig stören.</string>
+    <string name="feature_grayscale_screenFilter_intensity">Filterstärke</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">Wie stumpf und wie unscharf. Je stärker, desto schlechter lesbar wird Text.</string>
+    <string name="feature_grayscale_screenFilter_blur">Unscharf</string>
+    <string name="feature_grayscale_screenFilter_blur_description">Macht alles hinter dem Filter unscharf. Braucht Android 12 oder neuer und fällt im Energiesparmodus weg.</string>
+    <string name="feature_grayscale_screenFilter_percent">%d %%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
