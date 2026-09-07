@@ -171,9 +171,12 @@
     <string name="feature_grayscale_screenFilter_description">Real grayscale needs a one-time setup from a computer or via Shizuku. Until then, a filter washes the color out and blurs distracting apps.</string>
     <string name="feature_grayscale_screenFilter_description_granted">Runs on top of the system grayscale filter. You already have the real thing, so this is only worth it if grayscale alone is too easy to ignore.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filter Strength</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">How dull and how blurry. Stronger settings make text harder to read.</string>
-    <string name="feature_grayscale_screenFilter_blur">Blur</string>
-    <string name="feature_grayscale_screenFilter_blur_description">Blurs everything behind the filter. Needs Android 12 or newer and is skipped while battery saver is on.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">How far it goes. Stronger settings make text harder to read.</string>
+    <string name="feature_grayscale_screenFilter_effects">What the filter does</string>
+    <string name="feature_grayscale_screenFilter_effects_description">Shading drains the color and the contrast. Blurring needs Android 12 or newer, and the system drops it while battery saver is on.</string>
+    <string name="feature_grayscale_screenFilter_effects_shade">Shade</string>
+    <string name="feature_grayscale_screenFilter_effects_blur">Blur</string>
+    <string name="feature_grayscale_screenFilter_effects_both">Both</string>
     <string name="feature_grayscale_screenFilter_percent">%d%%</string>
     <!-- endregion -->
 

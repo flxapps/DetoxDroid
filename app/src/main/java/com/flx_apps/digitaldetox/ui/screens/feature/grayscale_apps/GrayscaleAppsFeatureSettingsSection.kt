@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +33,8 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
+import com.flx_apps.digitaldetox.features.ScreenFilterEffects
+import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
@@ -39,6 +42,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
+import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -78,8 +82,9 @@ fun GrayscaleAppsFeatureSettingsSection(
     }
     ScreenFilterTile()
     if (viewModel.screenFilterEnabled.collectAsState().value) {
+        // a device that cannot blur has only one thing the filter can do, so there is nothing to pick
+        if (ScreenFilterOverlay.isBlurAvailable()) ScreenFilterEffectsTile()
         ScreenFilterIntensityTile()
-        ScreenFilterBlurTile()
     }
     IgnoreFullScreenAppsTile()
     AllowedDailyColorScreenTimeTile()
@@ -175,18 +180,29 @@ fun ScreenFilterIntensityTile(viewModel: GrayscaleAppsFeatureSettingsViewModel =
 }
 
 /**
- * The UI element for toggling the blur part of the screen filter.
+ * The UI element for choosing whether the screen filter shades, blurs, or does both.
  */
 @Composable
-fun ScreenFilterBlurTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
-    SimpleListTile(
-        titleText = stringResource(id = R.string.feature_grayscale_screenFilter_blur),
-        subtitleText = stringResource(id = R.string.feature_grayscale_screenFilter_blur_description),
-        trailing = {
-            Checkbox(checked = viewModel.screenFilterBlur.collectAsState().value,
-                onCheckedChange = { viewModel.toggleScreenFilterBlur() })
+fun ScreenFilterEffectsTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
+    ListItem(
+        leadingContent = { Icon(imageVector = Icons.Default.BlurOn, contentDescription = null) },
+        headlineContent = {
+            Text(text = stringResource(id = R.string.feature_grayscale_screenFilter_effects))
         },
-        leadingIcon = Icons.Default.BlurOn
+        supportingContent = {
+            Column {
+                Text(text = stringResource(id = R.string.feature_grayscale_screenFilter_effects_description))
+                OptionsRow(
+                    options = mapOf(
+                        R.string.feature_grayscale_screenFilter_effects_shade to ScreenFilterEffects.SHADE,
+                        R.string.feature_grayscale_screenFilter_effects_blur to ScreenFilterEffects.BLUR,
+                        R.string.feature_grayscale_screenFilter_effects_both to ScreenFilterEffects.SHADE_AND_BLUR,
+                    ),
+                    selectedOption = viewModel.screenFilterEffects.collectAsState().value,
+                    onOptionSelected = { viewModel.setScreenFilterEffects(it as ScreenFilterEffects) },
+                )
+            }
+        },
     )
 }
 

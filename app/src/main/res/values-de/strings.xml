@@ -168,9 +168,12 @@
     <string name="feature_grayscale_screenFilter_description">Echte Graustufen brauchen einmalig einen Computer oder Shizuku. Bis dahin zieht ein Filter ablenkenden Apps die Farbe ab und macht sie unscharf.</string>
     <string name="feature_grayscale_screenFilter_description_granted">Läuft zusätzlich zum Graustufenfilter des Systems. Du hast das Original schon, das hier lohnt sich also nur, wenn dich Graustufen allein zu wenig stören.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filterstärke</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">Wie stumpf und wie unscharf. Je stärker, desto schlechter lesbar wird Text.</string>
-    <string name="feature_grayscale_screenFilter_blur">Unscharf</string>
-    <string name="feature_grayscale_screenFilter_blur_description">Macht alles hinter dem Filter unscharf. Braucht Android 12 oder neuer und fällt im Energiesparmodus weg.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">Wie weit es geht. Je stärker, desto schlechter lesbar wird Text.</string>
+    <string name="feature_grayscale_screenFilter_effects">Was der Filter macht</string>
+    <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 oder neuer, und im Energiesparmodus schaltet das System sie ab.</string>
+    <string name="feature_grayscale_screenFilter_effects_shade">Schleier</string>
+    <string name="feature_grayscale_screenFilter_effects_blur">Unschärfe</string>
+    <string name="feature_grayscale_screenFilter_effects_both">Beides</string>
     <string name="feature_grayscale_screenFilter_percent">%d %%</string>
     <!-- endregion -->
 

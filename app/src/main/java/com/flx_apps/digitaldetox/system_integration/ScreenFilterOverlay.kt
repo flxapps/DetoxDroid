@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.PixelFormat
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -63,17 +64,43 @@ object ScreenFilterOverlay {
 
 
     /**
-     * The wash color, painted opaque. A mid-dark neutral gray: light grays fog up dark-mode apps
-     * until they look broken, and a tinted wash reads as a photo filter rather than as "this app
-     * is boring now". How much of it ends up on screen is the window alpha.
+     * The wash colors, painted opaque; how much of one ends up on screen is the window alpha.
+     *
+     * Both are much lighter than they look like they should be, and that is the whole trick. What
+     * survives compositing a flat color c at alpha a over a fully saturated pixel is
+     * `(1 - a) / ((1 - a) + c * a)` of its original saturation, so a *lighter* wash drains more
+     * color, not less: it lifts the channel the ratio is measured against. A dark wash only turns
+     * the brightness down, which reads as a dimmed screen rather than a boring one.
+     *
+     * At the default strength that is 57 % of the color left instead of 80 %. The price is that
+     * the screen no longer goes darker, so the dark-mode wash stays moderate: fogging an OLED app
+     * to near-white at night is its own kind of broken.
      */
-    private const val WASH_COLOR = 0xFF4D4D4D.toInt()
+    private const val WASH_COLOR_LIGHT = 0xFFE8E8E8.toInt()
+    private const val WASH_COLOR_DARK = 0xFF9A9A9A.toInt()
+
+    /**
+     * Whether this device can blur behind a window at all. Separate from
+     * [WindowManager.isCrossWindowBlurEnabled], which also goes false while battery saver is on:
+     * that is a temporary condition and no reason to take the setting away from the user.
+     */
+    fun isBlurAvailable() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    /**
+     * The wash that suits what is most likely underneath. There is no way to sample the screen, so
+     * the system's own light/dark setting stands in for it.
+     */
+    private fun washColor(context: Context): Int {
+        val night = context.resources.configuration.uiMode and
+            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        return if (night) WASH_COLOR_DARK else WASH_COLOR_LIGHT
+    }
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /** Added first, so the flat wash on top of it is not itself blurred. */
     private val blurWindow = BlurWindow()
-    private val washWindow = FilterWindow(WASH_COLOR)
+    private val washWindow = FilterWindow()
 
     /**
      * Shows, updates or (with a null [spec]) removes the filter. Safe to call from any thread and
@@ -96,7 +123,7 @@ object ScreenFilterOverlay {
             }
             val washAlpha = spec.washAlpha.coerceIn(0f, MAX_WASH_ALPHA)
             if (washAlpha > 0f) {
-                washWindow.show(hostContext, windowType, washAlpha)
+                washWindow.show(hostContext, windowType, washAlpha, washColor(hostContext))
             } else {
                 washWindow.remove()
             }
@@ -220,16 +247,17 @@ object ScreenFilterOverlay {
      * The wash layer. Holds on to its window so a changed spec updates it in place instead of
      * tearing it down and building it again, which would flicker on every app switch.
      */
-    private class FilterWindow(private val color: Int) {
+    private class FilterWindow {
         private var view: View? = null
         private var params: WindowManager.LayoutParams? = null
         private var windowManager: WindowManager? = null
         private var currentAlpha = 0f
         private var currentHost: Context? = null
+        private var currentColor = 0
 
-        fun show(hostContext: Context, windowType: Int, alpha: Float) {
+        fun show(hostContext: Context, windowType: Int, alpha: Float, color: Int) {
             // @see BlurWindow.show - a cached window outlives the token it hangs on
-            if (currentHost !== hostContext) remove()
+            if (currentHost !== hostContext || currentColor != color) remove()
             val existingView = view
             val existingParams = params
             val existingManager = windowManager
@@ -273,6 +301,7 @@ object ScreenFilterOverlay {
                 windowManager = manager
                 currentAlpha = alpha
                 currentHost = hostContext
+                currentColor = color
             }.onFailure {
                 // e.g. the overlay permission was revoked, or the service token died between the
                 // event and this callback — running without the filter beats crashing the service
@@ -282,6 +311,7 @@ object ScreenFilterOverlay {
 
         fun remove() {
             currentHost = null
+            currentColor = 0
             val currentView = view ?: return
             kotlin.runCatching { windowManager?.removeView(currentView) }
             view = null

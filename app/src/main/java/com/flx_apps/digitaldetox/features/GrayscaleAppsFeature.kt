@@ -49,6 +49,14 @@ enum class ScreenFilterMode {
     AUTO, ON, OFF
 }
 
+/**
+ * Which halves of the screen filter run. Kept as the two switches it maps to rather than as its own
+ * stored value, so a preference survives a device that cannot blur.
+ */
+enum class ScreenFilterEffects {
+    SHADE, BLUR, SHADE_AND_BLUR
+}
+
 /** Below this the wash is invisible, so the picker starts here rather than at 0. */
 const val MinScreenFilterIntensity = 10
 
@@ -184,6 +192,27 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     var screenFilterBlur: Boolean by DataStoreProperty(
         booleanPreferencesKey("${id}_screenFilterBlur"), true
     )
+
+    /**
+     * Whether the screen filter washes the color out of what is behind it.
+     */
+    var screenFilterShade: Boolean by DataStoreProperty(
+        booleanPreferencesKey("${id}_screenFilterShade"), true
+    )
+
+    /**
+     * The two switches above as the single choice the settings screen offers.
+     */
+    var screenFilterEffects: ScreenFilterEffects
+        get() = when {
+            screenFilterShade && screenFilterBlur -> ScreenFilterEffects.SHADE_AND_BLUR
+            screenFilterBlur -> ScreenFilterEffects.BLUR
+            else -> ScreenFilterEffects.SHADE
+        }
+        set(value) {
+            screenFilterShade = value != ScreenFilterEffects.BLUR
+            screenFilterBlur = value != ScreenFilterEffects.SHADE
+        }
 
     /**
      * Whether the grayscale filter should be ignored when the current app is not in full screen mode.
@@ -478,12 +507,16 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         if (!isScreenFilterEnabled(context)) return null
         val intensity =
             screenFilterIntensity.coerceIn(MinScreenFilterIntensity, 100) / 100f
+        val blur = screenFilterBlur && ScreenFilterOverlay.isBlurAvailable()
+        // blur-only on a device that cannot blur would leave the filter switched on and doing
+        // nothing at all, so the wash stands in
+        val shade = screenFilterShade || !blur
         return ScreenFilterSpec(
-            washAlpha = intensity * ScreenFilterOverlay.MAX_WASH_ALPHA,
+            washAlpha = if (shade) intensity * ScreenFilterOverlay.MAX_WASH_ALPHA else 0f,
             // linear, now that the ceiling is low enough for the top of the slider to still be
             // worth reaching. Legibility drops off within the first few pixels of radius, so the
             // whole usable range sits between roughly one and ten of them.
-            blurDp = if (screenFilterBlur) intensity * MaxScreenFilterBlurDp else 0f
+            blurDp = if (blur) intensity * MaxScreenFilterBlurDp else 0f
         )
     }
 

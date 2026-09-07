@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.ScreenFilterEffects
 import com.flx_apps.digitaldetox.features.ScreenFilterMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,12 +46,12 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
     val screenFilterIntensity: StateFlow<Int> = _screenFilterIntensity
 
     /**
-     * Whether the screen filter blurs what is behind it.
-     * @see GrayscaleAppsFeature.screenFilterBlur
+     * Which halves of the screen filter are switched on.
+     * @see GrayscaleAppsFeature.screenFilterEffects
      */
-    private var _screenFilterBlur: MutableStateFlow<Boolean> =
-        MutableStateFlow(GrayscaleAppsFeature.screenFilterBlur)
-    val screenFilterBlur: StateFlow<Boolean> = _screenFilterBlur
+    private var _screenFilterEffects: MutableStateFlow<ScreenFilterEffects> =
+        MutableStateFlow(GrayscaleAppsFeature.screenFilterEffects)
+    val screenFilterEffects: StateFlow<ScreenFilterEffects> = _screenFilterEffects
 
     /**
      * Whether the dialog to set the screen filter strength should be shown.
@@ -100,7 +101,7 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
         _extraDimActivated.value = GrayscaleAppsFeature.extraDim
         _screenFilterEnabled.value = GrayscaleAppsFeature.isScreenFilterEnabled(context)
         _screenFilterIntensity.value = GrayscaleAppsFeature.screenFilterIntensity
-        _screenFilterBlur.value = GrayscaleAppsFeature.screenFilterBlur
+        _screenFilterEffects.value = GrayscaleAppsFeature.screenFilterEffects
     }
 
     /**
@@ -126,11 +127,11 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
     }
 
     /**
-     * Toggles the blur part of the screen filter.
+     * Picks the shade, the blur, or both.
      */
-    fun toggleScreenFilterBlur() {
-        GrayscaleAppsFeature.screenFilterBlur = !GrayscaleAppsFeature.screenFilterBlur
-        _screenFilterBlur.value = GrayscaleAppsFeature.screenFilterBlur
+    fun setScreenFilterEffects(effects: ScreenFilterEffects) {
+        GrayscaleAppsFeature.screenFilterEffects = effects
+        _screenFilterEffects.value = effects
         refreshEffects()
     }
 
