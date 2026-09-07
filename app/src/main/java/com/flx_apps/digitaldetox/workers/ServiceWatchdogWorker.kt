@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -38,8 +39,18 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         val shouldRun = AccessibilityServiceController.isEnabledInSettings(appContext)
         val isBound = DetoxDroidAccessibilityService.instance != null
 
-        if (!shouldRun || isBound) {
-            // Either the user turned DetoxDroid off, or it is healthy - reset outage tracking.
+        if (!shouldRun) {
+            // DetoxDroid is off. Anything it was holding in the system's display settings has to go
+            // back: the accessibility service is the only thing that would undo it, and it is not
+            // coming. Without this a service killed mid-filter leaves the screen gray and dimmed
+            // with nothing left in the app able to switch it off, which survives a reboot.
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(appContext) }
+                .onFailure { Timber.w(it, "ServiceWatchdogWorker: could not restore display filters") }
+            resetOutageState()
+            return Result.success()
+        }
+
+        if (isBound) {
             resetOutageState()
             return Result.success()
         }
@@ -57,6 +68,11 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         // false-alarm during the brief window while the OS is re-binding the service.
         val streak = incrementUnhealthyStreak()
         if (streak >= 2 && !wasOutageNotified()) {
+            // Half an hour of "enabled but not bound" means it is not coming back on its own. Give
+            // the display settings back rather than leaving the user staring at a gray screen no
+            // running code owns any more.
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(appContext) }
+                .onFailure { Timber.w(it, "ServiceWatchdogWorker: could not restore display filters") }
             notifyServiceDown()
             setOutageNotified(true)
         }

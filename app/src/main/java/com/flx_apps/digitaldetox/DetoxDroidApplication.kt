@@ -12,7 +12,9 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
@@ -87,6 +89,7 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
 
         scheduleUsageStatsSnapshot()
         ServiceReliabilityScheduler.schedule(this)
+        restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)
         // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
         // the premium entitlement here.
@@ -116,6 +119,21 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
             ExistingPeriodicWorkPolicy.KEEP,
             snapshotRequest
         )
+    }
+
+    /**
+     * Hands the system's display settings back when DetoxDroid is not running. Force-stopping an app
+     * disables its accessibility service and puts the package in the stopped state, where it
+     * receives no broadcasts at all: neither BOOT_COMPLETED nor the watchdog reaches it, not even
+     * across a reboot. Opening the app is the only thing left that runs our code, and a user whose
+     * screen is stuck gray and dimmed is going to open the app that did it.
+     */
+    private fun restoreDisplayFiltersIfStopped() {
+        if (AccessibilityServiceController.isEnabledInSettings(this)) return
+        Thread {
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(this) }
+                .onFailure { Timber.w(it, "Could not restore the display filters on start") }
+        }.start()
     }
 
     /**

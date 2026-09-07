@@ -113,6 +113,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     val currentForegroundPackage: String get() = lastPackage
 
     /**
+     * Drops the remembered foreground package, so the next window event counts as an app switch
+     * even if it names the same app. Used when the screen turns off: features tear their effects
+     * down for the lock screen and need a chance to put them back on the way in.
+     */
+    fun forgetForegroundPackage() {
+        lastPackage = ""
+    }
+
+    /**
      * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
      * window events must not be treated as "an app was opened".
      */

@@ -12,6 +12,10 @@ import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeat
  */
 class ScreenTurnedOffReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
+        // Features that drop what they are showing while the screen is off need a window event to
+        // put it back, and no event arrives when the user unlocks straight into the app they left.
+        // Forgetting the package turns that first event back into an app switch.
+        DetoxDroidAccessibilityService.instance?.forgetForegroundPackage()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScreenTurnedOffFeatures)
             .forEach {
                 (it as OnScreenTurnedOffSubscriptionFeature).onScreenTurnedOff(context)

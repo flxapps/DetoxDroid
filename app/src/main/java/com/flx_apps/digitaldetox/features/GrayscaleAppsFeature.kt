@@ -86,8 +86,14 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * Whether *we* currently hold the system color filter in grayscale. Tracked apart from
      * [areEffectsActive], because the feature can be busy filtering the screen while the
      * daltonizer is not in use at all.
+     *
+     * Persisted, because the setting outlives the process. The accessibility service can be killed
+     * without [onPause] ever running, and the filter it left behind would then have nothing left to
+     * switch it off: the screen stays gray until someone finds the toggle in the system settings.
      */
-    private var isDaltonizerApplied: Boolean = false
+    private var isDaltonizerApplied: Boolean by DataStoreProperty(
+        booleanPreferencesKey("${id}_daltonizerApplied"), false
+    )
 
     /**
      * Delegate for the WRITE_SECURE_SETTINGS permission. The feature no longer stands or falls
@@ -97,25 +103,44 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private val writeSecureSettingsPermission = NeedsWriteSecureSettingsPermission()
 
     /**
+     * The package DetoxDroid itself runs in. Its own screens are never filtered: the filter is
+     * configured on them, and a washed-out, blurred settings screen is both hard to read and hard
+     * to get back out of.
+     */
+    private const val OwnPackage = "com.flx_apps.digitaldetox"
+
+    /**
      * We use this for people who use a color filter for color blindness. If the user has a color
      * filter enabled, we want to save the current filter and restore it when the grayscale filter
      * is turned off.
-     * -1 means that the user does not have a color filter enabled.
+     * -1 means that the user does not have a color filter enabled. Persisted alongside
+     * [isDaltonizerApplied], so a process death cannot lose the setting we owe the user back.
      */
-    private var defaultDaltonizer: Int = -1
+    private var defaultDaltonizer: Int by DataStoreProperty(
+        intPreferencesKey("${id}_defaultDaltonizer"), -1
+    )
 
     /**
      * We use this to check whether the daltonizer was enabled before we turned on the grayscale
      * filter. If it was not enabled, we want to disable it again when the grayscale filter is
-     * turned off.
+     * turned off. Persisted for the same reason as [defaultDaltonizer].
      */
-    private var defaultDaltonizerEnabled: Int = 0
+    private var defaultDaltonizerEnabled: Int by DataStoreProperty(
+        intPreferencesKey("${id}_defaultDaltonizerEnabled"), 0
+    )
 
     /**
      * Represents, whether the extra dim filter is currently active.
      * We use this variable in order to avoid unnecessary calls to the system settings.
+     *
+     * Persisted, and the only record there is: since Android 12 [EXTRA_DIM] cannot be read back by
+     * an app targeting above S, so a fresh process has no way to ask the system whether extra dim
+     * is on. An in-memory flag starting at false would report "already off" and skip the write that
+     * would actually switch it off, leaving the screen dimmed for good.
      */
-    private var isCurrentlyExtraDim: Boolean = false
+    private var isCurrentlyExtraDim: Boolean by DataStoreProperty(
+        booleanPreferencesKey("${id}_extraDimApplied"), false
+    )
 
     /**
      * Whether the extra dim filter should be turned on when the grayscale filter is active.
@@ -219,13 +244,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         // a filter left over from an earlier run of the service would never be removed: the state
         // below starts out "off", so the first evaluation that also says "off" changes nothing
         ScreenFilterOverlay.apply(context, null)
-        val contentResolver = context.contentResolver
-        isDaltonizerApplied =
-            getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0) == 1 && getSecureInt(
-                contentResolver, DISPLAY_DALTONIZER, -1
-            ) == 0
-        areEffectsActive = isDaltonizerApplied
-        isCurrentlyExtraDim = getSecureInt(contentResolver, EXTRA_DIM, 0) == 1
+        // Hand the system settings back before anything else, so the evaluation below starts from a
+        // known-clean screen.
+        reclaimStrandedFilters(context)
+        restoreSystemFilters(context)
+        areEffectsActive = false
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         // Evaluate against the actual foreground app when the service knows it: after a resume
         // (or feature toggle) no new window event arrives while the user stays inside the current
@@ -258,7 +281,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         // the effects should be on while an app covered by the exception list config is in the
         // foreground (and the daily color allowance, if any, is used up)
-        val shouldApplyEffects = appliesTo(packageName)
+        val shouldApplyEffects = packageName != OwnPackage && appliesTo(packageName)
 
         if (!shouldApplyEffects) {
             // the effects should not be turned on, so we increase the used up screen time
@@ -292,6 +315,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     override fun onScreenTurnedOff(context: Context?) {
         eventuallyIncreaseUsedUpScreenTime()
+        // The lock screen is not the app the filter was meant for, and it is the first thing the
+        // user sees on the way back. DetoxDroidAccessibilityService forgets the foreground package
+        // at the same time, so the window event that arrives after unlocking re-evaluates even when
+        // it comes from the app that was already open.
+        context?.let { if (areEffectsActive) setEffectsActive(it, false) }
     }
 
     /**
@@ -358,6 +386,56 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     fun refreshEffects(context: Context) {
         if (areEffectsActive || isDaltonizerApplied) setEffectsActive(context, false)
+    }
+
+    /**
+     * Claims filters an earlier run left behind but did not record, so [restoreSystemFilters] can
+     * hand them back. Two cases need it, and neither can be recognised from our own state.
+     *
+     * A build that kept the applied-state in memory only (and any process killed before it could
+     * write) leaves the daltonizer switched on with nothing saying DetoxDroid owns it. Monochromacy
+     * is what this feature writes and close to nothing else does, so while the feature is on we take
+     * it as ours.
+     *
+     * Extra dim cannot be read back at all since Android 12, so on a fresh start there is no way to
+     * ask whether it is on. Writing it off costs one setting write and is the difference between a
+     * usable screen and one the user cannot fix from inside the app. The evaluation right after this
+     * puts it back if it is supposed to be on.
+     */
+    private fun reclaimStrandedFilters(context: Context) {
+        if (!writeSecureSettingsPermission.hasPermissions(context)) return
+        val contentResolver = context.contentResolver
+        if (!isDaltonizerApplied && getSecureInt(
+                contentResolver, DISPLAY_DALTONIZER_ENABLED, 0
+            ) == 1 && getSecureInt(contentResolver, DISPLAY_DALTONIZER, -1) == 0
+        ) {
+            isDaltonizerApplied = true
+        }
+        isCurrentlyExtraDim = true
+    }
+
+    /**
+     * Puts the system's own display settings back the way the user had them, and forgets that we
+     * ever touched them. Safe to call when nothing is applied and safe to call while DetoxDroid is
+     * not running at all, which is the point:
+     * [com.flx_apps.digitaldetox.workers.ServiceWatchdogWorker] calls it whenever it finds the
+     * accessibility service switched off, so a device whose service was killed mid-filter does not
+     * stay gray and dimmed with no way back from inside the app.
+     */
+    fun restoreSystemFilters(context: Context) {
+        if (!writeSecureSettingsPermission.hasPermissions(context)) return
+        val contentResolver = context.contentResolver
+        if (isDaltonizerApplied) {
+            Settings.Secure.putInt(
+                contentResolver, DISPLAY_DALTONIZER_ENABLED, defaultDaltonizerEnabled
+            )
+            Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER, defaultDaltonizer)
+            isDaltonizerApplied = false
+        }
+        if (isCurrentlyExtraDim) {
+            Settings.Secure.putInt(contentResolver, EXTRA_DIM, 0)
+            isCurrentlyExtraDim = false
+        }
     }
 
     /**
