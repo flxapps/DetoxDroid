@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
@@ -50,6 +52,14 @@ import kotlin.time.Duration.Companion.minutes
 fun GrayscaleAppsFeatureSettingsSection(
     viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()
 ) {
+    // The Shizuku wizard lives on this screen and comes back to it, and granting
+    // WRITE_SECURE_SETTINGS moves the screen filter from "on" to "off" under the AUTO rule. Nothing
+    // re-reads that on its own, so the view model would keep showing a filter that stopped running.
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    val context = LocalContext.current
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.Event.ON_RESUME) viewModel.refreshFromFeature(context)
+    }
     ShizukuWizardTile()
     OpenAppExceptionsTile(subtitleText = stringResource(
         id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {

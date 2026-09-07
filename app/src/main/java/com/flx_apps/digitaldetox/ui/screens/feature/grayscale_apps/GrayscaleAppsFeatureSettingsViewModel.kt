@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
@@ -88,6 +89,19 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
         MutableStateFlow(false)
     val showAllowedDailyColorScreenTimeDialog: StateFlow<Boolean> =
         _showAllowedDailyColorScreenTimeDialog
+
+    /**
+     * Re-reads every switch on this screen from the feature. Called when the screen comes back,
+     * because the WRITE_SECURE_SETTINGS permission can have arrived in the meantime and
+     * [ScreenFilterMode.AUTO] resolves against it.
+     */
+    fun refreshFromFeature(context: Context) {
+        _systemGrayscale.value = GrayscaleAppsFeature.systemGrayscale
+        _extraDimActivated.value = GrayscaleAppsFeature.extraDim
+        _screenFilterEnabled.value = GrayscaleAppsFeature.isScreenFilterEnabled(context)
+        _screenFilterIntensity.value = GrayscaleAppsFeature.screenFilterIntensity
+        _screenFilterBlur.value = GrayscaleAppsFeature.screenFilterBlur
+    }
 
     /**
      * Turns the system grayscale filter on or off. The feature itself stays activated: it can run
