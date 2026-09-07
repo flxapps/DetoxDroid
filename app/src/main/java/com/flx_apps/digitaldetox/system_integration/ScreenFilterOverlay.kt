@@ -140,9 +140,14 @@ object ScreenFilterOverlay {
     private class BlurWindow {
         private var dialog: Dialog? = null
         private var currentRadius = 0
+        private var currentHost: Context? = null
 
         fun show(hostContext: Context, windowType: Int, radius: Int) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+            // A window belongs to the token it was attached to. When the service dies and the
+            // untrusted fallback takes over, the cached one is bound to a token that no longer
+            // exists, and reusing it would silently do nothing.
+            if (currentHost !== hostContext) remove()
             dialog?.let { existing ->
                 if (currentRadius == radius) return
                 kotlin.runCatching { existing.window?.setBackgroundBlurRadius(radius) }
@@ -196,6 +201,7 @@ object ScreenFilterOverlay {
             }.onSuccess {
                 dialog = newDialog
                 currentRadius = radius
+                currentHost = hostContext
             }.onFailure {
                 Timber.e(it, "Could not attach the screen filter blur")
                 kotlin.runCatching { newDialog.dismiss() }
@@ -206,6 +212,7 @@ object ScreenFilterOverlay {
             kotlin.runCatching { dialog?.dismiss() }
             dialog = null
             currentRadius = 0
+            currentHost = null
         }
     }
 
@@ -218,8 +225,11 @@ object ScreenFilterOverlay {
         private var params: WindowManager.LayoutParams? = null
         private var windowManager: WindowManager? = null
         private var currentAlpha = 0f
+        private var currentHost: Context? = null
 
         fun show(hostContext: Context, windowType: Int, alpha: Float) {
+            // @see BlurWindow.show - a cached window outlives the token it hangs on
+            if (currentHost !== hostContext) remove()
             val existingView = view
             val existingParams = params
             val existingManager = windowManager
@@ -262,6 +272,7 @@ object ScreenFilterOverlay {
                 params = newParams
                 windowManager = manager
                 currentAlpha = alpha
+                currentHost = hostContext
             }.onFailure {
                 // e.g. the overlay permission was revoked, or the service token died between the
                 // event and this callback — running without the filter beats crashing the service
@@ -270,6 +281,7 @@ object ScreenFilterOverlay {
         }
 
         fun remove() {
+            currentHost = null
             val currentView = view ?: return
             kotlin.runCatching { windowManager?.removeView(currentView) }
             view = null
