@@ -43,39 +43,59 @@ object FeaturesProvider {
      */
     private var lastActiveFeaturesReload = 0L
 
+    private var _activeFeatures = setOf<Feature>()
+
     /**
      * A list of all currently active features. This list is reloaded only every minute to reduce the
      * number of calls to [Feature.isActive] for performance reasons.
      * @see Feature.isActive
      * @see lastActiveFeaturesReload
      */
-    var activeFeatures = mutableSetOf<Feature>()
+    val activeFeatures: Set<Feature>
         get() {
             // reload active features every minute to reduce the number of calls to isActive()
             // for performance reasons
             if (System.currentTimeMillis() - lastActiveFeaturesReload > OneMinuteInMs) {
-                val newActiveFeatures = featureList.filter { it.isActive() }.toMutableSet()
-                if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Inactive) {
-                    field.forEach { feature ->
-                        if (!newActiveFeatures.contains(feature)) {
-                            feature.onPause(DetoxDroidApplication.appContext)
-                        }
-                    }
-                }
-                field = newActiveFeatures
-                lastActiveFeaturesReload = System.currentTimeMillis()
+                reload(notifyTransitions = true)
             }
-            return field
+            return _activeFeatures
         }
 
     /**
      * Forces a reload of the active features. This is useful if the active state of a feature is
      * known to have changed (e.g. when the user has changed the schedule), but the active features
-     * have not been reloaded yet.
+     * have not been reloaded yet. The callers of this know what they changed and start or stop the
+     * affected feature themselves, so this reload stays quiet.
      */
-    fun reloadActiveFeatures() {
-        lastActiveFeaturesReload = 0L
-        activeFeatures
+    fun reloadActiveFeatures() = reload(notifyTransitions = false)
+
+    private fun reload(notifyTransitions: Boolean) {
+        val previouslyActive = _activeFeatures
+        _activeFeatures = featureList.filter { it.isActive() }.toSet()
+        lastActiveFeaturesReload = System.currentTimeMillis()
+        // the new set is in place before any callback runs: onStart/onPause read activeFeatures
+        // themselves, and would otherwise walk straight back into another reload
+        if (notifyTransitions) notifyScheduleTransitions(previouslyActive, _activeFeatures)
+    }
+
+    /**
+     * Starts and stops the features whose schedule just opened or closed. Every other way a feature
+     * changes its active state runs through someone who can start or stop it on the spot; a
+     * schedule boundary is passed with nobody watching, and a feature that is not started applies
+     * none of its effects until the next app switch happens to reach it.
+     */
+    private fun notifyScheduleTransitions(previouslyActive: Set<Feature>, active: Set<Feature>) {
+        val state = DetoxDroidAccessibilityService.updateState()
+        if (state == DetoxDroidState.Inactive) return
+        previouslyActive.forEach {
+            if (it !in active) it.onPause(DetoxDroidApplication.appContext)
+        }
+        // a pause is supposed to leave everything off; PauseButtonFeature.resume() starts the
+        // features that are active by then
+        if (state != DetoxDroidState.Active) return
+        active.forEach {
+            if (it !in previouslyActive) it.onStart(DetoxDroidApplication.appContext)
+        }
     }
 
     /**

@@ -87,6 +87,16 @@ object ScreenFilterOverlay {
     fun isBlurAvailable() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     /**
+     * Whether a blur put on the screen right now would actually show up. [isBlurAvailable] answers
+     * whether the device can blur at all, this also asks whether it is doing it at the moment.
+     */
+    fun isBlurEffective(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val manager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+        return manager?.isCrossWindowBlurEnabled == true
+    }
+
+    /**
      * The wash that suits what is most likely underneath. There is no way to sample the screen, so
      * the system's own light/dark setting stands in for it.
      */
@@ -152,9 +162,7 @@ object ScreenFilterOverlay {
      * The wash then carries the effect alone.
      */
     private fun blurRadiusPx(context: Context, spec: ScreenFilterSpec): Int {
-        if (spec.blurDp <= 0f || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return 0
-        val manager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        if (!manager.isCrossWindowBlurEnabled) return 0
+        if (spec.blurDp <= 0f || !isBlurEffective(context)) return 0
         return (spec.blurDp * context.resources.displayMetrics.density).toInt()
     }
 

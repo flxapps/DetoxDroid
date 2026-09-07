@@ -20,9 +20,11 @@ import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
+import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
@@ -122,6 +124,23 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Runs the app-opened features against whatever is in front right now instead of waiting for a
+     * window event. The screen coming back on needs this: features drop what they were showing
+     * while it was off, and an app that was already in the foreground when the screen went off does
+     * not have to send another window event when it comes back.
+     */
+    fun reevaluateForegroundApp() {
+        val packageName = kotlin.runCatching { rootInActiveWindow?.packageName?.toString() }
+            .onFailure { Timber.w(it, "Could not read the foreground app") }
+            .getOrNull().orEmpty()
+        if (packageName.isEmpty() || packageName == lastPackage ||
+            packageName == this.packageName || ignoredPackages.contains(packageName)
+        ) return
+        lastPackage = packageName
+        dispatchAppOpened(packageName, AccessibilityEventUtil.createEvent())
+    }
+
+    /**
      * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
      * window events must not be treated as "an app was opened".
      */
@@ -132,6 +151,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     )
     private var ignoredPackages = mutableSetOf<String>()
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
+    private var screenTurnedOnReceiver = ScreenTurnedOnReceiver()
     private val commitmentPasswordTamperGuard by lazy {
         CommitmentPasswordTamperGuard(this)
     }
@@ -190,16 +210,23 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             }
         }
 
-        val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-        registerReceiver(screenTurnedOffReceiver, intentFilter)
+        registerReceiver(screenTurnedOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        registerReceiver(screenTurnedOnReceiver, IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        })
 
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
             ignoredPackages.add(it.packageName)
         }
 
-        // call onStart() for all active features and update the state
-        FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
+        // Reload before starting anything, so the periodic reload cannot take a feature that is
+        // being started here for one whose schedule just opened and start it a second time.
+        // onStart is not idempotent everywhere: DoNotDisturbFeature remembers the interruption
+        // filter it finds, and a second run would remember its own.
+        FeaturesProvider.reloadActiveFeatures()
+        FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
         updateState()
 
         UsageStatsTracker.init(this)
@@ -330,13 +357,27 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             // be misdetected as a new app open
             return
         }
-        lastPackage = packageName
+        // A window that does not cover the screen (a dialog, the volume panel, the notification
+        // shade) does not change which app the user is in, and a feature that skips such an event
+        // (see GrayscaleAppsFeature.ignoreNonFullScreenApps) must not lose the app over it: taking
+        // the partial window as the foreground package would make the app's own next event look
+        // like a repeat of it and drop it above, so the feature would never hear about that app.
+        if (accessibilityEvent.isFullScreen || !GrayscaleAppsFeature.ignoreNonFullScreenApps) {
+            lastPackage = packageName
+        }
 
-        // forward event to all active features that implement the OnAppOpenedSubscriptionFeature interface
+        dispatchAppOpened(packageName, accessibilityEvent)
+    }
+
+    /**
+     * Hands an app that came to the front to the active [OnAppOpenedSubscriptionFeature]s, minus
+     * the ones a running pause suspends.
+     */
+    private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
-                this, lastPackage, accessibilityEvent
+                this, packageName, accessibilityEvent
             )
         }
     }
@@ -388,6 +429,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
+        kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }
 
         val cpRequiresWarning = kotlin.runCatching {
             CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()

@@ -507,9 +507,10 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         if (!isScreenFilterEnabled(context)) return null
         val intensity =
             screenFilterIntensity.coerceIn(MinScreenFilterIntensity, 100) / 100f
-        val blur = screenFilterBlur && ScreenFilterOverlay.isBlurAvailable()
-        // blur-only on a device that cannot blur would leave the filter switched on and doing
-        // nothing at all, so the wash stands in
+        val blur = screenFilterBlur && ScreenFilterOverlay.isBlurEffective(context)
+        // blur alone on a screen that is not blurring would leave the filter switched on and doing
+        // nothing at all, so the wash stands in. Battery saver is the common case: it switches
+        // cross-window blurs off system-wide, on a device that supports them perfectly well.
         val shade = screenFilterShade || !blur
         return ScreenFilterSpec(
             washAlpha = if (shade) intensity * ScreenFilterOverlay.MAX_WASH_ALPHA else 0f,
