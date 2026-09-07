@@ -235,3 +235,19 @@ jobs:
           files: ./app-${{ env.NEW_VERSION }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Lets a downstream build pick the release up on its own. Skipped when no hook is
+      # configured, so forks and clones are unaffected.
+      - name: Notify the release hook
+        env:
+          HOOK_URL: ${{ secrets.RELEASE_HOOK_URL }}
+          HOOK_TOKEN: ${{ secrets.RELEASE_HOOK_TOKEN }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "No release hook configured, skipping."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK_URL" \
+            -H "Authorization: Bearer $HOOK_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d "{\"event_type\":\"release-published\",\"client_payload\":{\"tag\":\"v$NEW_VERSION\"}}"
