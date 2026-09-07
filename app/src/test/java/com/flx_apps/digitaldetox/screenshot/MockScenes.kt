@@ -14,9 +14,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
@@ -314,56 +317,176 @@ fun MockExceptionsScene(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .background(Color(0xFF0E0E10)),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF17171B))
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("Messages", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            }
+            MockChatHeader()
             // The "excepted" (in-colour) app chat
             MockChat()
         }
     }
 }
 
+/**
+ * A conversation header rather than an app title: an avatar, a name, a presence dot.
+ *
+ * The card's whole claim is that this app kept its colour, and a grey bar reading "Messages" over
+ * grey bubbles was making that claim on a screen with no colour in it.
+ */
 @Composable
-private fun MockChat() {
-    val bubbles = listOf(
-        Triple("Are we still on for the hike tomorrow? 🥾", false, Color(0xFF2A2A31)),
-        Triple("Yes! Trailhead at 8, I'll bring coffee ☕", true, Color(0xFF3A86FF)),
-        Triple("Perfect. Weather looks amazing 🌞", false, Color(0xFF2A2A31)),
-        Triple("Can't wait — see you there!", true, Color(0xFF3A86FF)),
-    )
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+private fun MockChatHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF17171B))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        bubbles.forEach { (text, mine, color) ->
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
-            ) {
+        Icon(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = null,
+            tint = Color(0xFFD5D7DB),
+            modifier = Modifier.size(22.dp),
+        )
+        Spacer(Modifier.width(14.dp))
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(Color(0xFFFF6A88), Color(0xFFFF9A44)))),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text("Mia", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF3DDC84)))
                 Text(
-                    text = text,
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(color)
-                        .padding(horizontal = 14.dp, vertical = 10.dp)
-                        .widthMax(),
+                    "online",
+                    color = Color(0xFF9AA0A6),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(start = 5.dp),
                 )
             }
         }
     }
 }
 
-private fun Modifier.widthMax(): Modifier = this.fillMaxWidth(0.72f)
+/** One line of the conversation: text, or the shared photo that carries the colour. */
+private sealed interface ChatLine {
+    val mine: Boolean
+
+    data class Said(val text: String, override val mine: Boolean) : ChatLine
+    data class Photo(override val mine: Boolean) : ChatLine
+}
+
+// Sized to fill the panel without the last bubble running off its bottom edge. Four bubbles left
+// the lower half empty, and an empty messenger is a poor argument for keeping messengers in colour.
+private val mockChatLines = listOf(
+    ChatLine.Said("Are we still on for the hike tomorrow? 🥾", mine = false),
+    ChatLine.Said("Yes! Trailhead at 8, I'll bring coffee ☕", mine = true),
+    ChatLine.Photo(mine = false),
+    ChatLine.Said("Sunrise from the ridge last year 😍", mine = false),
+    ChatLine.Said("Okay now I'm setting two alarms 🎧", mine = true),
+)
+
+@Composable
+private fun MockChat() {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(start = 12.dp, end = 12.dp, top = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        mockChatLines.forEach { line ->
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = if (line.mine) Arrangement.End else Arrangement.Start,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                if (!line.mine) {
+                    Box(
+                        Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(Color(0xFFFF6A88), Color(0xFFFF9A44))
+                                )
+                            ),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
+                when (line) {
+                    is ChatLine.Photo -> MockChatPhoto()
+                    is ChatLine.Said -> Text(
+                        text = line.text,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        lineHeight = 21.sp,
+                        // widthIn, not a width fraction: a fraction padded "Okay now I'm setting
+                        // two alarms." out to the width of the longest line, and the column stopped
+                        // reading as a conversation.
+                        modifier = Modifier
+                            .widthIn(max = 232.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(if (line.mine) Color(0xFF3A86FF) else Color(0xFF2A2A31))
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.weight(1f))
+        MockChatInput()
+    }
+}
+
+/** The composer. Without it the conversation stopped mid-air above a band of empty panel. */
+@Composable
+private fun MockChatInput() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(22.dp))
+                .background(Color(0xFF2A2A31))
+                .padding(horizontal = 16.dp, vertical = 11.dp),
+        ) {
+            Text("Message", color = Color(0xFF7C818B), fontSize = 15.sp)
+        }
+        Spacer(Modifier.width(10.dp))
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF3A86FF)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.Send,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(19.dp),
+            )
+        }
+    }
+}
+
+/** A shared photo — the one block of real colour on the card the caption is about. */
+@Composable
+private fun MockChatPhoto() {
+    Box(
+        Modifier
+            .size(200.dp, 132.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFFFFC371), Color(0xFFFF5F6D), Color(0xFF7B4397))
+                )
+            ),
+    )
+}
 
 @Composable
 private fun MockFeedPost(post: MockPost) {
@@ -517,26 +640,30 @@ fun MockMinimalLauncher(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            // Violet rather than the slate it used to be: this scene runs edge to edge on the
+            // violet slot, and a blue-grey wallpaper against a violet caption band read as two
+            // different pictures stacked.
             .background(
-                Brush.verticalGradient(listOf(Color(0xFF20262F), Color(0xFF39434F)))
+                Brush.verticalGradient(listOf(Color(0xFF211A2E), Color(0xFF463A61)))
             )
-            .padding(horizontal = 32.dp, vertical = 40.dp),
+            .padding(horizontal = 34.dp),
     ) {
-        Text("9:41", color = Color(0xFFF2F4F7), fontSize = 56.sp, fontWeight = FontWeight.Light)
+        Spacer(Modifier.height(64.dp))
+        Text("9:41", color = Color(0xFFF3F0FA), fontSize = 60.sp, fontWeight = FontWeight.Light)
         Text(
             "Saturday, 18 July",
-            color = Color(0xFF9AA6B2),
+            color = Color(0xFFA99DC0),
             fontSize = 15.sp,
             fontWeight = FontWeight.Normal,
             modifier = Modifier.padding(top = 2.dp),
         )
-        Spacer(Modifier.height(48.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Spacer(Modifier.height(56.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
             mockLauncherApps.forEach { (name, favourite) ->
                 Text(
                     text = name,
-                    color = if (favourite) Color(0xFFF2F4F7) else Color(0xFFB4BDC7),
-                    fontSize = 26.sp,
+                    color = if (favourite) Color(0xFFF3F0FA) else Color(0xFFBCB1D0),
+                    fontSize = 27.sp,
                     fontWeight = if (favourite) FontWeight.SemiBold else FontWeight.Normal,
                 )
             }

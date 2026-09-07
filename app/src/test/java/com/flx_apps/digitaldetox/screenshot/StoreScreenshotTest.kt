@@ -6,7 +6,13 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -53,6 +59,8 @@ import javax.inject.Inject
  * activity to [MainActivity] and reimagined `hiltViewModel()` needs a nav-entry scope. The
  * grayscale / exceptions / doomscrolling / minimal-launcher beats are static mock scenes (see
  * [MockScenes]), per product decision, since Roborazzi can only render DetoxDroid's own UI.
+ *
+ * Each slot's colour, caption icon and composition come from [Slot] and [CardShape].
  *
  * Run with:
  *   ./gradlew :app:generateScreenshots
@@ -114,6 +122,9 @@ class StoreScreenshotTest {
         index = 1,
         titleRes = R.string.screenshot_1_title,
         subtitleRes = R.string.screenshot_1_subtitle,
+        style = Slot.Hero,
+        icon = null, // the hero card carries the headline alone
+        shape = null,
         navigate = { /* Home is the start destination — no navigation needed */ },
     )
 
@@ -123,6 +134,10 @@ class StoreScreenshotTest {
         index = 2,
         titleRes = R.string.screenshot_2_title,
         subtitleRes = R.string.screenshot_2_subtitle,
+        style = Slot.Grayscale,
+        icon = { painterResource(R.drawable.ic_contrast) },
+        // Framed, so the wipe edge sits at the panel's own centre.
+        shape = CardShape.CaptionOver,
     ) { MockGrayscaleSplit() }
 
     // ── 3 · App exceptions (kept in colour) ──────────────────────────────────
@@ -131,6 +146,9 @@ class StoreScreenshotTest {
         index = 3,
         titleRes = R.string.screenshot_3_title,
         subtitleRes = R.string.screenshot_3_subtitle,
+        style = Slot.Exceptions,
+        icon = { painterResource(R.drawable.ic_app_exceptions) },
+        shape = CardShape.CaptionUnder,
     ) { MockExceptionsScene() }
 
     // ── 4 · Break doomscrolling ──────────────────────────────────────────────
@@ -139,6 +157,10 @@ class StoreScreenshotTest {
         index = 4,
         titleRes = R.string.screenshot_4_title,
         subtitleRes = R.string.screenshot_4_subtitle,
+        style = Slot.Doomscroll,
+        icon = { painterResource(R.drawable.ic_scroll) },
+        // Edge to edge: the break screen is a whole phone, not a panel.
+        shape = CardShape.Band,
     ) {
         Box(Modifier.fillMaxSize()) {
             MockSocialFeed(Modifier.grayscale())
@@ -152,6 +174,10 @@ class StoreScreenshotTest {
         index = 5,
         titleRes = R.string.screenshot_5_title,
         subtitleRes = R.string.screenshot_5_subtitle,
+        style = Slot.UsageStats,
+        icon = { rememberVectorPainter(Icons.Outlined.QueryStats) },
+        // The top-apps list carries on past the crop, which is the point of the screen.
+        shape = CardShape.Bleed,
         navigate = { navVm -> navVm.openRoute(NavigationRoutes.UsageStats) },
         interact = {
             // Switch to the 7-day timeframe (premium is unlocked in the seed) so the weekly history
@@ -174,6 +200,10 @@ class StoreScreenshotTest {
         index = 6,
         titleRes = R.string.screenshot_6_title,
         subtitleRes = R.string.screenshot_6_subtitle,
+        style = Slot.Launcher,
+        icon = { rememberVectorPainter(Icons.Outlined.Widgets) },
+        // Edge to edge: a home screen inside a 26 dp gutter stops reading as a home screen.
+        shape = CardShape.Band,
     ) { MockMinimalLauncher() }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -183,43 +213,64 @@ class StoreScreenshotTest {
         index: Int,
         @StringRes titleRes: Int,
         @StringRes subtitleRes: Int,
+        style: MarketingStyle,
+        icon: @Composable () -> Painter,
+        shape: CardShape,
         scene: @Composable () -> Unit,
-    ) = forEachLocale { locale ->
-        val activity = composeRule.activity
-        val title = activity.getString(titleRes)
-        val subtitle = activity.getString(subtitleRes)
-        activity.runOnUiThread {
-            activity.setContent {
-                DetoxDroidTheme(darkTheme = false, dynamicColor = false) {
-                    MarketingCard(title, subtitle) { scene() }
-                }
-            }
-        }
-        settleAndCapture(index, locale)
+    ) = capture(index, titleRes, subtitleRes) { title, subtitle ->
+        MarketingCard(title, subtitle, style, icon, shape) { scene() }
     }
 
-    /** Renders the real app (NavHostScreen) in the marketing card, then runs [navigate]. */
+    /**
+     * Renders the real app (NavHostScreen) in the marketing card, then runs [navigate].
+     *
+     * A null [icon]/[shape] pair asks for [HeroCard] instead, which has no caption icon.
+     */
     private fun captureApp(
         index: Int,
         @StringRes titleRes: Int,
         @StringRes subtitleRes: Int,
+        style: MarketingStyle,
+        icon: (@Composable () -> Painter)?,
+        shape: CardShape?,
         navigate: (NavViewModel) -> Unit,
         interact: () -> Unit = {},
+    ) = capture(
+        index = index,
+        titleRes = titleRes,
+        subtitleRes = subtitleRes,
+        card = { title, subtitle ->
+            if (icon != null && shape != null) {
+                MarketingCard(title, subtitle, style, icon, shape) { NavHostScreen() }
+            } else {
+                HeroCard(title, subtitle, style) { NavHostScreen() }
+            }
+        },
+        afterCompose = {
+            val navVm = ViewModelProvider(composeRule.activity)[NavViewModel::class.java]
+            composeRule.activity.runOnUiThread { navigate(navVm) }
+            settle()
+            interact()
+        },
+    )
+
+    /** Sets [card] as the activity content once per locale, then captures it. */
+    private fun capture(
+        index: Int,
+        @StringRes titleRes: Int,
+        @StringRes subtitleRes: Int,
+        afterCompose: () -> Unit = {},
+        card: @Composable (title: String, subtitle: String) -> Unit,
     ) = forEachLocale { locale ->
         val activity = composeRule.activity
         val title = activity.getString(titleRes)
         val subtitle = activity.getString(subtitleRes)
         activity.runOnUiThread {
             activity.setContent {
-                DetoxDroidTheme(darkTheme = false, dynamicColor = false) {
-                    MarketingCard(title, subtitle) { NavHostScreen() }
-                }
+                DetoxDroidTheme(darkTheme = false, dynamicColor = false) { card(title, subtitle) }
             }
         }
-        val navVm = ViewModelProvider(activity)[NavViewModel::class.java]
-        activity.runOnUiThread { navigate(navVm) }
-        settle()
-        interact()
+        afterCompose()
         settleAndCapture(index, locale)
     }
 
