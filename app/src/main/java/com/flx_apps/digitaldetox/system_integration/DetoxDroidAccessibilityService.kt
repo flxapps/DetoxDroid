@@ -297,6 +297,19 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Whether the event comes from a window DetoxDroid put on the screen itself rather than from a
+     * screen the user navigated to: the grayscale screen filter, the doomscroll break, the block
+     * screen. They are reported under DetoxDroid's own package, and counting one as an app switch
+     * is a loop. Showing the filter looks like leaving the app the filter was meant for, so the
+     * filter comes back off, which makes that app current again, which puts the filter back.
+     *
+     * DetoxDroid's activities are told apart by their class name living inside the package. An
+     * overlay reports the class of whatever view it attached, which does not.
+     */
+    private fun isOwnOverlayWindow(packageName: String, className: String) =
+        packageName == this.packageName && !className.startsWith("${this.packageName}.")
+
+    /**
      * Called when an app is opened. If some conditions are met, it forwards the event to the
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
@@ -309,7 +322,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         val className = accessibilityEvent.className?.toString().orEmpty()
         if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
-            ignoredPackages.contains(packageName)
+            ignoredPackages.contains(packageName) ||
+            isOwnOverlayWindow(packageName, className)
         ) {
             // ignore events that are known to be irrelevant, without treating them as an app
             // switch — otherwise returning from e.g. the volume dialog to the previous app would
