@@ -49,25 +49,28 @@ import androidx.compose.ui.unit.sp
 // frame and screen at the ~200 px thumbnail Play shows first, which is the size that decides the
 // install.
 //
-// The six colours are the six stripes of the launcher icon, in the order the icon draws them, so
-// the strip reads the icon back. Each is that stripe pushed down to a background value; the accent
-// beside it is the same hue lifted until it clears 7:1 there, because the caption title is drawn
-// in it.
+// The six colours are one palette: night blues from petrol through indigo to violet. Warm grounds
+// were tried first and a dark red or olive at this value is just brown, which is what the panel
+// ends up sitting in. The accent beside each is that ground's own hue lifted until it clears 7:1,
+// because the caption title is drawn in it.
 
 /** Flat background and accent for one screenshot slot. */
 class MarketingStyle(val accent: Color, val background: Color)
 
 /**
- * The six slots, in strip order — and in launcher-stripe order: crimson, orange, amber, green,
- * blue, violet.
+ * The six slots, in strip order: indigo, petrol, steel blue, green, navy, violet.
  *
- * The hues also land where they mean something. Amber is the slot about the apps kept in colour,
- * blue the one about statistics, violet the twilight home screen the minimal launcher draws.
+ * The hues land where they mean something. Petrol is the slot where the feed loses its colour,
+ * green the break screen, navy the statistics, violet the twilight the minimal launcher draws.
+ *
+ * [Exceptions] is the exception. Its card is the one about the apps that keep their colour, so its
+ * title is amber over the blue instead of the blue lifted, and it is the only warm thing on the
+ * strip.
  */
 object Slot {
-    val Hero = MarketingStyle(accent = Color(0xFFEB84A6), background = Color(0xFF230D15))
-    val Grayscale = MarketingStyle(accent = Color(0xFFEE9377), background = Color(0xFF2B1610))
-    val Exceptions = MarketingStyle(accent = Color(0xFFF5CD5C), background = Color(0xFF2B230A))
+    val Hero = MarketingStyle(accent = Color(0xFF97A9F2), background = Color(0xFF141B3A))
+    val Grayscale = MarketingStyle(accent = Color(0xFF6FD2E0), background = Color(0xFF0A2B36))
+    val Exceptions = MarketingStyle(accent = Color(0xFFF5CD5C), background = Color(0xFF16233C))
     val Doomscroll = MarketingStyle(accent = Color(0xFF7BD5AF), background = Color(0xFF092519))
     val UsageStats = MarketingStyle(accent = Color(0xFF7BB8F4), background = Color(0xFF09192A))
     val Launcher = MarketingStyle(accent = Color(0xFFB399E6), background = Color(0xFF1C1726))
