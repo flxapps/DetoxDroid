@@ -23,6 +23,7 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
+import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
 import dagger.hilt.EntryPoint
@@ -201,6 +202,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         updateKeyEventFiltering()
         updateForegroundNotification()
+        // The watchdog is only scheduled while there is something to watch, and this is the one
+        // place every way of switching DetoxDroid on passes through, including the system settings.
+        ServiceReliabilityScheduler.schedule(this)
     }
 
     /**

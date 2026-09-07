@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.workers
 
 import android.content.Context
+import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -16,14 +17,23 @@ object ServiceReliabilityScheduler {
     private const val CHECK_NOW_WORK = "service_watchdog_now"
 
     /**
-     * Enqueues the periodic health check. WorkManager persists this across process death and
-     * reboots; [ExistingPeriodicWorkPolicy.KEEP] makes repeated calls idempotent.
+     * Enqueues the periodic health check, or cancels it again on a device where DetoxDroid was
+     * never started. There is nothing to watch over until the user switches it on once, and a
+     * quarter-hourly wake-up on a phone whose owner has moved on is pure cost.
+     *
+     * WorkManager persists the schedule across process death and reboots;
+     * [ExistingPeriodicWorkPolicy.KEEP] makes repeated calls idempotent.
      */
     fun schedule(context: Context) {
+        val workManager = WorkManager.getInstance(context)
+        if (!AccessibilityServiceController.isEnabledInSettings(context)) {
+            workManager.cancelUniqueWork(ServiceWatchdogWorker.WORK_NAME)
+            return
+        }
         val request = PeriodicWorkRequestBuilder<ServiceWatchdogWorker>(
             15, TimeUnit.MINUTES
         ).build()
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        workManager.enqueueUniquePeriodicWork(
             ServiceWatchdogWorker.WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             request

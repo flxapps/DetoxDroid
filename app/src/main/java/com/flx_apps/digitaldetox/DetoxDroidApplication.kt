@@ -33,6 +33,13 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
     companion object {
         lateinit var appContext: Application
         const val SERVICE_CHANNEL_ID = "detox_droid_service_channel"
+
+        /**
+         * Separate from [SERVICE_CHANNEL_ID], which is deliberately silent because it carries an
+         * ongoing status notification. Something the user has to act on cannot share a channel
+         * whose whole point is to stay out of the way.
+         */
+        const val ALERT_CHANNEL_ID = "detox_droid_alert_channel"
     }
 
     @Inject
@@ -112,7 +119,8 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
     }
 
     /**
-     * Creates the notification channel for the foreground service.
+     * Creates the notification channels: the silent one carrying the foreground service's ongoing
+     * status, and the one used for alerts the user is meant to notice.
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -122,8 +130,14 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
             val channel = NotificationChannel(SERVICE_CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
+            val alertChannel = NotificationChannel(
+                ALERT_CHANNEL_ID,
+                getString(R.string.app_notification_alertChannelName),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply { description = getString(R.string.app_notification_alertChannelDescription) }
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(alertChannel)
             notificationManager.createNotificationChannel(channel)
         }
     }

@@ -13,6 +13,8 @@
     <string name="app_notification_action_resume">Fortsetzen</string>
     <string name="app_notification_channelName">DetoxDroid-Dienst</string>
     <string name="app_notification_channelDescription">Hält DetoxDroid im Hintergrund aktiv</string>
+    <string name="app_notification_alertChannelName">DetoxDroid-Hinweise</string>
+    <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
     <string name="app_notification_pausedUntil">Pausiert bis %s</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
     <string name="reliability_serviceDown_message">Dein Telefon hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>

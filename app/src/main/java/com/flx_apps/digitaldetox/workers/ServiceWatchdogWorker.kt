@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.workers
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -66,6 +67,7 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         appContext.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) ==
             PackageManager.PERMISSION_GRANTED
 
+    @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled() and runCatching
     private fun notifyServiceDown() {
         if (!NotificationHelper.areNotificationsEnabled(appContext)) return
         val openIntent = PendingIntent.getActivity(
@@ -75,7 +77,7 @@ class ServiceWatchdogWorker @AssistedInject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification =
-            NotificationCompat.Builder(appContext, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+            NotificationCompat.Builder(appContext, DetoxDroidApplication.ALERT_CHANNEL_ID)
                 .setContentTitle(appContext.getString(R.string.reliability_serviceDown_title))
                 .setContentText(appContext.getString(R.string.reliability_serviceDown_message))
                 .setSmallIcon(R.drawable.ic_pause)
