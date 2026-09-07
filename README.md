@@ -20,22 +20,49 @@ You can still take intentional pauses when you need them.
 
 ## Features
 
-1. **Automatic Grayscale**  
-   Keep your phone mostly grayscale, with app exceptions where color is useful.
+1. **Make Apps Boring**  
+   Grayscale, dimmed and blurred. The apps you list lose their color, and on Android 12+ they go
+   blurry as well. This works the minute you install the app. Real grayscale is an upgrade, see
+   [Installation](#installation).
 2. **Do Not Disturb by default**  
-   Reduce notification-driven interruptions while DetoxDroid is active.
-3. **Disable Apps**  
-   Block or deactivate selected apps during detox time.
-4. **Break Infinite Scrolling**  
-   Detect long scrolling sessions and show an interrupt prompt.
-5. **Intentional Pause**  
-   Pause DetoxDroid for a limited time, then auto-resume.
+   Stays on for as long as DetoxDroid runs.
+3. **Break Doom Scrolling**  
+   Detects long scrolling sessions, interrupts them, and keeps that feed locked for a cooldown.
+4. **Disable Apps**  
+   Block an app behind a warning screen or deactivate it outright, launcher icon and notifications
+   included. Optionally with a daily time budget.
+5. **Pause Button**  
+   Pause from Quick Settings, the assistant, or a long-pressed hardware button. Auto-resumes, with a
+   minimum gap between pauses.
 6. **Commitment Password**  
    Lock selected settings behind a passphrase.
 7. **Minimal Launcher Widget**  
-   Place a simple text-based launcher for intentional apps on your home screen.
+   A text-only launcher for the apps you actually meant to open.
 
 ## Installation
+
+Install the APK from [Releases](https://github.com/flxapps/DetoxDroid/releases/) and grant the
+accessibility service when the app asks. That is the whole setup, and every feature runs: where the
+system color filter is out of reach, DetoxDroid draws its own screen filter that washes the color
+out of distracting apps and blurs them (Android 12+, and the system drops the blur while battery
+saver is on).
+
+### Optional: real grayscale
+
+Android only lets an app touch the system color filter if it holds `WRITE_SECURE_SETTINGS`, and
+there is no permission dialog for it. Grant it once and the overlay is replaced by actual grayscale,
+plus Extra Dim, which takes the screen below its normal minimum brightness. Grayscale, Extra Dim and
+the screen filter are separate switches, so you can also run the overlay on top of the real thing.
+
+Three ways to grant it:
+
+**Shizuku, no computer involved.** The app ships a step-by-step wizard for this. It takes about five
+minutes, and Shizuku has to be restarted after every reboot (the permission itself stays).
+
+**Root.** One tap inside the app.
+
+**From a computer:**
+
 1. [Enable developer mode and USB debugging](https://www.youtube.com/watch?v=0usgePpr8_Y):
     1. Go to Android Settings → About Phone
     2. Tap Build Number repeatedly until developer mode is enabled
@@ -48,8 +75,9 @@ You can still take intentional pauses when you need them.
     - If your phone asks to allow USB debugging for your computer, tap **Allow**
 3. Optionally, disable USB debugging again.
 
-### Alternative Method
-If the installation script does not work (or you prefer manual setup), use the [manual installation steps](https://github.com/flxapps/DetoxDroid/wiki/Manual-Installation).
+If the script does not work, or you would rather see what it does, there are
+[manual installation steps](https://github.com/flxapps/DetoxDroid/wiki/Manual-Installation) in the
+wiki.
 
 ## Support
 If DetoxDroid helps you, you can support development:

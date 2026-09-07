@@ -1,20 +1,31 @@
-Most "digital detox" apps ask you to sign a contract with yourself: no phone for the next X minutes, no more than Z minutes in app Y — and some even charge you money when you fail. DetoxDroid takes a different approach. Instead of relying on willpower, it removes the attention-grabbing tricks from your phone so that calm, healthy phone use becomes the default. You don't have to decide when to "detox" — protection is always on, and you deliberately pause it when you actually need something.
+Most digital detox apps want you to sign a contract with yourself: no phone for the next X minutes, no more than Z minutes in app Y. A few of them take your money when you break it. DetoxDroid works the other way round. It strips the attention-grabbing tricks out of the phone, so that a calm phone is what you get when you do nothing at all. Nothing to start, no session to survive. The protection is simply on, and you pause it on purpose when you actually need something.
 
 Use your phone. Don't let your phone use you.
 
 FEATURES
 
-* Automatic Grayscale: A colorless screen is far less addictive. Exclude apps that need color (camera, gallery, maps), set an optional daily budget of colored screen time, or dim the screen further with Extra Dim.
-* Break Doom Scrolling: Detects when you are stuck in an endless feed (Shorts, Reels & co.) and steps in with a prompt to stop. After a break, the feed stays locked for a cooldown period.
-* Disable Apps: Block or fully deactivate distracting apps — including their launcher icons and notifications — or give them a daily time budget after which they lock until the next day.
-* Automatic Do Not Disturb: DetoxDroid keeps Do Not Disturb switched on while it is active, so notifications wait for you — not the other way around.
-* Pause Button: Take intentional breaks from Quick Settings, your assistant, or by long-pressing a hardware button. DetoxDroid resumes automatically afterwards, and a minimum time between pauses keeps "just one more pause" in check.
-* Commitment Password: Lock DetoxDroid's settings behind a password — keep it yourself, or hand it to a partner or friend for extra accountability.
+* Make Apps Boring (grayscale, dimmed, blurred). The color drains out of the apps on your list, and on Android 12 and newer they go soft and blurry too: a feed turns into shapes, still navigable and no longer worth scrolling. This runs from the minute you install DetoxDroid. No computer, no root, nothing to grant.
+True grayscale it is not. An overlay can only ever paint on top of the screen, so it drags color and contrast towards a flat gray instead of taking the color out. A red notification dot stays recognisably red. The screen just looks dead, which is the entire point. For the real thing, see SETUP.
+* Break Doom Scrolling. Notices when you are stuck in an endless feed (Shorts, Reels and friends) and interrupts you. After the break, that feed stays locked for a cooldown.
+* Disable Apps. Put a blocking screen in front of a distracting app, or deactivate it outright, launcher icon and notifications included. Apps can also get a daily budget and lock themselves until tomorrow once it runs out.
+* Automatic Do Not Disturb. On for as long as DetoxDroid runs. Notifications wait for you.
+* Pause Button. From Quick Settings, from your assistant, or by holding a hardware button for two seconds. DetoxDroid resumes by itself afterwards, and a minimum gap between pauses keeps "just one more" in check.
+* Commitment Password. Locks the settings behind a password. Keep it yourself, or hand it to someone who won't give it back the second you ask.
 
-INSTALLATION
+SETUP (optional, and worth it)
 
-Installing the app alone is not enough for the grayscale feature: Android only exposes the color-mode setting to apps holding the WRITE_SECURE_SETTINGS permission. On a rooted phone you can grant it directly from the app; otherwise you grant it once from a computer. It usually takes only a few minutes — a step-by-step guide is on GitHub: https://github.com/flxapps/DetoxDroid#installation
+The system color filter is a secure setting: Android hands it only to apps holding WRITE_SECURE_SETTINGS, and there is no dialog to tap. Grant it once and the wash turns into real grayscale, with Extra Dim on top, which pushes the screen below the minimum brightness Android normally allows. Three routes: from a computer over adb, on the phone itself through Shizuku (the app walks you through it, roughly five minutes), or in one tap if you are rooted. It survives reboots.
 
-FREE & OPEN SOURCE
+Grayscale, Extra Dim and the screen filter are separate switches. Run one, run all three.
 
-DetoxDroid is free software with no ads and no tracking. All features are available to everyone — the power-user extras are unlocked on the honor system: donate if you can, or unlock them for free. If DetoxDroid earns its place on your phone, you can support development via LiberaPay or Ko-fi, and report issues or contribute on GitHub.
+The blur needs Android 12 or newer, and Android drops it while battery saver is on. Nothing I can do about that one.
+
+KEEPING IT RUNNING
+
+Some phones are ruthless with background apps, and a stopped DetoxDroid does nothing at all without telling you. There is a setting to keep it alive, and a notification for when your phone stops it anyway.
+
+FREE AND OPEN SOURCE
+
+No ads, no tracking, no account. Every feature is there for everyone. The extras (right now that is the longer usage history) sit behind a lock that opens when you donate, or when you tap "unlock without donating". The lock is a nudge. Nobody checks.
+
+If DetoxDroid earns its place on your phone, LiberaPay and Ko-fi keep me working on it. Bugs and ideas: https://github.com/flxapps/DetoxDroid
