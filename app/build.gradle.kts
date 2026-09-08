@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.flx_apps.digitaldetox"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.flx_apps.digitaldetox"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 20700
         versionName = "2.7.0"
 
