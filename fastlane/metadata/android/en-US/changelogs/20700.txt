@@ -1,0 +1,15 @@
+### Release v2.7.0
+
+✨ New Features
+- make distracting apps dull and blurry with a screen filter, no computer or root needed
+- choose whether the screen filter shades, blurs, or both
+- switch grayscale, extra dim and the screen filter on and off separately
+- warn when the phone stops DetoxDroid in the background, with an optional keepalive
+- exempt DetoxDroid from battery optimization from the home screen
+- turn the about screen into about & settings
+
+🐛 Bug Fixes
+- hand the system display filters back when DetoxDroid stops, instead of leaving the screen gray and dimmed
+- start a feature when its schedule opens, not only stop it when the schedule ends
+- stop losing the foreground app between window events, which left effects stuck on or off
+
