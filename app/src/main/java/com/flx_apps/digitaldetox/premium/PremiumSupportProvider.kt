@@ -30,8 +30,7 @@ data class SupportLink(
  * `src/foss`. Shared UI only ever talks to this interface, so neither flavor needs to know about
  * the other.
  *
- * See PREMIUM_TIER_PLAN.md §2–§4 for the rationale. [PremiumManager] holds the resulting
- * entitlement state.
+ * [PremiumManager] holds the resulting entitlement state.
  */
 interface PremiumSupportProvider {
     /**

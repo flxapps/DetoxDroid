@@ -53,6 +53,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- RECEIVE_BOOT_COMPLETED so the reliability watchdog can be re-armed after a reboot. Normal
+         permission - no Play declaration or justification required. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".DetoxDroidApplication"
         android:allowBackup="true"
@@ -108,12 +112,14 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
             <!-- Required alongside foregroundServiceType="specialUse" (targetSdk >= 34): explains
-                 why no dedicated FGS type fits. The service is the system-bound accessibility
-                 service; its foreground notification only surfaces DetoxDroid's active/paused
-                 state with a pause action. -->
+                 why no dedicated FGS type fits. This is the system-bound accessibility service that
+                 applies the screen rules the user configured for themselves; no dedicated type
+                 covers that. The foreground state carries its ongoing status notification (running
+                 or paused, with a pause action), and the user can additionally opt in to keeping it
+                 in the foreground for as long as it runs. -->
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Ongoing digital-wellbeing status notification (active/paused state with a pause action) for the user's own self-control rules; all processing stays on the device." />
+                android:value="User-initiated, user-visible digital wellbeing service. The user switches DetoxDroid on to have their own screen rules applied continuously; the ongoing notification shows whether it is running or paused and offers a pause action. Optionally the user keeps it in the foreground for the whole session so their rules are not interrupted without them noticing. All processing stays on the device and nothing is transmitted." />
         </service>
         <service android:name=".ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService" />
         <service android:name=".ui.screens.feature.disable_apps.AppDisabledOverlayService" />
@@ -148,6 +154,17 @@
         <receiver
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetClickReceiver"
             android:exported="false" />
+
+        <!-- Re-arms the reliability watchdog after a reboot / app update. -->
+        <receiver
+            android:name=".system_integration.BootCompletedReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name="android.service.voice.VoiceInteractionService"

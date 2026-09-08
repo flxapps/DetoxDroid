@@ -25,6 +25,18 @@ interface NeedsPermissionsFeature {
      * This method will be called when the user clicks on the Snackbar to request the permissions.
      */
     fun requestPermissions(context: Context, navViewModel: NavViewModel)
+
+    /**
+     * The message of that Snackbar. Features that can be blocked for a reason other than a missing
+     * permission (e.g. nothing switched on to do) override this to say what is actually wrong.
+     */
+    fun activationBlockedMessage(context: Context): Int = R.string.action_requestPermissions
+
+    /**
+     * Whether the Snackbar offers [requestPermissions] as its action. False when there is nothing
+     * to grant and the user has to change a setting instead.
+     */
+    fun activationBlockedHasAction(context: Context): Boolean = true
 }
 
 /**

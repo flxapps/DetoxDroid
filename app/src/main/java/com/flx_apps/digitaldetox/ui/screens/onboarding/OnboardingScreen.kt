@@ -161,6 +161,7 @@ fun OnboardingScreen(
                 OnboardingStep.PICK_APPS -> PickAppsStep(viewModel)
                 OnboardingStep.PRESET -> PresetStep(viewModel)
                 OnboardingStep.PERMISSIONS -> PermissionsStep(viewModel)
+                OnboardingStep.RELIABILITY -> ReliabilityStep(viewModel)
                 OnboardingStep.DONE -> DoneStep(viewModel)
             }
         }
@@ -321,18 +322,17 @@ private fun DoneStep(viewModel: OnboardingViewModel) {
                 )
             }
             if (preset != OnboardingPreset.GENTLE) {
-                if (writeSecureSettingsGranted) {
-                    SummaryRow(
-                        icon = Icons.Default.CheckCircle,
-                        text = stringResource(
-                            id = R.string.onboarding_done_summary_grayscale, grayscaleBudgetText
-                        )
+                // without WRITE_SECURE_SETTINGS the feature still runs, it just dulls and blurs
+                // the apps with its own overlay instead of switching the system filter
+                SummaryRow(
+                    icon = Icons.Default.CheckCircle, text = stringResource(
+                        id = if (writeSecureSettingsGranted) {
+                            R.string.onboarding_done_summary_grayscale
+                        } else {
+                            R.string.onboarding_done_summary_grayscaleFilter
+                        }, grayscaleBudgetText
                     )
-                } else {
-                    WarningRow(
-                        text = stringResource(id = R.string.onboarding_done_summary_grayscalePending)
-                    )
-                }
+                )
             }
             if (preset == OnboardingPreset.STRICT) {
                 if (overlayGranted) {

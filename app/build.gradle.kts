@@ -34,7 +34,7 @@ android {
         }
     }
 
-    // Distribution flavors (see PREMIUM_TIER_PLAN.md §3/§8.5): `foss` is the complete app that
+    // Distribution flavors: `foss` is the complete app that
     // GitHub/F-Droid ship; `googlePlay` swaps the premium/review seams for Play Billing and
     // in-app review. The Google-specific sources and dependencies live in a gitignored private
     // overlay (`googlePlay.gradle.kts` + `src/googlePlay/`), so public clones build `foss` only.
@@ -208,7 +208,7 @@ kotlin.sourceSets.all {
     languageSettings.enableLanguageFeature("DataObjects")
 }
 
-// Private Google Play overlay (gitignored — see PREMIUM_TIER_PLAN.md §8.5). Adds the Play Billing /
+// Private Google Play overlay (gitignored). Adds the Play Billing /
 // in-app review dependencies and the upload signing config. Absent in public clones, where only the
 // `foss` flavor is buildable — which is exactly the point.
 if (file("googlePlay.gradle").exists()) {

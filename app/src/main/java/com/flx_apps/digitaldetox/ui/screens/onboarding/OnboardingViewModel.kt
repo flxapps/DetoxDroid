@@ -12,15 +12,15 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
-import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER
-import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER_ENABLED
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
+import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.DistractionCandidate
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -30,15 +30,12 @@ import com.flx_apps.digitaldetox.util.knownCategoryOf
 import com.topjohnwu.superuser.Shell
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -46,7 +43,7 @@ import javax.inject.Inject
  * The steps of the onboarding flow, in order.
  */
 enum class OnboardingStep {
-    WELCOME, USAGE_ACCESS, PICK_APPS, PRESET, PERMISSIONS, DONE
+    WELCOME, USAGE_ACCESS, PICK_APPS, PRESET, PERMISSIONS, RELIABILITY, DONE
 }
 
 /**
@@ -86,9 +83,6 @@ class OnboardingViewModel @Inject constructor(
 
         /** System apps without a known category are hidden below this average daily usage. */
         val MIN_SYSTEM_APP_USAGE_MS: Long = TimeUnit.MINUTES.toMillis(5)
-
-        /** How long the grayscale preview stays on screen. */
-        const val GRAYSCALE_PREVIEW_DURATION_MS = 2500L
     }
 
     /**
@@ -280,6 +274,8 @@ class OnboardingViewModel @Inject constructor(
         _overlayGranted.value = Settings.canDrawOverlays(application)
         _notificationsGranted.value = NotificationHelper.hasNotificationPermission(application)
         _writeSecureSettingsGranted.value = hasWriteSecureSettings()
+        _batteryOptimizationIgnored.value =
+            BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application)
         viewModelScope.launch(Dispatchers.IO) {
             val isShizukuAvailable = ShizukuUtils.isShizukuAvailable()
             // publish the fast probe first so a stalling root check cannot delay the one-tap offer
@@ -317,46 +313,26 @@ class OnboardingViewModel @Inject constructor(
         runCatching { AccessibilityServiceController.activate(application) }
     }
 
-    private val _isPreviewingGrayscale = MutableStateFlow(false)
-    val isPreviewingGrayscale: StateFlow<Boolean> = _isPreviewingGrayscale
+    // endregion
 
-    /**
-     * Turns the whole screen grayscale for a few seconds so the user can feel what the Balanced
-     * and Strict presets will do. Only possible with WRITE_SECURE_SETTINGS; the previous
-     * daltonizer state (e.g. a color-blindness filter) is restored afterwards.
-     */
-    fun previewGrayscale() {
-        if (!_writeSecureSettingsGranted.value) return
-        if (!_isPreviewingGrayscale.compareAndSet(expect = false, update = true)) return
-        viewModelScope.launch(Dispatchers.IO) {
-            val contentResolver = application.contentResolver
-            val previousEnabled = runCatching {
-                Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 0)
-            }.getOrDefault(0)
-            val previousDaltonizer = runCatching {
-                Settings.Secure.getInt(contentResolver, DISPLAY_DALTONIZER, -1)
-            }.getOrDefault(-1)
-            try {
-                Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
-                Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER, 0)
-                delay(GRAYSCALE_PREVIEW_DURATION_MS)
-            } finally {
-                // never strand the user in gray: restore even when the view model is torn down
-                // mid-preview (leaving onboarding cancels this scope)
-                withContext(NonCancellable) {
-                    runCatching {
-                        Settings.Secure.putInt(
-                            contentResolver, DISPLAY_DALTONIZER_ENABLED, previousEnabled
-                        )
-                        Settings.Secure.putInt(
-                            contentResolver, DISPLAY_DALTONIZER, previousDaltonizer
-                        )
-                    }
-                    _isPreviewingGrayscale.value = false
-                }
-            }
-        }
+    // region reliability (optional)
+    private val _keepServiceAliveEnabled =
+        MutableStateFlow(ReliabilitySettings.keepServiceAliveEnabled)
+    val keepServiceAliveEnabled: StateFlow<Boolean> = _keepServiceAliveEnabled
+
+    private val _batteryOptimizationIgnored =
+        MutableStateFlow(BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application))
+    val batteryOptimizationIgnored: StateFlow<Boolean> = _batteryOptimizationIgnored
+
+    /** Enables/disables the foreground-service keepalive and refreshes the running service. */
+    fun setKeepServiceAlive(enabled: Boolean) {
+        ReliabilitySettings.keepServiceAliveEnabled = enabled
+        _keepServiceAliveEnabled.value = enabled
+        DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
     }
+
+    fun openBatteryOptimizationSettings() =
+        BatteryOptimizationHelper.openBatteryOptimizationSettings(application)
     // endregion
 
     /**

@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowUsageStatsManager
 import java.time.LocalDate
@@ -55,6 +56,9 @@ object ScreenshotSeed {
         PauseButtonFeature.isActivated = true
         // Unlock premium so the usage-stats timeframe selector shows without lock badges.
         PremiumManager.unlock()
+        // Give the opt-in "value of your time" reframing a rate, so the In Perspective card shows an
+        // actual amount (in the locale's currency) instead of the setup prompt.
+        UsageStatsSettings.hourlyRate = 25
     }
 
     /** Registers the fake apps with the package manager so their labels resolve to real names. */

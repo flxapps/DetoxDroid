@@ -59,9 +59,9 @@ import com.flx_apps.digitaldetox.util.formatDurationMsShort
  * [PremiumSheetController] and shows the sheet whenever a trigger is set — whether that is an
  * explicit tap, a locked premium control, or a capped power-use nudge.
  *
- * The sheet's persuasion strategy is deliberately reciprocity-over-pressure (see
- * PREMIUM_TIER_PLAN.md §1): show what DetoxDroid has already done for *this* user, be upfront that
- * everything can be unlocked for free, and make the tip the natural way to say thanks.
+ * The sheet's persuasion strategy is deliberately reciprocity-over-pressure: show what DetoxDroid
+ * has already done for *this* user, be upfront that everything can be unlocked for free, and make
+ * the tip the natural way to say thanks.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

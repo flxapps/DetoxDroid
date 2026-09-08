@@ -20,12 +20,14 @@ import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
+import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
-import com.flx_apps.digitaldetox.util.NotificationHelper
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -113,6 +115,32 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     val currentForegroundPackage: String get() = lastPackage
 
     /**
+     * Drops the remembered foreground package, so the next window event counts as an app switch
+     * even if it names the same app. Used when the screen turns off: features tear their effects
+     * down for the lock screen and need a chance to put them back on the way in.
+     */
+    fun forgetForegroundPackage() {
+        lastPackage = ""
+    }
+
+    /**
+     * Runs the app-opened features against whatever is in front right now instead of waiting for a
+     * window event. The screen coming back on needs this: features drop what they were showing
+     * while it was off, and an app that was already in the foreground when the screen went off does
+     * not have to send another window event when it comes back.
+     */
+    fun reevaluateForegroundApp() {
+        val packageName = kotlin.runCatching { rootInActiveWindow?.packageName?.toString() }
+            .onFailure { Timber.w(it, "Could not read the foreground app") }
+            .getOrNull().orEmpty()
+        if (packageName.isEmpty() || packageName == lastPackage ||
+            packageName == this.packageName || ignoredPackages.contains(packageName)
+        ) return
+        lastPackage = packageName
+        dispatchAppOpened(packageName, AccessibilityEventUtil.createEvent())
+    }
+
+    /**
      * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
      * window events must not be treated as "an app was opened".
      */
@@ -123,6 +151,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     )
     private var ignoredPackages = mutableSetOf<String>()
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
+    private var screenTurnedOnReceiver = ScreenTurnedOnReceiver()
     private val commitmentPasswordTamperGuard by lazy {
         CommitmentPasswordTamperGuard(this)
     }
@@ -181,16 +210,23 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             }
         }
 
-        val intentFilter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-        registerReceiver(screenTurnedOffReceiver, intentFilter)
+        registerReceiver(screenTurnedOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        registerReceiver(screenTurnedOnReceiver, IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        })
 
         // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
         (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
             ignoredPackages.add(it.packageName)
         }
 
-        // call onStart() for all active features and update the state
-        FeaturesProvider.activeFeatures.onEach { it.onStart(this) }
+        // Reload before starting anything, so the periodic reload cannot take a feature that is
+        // being started here for one whose schedule just opened and start it a second time.
+        // onStart is not idempotent everywhere: DoNotDisturbFeature remembers the interruption
+        // filter it finds, and a second run would remember its own.
+        FeaturesProvider.reloadActiveFeatures()
+        FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
         updateState()
 
         UsageStatsTracker.init(this)
@@ -201,7 +237,10 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
 
         updateKeyEventFiltering()
-        startForegroundService()
+        updateForegroundNotification()
+        // The watchdog is only scheduled while there is something to watch, and this is the one
+        // place every way of switching DetoxDroid on passes through, including the system settings.
+        ServiceReliabilityScheduler.schedule(this)
     }
 
     /**
@@ -285,6 +324,19 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Whether the event comes from a window DetoxDroid put on the screen itself rather than from a
+     * screen the user navigated to: the grayscale screen filter, the doomscroll break, the block
+     * screen. They are reported under DetoxDroid's own package, and counting one as an app switch
+     * is a loop. Showing the filter looks like leaving the app the filter was meant for, so the
+     * filter comes back off, which makes that app current again, which puts the filter back.
+     *
+     * DetoxDroid's activities are told apart by their class name living inside the package. An
+     * overlay reports the class of whatever view it attached, which does not.
+     */
+    private fun isOwnOverlayWindow(packageName: String, className: String) =
+        packageName == this.packageName && !className.startsWith("${this.packageName}.")
+
+    /**
      * Called when an app is opened. If some conditions are met, it forwards the event to the
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
@@ -297,20 +349,35 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         val className = accessibilityEvent.className?.toString().orEmpty()
         if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
-            ignoredPackages.contains(packageName)
+            ignoredPackages.contains(packageName) ||
+            isOwnOverlayWindow(packageName, className)
         ) {
             // ignore events that are known to be irrelevant, without treating them as an app
             // switch — otherwise returning from e.g. the volume dialog to the previous app would
             // be misdetected as a new app open
             return
         }
-        lastPackage = packageName
+        // A window that does not cover the screen (a dialog, the volume panel, the notification
+        // shade) does not change which app the user is in, and a feature that skips such an event
+        // (see GrayscaleAppsFeature.ignoreNonFullScreenApps) must not lose the app over it: taking
+        // the partial window as the foreground package would make the app's own next event look
+        // like a repeat of it and drop it above, so the feature would never hear about that app.
+        if (accessibilityEvent.isFullScreen || !GrayscaleAppsFeature.ignoreNonFullScreenApps) {
+            lastPackage = packageName
+        }
 
-        // forward event to all active features that implement the OnAppOpenedSubscriptionFeature interface
+        dispatchAppOpened(packageName, accessibilityEvent)
+    }
+
+    /**
+     * Hands an app that came to the front to the active [OnAppOpenedSubscriptionFeature]s, minus
+     * the ones a running pause suspends.
+     */
+    private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
-                this, lastPackage, accessibilityEvent
+                this, packageName, accessibilityEvent
             )
         }
     }
@@ -362,6 +429,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
+        kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }
 
         val cpRequiresWarning = kotlin.runCatching {
             CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
@@ -378,57 +446,54 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     private fun startForegroundService() {
-        // Only show notification if PauseButtonFeature is activated and notifications are enabled
-        if (!PauseButtonFeature.isActivated) {
-            return
-        }
-
-        // Check if notifications are fully enabled (permission + channel settings)
-        if (!NotificationHelper.areNotificationsEnabled(this)) {
-            return
-        }
-
-        val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
-            action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
-        }
-        val pausePendingIntent = android.app.PendingIntent.getService(
-            this,
-            0,
-            pauseIntent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-        )
-
         val isPausing = PauseButtonFeature.isPausing()
-        val notification: Notification =
-            NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-                .setContentTitle(getString(R.string.app_displayName)).setContentText(
-                    if (isPausing) {
-                        // show the actual end of the pause instead of a bare "Paused"
-                        getString(
-                            R.string.app_notification_pausedUntil,
-                            Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                                .atZone(ZoneId.systemDefault()).toLocalTime()
-                                .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                        )
-                    } else getString(R.string.app_notification_active)
-                ).setSmallIcon(R.drawable.ic_pause).setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOngoing(true).apply {
-                    if (isPausing) {
-                        // live countdown to the end of the pause in the collapsed notification
-                        setWhen(PauseButtonFeature.pauseUntil)
-                        setUsesChronometer(true)
-                        setChronometerCountDown(true)
-                    }
-                }.addAction(
-                    R.drawable.ic_pause, getString(
-                        if (isPausing) R.string.app_notification_action_resume
-                        else R.string.app_notification_action_pause
-                    ), pausePendingIntent
-                ).build()
+        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+            .setContentTitle(getString(R.string.app_displayName))
+            .setContentText(
+                if (isPausing) {
+                    // show the actual end of the pause instead of a bare "Paused"
+                    getString(
+                        R.string.app_notification_pausedUntil,
+                        Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                            .atZone(ZoneId.systemDefault()).toLocalTime()
+                            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
+                    )
+                } else getString(R.string.app_notification_active)
+            )
+            .setSmallIcon(R.drawable.ic_pause)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+        if (isPausing) {
+            // live countdown to the end of the pause in the collapsed notification
+            builder.setWhen(PauseButtonFeature.pauseUntil)
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+        }
+        // Only offer the pause/resume action when the Pause feature is actually enabled.
+        if (PauseButtonFeature.isActivated) {
+            val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
+                action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
+            }
+            val pausePendingIntent = android.app.PendingIntent.getService(
+                this,
+                0,
+                pauseIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(
+                R.drawable.ic_pause,
+                getString(
+                    if (isPausing) R.string.app_notification_action_resume
+                    else R.string.app_notification_action_pause
+                ),
+                pausePendingIntent
+            )
+        }
 
+        val notification: Notification = builder.build()
         try {
-            // ID 101 is just an arbitrary constant integration ID; the specialUse type matches the
-            // manifest declaration (required on targetSdk >= 34, ignored on older devices)
+            // ID 101 is an arbitrary constant; the specialUse type matches the manifest declaration
+            // (required on targetSdk >= 34, ignored on older devices).
             ServiceCompat.startForeground(
                 this, 101, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
@@ -442,15 +507,12 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * Updates the foreground notification (e.g., when pause state changes)
      */
     fun updateForegroundNotification() {
-        if (NotificationHelper.areNotificationsEnabled(this) && PauseButtonFeature.isActivated) {
+        // Run as a foreground service only when the user opted into the keepalive, or while a pause
+        // is active (the pause notification needs it). Otherwise stay a plain bound service.
+        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated) {
             startForegroundService()
         } else {
-            try {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                Timber.i("Service removed from foreground due to setting change or missing permission")
-            } catch (_: Exception) {
-                // Ignore - service might not have been in foreground
-            }
+            runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
         }
     }
 }

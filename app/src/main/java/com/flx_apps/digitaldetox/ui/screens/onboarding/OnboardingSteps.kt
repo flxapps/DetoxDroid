@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -37,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,7 +49,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -176,27 +177,8 @@ internal fun PresetStep(viewModel: OnboardingViewModel) {
                     )
                 },
                 onClick = { showBudgetDialog = true })
-            GrayscalePreviewTile(viewModel)
         }
     }
-}
-
-/**
- * Lets the user feel the grayscale effect for a few seconds. Only shown when the required
- * permission is already there — during a first onboarding run it usually is not, but re-runs and
- * adb/root users get the live demo.
- */
-@Composable
-private fun GrayscalePreviewTile(viewModel: OnboardingViewModel) {
-    val writeSecureSettingsGranted by viewModel.writeSecureSettingsGranted.collectAsState()
-    if (!writeSecureSettingsGranted) return
-    val isPreviewing by viewModel.isPreviewingGrayscale.collectAsState()
-    OnboardingTile(
-        icon = Icons.Default.InvertColors,
-        title = stringResource(id = R.string.onboarding_preset_preview),
-        subtitle = stringResource(id = R.string.onboarding_preset_preview_description),
-        enabled = !isPreviewing,
-        onClick = { viewModel.previewGrayscale() })
 }
 
 @Composable
@@ -345,6 +327,43 @@ internal fun PermissionsStep(
     }
 }
 
+/**
+ * Onboarding step: optional settings that help DetoxDroid keep running in the background. Nothing
+ * here is required - the user can skip straight past it.
+ */
+@Composable
+internal fun ReliabilityStep(viewModel: OnboardingViewModel) {
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.Event.ON_RESUME) viewModel.refreshPermissionStates()
+    }
+    val keepAlive by viewModel.keepServiceAliveEnabled.collectAsState()
+    val batteryIgnored by viewModel.batteryOptimizationIgnored.collectAsState()
+
+    OnboardingStepColumn(
+        title = stringResource(id = R.string.reliability_onboarding_title),
+        message = stringResource(id = R.string.reliability_onboarding_message)
+    ) {
+        OnboardingTile(
+            icon = Icons.Default.Notifications,
+            title = stringResource(id = R.string.reliability_keepAlive_title),
+            subtitle = stringResource(id = R.string.reliability_keepAlive_subtitle),
+            highlighted = keepAlive,
+            onClick = { viewModel.setKeepServiceAlive(!keepAlive) },
+            trailing = {
+                Switch(checked = keepAlive, onCheckedChange = { viewModel.setKeepServiceAlive(it) })
+            }
+        )
+        PermissionTile(
+            icon = Icons.Default.Warning,
+            title = stringResource(id = R.string.reliability_battery_title),
+            description = stringResource(id = R.string.reliability_battery_subtitle),
+            granted = batteryIgnored,
+            onClick = { viewModel.openBatteryOptimizationSettings() }
+        )
+    }
+}
+
 @Composable
 private fun PermissionTile(
     icon: ImageVector,
@@ -380,8 +399,8 @@ private fun PermissionTile(
 /**
  * A card-styled tile for the onboarding steps: a leading icon in a tinted circle, a title and a
  * subtitle, and optional trailing content. Deliberately shaped like [PresetCard] so the permission
- * checklist and the budget/preview rows read as one coherent set of cards (rather than differently
- * indented list rows). [highlighted] gives a "done"/selected look; a null [onClick] makes it inert.
+ * checklist and the budget row read as one coherent set of cards (rather than differently indented
+ * list rows). [highlighted] gives a "done"/selected look; a null [onClick] makes it inert.
  */
 @Composable
 private fun OnboardingTile(
@@ -389,7 +408,6 @@ private fun OnboardingTile(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
     highlighted: Boolean = false,
     trailing: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
@@ -398,9 +416,8 @@ private fun OnboardingTile(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .alpha(if (enabled) 1f else 0.6f)
             .then(
-                if (onClick != null && enabled) Modifier.clickable(onClick = onClick) else Modifier
+                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
             ),
         border = if (highlighted) {
             BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)

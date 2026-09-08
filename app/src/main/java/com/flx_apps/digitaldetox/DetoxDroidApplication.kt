@@ -12,10 +12,13 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.util.CachingDebugTree
 import com.flx_apps.digitaldetox.util.InMemoryLogStore
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
+import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.workers.UsageStatsSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -32,6 +35,13 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
     companion object {
         lateinit var appContext: Application
         const val SERVICE_CHANNEL_ID = "detox_droid_service_channel"
+
+        /**
+         * Separate from [SERVICE_CHANNEL_ID], which is deliberately silent because it carries an
+         * ongoing status notification. Something the user has to act on cannot share a channel
+         * whose whole point is to stay out of the way.
+         */
+        const val ALERT_CHANNEL_ID = "detox_droid_alert_channel"
     }
 
     @Inject
@@ -78,6 +88,8 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         if (!isMainProcess()) return
 
         scheduleUsageStatsSnapshot()
+        ServiceReliabilityScheduler.schedule(this)
+        restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)
         // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
         // the premium entitlement here.
@@ -110,7 +122,23 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
     }
 
     /**
-     * Creates the notification channel for the foreground service.
+     * Hands the system's display settings back when DetoxDroid is not running. Force-stopping an app
+     * disables its accessibility service and puts the package in the stopped state, where it
+     * receives no broadcasts at all: neither BOOT_COMPLETED nor the watchdog reaches it, not even
+     * across a reboot. Opening the app is the only thing left that runs our code, and a user whose
+     * screen is stuck gray and dimmed is going to open the app that did it.
+     */
+    private fun restoreDisplayFiltersIfStopped() {
+        if (AccessibilityServiceController.isEnabledInSettings(this)) return
+        Thread {
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(this) }
+                .onFailure { Timber.w(it, "Could not restore the display filters on start") }
+        }.start()
+    }
+
+    /**
+     * Creates the notification channels: the silent one carrying the foreground service's ongoing
+     * status, and the one used for alerts the user is meant to notice.
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -120,8 +148,14 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
             val channel = NotificationChannel(SERVICE_CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
+            val alertChannel = NotificationChannel(
+                ALERT_CHANNEL_ID,
+                getString(R.string.app_notification_alertChannelName),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply { description = getString(R.string.app_notification_alertChannelDescription) }
             val notificationManager: NotificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(alertChannel)
             notificationManager.createNotificationChannel(channel)
         }
     }

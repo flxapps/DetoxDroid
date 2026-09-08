@@ -9,8 +9,7 @@ import com.flx_apps.digitaldetox.R
  * FOSS (GitHub / F-Droid) implementation of [PremiumSupportProvider].
  *
  * Premium is supported by external donations (Ko-Fi / Liberapay) and can also simply be unlocked
- * for free — the lock is a nudge, not DRM (see PREMIUM_TIER_PLAN.md §1). There is no in-app
- * purchase here.
+ * for free — the lock is a nudge, not DRM. There is no in-app purchase here.
  *
  * NOTE: the sibling `src/googlePlay/…/premium/PremiumSupport.kt` (private overlay, gitignored)
  * provides the Billing-backed variant under the same fully-qualified name. Shared code must
