@@ -587,5 +587,17 @@
     <string name="about_reportIssue_link" translatable="false">https://github.com/flxapps/DetoxDroid/issues/new</string>
     <string name="about_onboarding">Set up DetoxDroid again</string>
     <string name="about_onboarding_subtitle">Replay the welcome tour and starter presets</string>
+    <!-- region Delayed App Loading Feature -->
+    <string name="feature_delayedLoading">Delayed App Loading</string>
+    <string name="feature_delayedLoading_subtitle">Pause and breathe before launching distracting apps</string>
+    <string name="feature_delayedLoading_description">Introduces a countdown timer before opening selected apps. This mindful friction breaks compulsive habit loops and gives you time to reconsider.</string>
+    <string name="feature_delayedLoading_manage_apps">Target Apps</string>
+    <string name="feature_delayedLoading_delay_duration">Delay Duration</string>
+    <string name="feature_delayedLoading_overlay_title">Take a breath…</string>
+    <string name="feature_delayedLoading_overlay_subtitle">Is opening this app intentional right now?</string>
+    <string name="feature_delayedLoading_seconds_remaining">seconds</string>
+    <string name="feature_delayedLoading_action_cancel">Never mind, go back</string>
+    <!-- endregion -->
+
     <!-- endregion -->
 </resources>

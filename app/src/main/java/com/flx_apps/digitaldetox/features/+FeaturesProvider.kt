@@ -28,6 +28,7 @@ object FeaturesProvider {
         DoNotDisturbFeature,
         BreakDoomScrollingFeature,
         DisableAppsFeature,
+        DelayedAppLoadingFeature,
         PauseButtonFeature,
         CommitmentPasswordFeature
     )

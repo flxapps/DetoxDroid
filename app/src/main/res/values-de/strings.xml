@@ -576,5 +576,15 @@
     <string name="about_github">Auf GitHub mitwirken</string>
     <string name="about_onboarding">DetoxDroid neu einrichten</string>
     <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
+    <!-- region Delayed App Loading Feature -->
+    <string name="feature_delayedLoading">Verzögertes Öffnen von Apps</string>
+    <string name="feature_delayedLoading_subtitle">Kurz innehalten vor dem Öffnen ablenkender Apps</string>
+    <string name="feature_delayedLoading_description">Fügt einen Countdown-Timer vor dem Öffnen ausgewählter Apps ein. Diese achtsame Verzögerung unterbricht impulsive Nutzungsmuster.</string>
+    <string name="feature_delayedLoading_manage_apps">Ziel-Apps</string>
+    <string name="feature_delayedLoading_delay_duration">Verzögerungsdauer</string>
+    <string name="feature_delayedLoading_overlay_title">Einmal tief durchatmen…</string>
+    <string name="feature_delayedLoading_overlay_subtitle">Möchtest du diese App gerade wirklich öffnen?</string>
+    <string name="feature_delayedLoading_seconds_remaining">Sekunden</string>
+    <string name="feature_delayedLoading_action_cancel">Zurück zum Startbildschirm</string>
     <!-- endregion -->
 </resources>

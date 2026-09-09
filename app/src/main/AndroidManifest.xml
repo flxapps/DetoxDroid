@@ -123,6 +123,7 @@
         </service>
         <service android:name=".ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService" />
         <service android:name=".ui.screens.feature.disable_apps.AppDisabledOverlayService" />
+        <service android:name=".ui.screens.feature.delayed_loading.DelayedAppLoadingOverlayService" />
         <service android:name=".ui.screens.feature.commitment_password.CommitmentPasswordTamperWarningOverlayService" />
 
         <receiver
