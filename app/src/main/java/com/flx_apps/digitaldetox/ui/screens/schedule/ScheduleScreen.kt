@@ -1,19 +1,28 @@
 package com.flx_apps.digitaldetox.ui.screens.schedule
 
-import android.app.AlertDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,10 +30,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -92,6 +107,10 @@ fun ScheduleRulesList(rules: Map<ScheduleRuleId, FeatureScheduleRule>) {
     LazyColumn {
         item {
             InfoCard(infoText = stringResource(id = R.string.feature_settings_schedule_description))
+            WeekScheduleOverview(
+                rules = rules.values,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
         if (rules.isEmpty()) {
             item {
@@ -144,36 +163,46 @@ fun FeatureScheduleRuleBottomSheet(
         viewModel.hideBottomSheet()
     }, sheetState = rememberModalBottomSheetState()) {
         Column(modifier = Modifier.padding(bottom = 64.dp)) {
-            SimpleListTile(titleText = stringResource(id = R.string.feature_settings_schedule_weekdays),
-                subtitleText = weekDaysText(context, rule.daysOfWeek),
-                onClick = {
-                    // show dialog to select weekdays
-                    val choices =
-                        DayOfWeek.values().map { rule.daysOfWeek.contains(it) }.toBooleanArray()
-                    showWeekDayPickerDialog(context, choices) {
-                        viewModel.updateBottomSheet(daysOfWeek = DayOfWeek.values()
-                            .filterIndexed { index, _ ->
-                                choices[index]
-                            })
-                    }
-                })
-            SimpleListTile(titleText = stringResource(id = R.string.feature_settings_schedule_from),
-                subtitleText = dtf.format(rule.start),
-                onClick = {
-                    // show time picker dialog to select start time
+            SheetLabel(text = stringResource(id = R.string.feature_settings_schedule_weekdays))
+            DayToggles(
+                selectedDays = rule.daysOfWeek,
+                onSelectedDaysChange = { viewModel.updateBottomSheet(daysOfWeek = it) }
+            )
+            SheetLabel(text = stringResource(id = R.string.feature_settings_schedule_time))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                OutlinedButton(onClick = {
                     TimePickerDialog(context, { _, hour, minute ->
                         viewModel.updateBottomSheet(start = LocalTime.of(hour, minute))
                     }, rule.start.hour, rule.start.minute, is24HourFormat).show()
-                })
-            SimpleListTile(titleText = stringResource(id = R.string.feature_settings_schedule_to),
-                subtitleText = dtf.format(rule.end),
-                onClick = {
-                    // show time picker dialog to select end time
+                }) {
+                    Text(stringResource(R.string.feature_settings_schedule_fromTime, dtf.format(rule.start)))
+                }
+                OutlinedButton(onClick = {
                     TimePickerDialog(context, { _, hour, minute ->
                         viewModel.updateBottomSheet(end = LocalTime.of(hour, minute))
                     }, rule.end.hour, rule.end.minute, is24HourFormat).show()
-                })
-            Row {
+                }) {
+                    Text(stringResource(R.string.feature_settings_schedule_toTime, dtf.format(rule.end)))
+                }
+            }
+            // equal times are easy to misread, and a new rule starts out as exactly that
+            val spanNote = when {
+                rule.start == rule.end -> R.string.feature_settings_schedule_allDay
+                rule.start.isAfter(rule.end) -> R.string.feature_settings_schedule_nextDay
+                else -> null
+            }
+            spanNote?.let {
+                Text(
+                    text = stringResource(id = it).replaceFirstChar(Char::titlecase),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+            }
+            Row(modifier = Modifier.padding(top = 16.dp)) {
                 if (ruleItem.first != -1) {
                     TextButton(modifier = Modifier.weight(1f), onClick = {
                         viewModel.onDeleteClick()
@@ -191,27 +220,56 @@ fun FeatureScheduleRuleBottomSheet(
     }
 }
 
+@Composable
+private fun SheetLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+    )
+}
+
 /**
- * Shows a dialog that allows the user to select the days of the week.
- * @param context The context.
- * @param choices The currently selected days of the week. The index of the boolean array
- * corresponds to the index of the day of the week in [DayOfWeek.values].
- * @param onSaveClick A callback that is called when the user clicks on the save button. It
- * receives the updated choices as a parameter.
+ * A round toggle per day of the week, the way alarm clocks offer them. No days at all stands for
+ * every day (see [FeatureScheduleRule.isActive]), so that is shown as all of them, and the last
+ * selected day cannot be switched off.
  */
-private fun showWeekDayPickerDialog(
-    context: Context, choices: BooleanArray, onSaveClick: (BooleanArray) -> Unit
+@Composable
+private fun DayToggles(
+    selectedDays: List<DayOfWeek>, onSelectedDaysChange: (List<DayOfWeek>) -> Unit
 ) {
-    AlertDialog.Builder(context)
-        .setTitle(context.getString(R.string.feature_settings_schedule_weekdays))
-        .setMultiChoiceItems(
-            DayOfWeek.values().map { it.getDisplayName(TextStyle.FULL, Locale.getDefault()) }
-                .toTypedArray(), choices
-        ) { _, which, isChecked ->
-            choices[which] = isChecked
-        }.setPositiveButton(context.getString(R.string.action_save)) { _, _ ->
-            onSaveClick(choices)
-        }.setNegativeButton(context.getString(R.string.action_cancel), null).show()
+    val locale = Locale.getDefault()
+    val effectiveDays = selectedDays.ifEmpty { DayOfWeek.entries }
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        orderedWeekDays(locale).forEach { day ->
+            val selected = day in effectiveDays
+            val colors = MaterialTheme.colorScheme
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) colors.primary else Color.Transparent)
+                    .border(1.dp, if (selected) colors.primary else colors.outline, CircleShape)
+                    .toggleable(value = selected, role = Role.Checkbox) {
+                        val days = if (selected) effectiveDays - day else effectiveDays + day
+                        if (days.isNotEmpty()) onSelectedDaysChange(days.sorted())
+                    }
+                    .semantics { contentDescription = day.getDisplayName(TextStyle.FULL, locale) }
+            ) {
+                Text(
+                    text = day.getDisplayName(TextStyle.NARROW, locale),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (selected) colors.onPrimary else colors.onSurface
+                )
+            }
+        }
+    }
 }
 
 /**

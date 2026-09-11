@@ -136,9 +136,10 @@
     <string name="feature_settings_schedule_everyDay">Täglich</string>
     <string name="feature_settings_schedule_allDay">ganztägig</string>
     <string name="feature_settings_schedule_nextDay">Folgetag</string>
-    <string name="feature_settings_schedule_weekdays">Wochentage</string>
-    <string name="feature_settings_schedule_from">Von</string>
-    <string name="feature_settings_schedule_to">Bis</string>
+    <string name="feature_settings_schedule_weekdays">Tage</string>
+    <string name="feature_settings_schedule_time">Uhrzeit</string>
+    <string name="feature_settings_schedule_fromTime">Von %s</string>
+    <string name="feature_settings_schedule_toTime">Bis %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->

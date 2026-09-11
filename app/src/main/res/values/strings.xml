@@ -139,9 +139,10 @@
     <string name="feature_settings_schedule_everyDay">Every day</string>
     <string name="feature_settings_schedule_allDay">all day</string>
     <string name="feature_settings_schedule_nextDay">next day</string>
-    <string name="feature_settings_schedule_weekdays">Weekdays</string>
-    <string name="feature_settings_schedule_from">From</string>
-    <string name="feature_settings_schedule_to">To</string>
+    <string name="feature_settings_schedule_weekdays">Days</string>
+    <string name="feature_settings_schedule_time">Time</string>
+    <string name="feature_settings_schedule_fromTime">From %s</string>
+    <string name="feature_settings_schedule_toTime">To %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->
