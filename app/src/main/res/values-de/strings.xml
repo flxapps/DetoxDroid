@@ -156,6 +156,7 @@
     <string name="feature_grayscale_subtitle">Grau, gedimmt, verschwommen</string>
     <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
+    <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
     <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm unter das normale Minimum ab, solange eine App aus der Liste offen ist. (Lange drücken, um die Stärke einzustellen.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Eingeblendete Elemente ignorieren</string>
@@ -177,6 +178,9 @@
     <string name="feature_grayscale_screenFilter_effects_blur">Unschärfe</string>
     <string name="feature_grayscale_screenFilter_effects_both">Beides</string>
     <string name="feature_grayscale_screenFilter_percent">%d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_shade">Schleier, %d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_blur">Unschärfe, %d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_both">Schleier und Unschärfe, %d %%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->

@@ -159,6 +159,7 @@
     <string name="feature_grayscale_subtitle">Grayscale, dimmed, blurred</string>
     <string name="feature_grayscale_description">Takes the color out of distracting apps. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Allowed Daily Color Screen Time</string>
+    <string name="feature_grayscale_allowedColorScreenTime_description">How long these apps stay in color each day. After that, they turn gray until tomorrow. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_grayscale_extraDim">Extra Dim</string>
     <string name="feature_grayscale_extraDim_description">Dims the screen below its normal minimum while a listed app is open. (Long-press to adjust intensity.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Ignore Non-Fullscreen Elements</string>
@@ -180,6 +181,9 @@
     <string name="feature_grayscale_screenFilter_effects_blur">Blur</string>
     <string name="feature_grayscale_screenFilter_effects_both">Both</string>
     <string name="feature_grayscale_screenFilter_percent">%d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_shade">Shade, %d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_blur">Blur, %d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_both">Shade and blur, %d%%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
