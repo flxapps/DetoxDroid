@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.ui.screens.feature.pause_button
 import android.os.Build
 import android.view.KeyEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.RequiresApi
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -13,13 +14,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AppShortcut
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,7 +43,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
+import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
+import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.KeyEventUtil
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -64,10 +67,32 @@ fun PauseButtonFeatureSettingsSection(
     }
     PauseDurationTile()
     MinimumTimeBetweenPausesTile()
-    AffectedFeaturesTile()
-    NotificationSettingsTile()
+    SectionHeader(title = stringResource(id = R.string.feature_pause_ways))
+    // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PauseFromQuickSettingsTile()
+    PauseFromNotificationTile()
     PauseFromAssistantTile()
     PauseFromHardwareButtonTile()
+    AdvancedSettings(
+        summary = stringResource(id = R.string.feature_pause_affectedFeatures),
+        initiallyExpanded = viewModel.pauseExemptFeatureIds.collectAsState().value.isNotEmpty()
+    ) {
+        AffectedFeaturesTile()
+    }
+}
+
+/**
+ * Offers the pause tile to the Quick Settings, so nobody has to find it in the tile editor.
+ * @see PauseButtonFeatureSettingsViewModel.requestAddQuickSettingsTile
+ */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun PauseFromQuickSettingsTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
+    SimpleListTile(
+        leadingIcon = Icons.Default.GridView,
+        titleText = stringResource(id = R.string.feature_pause_fromQuickSettings),
+        subtitleText = stringResource(id = R.string.feature_pause_fromQuickSettings_description),
+        onClick = { viewModel.requestAddQuickSettingsTile() })
 }
 
 /**
@@ -325,11 +350,12 @@ fun PickHardwareKeyDialog(
 }
 
 /**
- * A tile to open the Android notification settings for the service channel.
- * When notification permission is granted, a foreground notification with a pause button will be shown.
+ * The pause button in DetoxDroid's own notification. There is nothing to switch, the notification
+ * comes with the feature, so the tile only has something to do while notifications are blocked:
+ * it asks for them, and otherwise leads to the notification settings.
  */
 @Composable
-private fun NotificationSettingsTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
+private fun PauseFromNotificationTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var notificationsEnabled by remember { mutableStateOf(false) }
@@ -376,14 +402,14 @@ private fun NotificationSettingsTile(viewModel: PauseButtonFeatureSettingsViewMo
 
     SimpleListTile(
         leadingIcon = Icons.Default.Notifications,
-        titleText = stringResource(id = R.string.feature_pause_notification_settings),
-        subtitleText = stringResource(id = R.string.feature_pause_notification_settings_description),
-        trailing = {
-            Switch(
-                checked = notificationsEnabled, onCheckedChange = null, // Read-only switch
-                enabled = false // Visual indication that it's read-only
-            )
-        },
+        titleText = stringResource(id = R.string.feature_pause_fromNotification),
+        subtitleText = stringResource(
+            id = if (notificationsEnabled) {
+                R.string.feature_pause_fromNotification_description
+            } else {
+                R.string.feature_pause_fromNotification_blocked
+            }
+        ),
         onClick = {
             if (hasNotificationPermission) {
                 // Permission already granted, open notification settings
