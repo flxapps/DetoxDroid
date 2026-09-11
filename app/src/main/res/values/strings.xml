@@ -238,13 +238,18 @@
 
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Disable Apps</string>
-    <string name="feature_disableApps_subtitle">Forget about them</string>
-    <string name="feature_disableApps_description">Blocks or deactivates selected apps while DetoxDroid is active, including launcher access and notifications.</string>
+    <string name="feature_disableApps_subtitle">Make them wait, or lock them away</string>
+    <string name="feature_disableApps_description">Makes selected apps wait before they open, and blocks or deactivates them once their daily time is up, launcher access and notifications included.</string>
     <string name="feature_disableApps_deactivatedApps">Deactivated Apps</string>
     <string name="feature_disableApps_manage">Manage Deactivated Apps</string>
     <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
     <string name="feature_disableApps_allowedDailyTime">Allowed Daily Screen Time</string>
     <string name="feature_disableApps_allowedDailyTime_description">Set allowed daily screen time for these apps. After that, they are deactivated until the next day. (DetoxDroid must be running to track screen time.)</string>
+    <string name="feature_disableApps_allowedDailyTime_noLimit">No limit</string>
+    <string name="feature_disableApps_waitBeforeOpening">Wait Before Opening</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">These apps make you wait before they open. Once you\'ve waited, an app opens right away until the screen turns off.</string>
+    <string name="feature_disableApps_waitBeforeOpening_off">Off</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time the apps are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
     <string name="feature_disableApps_operationMode">Operation Mode</string>
     <string name="feature_disableApps_operationMode_description">Choose whether to block apps with a warning screen or fully deactivate them. Deactivate mode needs extra permissions.</string>
     <string name="feature_disableApps_operationMode_block">Block</string>
@@ -252,6 +257,12 @@
     <string name="feature_disableApps_overlay_title">Time\'s Up!</string>
     <string name="feature_disableApps_overlay_message">You have used up your daily screen time for this app.</string>
     <string name="feature_disableApps_overlay_message2">Take a break and come back tomorrow.</string>
+
+    <!-- screen that holds an app back before it opens -->
+    <string name="feature_disableApps_wait_title">Hold on a second</string>
+    <string name="feature_disableApps_wait_message">%1$s will be ready in a moment. Plenty of time to change your mind.</string>
+    <string name="feature_disableApps_wait_leave">Never mind</string>
+    <string name="feature_disableApps_wait_open">Open %1$s</string>
     <!-- endregion -->
 
     <!-- region Feature: Commitment Password -->

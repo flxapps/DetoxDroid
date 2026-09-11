@@ -86,6 +86,14 @@
             android:launchMode="singleTask"
             android:showWhenLocked="true"
             android:theme="@style/Theme.DetoxDroid" />
+        <!-- singleInstance: a task of its own, so finishing it returns to the app it held back
+             instead of to whatever DetoxDroid screen was left open -->
+        <activity
+            android:name=".ui.screens.feature.disable_apps.WaitBeforeOpeningActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.DetoxDroid.Intervention" />
         <activity
             android:name=".widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
             android:excludeFromRecents="true"

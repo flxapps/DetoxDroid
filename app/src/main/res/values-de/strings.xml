@@ -235,13 +235,18 @@
 
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Apps deaktivieren</string>
-    <string name="feature_disableApps_subtitle">Einfach mal vergessen</string>
-    <string name="feature_disableApps_description">Sperrt oder deaktiviert ausgewählte Apps, solange DetoxDroid läuft, samt Launcher-Symbol und Benachrichtigungen.</string>
+    <string name="feature_disableApps_subtitle">Warten lassen oder wegsperren</string>
+    <string name="feature_disableApps_description">Lässt ausgewählte Apps erst mal warten und sperrt oder deaktiviert sie, sobald ihre Zeit für heute um ist, samt Launcher-Symbol und Benachrichtigungen.</string>
     <string name="feature_disableApps_deactivatedApps">Deaktivierte Apps</string>
     <string name="feature_disableApps_manage">Deaktivierte Apps verwalten</string>
     <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
     <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
     <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
+    <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
+    <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht die App sofort auf, bis der Bildschirm wieder ausgeht.</string>
+    <string name="feature_disableApps_waitBeforeOpening_off">Aus</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Bildschirmzeit sind die Apps sofort gesperrt, da gibt\'s nichts zu warten. Stell erst eine Zeit ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Betriebsmodus</string>
     <string name="feature_disableApps_operationMode_description">Sollen Apps mit einem Hinweisbildschirm gesperrt oder vollständig deaktiviert werden? Deaktivieren braucht zusätzliche Berechtigungen.</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
@@ -249,6 +254,12 @@
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
     <string name="feature_disableApps_overlay_message2">Mach eine Pause und komm morgen wieder.</string>
+
+    <!-- screen that holds an app back before it opens -->
+    <string name="feature_disableApps_wait_title">Moment mal</string>
+    <string name="feature_disableApps_wait_message">%1$s ist gleich so weit. Genug Zeit, es dir doch noch anders zu überlegen.</string>
+    <string name="feature_disableApps_wait_leave">Doch nicht</string>
+    <string name="feature_disableApps_wait_open">%1$s öffnen</string>
     <!-- endregion -->
 
     <!-- region Feature: Commitment Password -->
