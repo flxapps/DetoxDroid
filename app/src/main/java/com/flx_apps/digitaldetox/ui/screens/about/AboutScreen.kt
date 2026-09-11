@@ -49,6 +49,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,14 +194,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
 }
 
 private fun LazyListScope.sectionHeader(title: String) {
-    item {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
-        )
-    }
+    item { SectionHeader(title) }
 }
 
 private fun LazyListScope.linkItem(

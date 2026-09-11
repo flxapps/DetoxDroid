@@ -130,6 +130,7 @@
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Copy selection from</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Copies another feature\'s app selection over this one. The current selection is gone.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d apps</string>
+    <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Feature Schedule</string>
     <string name="feature_settings_schedule_hint">%d rules are set.</string>

@@ -127,6 +127,7 @@
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Auswahl übernehmen von</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die App-Auswahl einer anderen Funktion hierher. Die aktuelle Auswahl ist damit weg.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d Apps</string>
+    <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
     <string name="feature_settings_schedule_hint">%d Regeln festgelegt.</string>
