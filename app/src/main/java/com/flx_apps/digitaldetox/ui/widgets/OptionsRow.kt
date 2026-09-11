@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 
 /**
  * Displays a set of mutually exclusive options as [FilterChip]s in a [ChipFlowRow]. The selected
@@ -19,19 +20,24 @@ import androidx.compose.ui.res.stringResource
  * @param options A map of text resources to option values
  * @param selectedOption The currently selected option
  * @param onOptionSelected A callback that is called when an option is selected
+ * @param enabled Whether the options can be changed. Like [SimpleListTile], the row is also
+ * disabled while the settings are locked (see [LocalSettingsLocked]).
  */
 @Composable
 fun OptionsRow(
     options: Map<Int, Any>,
     selectedOption: Any,
     onOptionSelected: (Any) -> Unit,
+    enabled: Boolean = true,
 ) {
+    val effectivelyEnabled = enabled && !LocalSettingsLocked.current
     ChipFlowRow {
         options.forEach { (textRes, option) ->
             val selected = option == selectedOption
             FilterChip(
                 selected = selected,
                 onClick = { onOptionSelected(option) },
+                enabled = effectivelyEnabled,
                 label = { Text(text = stringResource(id = textRes)) },
                 leadingIcon = if (selected) {
                     {
