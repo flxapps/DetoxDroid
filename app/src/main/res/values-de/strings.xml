@@ -67,7 +67,6 @@
     <string name="home_state_active">Läuft</string>
     <string name="home_state_paused">Pausiert bis %s</string>
     <string name="home_state_inactive">Gestoppt</string>
-    <string name="home_hint">DetoxDroid hilft dir, weniger am Handy zu hängen.</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
     <string name="home_uninstall">DetoxDroid deinstallieren</string>

@@ -72,7 +72,6 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
-import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
@@ -251,7 +250,6 @@ private fun HomeScreenContent(it: PaddingValues) {
     ) {
         item {
             ScreenTimeChart()
-            InfoCard(infoText = stringResource(id = R.string.home_hint))
         }
         item {
             FinishSetupCard()
