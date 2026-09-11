@@ -7,6 +7,14 @@ import android.provider.Settings
 
 object NavigationUtil {
     /**
+     * An intent that takes the user to the home screen. Carries [Intent.FLAG_ACTIVITY_NEW_TASK], so
+     * it can be started from any context, including services.
+     */
+    @JvmStatic
+    fun homeScreenIntent(): Intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    /**
      * Opens the settings screen for the draw overlay permission.
      */
     @JvmStatic
