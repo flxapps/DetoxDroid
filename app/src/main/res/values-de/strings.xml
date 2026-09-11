@@ -90,7 +90,6 @@
     <string name="appList_section_selected">Ausgewählte Apps</string>
     <string name="appList_section_available">Verfügbare Apps</string>
     <string name="appList_selected_empty">Noch keine Apps ausgewählt.</string>
-    <string name="appList_badge_user">Nutzer</string>
     <string name="appList_badge_system">System</string>
     <string name="exceptionsList_filter_userApps">Nutzer-Apps</string>
     <string name="exceptionsList_filter_systemApps">System-Apps</string>
@@ -118,9 +117,6 @@
     <string name="feature_settings_exceptions_filterByAppType">Nach App-Typ filtern</string>
     <string name="feature_settings_exceptions_filterByCategory">Nach App-Kategorie filtern</string>
     <string name="feature_settings_exceptions_listType">Funktion gilt für</string>
-    <string name="feature_settings_exceptions_listType_description">Lege fest, wo die Funktion greift.</string>
-    <string name="feature_settings_exceptions_listType_description_notList">Beispiel: Wähle YouTube aus, um es auszunehmen.</string>
-    <string name="feature_settings_exceptions_listType_description_onlyList">Beispiel: Wähle YouTube aus, damit die Funktion nur dort greift.</string>
     <string name="feature_settings_exceptions_listType_notList">Alle Apps außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList">Nur ausgewählte Apps</string>
     <string name="feature_settings_exceptions_copyFrom">Übernehmen von …</string>

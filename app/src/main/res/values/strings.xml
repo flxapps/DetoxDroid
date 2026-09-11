@@ -93,7 +93,6 @@
     <string name="appList_section_selected">Selected apps</string>
     <string name="appList_section_available">Available apps</string>
     <string name="appList_selected_empty">No apps selected yet.</string>
-    <string name="appList_badge_user">User</string>
     <string name="appList_badge_system">System</string>
     <string name="exceptionsList_filter_userApps">User Apps</string>
     <string name="exceptionsList_filter_systemApps">System Apps</string>
@@ -121,9 +120,6 @@
     <string name="feature_settings_exceptions_filterByAppType">Filter by app type</string>
     <string name="feature_settings_exceptions_filterByCategory">Filter by app category</string>
     <string name="feature_settings_exceptions_listType">Feature applies to</string>
-    <string name="feature_settings_exceptions_listType_description">Pick the scope.</string>
-    <string name="feature_settings_exceptions_listType_description_notList">Example: select YouTube to exclude it.</string>
-    <string name="feature_settings_exceptions_listType_description_onlyList">Example: select YouTube to include only it.</string>
     <string name="feature_settings_exceptions_listType_notList">All apps except selected</string>
     <string name="feature_settings_exceptions_listType_onlyList">Only selected apps</string>
     <string name="feature_settings_exceptions_copyFrom">Copy from…</string>
