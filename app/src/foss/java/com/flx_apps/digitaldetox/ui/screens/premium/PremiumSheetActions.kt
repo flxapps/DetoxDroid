@@ -1,12 +1,12 @@
 package com.flx_apps.digitaldetox.ui.screens.premium
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +26,7 @@ import com.flx_apps.digitaldetox.R
  * Play Billing purchase actions instead, under the same fully-qualified name — [PremiumSheetHost]
  * needs no flavor branching.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PremiumLockedSheetActions(onUnlock: () -> Unit) {
     val uriHandler = LocalUriHandler.current
@@ -34,23 +35,26 @@ fun PremiumLockedSheetActions(onUnlock: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         SupportButtons(uriHandler)
-
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedButton(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_donatedUnlock))
+        // both unlock the same way; they only differ in what they say
+        FlowRow(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            TextButton(onClick = onUnlock) {
+                Text(stringResource(R.string.premium_action_donatedUnlock))
+            }
+            TextButton(onClick = onUnlock) {
+                Text(stringResource(R.string.premium_action_freeUnlock))
+            }
         }
-        TextButton(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_freeUnlock))
-        }
-        Spacer(Modifier.height(4.dp))
         Text(
             text = stringResource(R.string.premium_locked_footer),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

@@ -188,8 +188,9 @@ private fun PremiumUnlockedContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(20.dp))
-        // renders nothing on Google Play (no external payment links there)
-        SupportButtons(uriHandler)
+        // renders nothing on Google Play (no external payment links there); Done is the action
+        // that matters here, so the tip links stay in the background
+        SupportButtons(uriHandler, highlightFirst = false)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.premium_action_done))
@@ -346,8 +347,12 @@ private fun ExtrasCard() {
     }
 }
 
+/**
+ * The external support links, one button each. With [highlightFirst], the first one (the one-time
+ * tip) is the filled button the sheet leads to.
+ */
 @Composable
-internal fun SupportButtons(uriHandler: UriHandler) {
+internal fun SupportButtons(uriHandler: UriHandler, highlightFirst: Boolean = true) {
     PremiumSupport.supportLinks.forEachIndexed { index, link ->
         val url = stringResource(link.urlRes)
         val content: @Composable () -> Unit = {
@@ -358,8 +363,7 @@ internal fun SupportButtons(uriHandler: UriHandler) {
         val modifier = Modifier
             .fillMaxWidth()
             .padding(top = if (index == 0) 0.dp else 8.dp)
-        if (index == 0) {
-            // the first (one-time tip) link is the action this sheet exists for
+        if (index == 0 && highlightFirst) {
             Button(onClick = { uriHandler.openUri(url) }, modifier = modifier) { content() }
         } else {
             FilledTonalButton(onClick = { uriHandler.openUri(url) }, modifier = modifier) {
