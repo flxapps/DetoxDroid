@@ -59,6 +59,7 @@ import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlin.math.roundToInt
@@ -318,13 +319,15 @@ private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewM
 }
 
 /**
- * The UI element for toggling the extra dim setting.
+ * The UI element for toggling the extra dim setting. How dark it gets is the system's to set, so a
+ * long press takes the user to that setting.
  */
 @Composable
 fun ExtraDimTile(
     viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel(),
     featureViewModel: FeatureViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_extraDim),
         subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description),
@@ -334,6 +337,7 @@ fun ExtraDimTile(
                     if (viewModel.toggleExtraDim()) featureViewModel.refreshActiveState()
                 })
         },
+        onLongClick = { NavigationUtil.openExtraDimSettings(context) },
         leadingIcon = Icons.Default.BrightnessLow
     )
 }

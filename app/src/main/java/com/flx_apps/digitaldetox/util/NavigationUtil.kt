@@ -56,6 +56,21 @@ object NavigationUtil {
     }
 
     /**
+     * Opens the system's Extra Dim page, where its intensity is set. The page's action is hidden
+     * from the SDK and some devices lack the page, so the accessibility settings, where Extra Dim
+     * is listed, stand in for it there.
+     */
+    @JvmStatic
+    fun openExtraDimSettings(context: Context) {
+        runCatching {
+            context.startActivity(
+                Intent("android.settings.REDUCE_BRIGHT_COLORS_SETTINGS")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }.onFailure { openAccessibilitySettings(context) }
+    }
+
+    /**
      * Opens the developer options settings screen (e.g. for enabling wireless debugging).
      */
     @JvmStatic
