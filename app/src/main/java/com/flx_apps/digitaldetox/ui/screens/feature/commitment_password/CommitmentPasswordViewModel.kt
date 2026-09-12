@@ -1,9 +1,12 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
 import android.app.Application
+import android.content.ClipData
+import android.content.ClipDescription
+import android.content.ClipboardManager
+import android.os.PersistableBundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -21,7 +24,7 @@ enum class CommitmentPasswordState {
 }
 
 enum class CommitmentPasswordDialog {
-    NONE, WALKTHROUGH, GENERATED_PASSWORD, FORGOT_PASSWORD, RECOVERY_IN_PROGRESS, RECOVERY_READY, UNLOCK_TO_DISABLE,
+    NONE, WALKTHROUGH, GENERATED_PASSWORD, RECOVERY, UNLOCK_TO_DISABLE,
 }
 
 @HiltViewModel
@@ -43,17 +46,8 @@ class CommitmentPasswordViewModel @Inject constructor(
     private val _passwordInput = MutableStateFlow("")
     val passwordInput: StateFlow<String> = _passwordInput
 
-    private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> = _errorMessage
-
-    private val _failedAttempts = MutableStateFlow(0)
-    val failedAttempts: StateFlow<Int> = _failedAttempts
-
-    private val _isLockedOut = MutableStateFlow(false)
-    val isLockedOut: StateFlow<Boolean> = _isLockedOut
-
-    private val _remainingLockoutTime = MutableStateFlow(0L)
-    val remainingLockoutTime: StateFlow<Long> = _remainingLockoutTime
+    private val _wrongPassphrase = MutableStateFlow(false)
+    val wrongPassphrase: StateFlow<Boolean> = _wrongPassphrase
 
     private val _isRecoveryInProgress = MutableStateFlow(false)
     val isRecoveryInProgress: StateFlow<Boolean> = _isRecoveryInProgress
@@ -91,9 +85,6 @@ class CommitmentPasswordViewModel @Inject constructor(
             else -> CommitmentPasswordState.SET_AND_UNLOCKED
         }
 
-        _failedAttempts.value = CommitmentPasswordFeature.failedAttempts
-        _isLockedOut.value = CommitmentPasswordFeature.isLockedOut()
-        _remainingLockoutTime.value = CommitmentPasswordFeature.getRemainingLockoutTime()
         _isRecoveryInProgress.value = CommitmentPasswordFeature.isRecoveryInProgress()
         _isRecoveryReady.value = CommitmentPasswordFeature.isRecoveryReady()
         _remainingRecoveryTime.value = CommitmentPasswordFeature.getRemainingRecoveryTime()
@@ -163,41 +154,12 @@ class CommitmentPasswordViewModel @Inject constructor(
 
     fun onPasswordInputChanged(input: String) {
         _passwordInput.value = input
-        _errorMessage.value = ""
-    }
-
-    fun verifyPassword() {
-        viewModelScope.launch {
-            val isValid = withContext(Dispatchers.Default) {
-                CommitmentPasswordFeature.verifyPassword(context, _passwordInput.value)
-            }
-            if (isValid) {
-                CommitmentPasswordFeature.unlockSession()
-                _showDialog.value = CommitmentPasswordDialog.NONE
-                _passwordInput.value = ""
-                updateState()
-            } else {
-                _errorMessage.value = context.getString(R.string.feature_commitmentPassword_incorrect)
-                updateState()
-                if (CommitmentPasswordFeature.isLockedOut()) {
-                    _showDialog.value = CommitmentPasswordDialog.NONE
-                }
-            }
-        }
-    }
-
-    fun lockSession() {
-        CommitmentPasswordFeature.lockSession()
-        updateState()
-    }
-
-    fun showForgotPasswordDialog() {
-        _showDialog.value = CommitmentPasswordDialog.FORGOT_PASSWORD
+        _wrongPassphrase.value = false
     }
 
     fun initiateRecovery() {
         CommitmentPasswordFeature.initiateRecovery(context)
-        _showDialog.value = CommitmentPasswordDialog.RECOVERY_IN_PROGRESS
+        _showDialog.value = CommitmentPasswordDialog.RECOVERY
         updateState()
     }
 
@@ -207,12 +169,8 @@ class CommitmentPasswordViewModel @Inject constructor(
         updateState()
     }
 
-    fun showRecoveryInProgressDialog() {
-        _showDialog.value = CommitmentPasswordDialog.RECOVERY_IN_PROGRESS
-    }
-
-    fun showRecoveryReadyDialog() {
-        _showDialog.value = CommitmentPasswordDialog.RECOVERY_READY
+    fun showRecoveryDialog() {
+        _showDialog.value = CommitmentPasswordDialog.RECOVERY
     }
 
     fun completeRecovery() {
@@ -236,7 +194,7 @@ class CommitmentPasswordViewModel @Inject constructor(
 
     fun showUnlockToDisableDialog() {
         _passwordInput.value = ""
-        _errorMessage.value = ""
+        _wrongPassphrase.value = false
         _showDialog.value = CommitmentPasswordDialog.UNLOCK_TO_DISABLE
     }
 
@@ -254,7 +212,7 @@ class CommitmentPasswordViewModel @Inject constructor(
                 updateState()
                 onDisabled()
             } else {
-                _errorMessage.value = context.getString(R.string.feature_commitmentPassword_incorrect)
+                _wrongPassphrase.value = true
                 updateState()
                 if (CommitmentPasswordFeature.isLockedOut()) {
                     _showDialog.value = CommitmentPasswordDialog.NONE
@@ -266,13 +224,20 @@ class CommitmentPasswordViewModel @Inject constructor(
     fun dismissDialog() {
         _showDialog.value = CommitmentPasswordDialog.NONE
         _passwordInput.value = ""
-        _errorMessage.value = ""
+        _wrongPassphrase.value = false
     }
 
+    /**
+     * Copies the passphrase, marked as sensitive so the system's clipboard preview and keyboard
+     * suggestions don't show it around.
+     */
     fun copyPasswordToClipboard(password: String) {
-        val clipboard =
-            context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val clip = android.content.ClipData.newPlainText("Passphrase", password)
+        val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+        val clip = ClipData.newPlainText("Passphrase", password).apply {
+            description.extras = PersistableBundle().apply {
+                putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+            }
+        }
         clipboard.setPrimaryClip(clip)
     }
 

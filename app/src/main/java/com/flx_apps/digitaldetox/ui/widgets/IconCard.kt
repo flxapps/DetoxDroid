@@ -50,6 +50,7 @@ fun IconCard(
             )
             Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(start = 16.dp),
                 horizontalAlignment = Alignment.Start
             ) {

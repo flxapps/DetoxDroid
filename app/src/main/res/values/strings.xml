@@ -281,10 +281,16 @@
     <string name="feature_commitmentPassword_description">Protect selected DetoxDroid settings with a passphrase so they cannot be changed impulsively. Requires Device Admin.</string>
     <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Grant Device Admin to enable Commitment Password.</string>
     <string name="feature_commitmentPassword_walkthrough_title">Before You Enable This</string>
-    <string name="feature_commitmentPassword_walkthrough_message">Enabling Commitment Password will:\n\n• Lock selected settings\n• Require your passphrase for changes\n• Prevent stopping DetoxDroid while locked\n• Allow 3 attempts, then a 5-minute cooldown\n• Offer 24-hour recovery if forgotten\n\nOnly enable this if you stored your passphrase safely.\n\nContinue?</string>
+    <string name="feature_commitmentPassword_walkthrough_lock">Locks the settings you pick</string>
+    <string name="feature_commitmentPassword_walkthrough_passphrase">Changing them takes your passphrase</string>
+    <string name="feature_commitmentPassword_walkthrough_stop">DetoxDroid can\'t be stopped while they\'re locked</string>
+    <string name="feature_commitmentPassword_walkthrough_attempts">3 wrong tries pause input for 5 minutes</string>
+    <string name="feature_commitmentPassword_walkthrough_recovery">Forgot it? Recovery takes 24 hours</string>
+    <string name="feature_commitmentPassword_walkthrough_next">You get your passphrase on the next step. Keep it somewhere safe.</string>
     <string name="feature_commitmentPassword_walkthrough_proceed">I Understand</string>
     <string name="feature_commitmentPassword_generated_title">Your Passphrase</string>
-    <string name="feature_commitmentPassword_generated_message">Save this passphrase now. You need it to change protected settings:\n\n%s\n\nWrite it down or store it in a secure place before continuing.</string>
+    <string name="feature_commitmentPassword_generated_message">Save this passphrase now. You need it to change protected settings.</string>
+    <string name="feature_commitmentPassword_generated_hint">Write it down or store it in a secure place before continuing.</string>
     <string name="feature_commitmentPassword_generated_copied">Passphrase copied to clipboard</string>
     <string name="feature_commitmentPassword_generated_confirm">I Saved the Passphrase</string>
     <string name="feature_commitmentPassword_copy">Copy Passphrase</string>
@@ -293,7 +299,12 @@
     <string name="feature_commitmentPassword_enter">Enter Passphrase</string>
     <string name="feature_commitmentPassword_verify">Verify</string>
     <string name="feature_commitmentPassword_incorrect">Wrong passphrase</string>
-    <string name="feature_commitmentPassword_attemptsRemaining">%d attempts remaining</string>
+    <plurals name="feature_commitmentPassword_attemptsRemaining">
+        <item quantity="one">%d attempt remaining</item>
+        <item quantity="other">%d attempts remaining</item>
+    </plurals>
+    <string name="feature_commitmentPassword_show">Show passphrase</string>
+    <string name="feature_commitmentPassword_hide">Hide passphrase</string>
     <string name="feature_commitmentPassword_lockedOut">Too many failed attempts. Try again in %s.</string>
     <string name="feature_commitmentPassword_forgot">Forgot Passphrase?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase Recovery</string>

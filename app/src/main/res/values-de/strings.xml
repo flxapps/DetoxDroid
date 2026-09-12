@@ -278,10 +278,16 @@
     <string name="feature_commitmentPassword_description">Schütze ausgewählte Einstellungen mit einer Passphrase, damit du sie nicht impulsiv änderst. Benötigt Geräteadministrator-Rechte.</string>
     <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Erteile Geräteadministrator-Rechte, um das Commitment-Passwort zu aktivieren.</string>
     <string name="feature_commitmentPassword_walkthrough_title">Bevor du das aktivierst</string>
-    <string name="feature_commitmentPassword_walkthrough_message">Das Commitment-Passwort:\n\n• sperrt ausgewählte Einstellungen\n• verlangt für Änderungen deine Passphrase\n• verhindert, dass DetoxDroid im gesperrten Zustand gestoppt wird\n• erlaubt 3 Versuche, danach 5 Minuten Sperre\n• bietet eine 24-Stunden-Wiederherstellung, falls du sie vergisst\n\nAktiviere das nur, wenn deine Passphrase sicher aufbewahrt ist.\n\nFortfahren?</string>
+    <string name="feature_commitmentPassword_walkthrough_lock">Sperrt die Einstellungen, die du auswählst</string>
+    <string name="feature_commitmentPassword_walkthrough_passphrase">Ändern kannst du sie nur mit deiner Passphrase</string>
+    <string name="feature_commitmentPassword_walkthrough_stop">Solange sie gesperrt sind, lässt sich DetoxDroid nicht stoppen</string>
+    <string name="feature_commitmentPassword_walkthrough_attempts">Nach 3 falschen Versuchen ist die Eingabe 5 Minuten gesperrt</string>
+    <string name="feature_commitmentPassword_walkthrough_recovery">Vergessen? Die Wiederherstellung dauert 24 Stunden</string>
+    <string name="feature_commitmentPassword_walkthrough_next">Deine Passphrase bekommst du im nächsten Schritt. Leg sie dir irgendwo sicher ab.</string>
     <string name="feature_commitmentPassword_walkthrough_proceed">Verstanden</string>
     <string name="feature_commitmentPassword_generated_title">Deine Passphrase</string>
-    <string name="feature_commitmentPassword_generated_message">Sichere diese Passphrase jetzt. Ohne sie kannst du geschützte Einstellungen nicht mehr ändern:\n\n%s\n\nSchreib sie auf oder leg sie an einem sicheren Ort ab, bevor du fortfährst.</string>
+    <string name="feature_commitmentPassword_generated_message">Sichere diese Passphrase jetzt. Ohne sie kannst du geschützte Einstellungen nicht mehr ändern.</string>
+    <string name="feature_commitmentPassword_generated_hint">Schreib sie auf oder leg sie an einem sicheren Ort ab, bevor du fortfährst.</string>
     <string name="feature_commitmentPassword_generated_copied">Passphrase in die Zwischenablage kopiert</string>
     <string name="feature_commitmentPassword_generated_confirm">Ich habe die Passphrase gesichert</string>
     <string name="feature_commitmentPassword_copy">Passphrase kopieren</string>
@@ -290,7 +296,12 @@
     <string name="feature_commitmentPassword_enter">Passphrase eingeben</string>
     <string name="feature_commitmentPassword_verify">Bestätigen</string>
     <string name="feature_commitmentPassword_incorrect">Falsche Passphrase</string>
-    <string name="feature_commitmentPassword_attemptsRemaining">Noch %d Versuche</string>
+    <plurals name="feature_commitmentPassword_attemptsRemaining">
+        <item quantity="one">Noch %d Versuch</item>
+        <item quantity="other">Noch %d Versuche</item>
+    </plurals>
+    <string name="feature_commitmentPassword_show">Passphrase anzeigen</string>
+    <string name="feature_commitmentPassword_hide">Passphrase verbergen</string>
     <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuche es in %s erneut.</string>
     <string name="feature_commitmentPassword_forgot">Passphrase vergessen?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase-Wiederherstellung</string>

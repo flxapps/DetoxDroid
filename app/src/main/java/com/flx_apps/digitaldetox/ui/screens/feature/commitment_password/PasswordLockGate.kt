@@ -1,31 +1,14 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -37,13 +20,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.flx_apps.digitaldetox.util.formatCountdown
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
+import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -122,270 +104,108 @@ fun SettingsLockBannerIfNeeded(featureId: String? = null) {
     }
 }
 
+/**
+ * Says whether the settings below are locked, with the way to unlock them, or to lock them again
+ * for the rest of the session once they are open.
+ */
 @Composable
 private fun SettingsLockBanner(isLocked: Boolean) {
     var showUnlockDialog by remember { mutableStateOf(false) }
-
-    val backgroundColor =
-        if (isLocked) MaterialTheme.colorScheme.errorContainer
-        else MaterialTheme.colorScheme.primaryContainer
-    val contentColor =
-        if (isLocked) MaterialTheme.colorScheme.onErrorContainer
-        else MaterialTheme.colorScheme.onPrimaryContainer
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+    IconCard(icon = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen) {
+        Text(
+            text = stringResource(
+                if (isLocked) {
+                    R.string.feature_commitmentPassword_banner_locked
+                } else {
+                    R.string.feature_commitmentPassword_banner_unlocked
+                }
+            ),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        if (isLocked) {
+            Button(
+                onClick = { showUnlockDialog = true },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp)
             ) {
-                Icon(
-                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                    contentDescription = null,
-                    tint = contentColor,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isLocked) stringResource(R.string.feature_commitmentPassword_banner_locked)
-                    else stringResource(R.string.feature_commitmentPassword_banner_unlocked),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor,
-                    modifier = Modifier.weight(1f)
-                )
+                Text(stringResource(R.string.feature_commitmentPassword_unlock))
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (isLocked) {
-                Button(
-                    onClick = { showUnlockDialog = true },
-                    modifier = Modifier.padding(start = 32.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = contentColor, contentColor = backgroundColor
-                    )
-                ) {
-                    Text(stringResource(R.string.feature_commitmentPassword_unlock))
-                }
-            } else {
-                OutlinedButton(
-                    onClick = { CommitmentPasswordFeature.lockSession() },
-                    modifier = Modifier.padding(start = 32.dp)
-                ) {
-                    Text(stringResource(R.string.feature_commitmentPassword_lockAgain))
-                }
+        } else {
+            OutlinedButton(
+                onClick = { CommitmentPasswordFeature.lockSession() },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 8.dp)
+            ) {
+                Text(stringResource(R.string.feature_commitmentPassword_lockAgain))
             }
         }
     }
 
     if (showUnlockDialog) {
-        UnlockPasswordDialog(
-            onDismiss = { showUnlockDialog = false },
-            onUnlocked = { showUnlockDialog = false }
-        )
+        UnlockPasswordDialog(onDismiss = { showUnlockDialog = false })
     }
 }
 
+/**
+ * Unlocks the settings for the session, or leads into the recovery for a forgotten passphrase.
+ * Resetting the passphrase there switches the password off.
+ */
 @Composable
-private fun UnlockPasswordDialog(onDismiss: () -> Unit, onUnlocked: () -> Unit) {
+private fun UnlockPasswordDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
-    var passwordInput by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
-    var isVerifying by remember { mutableStateOf(false) }
-    var showForgotPasswordDialog by remember { mutableStateOf(false) }
-    val failedAttempts = remember(stateToken) { CommitmentPasswordFeature.failedAttempts }
-    val isLockedOut = remember(stateToken) { CommitmentPasswordFeature.isLockedOut() }
-    val remainingLockoutTime = remember(stateToken) { CommitmentPasswordFeature.getRemainingLockoutTime() }
+    var passphrase by remember { mutableStateOf("") }
+    var wrongPassphrase by remember { mutableStateOf(false) }
+    var verifying by remember { mutableStateOf(false) }
+    var recovering by remember { mutableStateOf(false) }
 
-    if (showForgotPasswordDialog) {
-        ForgotPasswordFlow(onDismiss = { showForgotPasswordDialog = false })
-    } else {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            icon = { Icon(Icons.Default.Lock, contentDescription = null) },
-            title = { Text(stringResource(R.string.feature_commitmentPassword_unlock)) },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.feature_commitmentPassword_unlock_description))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    if (isLockedOut) {
-                        Text(
-                            text = stringResource(
-                                R.string.feature_commitmentPassword_lockedOut,
-                                formatCountdown(context, remainingLockoutTime)
-                            ),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                    OutlinedTextField(
-                        value = passwordInput,
-                        onValueChange = {
-                            passwordInput = it
-                            errorMessage = ""
-                        },
-                        label = { Text(stringResource(R.string.feature_commitmentPassword_enter)) },
-                        visualTransformation = PasswordVisualTransformation(),
-                        isError = errorMessage.isNotEmpty(),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (errorMessage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = errorMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    if (failedAttempts > 0) {
-                        Text(
-                            text = stringResource(
-                                R.string.feature_commitmentPassword_attemptsRemaining,
-                                (CommitmentPasswordFeature.MAX_FAILED_ATTEMPTS - failedAttempts).coerceAtLeast(0)
-                            ),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(onClick = { showForgotPasswordDialog = true }) {
-                        Text(stringResource(R.string.feature_commitmentPassword_forgot))
-                    }
-                }
+    if (recovering) {
+        RecoveryDialog(
+            onStart = { CommitmentPasswordFeature.initiateRecovery(context) },
+            onCancelRecovery = {
+                CommitmentPasswordFeature.cancelRecovery(context)
+                recovering = false
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (CommitmentPasswordFeature.isLockedOut()) {
-                            errorMessage = context.getString(
-                                R.string.feature_commitmentPassword_lockedOut,
-                                formatCountdown(context, CommitmentPasswordFeature.getRemainingLockoutTime())
-                            )
-                            return@TextButton
-                        }
-
-                        // BCrypt (work factor 12) takes a few hundred ms — off the main thread
-                        isVerifying = true
-                        scope.launch {
-                            val isValid = withContext(Dispatchers.Default) {
-                                CommitmentPasswordFeature.verifyPassword(context, passwordInput)
-                            }
-                            isVerifying = false
-                            if (isValid) {
-                                CommitmentPasswordFeature.unlockSession()
-                                passwordInput = ""
-                                onUnlocked()
-                            } else {
-                                errorMessage =
-                                    context.getString(R.string.feature_commitmentPassword_incorrect)
-                            }
-                        }
-                    },
-                    enabled = passwordInput.isNotEmpty() && !isVerifying
-                ) {
-                    Text(stringResource(R.string.feature_commitmentPassword_verify))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    passwordInput = ""
-                    errorMessage = ""
+            onReset = {
+                if (CommitmentPasswordFeature.completeRecovery(context)) {
+                    CommitmentPasswordFeature.updateActivationState(false, dispatchLifecycle = true)
                     onDismiss()
-                }) {
-                    Text(stringResource(R.string.action_cancel))
                 }
-            }
+            },
+            onDismiss = { recovering = false }
         )
+        return
     }
-}
-
-@Composable
-private fun ForgotPasswordFlow(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val stateToken by CommitmentPasswordFeature.stateToken.collectAsState()
-    val isRecoveryInProgress = remember(stateToken) { CommitmentPasswordFeature.isRecoveryInProgress() }
-    val isRecoveryReady = remember(stateToken) { CommitmentPasswordFeature.isRecoveryReady() }
-    val remainingRecoveryTime = remember(stateToken) { CommitmentPasswordFeature.getRemainingRecoveryTime() }
-
-    when {
-        isRecoveryReady -> AlertDialog(
-            onDismissRequest = onDismiss,
-            icon = { Icon(Icons.Default.CheckCircle, contentDescription = null) },
-            title = { Text(stringResource(R.string.feature_commitmentPassword_recovery_ready)) },
-            text = { Text(stringResource(R.string.feature_commitmentPassword_recovery_ready_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (CommitmentPasswordFeature.completeRecovery(context)) {
-                        CommitmentPasswordFeature.updateActivationState(
-                            false,
-                            dispatchLifecycle = true
-                        )
-                        onDismiss()
-                    }
-                }) {
-                    Text(stringResource(R.string.feature_commitmentPassword_recovery_complete))
+    PassphraseDialog(
+        title = stringResource(R.string.feature_commitmentPassword_unlock),
+        description = stringResource(R.string.feature_commitmentPassword_unlock_description),
+        confirmLabel = stringResource(R.string.feature_commitmentPassword_verify),
+        passphrase = passphrase,
+        onPassphraseChange = {
+            passphrase = it
+            wrongPassphrase = false
+        },
+        wrongPassphrase = wrongPassphrase,
+        verifying = verifying,
+        onConfirm = {
+            // BCrypt (work factor 12) takes a few hundred ms, too long for the main thread
+            verifying = true
+            scope.launch {
+                val isValid = withContext(Dispatchers.Default) {
+                    CommitmentPasswordFeature.verifyPassword(context, passphrase)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
-
-        isRecoveryInProgress -> AlertDialog(
-            onDismissRequest = onDismiss,
-            icon = { Icon(Icons.Default.Timer, contentDescription = null) },
-            title = { Text(stringResource(R.string.feature_commitmentPassword_recovery_inProgress)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.feature_commitmentPassword_recovery_timeRemaining,
-                        formatCountdown(context, remainingRecoveryTime)
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.action_close))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    CommitmentPasswordFeature.cancelRecovery(context)
+                verifying = false
+                if (isValid) {
+                    CommitmentPasswordFeature.unlockSession()
                     onDismiss()
-                }) {
-                    Text(stringResource(R.string.feature_commitmentPassword_recovery_cancel))
+                } else {
+                    wrongPassphrase = true
                 }
             }
-        )
-
-        else -> AlertDialog(
-            onDismissRequest = onDismiss,
-            icon = { Icon(Icons.AutoMirrored.Filled.Help, contentDescription = null) },
-            title = { Text(stringResource(R.string.feature_commitmentPassword_recovery_title)) },
-            text = { Text(stringResource(R.string.feature_commitmentPassword_recovery_message)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    CommitmentPasswordFeature.initiateRecovery(context)
-                }) {
-                    Text(stringResource(R.string.feature_commitmentPassword_recovery_initiate))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
-    }
+        },
+        onDismiss = onDismiss,
+        extraAction = { ForgotPassphraseButton(onClick = { recovering = true }) }
+    )
 }
