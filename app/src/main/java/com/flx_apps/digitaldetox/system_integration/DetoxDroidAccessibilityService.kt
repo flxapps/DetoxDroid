@@ -249,6 +249,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            if (AccessibilityEventUtil.isTextFieldScrollEvent(accessibilityEvent)) return
             // usage statistics are pure measurement and keep counting during a pause —
             // a pause only suspends the interventions below
             if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {

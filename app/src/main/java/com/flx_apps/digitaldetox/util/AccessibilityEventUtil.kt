@@ -54,5 +54,17 @@ class AccessibilityEventUtil {
             val deltaY = accessibilityEvent.scrollDeltaY
             return deltaY >= 0
         }
+
+        /**
+         * Returns true if the scroll event comes from a text field keeping its cursor in view
+         * while someone types. That says nothing about scrolling through anything, and as the
+         * field often moves sideways with a vertical delta of 0, [isDownScrollEvent] and
+         * [ScrollDistanceEstimator] would take it for a downward scroll of unknown length.
+         *
+         * Sideways scrolls in general stay in, on purpose: swiping through a deck of cards that
+         * keeps refilling is how some apps keep people going.
+         */
+        fun isTextFieldScrollEvent(accessibilityEvent: AccessibilityEvent): Boolean =
+            accessibilityEvent.source?.isEditable == true
     }
 }
