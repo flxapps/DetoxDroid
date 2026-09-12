@@ -214,6 +214,9 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     }
 
     override fun onPause(context: Context) {
+        // a paused feature sees no more app switches, so the time in a listed app that is still
+        // open stops counting here and not when the next app shows up, maybe the next morning
+        eventuallyIncreaseUsedUpScreenTime()
         mainHandler.removeCallbacks(budgetExhaustedChecker)
         waitedForApps.clear()
         if (operationMode == DisableAppsMode.DEACTIVATE) {

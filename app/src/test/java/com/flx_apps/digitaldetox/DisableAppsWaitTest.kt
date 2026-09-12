@@ -119,6 +119,20 @@ class DisableAppsWaitTest {
     }
 
     @Test
+    fun `time in a listed app stops counting when the feature pauses`() {
+        DisableAppsFeature.waitBeforeOpening = 0L
+        DisableAppsFeature.allowedDailyScreenTime = 30 * 60_000L
+        open(LISTED_APP)
+        // ten minutes in the app, then the schedule ends while it is still open
+        DisableAppsFeature.trackingSinceTimestamp -= 10 * 60_000L
+        DisableAppsFeature.onPause(context)
+        assertEquals(0L, DisableAppsFeature.trackingSinceTimestamp)
+        assertEquals(
+            10 * 60_000.0, DisableAppsFeature.currentUsedUpScreenTime().toDouble(), 1_000.0
+        )
+    }
+
+    @Test
     fun `without a daily limit the apps never lock`() {
         DisableAppsFeature.waitBeforeOpening = 0L
         open(LISTED_APP)
