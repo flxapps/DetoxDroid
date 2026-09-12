@@ -80,6 +80,9 @@ fun GrayscaleAppsFeatureSettingsSection(
     LaunchedEffect(lifecycleState) {
         if (lifecycleState == Lifecycle.Event.ON_RESUME) viewModel.refreshFromFeature(context)
     }
+    // grayscale and extra dim are secure settings, so without the permission they can only be
+    // offered as something to set up (see the Shizuku tile), not as something to switch
+    val canWriteSecureSettings = hasWriteSecureSettingsPermission()
     SettingsGroup {
         ShizukuWizardTile()
         OpenAppExceptionsTile(subtitleText = stringResource(
@@ -91,19 +94,21 @@ fun GrayscaleAppsFeatureSettingsSection(
             GrayscaleAppsFeature.appExceptions.size
         ))
         OpenScheduleTile()
-        // grayscale and extra dim are secure settings, so without the permission they can only be
-        // offered as something to set up (see the Shizuku tile), not as something to switch
-        if (hasWriteSecureSettingsPermission()) {
-            SystemGrayscaleTile()
-            ExtraDimTile()
-        }
+        if (canWriteSecureSettings) SystemGrayscaleTile()
         ScreenFilterTile()
         AllowedDailyColorScreenTimeTile()
     }
+    val extraDim = viewModel.extraDimActivated.collectAsState().value
     AdvancedSettings(
-        summary = stringResource(id = R.string.feature_grayscale_ignoreNonFullScreen),
-        initiallyExpanded = !viewModel.ignoreNonFullScreenApps.collectAsState().value
+        summary = listOfNotNull(
+            stringResource(id = R.string.feature_grayscale_extraDim)
+                .takeIf { canWriteSecureSettings },
+            stringResource(id = R.string.feature_grayscale_ignoreNonFullScreen)
+        ).joinToString(),
+        initiallyExpanded = !viewModel.ignoreNonFullScreenApps.collectAsState().value ||
+                (canWriteSecureSettings && !extraDim)
     ) {
+        if (canWriteSecureSettings) ExtraDimTile()
         IgnoreFullScreenAppsTile()
     }
 }
