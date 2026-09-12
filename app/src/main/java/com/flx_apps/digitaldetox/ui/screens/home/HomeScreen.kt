@@ -2,7 +2,6 @@ package com.flx_apps.digitaldetox.ui.screens.home
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,10 +47,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -72,7 +74,6 @@ import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
-import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
@@ -285,32 +286,46 @@ fun OpenFeatureTile(
     feature: Feature,
     navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)
 ) {
-    val isActivated = feature.isActivated
-    androidx.compose.material3.ListItem(
-        headlineContent = { Text(stringResource(id = feature.texts.title)) },
-        supportingContent = {
-            Text(
-                stringResource(
-                    id = feature.texts.subtitle
-                )
-            )
-        },
-        leadingContent = {
-            FeatureIconBadge(iconRes = feature.iconRes, isActivated = isActivated)
-        },
-        modifier = Modifier.clickable {
-            navViewModel.openRoute(
-                NavigationRoutes.ManageFeature(featureId = feature.id)
-            )
-        })
+    HomeTile(
+        title = stringResource(id = feature.texts.title),
+        subtitle = stringResource(id = feature.texts.subtitle),
+        icon = painterResource(id = feature.iconRes),
+        isActivated = feature.isActivated,
+        onClick = {
+            navViewModel.openRoute(NavigationRoutes.ManageFeature(featureId = feature.id))
+        }
+    )
 }
 
 /**
- * A feature's icon on a round badge. While the feature is on, the badge takes the accent color
- * and wears the green dot that also marks DetoxDroid as running.
+ * A row of the home list. Every row carries its icon on a round badge, so all their texts start
+ * on the same line.
  */
 @Composable
-private fun FeatureIconBadge(@DrawableRes iconRes: Int, isActivated: Boolean) {
+private fun HomeTile(
+    title: String,
+    subtitle: String,
+    icon: Painter,
+    onClick: () -> Unit,
+    isActivated: Boolean = false,
+    enabled: Boolean = true,
+) {
+    androidx.compose.material3.ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = { Text(subtitle) },
+        leadingContent = { IconBadge(icon = icon, isActivated = isActivated) },
+        modifier = Modifier
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+    )
+}
+
+/**
+ * An icon on a round badge. While the feature it stands for is on, the badge takes the accent
+ * color and wears the green dot that also marks DetoxDroid as running.
+ */
+@Composable
+private fun IconBadge(icon: Painter, isActivated: Boolean) {
     val colors = MaterialTheme.colorScheme
     Box(modifier = Modifier.size(40.dp)) {
         Box(
@@ -327,7 +342,7 @@ private fun FeatureIconBadge(@DrawableRes iconRes: Int, isActivated: Boolean) {
                 )
         ) {
             Icon(
-                painter = painterResource(id = iconRes),
+                painter = icon,
                 contentDescription = null,
                 tint = if (isActivated) colors.onPrimaryContainer else colors.onSurfaceVariant,
                 modifier = Modifier.size(22.dp)
@@ -382,12 +397,12 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         })
     }
 
-    SimpleListTile(
-        leadingIcon = Icons.Default.DeleteForever,
-        titleText = stringResource(id = R.string.home_uninstall),
-        subtitleText = stringResource(
+    HomeTile(
+        title = stringResource(id = R.string.home_uninstall),
+        subtitle = stringResource(
             id = if (uninstallBlocked) R.string.home_uninstall_blocked_hint else R.string.home_uninstall_hint
         ),
+        icon = rememberVectorPainter(Icons.Default.DeleteForever),
         enabled = !uninstallBlocked,
         onClick = {
             showAreYouSureDialog.value = true
@@ -396,10 +411,10 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
 
 @Composable
 fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
-    SimpleListTile(
-        leadingIcon = Icons.Default.Settings,
-        titleText = stringResource(id = R.string.navigation_about),
-        subtitleText = stringResource(id = R.string.about_tile_subtitle),
+    HomeTile(
+        title = stringResource(id = R.string.navigation_about),
+        subtitle = stringResource(id = R.string.about_tile_subtitle),
+        icon = rememberVectorPainter(Icons.Default.Settings),
         onClick = { navViewModel.openRoute(NavigationRoutes.About) }
     )
 }
