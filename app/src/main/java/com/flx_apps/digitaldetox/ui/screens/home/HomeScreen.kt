@@ -2,8 +2,11 @@ package com.flx_apps.digitaldetox.ui.screens.home
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -13,20 +16,18 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,8 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +71,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
@@ -255,18 +255,21 @@ private fun HomeScreenContent(it: PaddingValues) {
             FinishSetupCard()
             BatteryOptimizationCard()
         }
-        items(FeaturesProvider.featureList) { feature ->
-            OpenFeatureTile(feature = feature)
-        }
         item {
-            UninstallDetoxDroidTile()
-            OpenAboutTile()
-            // bottom logo
+            SettingsGroup {
+                FeaturesProvider.featureList.forEach { OpenFeatureTile(feature = it) }
+            }
+            SettingsGroup {
+                UninstallDetoxDroidTile()
+                OpenAboutTile()
+            }
+            // bottom logo, with room below it for the start/stop button to float over
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Logo",
+                contentDescription = null,
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 80.dp)
                     .size(76.dp)
             )
         }
@@ -282,6 +285,7 @@ fun OpenFeatureTile(
     feature: Feature,
     navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)
 ) {
+    val isActivated = feature.isActivated
     androidx.compose.material3.ListItem(
         headlineContent = { Text(stringResource(id = feature.texts.title)) },
         supportingContent = {
@@ -292,31 +296,55 @@ fun OpenFeatureTile(
             )
         },
         leadingContent = {
-            Icon(
-                painter = painterResource(id = feature.iconRes),
-                contentDescription = "Feature Icon",
-            )
-        },
-        trailingContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxHeight()
-            ) {
-                if (feature.isActivated) {
-                    StatusIndicator(indicatorColor = colorResource(id = R.color.green))
-                }
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Open feature settings"
-                )
-            }
+            FeatureIconBadge(iconRes = feature.iconRes, isActivated = isActivated)
         },
         modifier = Modifier.clickable {
             navViewModel.openRoute(
                 NavigationRoutes.ManageFeature(featureId = feature.id)
             )
         })
-    return
+}
+
+/**
+ * A feature's icon on a round badge. While the feature is on, the badge takes the accent color
+ * and wears the green dot that also marks DetoxDroid as running.
+ */
+@Composable
+private fun FeatureIconBadge(@DrawableRes iconRes: Int, isActivated: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier = Modifier.size(40.dp)) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    color = if (isActivated) {
+                        colors.primaryContainer
+                    } else {
+                        colors.surfaceContainerHighest
+                    },
+                    shape = CircleShape
+                )
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                tint = if (isActivated) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+        if (isActivated) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(12.dp)
+                    // a ring in the row's color cuts the dot out of the badge
+                    .border(2.dp, colors.surfaceContainer, CircleShape)
+                    .padding(2.dp)
+                    .background(colorResource(id = R.color.green), CircleShape)
+            )
+        }
+    }
 }
 
 /**
@@ -354,7 +382,6 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         })
     }
 
-    Divider()
     SimpleListTile(
         leadingIcon = Icons.Default.DeleteForever,
         titleText = stringResource(id = R.string.home_uninstall),
@@ -365,7 +392,6 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         onClick = {
             showAreYouSureDialog.value = true
         })
-    Divider()
 }
 
 @Composable
@@ -472,6 +498,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         (size.width - radius * 2) / 2,
                         (size.height - radius * 2) / 2
                     )
+                    // the slices are set apart by a gap a few dp wide, as an angle on the ring
+                    val gapAngle = Math.toDegrees(3.dp.toPx() / radius.toDouble()).toFloat()
                     var startAngle = -90f
                     slices.forEachIndexed { index, _ ->
                         val sweepAngle = sweepAngles[index]
@@ -479,12 +507,12 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                             color = colors[index % colors.size].let { color ->
                                 if (selectedIndex.value == index) color.copy(alpha = 0.6f) else color
                             },
-                            startAngle = startAngle,
-                            sweepAngle = sweepAngle,
+                            startAngle = startAngle + gapAngle / 2,
+                            sweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0.5f),
                             useCenter = false,
                             topLeft = topLeft,
                             size = Size(radius * 2, radius * 2),
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                            style = Stroke(width = strokeWidth)
                         )
                         startAngle = startAngle + sweepAngle
                     }
@@ -514,7 +542,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     } else {
                         Text(
                             text = screenTime.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.headlineSmall
                         )
                         Text(
                             text = stringResource(id = R.string.home_screenTime_today),
