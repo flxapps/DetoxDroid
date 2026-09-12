@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -54,6 +55,11 @@ fun SimpleListTile(
         } else null)
 }
 
+/**
+ * Keeps touches from reaching the tile's trailing controls, which have no idea the settings are
+ * locked. Only the presses are taken: a switch or checkbox reacts to nothing else, while the moves
+ * have to stay untouched for the list around the tile to scroll when a drag starts on it.
+ */
 private fun Modifier.blockInteractionWhenLocked(isLocked: Boolean): Modifier {
     if (!isLocked) return this
     return this
@@ -61,7 +67,7 @@ private fun Modifier.blockInteractionWhenLocked(isLocked: Boolean): Modifier {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
-                    event.changes.forEach { it.consume() }
+                    event.changes.forEach { if (it.changedToDownIgnoreConsumed()) it.consume() }
                 }
             }
         }
