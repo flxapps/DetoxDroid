@@ -34,6 +34,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
     <string name="action_close">Close</string>
     <string name="action_grantPermission">Grant Permission</string>
     <string name="action_requestPermissions">This feature needs additional permissions.</string>
@@ -69,7 +70,6 @@
     <string name="home_state_active">Running</string>
     <string name="home_state_paused">Paused until %s</string>
     <string name="home_state_inactive">Stopped</string>
-    <string name="home_hint">DetoxDroid helps you spend less time stuck to your phone.</string>
     <string name="home_screenTime_today">Screen time today</string>
     <string name="home_screenTime_unavailable">Screen time unavailable</string>
     <string name="home_uninstall">Uninstall DetoxDroid</string>
@@ -93,7 +93,6 @@
     <string name="appList_section_selected">Selected apps</string>
     <string name="appList_section_available">Available apps</string>
     <string name="appList_selected_empty">No apps selected yet.</string>
-    <string name="appList_badge_user">User</string>
     <string name="appList_badge_system">System</string>
     <string name="exceptionsList_filter_userApps">User Apps</string>
     <string name="exceptionsList_filter_systemApps">System Apps</string>
@@ -121,27 +120,29 @@
     <string name="feature_settings_exceptions_filterByAppType">Filter by app type</string>
     <string name="feature_settings_exceptions_filterByCategory">Filter by app category</string>
     <string name="feature_settings_exceptions_listType">Feature applies to</string>
-    <string name="feature_settings_exceptions_listType_description">Pick the scope.</string>
-    <string name="feature_settings_exceptions_listType_description_notList">Example: select YouTube to exclude it.</string>
-    <string name="feature_settings_exceptions_listType_description_onlyList">Example: select YouTube to include only it.</string>
     <string name="feature_settings_exceptions_listType_notList">All apps except selected</string>
     <string name="feature_settings_exceptions_listType_onlyList">Only selected apps</string>
     <string name="feature_settings_exceptions_copyFrom">Copy from…</string>
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Copy selection from</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Copies another feature\'s app selection over this one. The current selection is gone.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d apps</string>
+    <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Feature Schedule</string>
-    <string name="feature_settings_schedule_hint">%d rules are set.</string>
-    <string name="feature_settings_schedule_hint_activeAllTheTime">The feature is active all the time.</string>
-    <string name="feature_settings_schedule_description">Limit this feature to specific days and time ranges.</string>
-    <string name="feature_settings_schedule_empty">No rules yet.\n\nThis feature is active all the time.</string>
+    <string name="feature_settings_schedule_hint">%d time windows</string>
+    <string name="feature_settings_schedule_hint_activeAllTheTime">Active all the time</string>
+    <string name="feature_settings_schedule_description">Add a time window to limit this feature to certain days and hours.</string>
     <string name="feature_settings_schedule_everyDay">Every day</string>
     <string name="feature_settings_schedule_allDay">all day</string>
     <string name="feature_settings_schedule_nextDay">next day</string>
-    <string name="feature_settings_schedule_weekdays">Weekdays</string>
-    <string name="feature_settings_schedule_from">From</string>
-    <string name="feature_settings_schedule_to">To</string>
+    <string name="feature_settings_schedule_weekdays">Days</string>
+    <string name="feature_settings_schedule_add">Add time window</string>
+    <string name="feature_settings_schedule_newRule">New time window</string>
+    <string name="feature_settings_schedule_editRule">Edit time window</string>
+    <string name="feature_settings_schedule_start">Start</string>
+    <string name="feature_settings_schedule_end">End</string>
+    <string name="feature_settings_schedule_status_activeUntil">Active now, until %s</string>
+    <string name="feature_settings_schedule_status_inactiveUntil">Off now, active from %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->
@@ -157,6 +158,7 @@
     <string name="feature_grayscale_subtitle">Grayscale, dimmed, blurred</string>
     <string name="feature_grayscale_description">Takes the color out of distracting apps. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Allowed Daily Color Screen Time</string>
+    <string name="feature_grayscale_allowedColorScreenTime_description">How long these apps stay in color each day. After that, they turn gray until tomorrow. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_grayscale_extraDim">Extra Dim</string>
     <string name="feature_grayscale_extraDim_description">Dims the screen below its normal minimum while a listed app is open. (Long-press to adjust intensity.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Ignore Non-Fullscreen Elements</string>
@@ -178,26 +180,34 @@
     <string name="feature_grayscale_screenFilter_effects_blur">Blur</string>
     <string name="feature_grayscale_screenFilter_effects_both">Both</string>
     <string name="feature_grayscale_screenFilter_percent">%d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_shade">Shade, %d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_blur">Blur, %d%%</string>
+    <string name="feature_grayscale_screenFilter_summary_both">Shade and blur, %d%%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
     <string name="feature_pause">Pause Button</string>
     <string name="feature_pause_subtitle">Breaks you actually choose</string>
-    <string name="feature_pause_description">Pauses DetoxDroid for a set time. You can start one from Quick Settings, the Assistant or a hardware button.</string>
+    <string name="feature_pause_description">Pauses DetoxDroid for a few minutes, for when you really need your phone.</string>
     <string name="feature_pause_duration">Pause Duration</string>
     <string name="feature_pause_duration_description">When the pause ends, DetoxDroid automatically resumes.</string>
     <string name="feature_pause_minimumTimeBetween">Minimum Time Between Pauses</string>
     <string name="feature_pause_minimumTimeBetween_description">So pausing doesn\'t quietly become the habit.</string>
-    <string name="feature_pause_fromAssistant">Pause from Assistant</string>
+    <string name="feature_pause_fromAssistant">Assistant</string>
     <string name="feature_pause_fromAssistant_description">Set DetoxDroid as your default assistant app to start a pause. (Assistant is often opened by long-pressing Home.)</string>
-    <string name="feature_pause_fromHardwareButton">Pause from Hardware Button</string>
+    <string name="feature_pause_fromHardwareButton">Hardware Button</string>
     <string name="feature_pause_fromHardwareButton_description">Choose a hardware button to long-press for 2 seconds to pause DetoxDroid.</string>
     <string name="feature_pause_fromHardwareButton_press">Press any hardware button on your phone</string>
     <string name="feature_pause_fromHardwareButton_noButtonPressed">No button pressed yet</string>
     <string name="feature_pause_fromHardwareButton_selected">Selected button: %s</string>
     <string name="feature_pause_fromHardwareButton_appNotRunning">DetoxDroid must be running to assign a hardware button.</string>
-    <string name="feature_pause_notification_settings">Foreground Notification</string>
-    <string name="feature_pause_notification_settings_description">Show a foreground notification with a pause action. Requires notification permission.</string>
+    <string name="feature_pause_ways">Ways to pause</string>
+    <string name="feature_pause_fromQuickSettings">Quick Settings</string>
+    <string name="feature_pause_fromQuickSettings_description">Tap to put the pause tile into your Quick Settings.</string>
+    <string name="feature_pause_fromQuickSettings_alreadyAdded">The pause tile is already in your Quick Settings.</string>
+    <string name="feature_pause_fromNotification">Notification</string>
+    <string name="feature_pause_fromNotification_description">DetoxDroid\'s notification has a pause button.</string>
+    <string name="feature_pause_fromNotification_blocked">Allow notifications, and DetoxDroid\'s notification gets a pause button.</string>
     <string name="feature_pause_affectedFeatures">Affected Features</string>
     <string name="feature_pause_affectedFeatures_all">All features</string>
     <string name="feature_pause_affectedFeatures_count">%1$d of %2$d features</string>
@@ -238,13 +248,18 @@
 
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Disable Apps</string>
-    <string name="feature_disableApps_subtitle">Forget about them</string>
-    <string name="feature_disableApps_description">Blocks or deactivates selected apps while DetoxDroid is active, including launcher access and notifications.</string>
+    <string name="feature_disableApps_subtitle">Make them wait, or lock them away</string>
+    <string name="feature_disableApps_description">Makes selected apps wait before they open, and blocks or deactivates them once their daily time is up, launcher access and notifications included.</string>
     <string name="feature_disableApps_deactivatedApps">Deactivated Apps</string>
     <string name="feature_disableApps_manage">Manage Deactivated Apps</string>
     <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
     <string name="feature_disableApps_allowedDailyTime">Allowed Daily Screen Time</string>
     <string name="feature_disableApps_allowedDailyTime_description">Set allowed daily screen time for these apps. After that, they are deactivated until the next day. (DetoxDroid must be running to track screen time.)</string>
+    <string name="feature_disableApps_allowedDailyTime_noLimit">No limit</string>
+    <string name="feature_disableApps_waitBeforeOpening">Wait Before Opening</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">These apps make you wait before they open. Once you\'ve waited, an app opens right away until the screen turns off.</string>
+    <string name="feature_disableApps_waitBeforeOpening_off">Off</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time the apps are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
     <string name="feature_disableApps_operationMode">Operation Mode</string>
     <string name="feature_disableApps_operationMode_description">Choose whether to block apps with a warning screen or fully deactivate them. Deactivate mode needs extra permissions.</string>
     <string name="feature_disableApps_operationMode_block">Block</string>
@@ -252,6 +267,12 @@
     <string name="feature_disableApps_overlay_title">Time\'s Up!</string>
     <string name="feature_disableApps_overlay_message">You have used up your daily screen time for this app.</string>
     <string name="feature_disableApps_overlay_message2">Take a break and come back tomorrow.</string>
+
+    <!-- screen that holds an app back before it opens -->
+    <string name="feature_disableApps_wait_title">Hold on a second</string>
+    <string name="feature_disableApps_wait_message">%1$s will be ready in a moment. Plenty of time to change your mind.</string>
+    <string name="feature_disableApps_wait_leave">Never mind</string>
+    <string name="feature_disableApps_wait_open">Open %1$s</string>
     <!-- endregion -->
 
     <!-- region Feature: Commitment Password -->
@@ -260,10 +281,16 @@
     <string name="feature_commitmentPassword_description">Protect selected DetoxDroid settings with a passphrase so they cannot be changed impulsively. Requires Device Admin.</string>
     <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Grant Device Admin to enable Commitment Password.</string>
     <string name="feature_commitmentPassword_walkthrough_title">Before You Enable This</string>
-    <string name="feature_commitmentPassword_walkthrough_message">Enabling Commitment Password will:\n\n• Lock selected settings\n• Require your passphrase for changes\n• Prevent stopping DetoxDroid while locked\n• Allow 3 attempts, then a 5-minute cooldown\n• Offer 24-hour recovery if forgotten\n\nOnly enable this if you stored your passphrase safely.\n\nContinue?</string>
+    <string name="feature_commitmentPassword_walkthrough_lock">Locks the settings you pick</string>
+    <string name="feature_commitmentPassword_walkthrough_passphrase">Changing them takes your passphrase</string>
+    <string name="feature_commitmentPassword_walkthrough_stop">DetoxDroid can\'t be stopped while they\'re locked</string>
+    <string name="feature_commitmentPassword_walkthrough_attempts">3 wrong tries pause input for 5 minutes</string>
+    <string name="feature_commitmentPassword_walkthrough_recovery">Forgot it? Recovery takes 24 hours</string>
+    <string name="feature_commitmentPassword_walkthrough_next">You get your passphrase on the next step. Keep it somewhere safe.</string>
     <string name="feature_commitmentPassword_walkthrough_proceed">I Understand</string>
     <string name="feature_commitmentPassword_generated_title">Your Passphrase</string>
-    <string name="feature_commitmentPassword_generated_message">Save this passphrase now. You need it to change protected settings:\n\n%s\n\nWrite it down or store it in a secure place before continuing.</string>
+    <string name="feature_commitmentPassword_generated_message">Save this passphrase now. You need it to change protected settings.</string>
+    <string name="feature_commitmentPassword_generated_hint">Write it down or store it in a secure place before continuing.</string>
     <string name="feature_commitmentPassword_generated_copied">Passphrase copied to clipboard</string>
     <string name="feature_commitmentPassword_generated_confirm">I Saved the Passphrase</string>
     <string name="feature_commitmentPassword_copy">Copy Passphrase</string>
@@ -272,7 +299,12 @@
     <string name="feature_commitmentPassword_enter">Enter Passphrase</string>
     <string name="feature_commitmentPassword_verify">Verify</string>
     <string name="feature_commitmentPassword_incorrect">Wrong passphrase</string>
-    <string name="feature_commitmentPassword_attemptsRemaining">%d attempts remaining</string>
+    <plurals name="feature_commitmentPassword_attemptsRemaining">
+        <item quantity="one">%d attempt remaining</item>
+        <item quantity="other">%d attempts remaining</item>
+    </plurals>
+    <string name="feature_commitmentPassword_show">Show passphrase</string>
+    <string name="feature_commitmentPassword_hide">Hide passphrase</string>
     <string name="feature_commitmentPassword_lockedOut">Too many failed attempts. Try again in %s.</string>
     <string name="feature_commitmentPassword_forgot">Forgot Passphrase?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase Recovery</string>
@@ -300,16 +332,13 @@
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: strengthen with Device Owner</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Commitment Password works with Device Admin. Device Owner also blocks uninstalling DetoxDroid. Tap to view the ADB command.</string>
     <string name="feature_commitmentPassword_stop_locked">Stop is locked by Commitment Password. Unlock settings first.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_title">Attempt blocked</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Blocked: uninstall flow while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_reassurance">DetoxDroid blocked the action and returned you to Home. Your protection settings are still active.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Locked for now</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">DetoxDroid can\'t be uninstalled while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">DetoxDroid\'s device admin can\'t be switched off while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">DetoxDroid\'s accessibility service can\'t be switched off while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_reassurance">You\'re back on your home screen, and your protection is still on.</string>
     <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Back to Home</string>
     <string name="feature_commitmentPassword_tamper_iconDescription">Security warning icon</string>
-    <string name="feature_commitmentPassword_tamper_toast_uninstall">Blocked: uninstall while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_toast_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_toast_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
     <!-- endregion -->
 
     <!-- region Device Admin & Accessibility Warnings -->
@@ -579,6 +608,13 @@
     <string name="about_patron">Become a patron</string>
     <string name="about_patron_link" translatable="false">https://liberapay.com/DetoxDroid/donate</string>
     <string name="about_patron_subtitle">A small monthly amount helps more than a one-off.</string>
+    <string name="about_bitcoin">Send Bitcoin</string>
+    <string name="about_bitcoin_subtitle">Straight to my wallet. The network fee makes it better for bigger amounts.</string>
+    <string name="about_bitcoin_message">Send any amount to this address from your Bitcoin wallet.</string>
+    <string name="about_bitcoin_copy">Copy address</string>
+    <string name="about_bitcoin_copied">Address copied</string>
+    <string name="about_bitcoin_openWallet">Open wallet</string>
+    <string name="about_bitcoin_noWallet">There\'s no Bitcoin wallet on this phone. Copy the address instead.</string>
     <string name="about_contact">Contact me</string>
     <string name="about_contact_link" translatable="false">mailto:detoxdroid@flx-apps.com</string>
     <string name="about_contact_subtitle">Feature requests and ideas are welcome. I read everything, I don\'t always answer.</string>

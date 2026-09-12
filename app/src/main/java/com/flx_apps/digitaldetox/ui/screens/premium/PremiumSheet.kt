@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -35,6 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -188,8 +192,9 @@ private fun PremiumUnlockedContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(20.dp))
-        // renders nothing on Google Play (no external payment links there)
-        SupportButtons(uriHandler)
+        // renders nothing on Google Play (no external payment links there); Done is the action
+        // that matters here, so the tip links stay in the background
+        SupportButtons(uriHandler, highlightFirst = false)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.premium_action_done))
@@ -346,8 +351,13 @@ private fun ExtrasCard() {
     }
 }
 
+/**
+ * The external support links, one button each, and the Bitcoin address where the build offers
+ * one. With [highlightFirst], the first link (the one-time tip) is the filled button the sheet
+ * leads to.
+ */
 @Composable
-internal fun SupportButtons(uriHandler: UriHandler) {
+internal fun SupportButtons(uriHandler: UriHandler, highlightFirst: Boolean = true) {
     PremiumSupport.supportLinks.forEachIndexed { index, link ->
         val url = stringResource(link.urlRes)
         val content: @Composable () -> Unit = {
@@ -358,13 +368,30 @@ internal fun SupportButtons(uriHandler: UriHandler) {
         val modifier = Modifier
             .fillMaxWidth()
             .padding(top = if (index == 0) 0.dp else 8.dp)
-        if (index == 0) {
-            // the first (one-time tip) link is the action this sheet exists for
+        if (index == 0 && highlightFirst) {
             Button(onClick = { uriHandler.openUri(url) }, modifier = modifier) { content() }
         } else {
             FilledTonalButton(onClick = { uriHandler.openUri(url) }, modifier = modifier) {
                 content()
             }
         }
+    }
+    PremiumSupport.bitcoinAddress?.let { address ->
+        var showAddress by rememberSaveable { mutableStateOf(false) }
+        FilledTonalButton(
+            onClick = { showAddress = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CurrencyBitcoin,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.about_bitcoin))
+        }
+        if (showAddress) BitcoinAddressDialog(address, onDismiss = { showAddress = false })
     }
 }

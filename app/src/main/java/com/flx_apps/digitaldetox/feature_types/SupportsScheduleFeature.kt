@@ -39,13 +39,17 @@ interface SupportsScheduleFeature {
                 itemToString = { it.toString() })
         )
 
-        override fun isScheduled(atDateTime: LocalDateTime): Boolean {
-            return scheduleRules.isEmpty() || scheduleRules.any {
-                it.isActive(atDateTime)
-            }
-        }
+        override fun isScheduled(atDateTime: LocalDateTime): Boolean =
+            scheduleRules.isScheduled(atDateTime)
     }
 }
+
+/**
+ * Whether these rules have a feature active at [atDateTime]. No rules at all means always: a
+ * feature without a schedule simply runs.
+ */
+fun Collection<FeatureScheduleRule>.isScheduled(atDateTime: LocalDateTime): Boolean =
+    isEmpty() || any { it.isActive(atDateTime) }
 
 /**
  * A rule for when a feature should be active. A rule consists of a time range and a day of the

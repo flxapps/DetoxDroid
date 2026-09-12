@@ -21,6 +21,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
@@ -30,16 +31,6 @@ import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 fun BreakDoomScrollingFeatureSettingsSection(
     viewModel: BreakDoomScrollingFeatureSettingsViewModel = viewModel()
 ) {
-    OpenAppExceptionsTile(subtitleText = stringResource(
-        id = if (BreakDoomScrollingFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
-            R.string.feature_doomScrolling_exceptions_summary_notList
-        } else {
-            R.string.feature_doomScrolling_exceptions_summary_onlyList
-        },
-        BreakDoomScrollingFeature.appExceptions.size
-    ))
-    OpenScheduleTile()
-
     val timeUntilWarning = viewModel.timeUntilWarning.collectAsState().value
     if (viewModel.showTimeUntilWarningNumberPickerDialog.collectAsState().value) {
         val context = LocalContext.current
@@ -59,24 +50,33 @@ fun BreakDoomScrollingFeatureSettingsSection(
         )
     }
 
-    SimpleListTile(
-        titleText = stringResource(id = R.string.feature_doomScrolling_timeUntilWarning),
-        subtitleText = stringResource(id = R.string.feature_doomScrolling_timeUntilWarning_description),
-        trailing = {
-            Text(
-                text = stringResource(
-                    id = R.string.time_minutes, viewModel.timeUntilWarning.collectAsState().value
-                )
-            )
-        },
-        onClick = {
-            viewModel.setTimeUntilNumberPickerDialogVisible(true)
-        },
-        leadingIcon = Icons.Default.Timelapse
-    )
-
-    CooldownTimeTile()
-    DetectionSensitivityTile()
+    SettingsGroup {
+        val listType = BreakDoomScrollingFeature.appExceptionListType
+        OpenAppExceptionsTile(subtitleText = stringResource(
+            id = if (listType == AppExceptionListType.NOT_LIST) {
+                R.string.feature_doomScrolling_exceptions_summary_notList
+            } else {
+                R.string.feature_doomScrolling_exceptions_summary_onlyList
+            },
+            BreakDoomScrollingFeature.appExceptions.size
+        ))
+        OpenScheduleTile()
+        SimpleListTile(
+            titleText = stringResource(id = R.string.feature_doomScrolling_timeUntilWarning),
+            subtitleText = stringResource(
+                id = R.string.feature_doomScrolling_timeUntilWarning_description
+            ),
+            trailing = {
+                Text(text = stringResource(id = R.string.time_minutes, timeUntilWarning))
+            },
+            onClick = {
+                viewModel.setTimeUntilNumberPickerDialogVisible(true)
+            },
+            leadingIcon = Icons.Default.Timelapse
+        )
+        CooldownTimeTile()
+        DetectionSensitivityTile()
+    }
 }
 
 /**

@@ -32,6 +32,7 @@
     <string name="action_delete">Löschen</string>
     <string name="action_back">Zurück</string>
     <string name="action_cancel">Abbrechen</string>
+    <string name="action_ok">OK</string>
     <string name="action_close">Schließen</string>
     <string name="action_grantPermission">Berechtigung erteilen</string>
     <string name="action_requestPermissions">Für diese Funktion fehlen noch Berechtigungen.</string>
@@ -67,7 +68,6 @@
     <string name="home_state_active">Läuft</string>
     <string name="home_state_paused">Pausiert bis %s</string>
     <string name="home_state_inactive">Gestoppt</string>
-    <string name="home_hint">DetoxDroid hilft dir, weniger am Handy zu hängen.</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
     <string name="home_uninstall">DetoxDroid deinstallieren</string>
@@ -90,7 +90,6 @@
     <string name="appList_section_selected">Ausgewählte Apps</string>
     <string name="appList_section_available">Verfügbare Apps</string>
     <string name="appList_selected_empty">Noch keine Apps ausgewählt.</string>
-    <string name="appList_badge_user">Nutzer</string>
     <string name="appList_badge_system">System</string>
     <string name="exceptionsList_filter_userApps">Nutzer-Apps</string>
     <string name="exceptionsList_filter_systemApps">System-Apps</string>
@@ -118,27 +117,29 @@
     <string name="feature_settings_exceptions_filterByAppType">Nach App-Typ filtern</string>
     <string name="feature_settings_exceptions_filterByCategory">Nach App-Kategorie filtern</string>
     <string name="feature_settings_exceptions_listType">Funktion gilt für</string>
-    <string name="feature_settings_exceptions_listType_description">Lege fest, wo die Funktion greift.</string>
-    <string name="feature_settings_exceptions_listType_description_notList">Beispiel: Wähle YouTube aus, um es auszunehmen.</string>
-    <string name="feature_settings_exceptions_listType_description_onlyList">Beispiel: Wähle YouTube aus, damit die Funktion nur dort greift.</string>
     <string name="feature_settings_exceptions_listType_notList">Alle Apps außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList">Nur ausgewählte Apps</string>
     <string name="feature_settings_exceptions_copyFrom">Übernehmen von …</string>
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Auswahl übernehmen von</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die App-Auswahl einer anderen Funktion hierher. Die aktuelle Auswahl ist damit weg.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d Apps</string>
+    <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
-    <string name="feature_settings_schedule_hint">%d Regeln festgelegt.</string>
-    <string name="feature_settings_schedule_hint_activeAllTheTime">Die Funktion ist durchgehend aktiv.</string>
-    <string name="feature_settings_schedule_description">Beschränke diese Funktion auf bestimmte Tage und Zeiten.</string>
-    <string name="feature_settings_schedule_empty">Noch keine Regeln.\n\nDiese Funktion ist durchgehend aktiv.</string>
+    <string name="feature_settings_schedule_hint">%d Zeitfenster</string>
+    <string name="feature_settings_schedule_hint_activeAllTheTime">Durchgehend aktiv</string>
+    <string name="feature_settings_schedule_description">Mit einem Zeitfenster beschränkst du die Funktion auf bestimmte Tage und Uhrzeiten.</string>
     <string name="feature_settings_schedule_everyDay">Täglich</string>
     <string name="feature_settings_schedule_allDay">ganztägig</string>
     <string name="feature_settings_schedule_nextDay">Folgetag</string>
-    <string name="feature_settings_schedule_weekdays">Wochentage</string>
-    <string name="feature_settings_schedule_from">Von</string>
-    <string name="feature_settings_schedule_to">Bis</string>
+    <string name="feature_settings_schedule_weekdays">Tage</string>
+    <string name="feature_settings_schedule_add">Zeitfenster hinzufügen</string>
+    <string name="feature_settings_schedule_newRule">Neues Zeitfenster</string>
+    <string name="feature_settings_schedule_editRule">Zeitfenster bearbeiten</string>
+    <string name="feature_settings_schedule_start">Start</string>
+    <string name="feature_settings_schedule_end">Ende</string>
+    <string name="feature_settings_schedule_status_activeUntil">Gerade aktiv, bis %s</string>
+    <string name="feature_settings_schedule_status_inactiveUntil">Gerade aus, aktiv ab %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->
@@ -154,6 +155,7 @@
     <string name="feature_grayscale_subtitle">Grau, gedimmt, verschwommen</string>
     <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
+    <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
     <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm unter das normale Minimum ab, solange eine App aus der Liste offen ist. (Lange drücken, um die Stärke einzustellen.)</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Eingeblendete Elemente ignorieren</string>
@@ -175,26 +177,34 @@
     <string name="feature_grayscale_screenFilter_effects_blur">Unschärfe</string>
     <string name="feature_grayscale_screenFilter_effects_both">Beides</string>
     <string name="feature_grayscale_screenFilter_percent">%d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_shade">Schleier, %d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_blur">Unschärfe, %d %%</string>
+    <string name="feature_grayscale_screenFilter_summary_both">Schleier und Unschärfe, %d %%</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
     <string name="feature_pause">Pause-Taste</string>
     <string name="feature_pause_subtitle">Pausen, die du selbst wählst</string>
-    <string name="feature_pause_description">Pausiert DetoxDroid für eine festgelegte Zeit. Starten kannst du eine Pause über die Schnelleinstellungen, den Assistenten oder eine Hardware-Taste.</string>
+    <string name="feature_pause_description">Pausiert DetoxDroid für ein paar Minuten, wenn du dein Handy halt wirklich brauchst.</string>
     <string name="feature_pause_duration">Pausendauer</string>
     <string name="feature_pause_duration_description">Nach Ablauf der Pause läuft DetoxDroid automatisch weiter.</string>
     <string name="feature_pause_minimumTimeBetween">Mindestabstand zwischen Pausen</string>
     <string name="feature_pause_minimumTimeBetween_description">Damit das Pausieren nicht selbst zur Gewohnheit wird.</string>
-    <string name="feature_pause_fromAssistant">Pause über den Assistenten</string>
+    <string name="feature_pause_fromAssistant">Assistent</string>
     <string name="feature_pause_fromAssistant_description">Lege DetoxDroid als Standard-Assistenten fest, um eine Pause zu starten. (Den Assistenten öffnest du meist mit langem Druck auf die Home-Taste.)</string>
-    <string name="feature_pause_fromHardwareButton">Pause über eine Hardware-Taste</string>
+    <string name="feature_pause_fromHardwareButton">Hardware-Taste</string>
     <string name="feature_pause_fromHardwareButton_description">Wähle eine Taste, die DetoxDroid pausiert, wenn du sie 2 Sekunden gedrückt hältst.</string>
     <string name="feature_pause_fromHardwareButton_press">Drücke eine beliebige Taste an deinem Handy</string>
     <string name="feature_pause_fromHardwareButton_noButtonPressed">Noch keine Taste gedrückt</string>
     <string name="feature_pause_fromHardwareButton_selected">Gewählte Taste: %s</string>
     <string name="feature_pause_fromHardwareButton_appNotRunning">DetoxDroid muss laufen, um eine Hardware-Taste zuzuweisen.</string>
-    <string name="feature_pause_notification_settings">Vordergrund-Benachrichtigung</string>
-    <string name="feature_pause_notification_settings_description">Zeigt eine Benachrichtigung mit Pause-Aktion. Benötigt die Benachrichtigungsberechtigung.</string>
+    <string name="feature_pause_ways">So pausierst du</string>
+    <string name="feature_pause_fromQuickSettings">Schnelleinstellungen</string>
+    <string name="feature_pause_fromQuickSettings_description">Tippe hier, und die Pausen-Kachel landet in deinen Schnelleinstellungen.</string>
+    <string name="feature_pause_fromQuickSettings_alreadyAdded">Die Pausen-Kachel ist schon in deinen Schnelleinstellungen.</string>
+    <string name="feature_pause_fromNotification">Benachrichtigung</string>
+    <string name="feature_pause_fromNotification_description">In der Benachrichtigung von DetoxDroid gibt\'s einen Pause-Knopf.</string>
+    <string name="feature_pause_fromNotification_blocked">Erlaube Benachrichtigungen, dann bekommt die von DetoxDroid einen Pause-Knopf.</string>
     <string name="feature_pause_affectedFeatures">Betroffene Funktionen</string>
     <string name="feature_pause_affectedFeatures_all">Alle Funktionen</string>
     <string name="feature_pause_affectedFeatures_count">%1$d von %2$d Funktionen</string>
@@ -235,13 +245,18 @@
 
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Apps deaktivieren</string>
-    <string name="feature_disableApps_subtitle">Einfach mal vergessen</string>
-    <string name="feature_disableApps_description">Sperrt oder deaktiviert ausgewählte Apps, solange DetoxDroid läuft, samt Launcher-Symbol und Benachrichtigungen.</string>
+    <string name="feature_disableApps_subtitle">Warten lassen oder wegsperren</string>
+    <string name="feature_disableApps_description">Lässt ausgewählte Apps erst mal warten und sperrt oder deaktiviert sie, sobald ihre Zeit für heute um ist, samt Launcher-Symbol und Benachrichtigungen.</string>
     <string name="feature_disableApps_deactivatedApps">Deaktivierte Apps</string>
     <string name="feature_disableApps_manage">Deaktivierte Apps verwalten</string>
     <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
     <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
     <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
+    <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
+    <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht die App sofort auf, bis der Bildschirm wieder ausgeht.</string>
+    <string name="feature_disableApps_waitBeforeOpening_off">Aus</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Bildschirmzeit sind die Apps sofort gesperrt, da gibt\'s nichts zu warten. Stell erst eine Zeit ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Betriebsmodus</string>
     <string name="feature_disableApps_operationMode_description">Sollen Apps mit einem Hinweisbildschirm gesperrt oder vollständig deaktiviert werden? Deaktivieren braucht zusätzliche Berechtigungen.</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
@@ -249,6 +264,12 @@
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
     <string name="feature_disableApps_overlay_message2">Mach eine Pause und komm morgen wieder.</string>
+
+    <!-- screen that holds an app back before it opens -->
+    <string name="feature_disableApps_wait_title">Moment mal</string>
+    <string name="feature_disableApps_wait_message">%1$s ist gleich so weit. Genug Zeit, es dir doch noch anders zu überlegen.</string>
+    <string name="feature_disableApps_wait_leave">Doch nicht</string>
+    <string name="feature_disableApps_wait_open">%1$s öffnen</string>
     <!-- endregion -->
 
     <!-- region Feature: Commitment Password -->
@@ -257,10 +278,16 @@
     <string name="feature_commitmentPassword_description">Schütze ausgewählte Einstellungen mit einer Passphrase, damit du sie nicht impulsiv änderst. Benötigt Geräteadministrator-Rechte.</string>
     <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Erteile Geräteadministrator-Rechte, um das Commitment-Passwort zu aktivieren.</string>
     <string name="feature_commitmentPassword_walkthrough_title">Bevor du das aktivierst</string>
-    <string name="feature_commitmentPassword_walkthrough_message">Das Commitment-Passwort:\n\n• sperrt ausgewählte Einstellungen\n• verlangt für Änderungen deine Passphrase\n• verhindert, dass DetoxDroid im gesperrten Zustand gestoppt wird\n• erlaubt 3 Versuche, danach 5 Minuten Sperre\n• bietet eine 24-Stunden-Wiederherstellung, falls du sie vergisst\n\nAktiviere das nur, wenn deine Passphrase sicher aufbewahrt ist.\n\nFortfahren?</string>
+    <string name="feature_commitmentPassword_walkthrough_lock">Sperrt die Einstellungen, die du auswählst</string>
+    <string name="feature_commitmentPassword_walkthrough_passphrase">Ändern kannst du sie nur mit deiner Passphrase</string>
+    <string name="feature_commitmentPassword_walkthrough_stop">Solange sie gesperrt sind, lässt sich DetoxDroid nicht stoppen</string>
+    <string name="feature_commitmentPassword_walkthrough_attempts">Nach 3 falschen Versuchen ist die Eingabe 5 Minuten gesperrt</string>
+    <string name="feature_commitmentPassword_walkthrough_recovery">Vergessen? Die Wiederherstellung dauert 24 Stunden</string>
+    <string name="feature_commitmentPassword_walkthrough_next">Deine Passphrase bekommst du im nächsten Schritt. Leg sie dir irgendwo sicher ab.</string>
     <string name="feature_commitmentPassword_walkthrough_proceed">Verstanden</string>
     <string name="feature_commitmentPassword_generated_title">Deine Passphrase</string>
-    <string name="feature_commitmentPassword_generated_message">Sichere diese Passphrase jetzt. Ohne sie kannst du geschützte Einstellungen nicht mehr ändern:\n\n%s\n\nSchreib sie auf oder leg sie an einem sicheren Ort ab, bevor du fortfährst.</string>
+    <string name="feature_commitmentPassword_generated_message">Sichere diese Passphrase jetzt. Ohne sie kannst du geschützte Einstellungen nicht mehr ändern.</string>
+    <string name="feature_commitmentPassword_generated_hint">Schreib sie auf oder leg sie an einem sicheren Ort ab, bevor du fortfährst.</string>
     <string name="feature_commitmentPassword_generated_copied">Passphrase in die Zwischenablage kopiert</string>
     <string name="feature_commitmentPassword_generated_confirm">Ich habe die Passphrase gesichert</string>
     <string name="feature_commitmentPassword_copy">Passphrase kopieren</string>
@@ -269,7 +296,12 @@
     <string name="feature_commitmentPassword_enter">Passphrase eingeben</string>
     <string name="feature_commitmentPassword_verify">Bestätigen</string>
     <string name="feature_commitmentPassword_incorrect">Falsche Passphrase</string>
-    <string name="feature_commitmentPassword_attemptsRemaining">Noch %d Versuche</string>
+    <plurals name="feature_commitmentPassword_attemptsRemaining">
+        <item quantity="one">Noch %d Versuch</item>
+        <item quantity="other">Noch %d Versuche</item>
+    </plurals>
+    <string name="feature_commitmentPassword_show">Passphrase anzeigen</string>
+    <string name="feature_commitmentPassword_hide">Passphrase verbergen</string>
     <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuche es in %s erneut.</string>
     <string name="feature_commitmentPassword_forgot">Passphrase vergessen?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase-Wiederherstellung</string>
@@ -297,16 +329,13 @@
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: mit Device Owner verstärken</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort läuft schon mit Geräteadministrator-Rechten. Device Owner verhindert zusätzlich, dass DetoxDroid deinstalliert wird. Tippe für den ADB-Befehl.</string>
     <string name="feature_commitmentPassword_stop_locked">Stoppen ist durch das Commitment-Passwort gesperrt. Entsperre zuerst die Einstellungen.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_title">Versuch blockiert</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Blockiert: Deinstallation, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Blockiert: Änderungen am Geräteadministrator, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Blockiert: Änderungen an den Bedienungshilfen, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_reassurance">DetoxDroid hat die Aktion blockiert und dich zum Startbildschirm zurückgebracht. Dein Schutz steht weiterhin.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Gerade gesperrt</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Solange deine Einstellungen gesperrt sind, lässt sich DetoxDroid nicht deinstallieren.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Solange deine Einstellungen gesperrt sind, lässt sich der Geräteadministrator von DetoxDroid nicht ausschalten.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Solange deine Einstellungen gesperrt sind, lassen sich die Bedienungshilfen von DetoxDroid nicht ausschalten.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_reassurance">Du bist wieder auf dem Startbildschirm, und dein Schutz bleibt an.</string>
     <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Zurück zum Start</string>
     <string name="feature_commitmentPassword_tamper_iconDescription">Warnsymbol</string>
-    <string name="feature_commitmentPassword_tamper_toast_uninstall">Blockiert: Deinstallation, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_toast_deviceAdmin">Blockiert: Änderungen am Geräteadministrator, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_toast_accessibility">Blockiert: Änderungen an den Bedienungshilfen, solange das Commitment-Passwort gesperrt ist.</string>
     <!-- endregion -->
 
     <!-- region Device Admin & Accessibility Warnings -->
@@ -571,6 +600,13 @@
     <string name="about_coffee_subtitle">Jeder Kaffee hilft, DetoxDroid weiterzuentwickeln.</string>
     <string name="about_patron">Förderer werden</string>
     <string name="about_patron_subtitle">Ein kleiner monatlicher Beitrag hilft mehr als eine einmalige Spende.</string>
+    <string name="about_bitcoin">Bitcoin schicken</string>
+    <string name="about_bitcoin_subtitle">Direkt in meine Wallet. Wegen der Netzwerkgebühr eher was für größere Beträge.</string>
+    <string name="about_bitcoin_message">Schick einen beliebigen Betrag aus deiner Bitcoin-Wallet an diese Adresse.</string>
+    <string name="about_bitcoin_copy">Adresse kopieren</string>
+    <string name="about_bitcoin_copied">Adresse kopiert</string>
+    <string name="about_bitcoin_openWallet">Wallet öffnen</string>
+    <string name="about_bitcoin_noWallet">Auf diesem Handy ist keine Bitcoin-Wallet. Kopier einfach die Adresse.</string>
     <string name="about_contact">Kontakt aufnehmen</string>
     <string name="about_contact_subtitle">Feature-Wünsche und Ideen sind willkommen. Ich lese alles, antworte aber nicht immer.</string>
     <string name="about_github">Auf GitHub mitwirken</string>

@@ -294,24 +294,11 @@ fun AppExceptionsListTypeSection(
             style = MaterialTheme.typography.titleSmall
         )
         if (supportsMultipleListTypes) {
-            Text(
-                text = stringResource(id = R.string.feature_settings_exceptions_listType_description),
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
             OptionsRow(
                 options = listTypeMap, selectedOption = selectedListType, onOptionSelected = {
                     if (settingsLocked) return@OptionsRow
                     viewModel.setExceptionListType(it as AppExceptionListType)
                 })
-            Text(
-                text = stringResource(
-                    id = if (selectedListType == AppExceptionListType.NOT_LIST) {
-                        R.string.feature_settings_exceptions_listType_description_notList
-                    } else {
-                        R.string.feature_settings_exceptions_listType_description_onlyList
-                    }
-                ), modifier = Modifier.padding(vertical = 4.dp)
-            )
         }
         Text(
             text = stringResource(

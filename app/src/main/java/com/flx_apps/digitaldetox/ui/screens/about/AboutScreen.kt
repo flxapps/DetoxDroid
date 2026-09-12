@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,8 +48,11 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.ui.screens.premium.BitcoinAddressDialog
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,105 +138,112 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
 
-            sectionHeader(settingsSection)
-            switchItem(
-                icon = Icons.Default.Notifications,
-                title = keepAliveTitle,
-                subtitle = keepAliveSubtitle,
-                checked = keepAlive,
-                onCheckedChange = {
-                    keepAlive = it
-                    ReliabilitySettings.keepServiceAliveEnabled = it
-                    DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+            item {
+                SectionHeader(settingsSection)
+                SettingsGroup {
+                    SwitchTile(
+                        icon = Icons.Default.Notifications,
+                        title = keepAliveTitle,
+                        subtitle = keepAliveSubtitle,
+                        checked = keepAlive,
+                        onCheckedChange = {
+                            keepAlive = it
+                            ReliabilitySettings.keepServiceAliveEnabled = it
+                            DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+                        }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.RestartAlt,
+                        title = onboardingTitle,
+                        subtitle = onboardingSubtitle,
+                        onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
+                    )
                 }
-            )
-            linkItem(
-                icon = Icons.Default.RestartAlt,
-                title = onboardingTitle,
-                subtitle = onboardingSubtitle,
-                onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
-            )
 
-            sectionHeader(supportSection)
-            linkItem(
-                icon = Icons.Default.WorkspacePremium,
-                title = premiumTitle,
-                subtitle = premiumSubtitle,
-                onClick = { PremiumSheetController.show() }
-            )
-            supportLinkItems.forEach { (icon, texts, url) ->
-                linkItem(
-                    icon = icon,
-                    title = texts.first,
-                    subtitle = texts.second,
-                    onClick = { uriHandler.openUri(url) }
-                )
+                SectionHeader(supportSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.WorkspacePremium,
+                        title = premiumTitle,
+                        subtitle = premiumSubtitle,
+                        onClick = { PremiumSheetController.show() }
+                    )
+                    supportLinkItems.forEach { (icon, texts, url) ->
+                        LinkTile(
+                            icon = icon,
+                            title = texts.first,
+                            subtitle = texts.second,
+                            onClick = { uriHandler.openUri(url) }
+                        )
+                    }
+                    PremiumSupport.bitcoinAddress?.let { address ->
+                        var showAddress by rememberSaveable { mutableStateOf(false) }
+                        LinkTile(
+                            icon = Icons.Default.CurrencyBitcoin,
+                            title = stringResource(id = R.string.about_bitcoin),
+                            subtitle = stringResource(id = R.string.about_bitcoin_subtitle),
+                            onClick = { showAddress = true }
+                        )
+                        if (showAddress) {
+                            BitcoinAddressDialog(address, onDismiss = { showAddress = false })
+                        }
+                    }
+                    // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
+                    StoreReviewAboutTile(activity)
+                }
+
+                SectionHeader(projectSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.BugReport,
+                        title = reportIssueTitle,
+                        onClick = { uriHandler.openUri(reportIssueLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.Code,
+                        title = githubTitle,
+                        onClick = { uriHandler.openUri(githubLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.AlternateEmail,
+                        title = contactTitle,
+                        subtitle = contactSubtitle,
+                        onClick = { uriHandler.openUri(contactLink) }
+                    )
+                }
             }
-            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
-            storeReviewAboutItem(activity)
-
-            sectionHeader(projectSection)
-            linkItem(
-                icon = Icons.Default.BugReport,
-                title = reportIssueTitle,
-                onClick = { uriHandler.openUri(reportIssueLink) }
-            )
-            linkItem(
-                icon = Icons.Default.Code,
-                title = githubTitle,
-                onClick = { uriHandler.openUri(githubLink) }
-            )
-            linkItem(
-                icon = Icons.Default.AlternateEmail,
-                title = contactTitle,
-                subtitle = contactSubtitle,
-                onClick = { uriHandler.openUri(contactLink) }
-            )
         }
     }
 }
 
-private fun LazyListScope.sectionHeader(title: String) {
-    item {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
-        )
-    }
-}
-
-private fun LazyListScope.linkItem(
+@Composable
+private fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     onClick: () -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            modifier = Modifier.clickable(onClick = onClick)
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
 }
 
-private fun LazyListScope.switchItem(
+@Composable
+private fun SwitchTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-            modifier = Modifier.clickable { onCheckedChange(!checked) }
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+        modifier = Modifier.clickable { onCheckedChange(!checked) }
+    )
 }

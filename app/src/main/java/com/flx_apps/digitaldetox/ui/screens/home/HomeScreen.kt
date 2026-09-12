@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -13,20 +15,19 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -47,18 +48,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.BuildConfig
@@ -72,8 +75,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
-import com.flx_apps.digitaldetox.ui.widgets.InfoCard
-import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
@@ -251,24 +253,26 @@ private fun HomeScreenContent(it: PaddingValues) {
     ) {
         item {
             ScreenTimeChart()
-            InfoCard(infoText = stringResource(id = R.string.home_hint))
         }
         item {
             FinishSetupCard()
             BatteryOptimizationCard()
         }
-        items(FeaturesProvider.featureList) { feature ->
-            OpenFeatureTile(feature = feature)
-        }
         item {
-            UninstallDetoxDroidTile()
-            OpenAboutTile()
-            // bottom logo
+            SettingsGroup {
+                FeaturesProvider.featureList.forEach { OpenFeatureTile(feature = it) }
+            }
+            SettingsGroup {
+                UninstallDetoxDroidTile()
+                OpenAboutTile()
+            }
+            // bottom logo, with room below it for the start/stop button to float over
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "Logo",
+                contentDescription = null,
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 80.dp)
                     .size(76.dp)
             )
         }
@@ -284,41 +288,80 @@ fun OpenFeatureTile(
     feature: Feature,
     navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalActivity.current as ComponentActivity)
 ) {
+    HomeTile(
+        title = stringResource(id = feature.texts.title),
+        subtitle = stringResource(id = feature.texts.subtitle),
+        icon = painterResource(id = feature.iconRes),
+        isActivated = feature.isActivated,
+        onClick = {
+            navViewModel.openRoute(NavigationRoutes.ManageFeature(featureId = feature.id))
+        }
+    )
+}
+
+/**
+ * A row of the home list. Every row carries its icon on a round badge, so all their texts start
+ * on the same line.
+ */
+@Composable
+private fun HomeTile(
+    title: String,
+    subtitle: String,
+    icon: Painter,
+    onClick: () -> Unit,
+    isActivated: Boolean = false,
+    enabled: Boolean = true,
+) {
     androidx.compose.material3.ListItem(
-        headlineContent = { Text(stringResource(id = feature.texts.title)) },
-        supportingContent = {
-            Text(
-                stringResource(
-                    id = feature.texts.subtitle
+        headlineContent = { Text(title) },
+        supportingContent = { Text(subtitle) },
+        leadingContent = { IconBadge(icon = icon, isActivated = isActivated) },
+        modifier = Modifier
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
+    )
+}
+
+/**
+ * An icon on a round badge. While the feature it stands for is on, the badge takes the accent
+ * color and wears the green dot that also marks DetoxDroid as running.
+ */
+@Composable
+private fun IconBadge(icon: Painter, isActivated: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier = Modifier.size(40.dp)) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    color = if (isActivated) {
+                        colors.primaryContainer
+                    } else {
+                        colors.surfaceContainerHighest
+                    },
+                    shape = CircleShape
                 )
-            )
-        },
-        leadingContent = {
+        ) {
             Icon(
-                painter = painterResource(id = feature.iconRes),
-                contentDescription = "Feature Icon",
+                painter = icon,
+                contentDescription = null,
+                tint = if (isActivated) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                modifier = Modifier.size(22.dp)
             )
-        },
-        trailingContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxHeight()
-            ) {
-                if (feature.isActivated) {
-                    StatusIndicator(indicatorColor = colorResource(id = R.color.green))
-                }
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Open feature settings"
-                )
-            }
-        },
-        modifier = Modifier.clickable {
-            navViewModel.openRoute(
-                NavigationRoutes.ManageFeature(featureId = feature.id)
+        }
+        if (isActivated) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(12.dp)
+                    // a ring in the row's color cuts the dot out of the badge
+                    .border(2.dp, colors.surfaceContainer, CircleShape)
+                    .padding(2.dp)
+                    .background(colorResource(id = R.color.green), CircleShape)
             )
-        })
-    return
+        }
+    }
 }
 
 /**
@@ -356,26 +399,24 @@ fun UninstallDetoxDroidTile(viewModel: HomeViewModel = viewModel()) {
         })
     }
 
-    Divider()
-    SimpleListTile(
-        leadingIcon = Icons.Default.DeleteForever,
-        titleText = stringResource(id = R.string.home_uninstall),
-        subtitleText = stringResource(
+    HomeTile(
+        title = stringResource(id = R.string.home_uninstall),
+        subtitle = stringResource(
             id = if (uninstallBlocked) R.string.home_uninstall_blocked_hint else R.string.home_uninstall_hint
         ),
+        icon = rememberVectorPainter(Icons.Default.DeleteForever),
         enabled = !uninstallBlocked,
         onClick = {
             showAreYouSureDialog.value = true
         })
-    Divider()
 }
 
 @Composable
 fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
-    SimpleListTile(
-        leadingIcon = Icons.Default.Settings,
-        titleText = stringResource(id = R.string.navigation_about),
-        subtitleText = stringResource(id = R.string.about_tile_subtitle),
+    HomeTile(
+        title = stringResource(id = R.string.navigation_about),
+        subtitle = stringResource(id = R.string.about_tile_subtitle),
+        icon = rememberVectorPainter(Icons.Default.Settings),
         onClick = { navViewModel.openRoute(NavigationRoutes.About) }
     )
 }
@@ -474,6 +515,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         (size.width - radius * 2) / 2,
                         (size.height - radius * 2) / 2
                     )
+                    // the slices are set apart by a gap a few dp wide, as an angle on the ring
+                    val gapAngle = Math.toDegrees(3.dp.toPx() / radius.toDouble()).toFloat()
                     var startAngle = -90f
                     slices.forEachIndexed { index, _ ->
                         val sweepAngle = sweepAngles[index]
@@ -481,46 +524,57 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                             color = colors[index % colors.size].let { color ->
                                 if (selectedIndex.value == index) color.copy(alpha = 0.6f) else color
                             },
-                            startAngle = startAngle,
-                            sweepAngle = sweepAngle,
+                            startAngle = startAngle + gapAngle / 2,
+                            sweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0.5f),
                             useCenter = false,
                             topLeft = topLeft,
                             size = Size(radius * 2, radius * 2),
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                            style = Stroke(width = strokeWidth)
                         )
                         startAngle = startAngle + sweepAngle
                     }
                 }
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // no wider than the hole in the ring, so a long time or app name wraps inside it
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.widthIn(max = 128.dp)
+            ) {
                 if (stats.isNotEmpty()) {
                     val idx = selectedIndex.value
                     if (idx >= 0 && idx < chartStats.count()) {
                         val selectedStat = chartStats[idx]
                         Text(
                             text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
                             text = slices[idx].first,
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     } else if (idx == chartStats.count()) {
                         Text(
                             text = otherTime.toLong().milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
-                            text = otherLabel, style = MaterialTheme.typography.labelSmall
+                            text = otherLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     } else {
                         Text(
                             text = screenTime.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
                             text = stringResource(id = R.string.home_screenTime_today),
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {

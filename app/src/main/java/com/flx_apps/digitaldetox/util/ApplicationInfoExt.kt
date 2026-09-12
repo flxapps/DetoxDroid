@@ -48,3 +48,11 @@ fun ApplicationInfo.getAppCategoryTitle(
 fun ApplicationInfo.isSystemApp(): Boolean {
     return this.flags and ApplicationInfo.FLAG_SYSTEM != 0
 }
+
+/**
+ * The name the app with [packageName] goes by in the launcher, or the package name itself if the
+ * app cannot be found (e.g. it was uninstalled in the meantime).
+ */
+fun Context.appLabel(packageName: String): String = runCatching {
+    packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
+}.getOrDefault(packageName)

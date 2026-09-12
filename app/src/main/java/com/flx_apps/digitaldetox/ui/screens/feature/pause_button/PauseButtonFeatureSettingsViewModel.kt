@@ -1,16 +1,22 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.pause_button
 
 import android.app.Application
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Intent
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.util.NotificationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -159,5 +165,26 @@ class PauseButtonFeatureSettingsViewModel @Inject constructor(application: Appli
      */
     fun openNotificationSettings() {
         NotificationHelper.openNotificationSettings(getApplication())
+    }
+
+    /**
+     * Asks the system to add the pause tile to the Quick Settings. The system shows its own dialog;
+     * only a tile that is already there gets no answer, so that case is confirmed here.
+     */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun requestAddQuickSettingsTile() {
+        val app = getApplication<Application>()
+        app.getSystemService(StatusBarManager::class.java).requestAddTileService(
+            ComponentName(app, PauseTileService::class.java),
+            app.getString(R.string.app_quickSettingsTile),
+            Icon.createWithResource(app, R.drawable.ic_launcher_foreground_outlined),
+            app.mainExecutor
+        ) { result ->
+            if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED) {
+                Toast.makeText(
+                    app, R.string.feature_pause_fromQuickSettings_alreadyAdded, Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 }

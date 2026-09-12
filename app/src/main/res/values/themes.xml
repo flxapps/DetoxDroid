@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.DetoxDroid" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Full-screen interventions draw a dark screen; a black window keeps a light theme from
+         flashing up before the first frame -->
+    <style name="Theme.DetoxDroid.Intervention" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>
