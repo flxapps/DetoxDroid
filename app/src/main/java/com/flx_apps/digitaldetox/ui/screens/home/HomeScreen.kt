@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -60,6 +61,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.BuildConfig
@@ -533,35 +535,46 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     }
                 }
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // no wider than the hole in the ring, so a long time or app name wraps inside it
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.widthIn(max = 128.dp)
+            ) {
                 if (stats.isNotEmpty()) {
                     val idx = selectedIndex.value
                     if (idx >= 0 && idx < chartStats.count()) {
                         val selectedStat = chartStats[idx]
                         Text(
                             text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
                             text = slices[idx].first,
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     } else if (idx == chartStats.count()) {
                         Text(
                             text = otherTime.toLong().milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
-                            text = otherLabel, style = MaterialTheme.typography.labelSmall
+                            text = otherLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     } else {
                         Text(
                             text = screenTime.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.headlineSmall
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
                         )
                         Text(
                             text = stringResource(id = R.string.home_screenTime_today),
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {
