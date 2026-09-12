@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -23,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -190,8 +193,15 @@ private fun ScreenFilterSheet(
     val context = LocalContext.current
     val enabled = viewModel.screenFilterEnabled.collectAsState().value
     var intensity by remember { mutableFloatStateOf(viewModel.screenFilterIntensity.value.toFloat()) }
-    ModalBottomSheet(onDismissRequest = { viewModel.setShowScreenFilterSheet(false) }) {
-        Column(modifier = Modifier.padding(bottom = 32.dp)) {
+    ModalBottomSheet(
+        onDismissRequest = { viewModel.setShowScreenFilterSheet(false) },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp)
+        ) {
             ListItem(
                 headlineContent = { Text(stringResource(id = R.string.feature_grayscale_screenFilter)) },
                 supportingContent = { Text(screenFilterDescription()) },
