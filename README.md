@@ -86,6 +86,7 @@ If DetoxDroid helps you, you can support development:
 - [Buy me a coffee via Ko-Fi](https://ko-fi.com/flxapps)
 - [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
 - [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
+- Send Bitcoin to `bc1qj4r8srgx4arf3qxrmqqnsqnkc3rwdspx5ewvg7`
 
 ## Troubleshooting
 

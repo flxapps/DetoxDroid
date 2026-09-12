@@ -53,6 +53,12 @@ interface PremiumSupportProvider {
     val supportLinks: List<SupportLink>
 
     /**
+     * A Bitcoin address to donate to, offered next to the [supportLinks], or `null` where outside
+     * payment methods can't be offered, like the support links.
+     */
+    val bitcoinAddress: String? get() = null
+
+    /**
      * The localized display price of the premium unlock (e.g. "€4.99"), once known. Stays `null`
      * in builds without an in-app purchase and while the price has not been fetched yet.
      */

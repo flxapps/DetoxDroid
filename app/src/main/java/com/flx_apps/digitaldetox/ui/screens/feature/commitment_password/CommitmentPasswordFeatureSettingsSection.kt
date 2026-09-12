@@ -1,7 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
-import android.os.Build
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,10 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
@@ -23,10 +19,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,7 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
@@ -48,6 +41,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceive
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
+import com.flx_apps.digitaldetox.ui.widgets.CopyableText
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -266,7 +260,6 @@ private fun WalkthroughDialog(viewModel: CommitmentPasswordViewModel) {
 private fun GeneratedPasswordDialog(
     viewModel: CommitmentPasswordViewModel, onFeatureStateChanged: () -> Unit
 ) {
-    val context = LocalContext.current
     val generatedPassword by viewModel.generatedPassword.collectAsState()
 
     AlertDialog(
@@ -276,48 +269,13 @@ private fun GeneratedPasswordDialog(
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.feature_commitmentPassword_generated_message))
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 16.dp, end = 4.dp)
-                    ) {
-                        SelectionContainer(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = generatedPassword,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        IconButton(onClick = {
-                            viewModel.copyPasswordToClipboard(generatedPassword)
-                            // from Android 13 on, the system confirms the copy itself
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                Toast.makeText(
-                                    context,
-                                    R.string.feature_commitmentPassword_generated_copied,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = stringResource(
-                                    R.string.feature_commitmentPassword_copy
-                                )
-                            )
-                        }
-                    }
-                }
+                CopyableText(
+                    text = generatedPassword,
+                    copyLabel = stringResource(R.string.feature_commitmentPassword_copy),
+                    copiedMessage = stringResource(R.string.feature_commitmentPassword_generated_copied),
+                    sensitive = true,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
                 Text(stringResource(R.string.feature_commitmentPassword_generated_hint))
             }
         },

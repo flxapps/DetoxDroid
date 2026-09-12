@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -35,6 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -348,8 +352,9 @@ private fun ExtrasCard() {
 }
 
 /**
- * The external support links, one button each. With [highlightFirst], the first one (the one-time
- * tip) is the filled button the sheet leads to.
+ * The external support links, one button each, and the Bitcoin address where the build offers
+ * one. With [highlightFirst], the first link (the one-time tip) is the filled button the sheet
+ * leads to.
  */
 @Composable
 internal fun SupportButtons(uriHandler: UriHandler, highlightFirst: Boolean = true) {
@@ -370,5 +375,23 @@ internal fun SupportButtons(uriHandler: UriHandler, highlightFirst: Boolean = tr
                 content()
             }
         }
+    }
+    PremiumSupport.bitcoinAddress?.let { address ->
+        var showAddress by rememberSaveable { mutableStateOf(false) }
+        FilledTonalButton(
+            onClick = { showAddress = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CurrencyBitcoin,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.about_bitcoin))
+        }
+        if (showAddress) BitcoinAddressDialog(address, onDismiss = { showAddress = false })
     }
 }

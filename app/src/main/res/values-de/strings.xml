@@ -600,6 +600,13 @@
     <string name="about_coffee_subtitle">Jeder Kaffee hilft, DetoxDroid weiterzuentwickeln.</string>
     <string name="about_patron">Förderer werden</string>
     <string name="about_patron_subtitle">Ein kleiner monatlicher Beitrag hilft mehr als eine einmalige Spende.</string>
+    <string name="about_bitcoin">Bitcoin schicken</string>
+    <string name="about_bitcoin_subtitle">Direkt in meine Wallet. Wegen der Netzwerkgebühr eher was für größere Beträge.</string>
+    <string name="about_bitcoin_message">Schick einen beliebigen Betrag aus deiner Bitcoin-Wallet an diese Adresse.</string>
+    <string name="about_bitcoin_copy">Adresse kopieren</string>
+    <string name="about_bitcoin_copied">Adresse kopiert</string>
+    <string name="about_bitcoin_openWallet">Wallet öffnen</string>
+    <string name="about_bitcoin_noWallet">Auf diesem Handy ist keine Bitcoin-Wallet. Kopier einfach die Adresse.</string>
     <string name="about_contact">Kontakt aufnehmen</string>
     <string name="about_contact_subtitle">Feature-Wünsche und Ideen sind willkommen. Ich lese alles, antworte aber nicht immer.</string>
     <string name="about_github">Auf GitHub mitwirken</string>

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -31,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.ui.screens.premium.BitcoinAddressDialog
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
@@ -172,6 +175,18 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                             subtitle = texts.second,
                             onClick = { uriHandler.openUri(url) }
                         )
+                    }
+                    PremiumSupport.bitcoinAddress?.let { address ->
+                        var showAddress by rememberSaveable { mutableStateOf(false) }
+                        LinkTile(
+                            icon = Icons.Default.CurrencyBitcoin,
+                            title = stringResource(id = R.string.about_bitcoin),
+                            subtitle = stringResource(id = R.string.about_bitcoin_subtitle),
+                            onClick = { showAddress = true }
+                        )
+                        if (showAddress) {
+                            BitcoinAddressDialog(address, onDismiss = { showAddress = false })
+                        }
                     }
                     // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
                     StoreReviewAboutTile(activity)

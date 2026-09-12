@@ -1,10 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipDescription
-import android.content.ClipboardManager
-import android.os.PersistableBundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.feature_types.Feature
@@ -225,20 +221,6 @@ class CommitmentPasswordViewModel @Inject constructor(
         _showDialog.value = CommitmentPasswordDialog.NONE
         _passwordInput.value = ""
         _wrongPassphrase.value = false
-    }
-
-    /**
-     * Copies the passphrase, marked as sensitive so the system's clipboard preview and keyboard
-     * suggestions don't show it around.
-     */
-    fun copyPasswordToClipboard(password: String) {
-        val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
-        val clip = ClipData.newPlainText("Passphrase", password).apply {
-            description.extras = PersistableBundle().apply {
-                putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
-            }
-        }
-        clipboard.setPrimaryClip(clip)
     }
 
 }
