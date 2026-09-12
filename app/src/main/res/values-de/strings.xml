@@ -318,16 +318,13 @@
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: mit Device Owner verstärken</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort läuft schon mit Geräteadministrator-Rechten. Device Owner verhindert zusätzlich, dass DetoxDroid deinstalliert wird. Tippe für den ADB-Befehl.</string>
     <string name="feature_commitmentPassword_stop_locked">Stoppen ist durch das Commitment-Passwort gesperrt. Entsperre zuerst die Einstellungen.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_title">Versuch blockiert</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Blockiert: Deinstallation, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Blockiert: Änderungen am Geräteadministrator, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Blockiert: Änderungen an den Bedienungshilfen, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_reassurance">DetoxDroid hat die Aktion blockiert und dich zum Startbildschirm zurückgebracht. Dein Schutz steht weiterhin.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Gerade gesperrt</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Solange deine Einstellungen gesperrt sind, lässt sich DetoxDroid nicht deinstallieren.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Solange deine Einstellungen gesperrt sind, lässt sich der Geräteadministrator von DetoxDroid nicht ausschalten.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Solange deine Einstellungen gesperrt sind, lassen sich die Bedienungshilfen von DetoxDroid nicht ausschalten.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_reassurance">Du bist wieder auf dem Startbildschirm, und dein Schutz bleibt an.</string>
     <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Zurück zum Start</string>
     <string name="feature_commitmentPassword_tamper_iconDescription">Warnsymbol</string>
-    <string name="feature_commitmentPassword_tamper_toast_uninstall">Blockiert: Deinstallation, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_toast_deviceAdmin">Blockiert: Änderungen am Geräteadministrator, solange das Commitment-Passwort gesperrt ist.</string>
-    <string name="feature_commitmentPassword_tamper_toast_accessibility">Blockiert: Änderungen an den Bedienungshilfen, solange das Commitment-Passwort gesperrt ist.</string>
     <!-- endregion -->
 
     <!-- region Device Admin & Accessibility Warnings -->

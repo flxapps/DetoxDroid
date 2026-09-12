@@ -321,16 +321,13 @@
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: strengthen with Device Owner</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Commitment Password works with Device Admin. Device Owner also blocks uninstalling DetoxDroid. Tap to view the ADB command.</string>
     <string name="feature_commitmentPassword_stop_locked">Stop is locked by Commitment Password. Unlock settings first.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_title">Attempt blocked</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Blocked: uninstall flow while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_reassurance">DetoxDroid blocked the action and returned you to Home. Your protection settings are still active.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Locked for now</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">DetoxDroid can\'t be uninstalled while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">DetoxDroid\'s device admin can\'t be switched off while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">DetoxDroid\'s accessibility service can\'t be switched off while your settings are locked.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_reassurance">You\'re back on your home screen, and your protection is still on.</string>
     <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Back to Home</string>
     <string name="feature_commitmentPassword_tamper_iconDescription">Security warning icon</string>
-    <string name="feature_commitmentPassword_tamper_toast_uninstall">Blocked: uninstall while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_toast_deviceAdmin">Blocked: Device Admin changes while Commitment Password is locked.</string>
-    <string name="feature_commitmentPassword_tamper_toast_accessibility">Blocked: Accessibility changes while Commitment Password is locked.</string>
     <!-- endregion -->
 
     <!-- region Device Admin & Accessibility Warnings -->

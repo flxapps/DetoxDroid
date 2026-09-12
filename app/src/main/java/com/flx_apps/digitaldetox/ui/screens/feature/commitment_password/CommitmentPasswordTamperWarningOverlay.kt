@@ -1,21 +1,18 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -23,11 +20,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import android.content.Context
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.system_integration.OverlayContent
 import com.flx_apps.digitaldetox.system_integration.OverlayService
@@ -35,25 +30,17 @@ import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class CommitmentPasswordTamperType(
-    val value: String,
-    val overlayMessageRes: Int,
-    val toastMessageRes: Int
-) {
-    Uninstall(
-        "uninstall",
-        R.string.feature_commitmentPassword_tamper_overlay_message_uninstall,
-        R.string.feature_commitmentPassword_tamper_toast_uninstall
-    ),
+/**
+ * What someone tried while the settings were locked, with the message that says it can't be done.
+ * The overlay shows it, or a toast where DetoxDroid may not draw over other apps.
+ */
+enum class CommitmentPasswordTamperType(val value: String, val messageRes: Int) {
+    Uninstall("uninstall", R.string.feature_commitmentPassword_tamper_overlay_message_uninstall),
     DeviceAdmin(
-        "device_admin",
-        R.string.feature_commitmentPassword_tamper_overlay_message_deviceAdmin,
-        R.string.feature_commitmentPassword_tamper_toast_deviceAdmin
+        "device_admin", R.string.feature_commitmentPassword_tamper_overlay_message_deviceAdmin
     ),
     Accessibility(
-        "accessibility",
-        R.string.feature_commitmentPassword_tamper_overlay_message_accessibility,
-        R.string.feature_commitmentPassword_tamper_toast_accessibility
+        "accessibility", R.string.feature_commitmentPassword_tamper_overlay_message_accessibility
     );
 
     companion object {
@@ -99,48 +86,39 @@ fun CommitmentPasswordTamperWarningOverlay() {
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+            // laid out like the app's dialogs, the one thing in red being the icon
+            Surface(
+                shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                    modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = stringResource(R.string.feature_commitmentPassword_tamper_iconDescription),
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.size(40.dp)
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.size(12.dp))
                     Text(
                         text = stringResource(R.string.feature_commitmentPassword_tamper_overlay_title),
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = stringResource(id = tamperType.value.overlayMessageRes),
-                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onErrorContainer
+                        modifier = Modifier.padding(top = 16.dp)
                     )
-                    Spacer(modifier = Modifier.size(8.dp))
                     Text(
-                        text = stringResource(id = R.string.feature_commitmentPassword_tamper_overlay_reassurance),
+                        text = stringResource(id = tamperType.value.messageRes) + " " +
+                                stringResource(R.string.feature_commitmentPassword_tamper_overlay_reassurance),
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.92f)
+                        modifier = Modifier.padding(top = 16.dp)
                     )
-                    Spacer(modifier = Modifier.size(20.dp))
                     Button(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 24.dp),
                         onClick = { (context as OverlayService).closeOverlay() }
                     ) {
                         Text(text = stringResource(id = R.string.feature_commitmentPassword_tamper_overlay_action_backHome))
