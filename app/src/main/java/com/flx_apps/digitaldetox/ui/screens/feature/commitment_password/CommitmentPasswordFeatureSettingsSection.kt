@@ -2,7 +2,6 @@ package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.CheckCircle
@@ -22,8 +22,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,7 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import com.flx_apps.digitaldetox.util.formatCountdown
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -48,6 +50,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
@@ -114,8 +117,9 @@ fun CommitmentPasswordFeatureSettingsSection(
 
     val selectionEnabled = currentState != CommitmentPasswordState.SET_AND_LOCKED
     FeatureSelectionSection(viewModel = viewModel, enabled = selectionEnabled)
-
-    RecoveryStatusTile(viewModel)
+    SettingsGroup {
+        RecoveryStatusTile(viewModel)
+    }
 }
 
 @Composable
@@ -124,57 +128,46 @@ private fun FeatureSelectionSection(
 ) {
     val lockableFeatures by viewModel.lockableFeatures.collectAsState()
     val selectedFeatureIds by viewModel.selectedFeatureIds.collectAsState()
-    val context = LocalContext.current
 
     if (lockableFeatures.isEmpty()) return
 
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .alpha(if (enabled) 1f else 0.5f)
-    ) {
+    Column(modifier = Modifier.alpha(if (enabled) 1f else 0.5f)) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 32.dp, end = 16.dp, top = 8.dp)
         ) {
             Text(
                 text = stringResource(R.string.feature_commitmentPassword_selectFeatures),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
             )
-            Row {
-                TextButton(onClick = { viewModel.selectAllFeatures() }, enabled = enabled) {
-                    Text(stringResource(R.string.feature_commitmentPassword_selectAll))
-                }
-                TextButton(onClick = { viewModel.deselectAllFeatures() }, enabled = enabled) {
-                    Text(stringResource(R.string.feature_commitmentPassword_selectNone))
-                }
+            TextButton(onClick = { viewModel.selectAllFeatures() }, enabled = enabled) {
+                Text(stringResource(R.string.feature_commitmentPassword_selectAll))
+            }
+            TextButton(onClick = { viewModel.deselectAllFeatures() }, enabled = enabled) {
+                Text(stringResource(R.string.feature_commitmentPassword_selectNone))
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        lockableFeatures.forEach { feature ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = enabled) { viewModel.toggleFeatureSelection(feature.id) }
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = context.getString(feature.texts.title), modifier = Modifier.weight(1f)
-                )
-                Checkbox(
-                    checked = selectedFeatureIds.contains(feature.id),
-                    onCheckedChange = { viewModel.toggleFeatureSelection(feature.id) },
-                    enabled = enabled
+        SettingsGroup {
+            lockableFeatures.forEach { feature ->
+                val selected = selectedFeatureIds.contains(feature.id)
+                ListItem(
+                    headlineContent = { Text(text = stringResource(feature.texts.title)) },
+                    leadingContent = {
+                        Icon(painter = painterResource(feature.iconRes), contentDescription = null)
+                    },
+                    trailingContent = {
+                        Checkbox(checked = selected, onCheckedChange = null, enabled = enabled)
+                    },
+                    modifier = Modifier.toggleable(
+                        value = selected, enabled = enabled, role = Role.Checkbox
+                    ) { viewModel.toggleFeatureSelection(feature.id) }
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
         Text(
             text = stringResource(
                 R.string.feature_commitmentPassword_featuresSelected,
@@ -182,11 +175,10 @@ private fun FeatureSelectionSection(
                 lockableFeatures.size
             ),
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
-
-    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 }
 
 @Composable

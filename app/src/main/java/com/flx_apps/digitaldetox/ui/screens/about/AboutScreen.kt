@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AlternateEmail
@@ -50,6 +49,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,98 +135,100 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
 
-            sectionHeader(settingsSection)
-            switchItem(
-                icon = Icons.Default.Notifications,
-                title = keepAliveTitle,
-                subtitle = keepAliveSubtitle,
-                checked = keepAlive,
-                onCheckedChange = {
-                    keepAlive = it
-                    ReliabilitySettings.keepServiceAliveEnabled = it
-                    DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+            item {
+                SectionHeader(settingsSection)
+                SettingsGroup {
+                    SwitchTile(
+                        icon = Icons.Default.Notifications,
+                        title = keepAliveTitle,
+                        subtitle = keepAliveSubtitle,
+                        checked = keepAlive,
+                        onCheckedChange = {
+                            keepAlive = it
+                            ReliabilitySettings.keepServiceAliveEnabled = it
+                            DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+                        }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.RestartAlt,
+                        title = onboardingTitle,
+                        subtitle = onboardingSubtitle,
+                        onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
+                    )
                 }
-            )
-            linkItem(
-                icon = Icons.Default.RestartAlt,
-                title = onboardingTitle,
-                subtitle = onboardingSubtitle,
-                onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
-            )
 
-            sectionHeader(supportSection)
-            linkItem(
-                icon = Icons.Default.WorkspacePremium,
-                title = premiumTitle,
-                subtitle = premiumSubtitle,
-                onClick = { PremiumSheetController.show() }
-            )
-            supportLinkItems.forEach { (icon, texts, url) ->
-                linkItem(
-                    icon = icon,
-                    title = texts.first,
-                    subtitle = texts.second,
-                    onClick = { uriHandler.openUri(url) }
-                )
+                SectionHeader(supportSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.WorkspacePremium,
+                        title = premiumTitle,
+                        subtitle = premiumSubtitle,
+                        onClick = { PremiumSheetController.show() }
+                    )
+                    supportLinkItems.forEach { (icon, texts, url) ->
+                        LinkTile(
+                            icon = icon,
+                            title = texts.first,
+                            subtitle = texts.second,
+                            onClick = { uriHandler.openUri(url) }
+                        )
+                    }
+                    // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
+                    StoreReviewAboutTile(activity)
+                }
+
+                SectionHeader(projectSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.BugReport,
+                        title = reportIssueTitle,
+                        onClick = { uriHandler.openUri(reportIssueLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.Code,
+                        title = githubTitle,
+                        onClick = { uriHandler.openUri(githubLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.AlternateEmail,
+                        title = contactTitle,
+                        subtitle = contactSubtitle,
+                        onClick = { uriHandler.openUri(contactLink) }
+                    )
+                }
             }
-            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
-            storeReviewAboutItem(activity)
-
-            sectionHeader(projectSection)
-            linkItem(
-                icon = Icons.Default.BugReport,
-                title = reportIssueTitle,
-                onClick = { uriHandler.openUri(reportIssueLink) }
-            )
-            linkItem(
-                icon = Icons.Default.Code,
-                title = githubTitle,
-                onClick = { uriHandler.openUri(githubLink) }
-            )
-            linkItem(
-                icon = Icons.Default.AlternateEmail,
-                title = contactTitle,
-                subtitle = contactSubtitle,
-                onClick = { uriHandler.openUri(contactLink) }
-            )
         }
     }
 }
 
-private fun LazyListScope.sectionHeader(title: String) {
-    item { SectionHeader(title) }
-}
-
-private fun LazyListScope.linkItem(
+@Composable
+private fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     onClick: () -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            modifier = Modifier.clickable(onClick = onClick)
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
 }
 
-private fun LazyListScope.switchItem(
+@Composable
+private fun SwitchTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-            modifier = Modifier.clickable { onCheckedChange(!checked) }
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+        modifier = Modifier.clickable { onCheckedChange(!checked) }
+    )
 }

@@ -46,6 +46,7 @@ import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.KeyEventUtil
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -65,14 +66,18 @@ fun PauseButtonFeatureSettingsSection(
         PauseButtonFeatureSettingsViewModelDialog.AFFECTED_FEATURES -> AffectedFeaturesDialog()
         else -> {} // No dialog is shown
     }
-    PauseDurationTile()
-    MinimumTimeBetweenPausesTile()
+    SettingsGroup {
+        PauseDurationTile()
+        MinimumTimeBetweenPausesTile()
+    }
     SectionHeader(title = stringResource(id = R.string.feature_pause_ways))
-    // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PauseFromQuickSettingsTile()
-    PauseFromNotificationTile()
-    PauseFromAssistantTile()
-    PauseFromHardwareButtonTile()
+    SettingsGroup {
+        // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PauseFromQuickSettingsTile()
+        PauseFromNotificationTile()
+        PauseFromAssistantTile()
+        PauseFromHardwareButtonTile()
+    }
     AdvancedSettings(
         summary = stringResource(id = R.string.feature_pause_affectedFeatures),
         initiallyExpanded = viewModel.pauseExemptFeatureIds.collectAsState().value.isNotEmpty()

@@ -31,6 +31,7 @@ import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlin.math.abs
@@ -42,12 +43,14 @@ import kotlin.time.Duration.Companion.minutes
  */
 @Composable
 fun DisableAppsFeatureSettingsSection() {
-    ManageDisabledAppsListTile()
-    // the daily time comes first: with none at all there is nothing to wait for, and the wait
-    // tile says so
-    AllowedDailyTimeTile()
-    WaitBeforeOpeningTile()
-    OpenScheduleTile()
+    SettingsGroup {
+        ManageDisabledAppsListTile()
+        // the daily time comes first: with none at all there is nothing to wait for, and the wait
+        // tile says so
+        AllowedDailyTimeTile()
+        WaitBeforeOpeningTile()
+        OpenScheduleTile()
+    }
     // deactivating needs a device admin grant from a computer, so blocking is what nearly everyone
     // keeps
     AdvancedSettings(

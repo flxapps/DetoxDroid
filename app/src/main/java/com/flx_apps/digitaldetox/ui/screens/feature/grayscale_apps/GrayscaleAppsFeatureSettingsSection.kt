@@ -54,6 +54,7 @@ import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -76,24 +77,26 @@ fun GrayscaleAppsFeatureSettingsSection(
     LaunchedEffect(lifecycleState) {
         if (lifecycleState == Lifecycle.Event.ON_RESUME) viewModel.refreshFromFeature(context)
     }
-    ShizukuWizardTile()
-    OpenAppExceptionsTile(subtitleText = stringResource(
-        id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
-            R.string.feature_grayscale_exceptions_summary_notList
-        } else {
-            R.string.feature_grayscale_exceptions_summary_onlyList
-        },
-        GrayscaleAppsFeature.appExceptions.size
-    ))
-    OpenScheduleTile()
-    // grayscale and extra dim are secure settings, so without the permission they can only be
-    // offered as something to set up (see the Shizuku tile), not as something to switch
-    if (hasWriteSecureSettingsPermission()) {
-        SystemGrayscaleTile()
-        ExtraDimTile()
+    SettingsGroup {
+        ShizukuWizardTile()
+        OpenAppExceptionsTile(subtitleText = stringResource(
+            id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
+                R.string.feature_grayscale_exceptions_summary_notList
+            } else {
+                R.string.feature_grayscale_exceptions_summary_onlyList
+            },
+            GrayscaleAppsFeature.appExceptions.size
+        ))
+        OpenScheduleTile()
+        // grayscale and extra dim are secure settings, so without the permission they can only be
+        // offered as something to set up (see the Shizuku tile), not as something to switch
+        if (hasWriteSecureSettingsPermission()) {
+            SystemGrayscaleTile()
+            ExtraDimTile()
+        }
+        ScreenFilterTile()
+        AllowedDailyColorScreenTimeTile()
     }
-    ScreenFilterTile()
-    AllowedDailyColorScreenTimeTile()
     AdvancedSettings(
         summary = stringResource(id = R.string.feature_grayscale_ignoreNonFullScreen),
         initiallyExpanded = !viewModel.ignoreNonFullScreenApps.collectAsState().value

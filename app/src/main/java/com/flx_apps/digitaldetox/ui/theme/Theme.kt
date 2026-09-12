@@ -2,13 +2,16 @@ package com.flx_apps.digitaldetox.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80, secondary = PurpleGrey80, tertiary = Pink80
@@ -17,6 +20,9 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = Purple40, secondary = PurpleGrey40, tertiary = Pink40
 )
+
+/** Cards come out a little rounder than Material's defaults, closer to the grouped lists. */
+private val DetoxDroidShapes = Shapes(medium = RoundedCornerShape(16.dp))
 
 /**
  * The app's theme. It leaves the system bars alone: activities draw edge to edge (see
@@ -41,6 +47,7 @@ fun DetoxDroidTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = DetoxDroidShapes,
         content = content
     )
 }
