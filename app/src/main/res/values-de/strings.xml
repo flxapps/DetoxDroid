@@ -32,6 +32,7 @@
     <string name="action_delete">Löschen</string>
     <string name="action_back">Zurück</string>
     <string name="action_cancel">Abbrechen</string>
+    <string name="action_ok">OK</string>
     <string name="action_close">Schließen</string>
     <string name="action_grantPermission">Berechtigung erteilen</string>
     <string name="action_requestPermissions">Für diese Funktion fehlen noch Berechtigungen.</string>
@@ -125,17 +126,20 @@
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
-    <string name="feature_settings_schedule_hint">%d Regeln festgelegt.</string>
-    <string name="feature_settings_schedule_hint_activeAllTheTime">Die Funktion ist durchgehend aktiv.</string>
-    <string name="feature_settings_schedule_description">Beschränke diese Funktion auf bestimmte Tage und Zeiten.</string>
-    <string name="feature_settings_schedule_empty">Noch keine Regeln.\n\nDiese Funktion ist durchgehend aktiv.</string>
+    <string name="feature_settings_schedule_hint">%d Zeitfenster</string>
+    <string name="feature_settings_schedule_hint_activeAllTheTime">Durchgehend aktiv</string>
+    <string name="feature_settings_schedule_description">Mit einem Zeitfenster beschränkst du die Funktion auf bestimmte Tage und Uhrzeiten.</string>
     <string name="feature_settings_schedule_everyDay">Täglich</string>
     <string name="feature_settings_schedule_allDay">ganztägig</string>
     <string name="feature_settings_schedule_nextDay">Folgetag</string>
     <string name="feature_settings_schedule_weekdays">Tage</string>
-    <string name="feature_settings_schedule_time">Uhrzeit</string>
-    <string name="feature_settings_schedule_fromTime">Von %s</string>
-    <string name="feature_settings_schedule_toTime">Bis %s</string>
+    <string name="feature_settings_schedule_add">Zeitfenster hinzufügen</string>
+    <string name="feature_settings_schedule_newRule">Neues Zeitfenster</string>
+    <string name="feature_settings_schedule_editRule">Zeitfenster bearbeiten</string>
+    <string name="feature_settings_schedule_start">Start</string>
+    <string name="feature_settings_schedule_end">Ende</string>
+    <string name="feature_settings_schedule_status_activeUntil">Gerade aktiv, bis %s</string>
+    <string name="feature_settings_schedule_status_inactiveUntil">Gerade aus, aktiv ab %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->

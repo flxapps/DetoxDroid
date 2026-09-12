@@ -34,6 +34,7 @@
     <string name="action_delete">Delete</string>
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
     <string name="action_close">Close</string>
     <string name="action_grantPermission">Grant Permission</string>
     <string name="action_requestPermissions">This feature needs additional permissions.</string>
@@ -128,17 +129,20 @@
     <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Feature Schedule</string>
-    <string name="feature_settings_schedule_hint">%d rules are set.</string>
-    <string name="feature_settings_schedule_hint_activeAllTheTime">The feature is active all the time.</string>
-    <string name="feature_settings_schedule_description">Limit this feature to specific days and time ranges.</string>
-    <string name="feature_settings_schedule_empty">No rules yet.\n\nThis feature is active all the time.</string>
+    <string name="feature_settings_schedule_hint">%d time windows</string>
+    <string name="feature_settings_schedule_hint_activeAllTheTime">Active all the time</string>
+    <string name="feature_settings_schedule_description">Add a time window to limit this feature to certain days and hours.</string>
     <string name="feature_settings_schedule_everyDay">Every day</string>
     <string name="feature_settings_schedule_allDay">all day</string>
     <string name="feature_settings_schedule_nextDay">next day</string>
     <string name="feature_settings_schedule_weekdays">Days</string>
-    <string name="feature_settings_schedule_time">Time</string>
-    <string name="feature_settings_schedule_fromTime">From %s</string>
-    <string name="feature_settings_schedule_toTime">To %s</string>
+    <string name="feature_settings_schedule_add">Add time window</string>
+    <string name="feature_settings_schedule_newRule">New time window</string>
+    <string name="feature_settings_schedule_editRule">Edit time window</string>
+    <string name="feature_settings_schedule_start">Start</string>
+    <string name="feature_settings_schedule_end">End</string>
+    <string name="feature_settings_schedule_status_activeUntil">Active now, until %s</string>
+    <string name="feature_settings_schedule_status_inactiveUntil">Off now, active from %s</string>
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->

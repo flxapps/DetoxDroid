@@ -37,7 +37,16 @@ class ScheduleViewModel @Inject constructor(
     private val application: Application,
     private val savedStateHandle: androidx.lifecycle.SavedStateHandle
 ) : FeatureViewModel(application, savedStateHandle) {
-    companion object : FeatureViewModelFactory()
+    companion object : FeatureViewModelFactory() {
+        /** The id of a rule that is being added and has no id of its own yet. */
+        const val NEW_RULE_ID: ScheduleRuleId = -1
+
+        /**
+         * The times a new rule starts out with, and those an all-day rule gets when it stops
+         * being one.
+         */
+        val NewRuleWindow: Pair<LocalTime, LocalTime> = LocalTime.of(9, 0) to LocalTime.of(17, 0)
+    }
 
     private val scheduleFeature = feature as SupportsScheduleFeature
 
@@ -54,11 +63,11 @@ class ScheduleViewModel @Inject constructor(
      * Shows the bottom sheet for adding/editing a rule.
      */
     fun showBottomSheet(
-        rule: ScheduleRuleItem = -1 to FeatureScheduleRule(
-            listOf(), LocalTime.of(0, 0), LocalTime.of(0, 0)
+        rule: ScheduleRuleItem = NEW_RULE_ID to FeatureScheduleRule(
+            listOf(), NewRuleWindow.first, NewRuleWindow.second
         )
     ) {
-        _dialogRule.value = rule.first to rule.second
+        _dialogRule.value = rule
     }
 
     /**
@@ -86,7 +95,7 @@ class ScheduleViewModel @Inject constructor(
      */
     fun onSaveClick() {
         val rule = _dialogRule.value!!
-        if (rule.first == -1) {
+        if (rule.first == NEW_RULE_ID) {
             _rules.value = _rules.value + (rule.second.hashCode() to rule.second)
         } else {
             _rules.value = _rules.value + rule

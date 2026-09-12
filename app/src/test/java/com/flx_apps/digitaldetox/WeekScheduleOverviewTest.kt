@@ -1,15 +1,23 @@
 package com.flx_apps.digitaldetox
 
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
+import com.flx_apps.digitaldetox.ui.screens.schedule.ScheduleStatus
 import com.flx_apps.digitaldetox.ui.screens.schedule.activeMinutes
+import com.flx_apps.digitaldetox.ui.screens.schedule.dayRangesText
+import com.flx_apps.digitaldetox.ui.screens.schedule.hourLabel
 import com.flx_apps.digitaldetox.ui.screens.schedule.orderedWeekDays
+import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.DayOfWeek
+import java.time.DayOfWeek.FRIDAY
 import java.time.DayOfWeek.MONDAY
 import java.time.DayOfWeek.SATURDAY
 import java.time.DayOfWeek.SUNDAY
+import java.time.DayOfWeek.THURSDAY
 import java.time.DayOfWeek.TUESDAY
+import java.time.DayOfWeek.WEDNESDAY
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.Locale
 
@@ -56,5 +64,52 @@ class WeekScheduleOverviewTest {
         assertEquals(MONDAY, orderedWeekDays(Locale.GERMANY).first())
         assertEquals(SUNDAY, orderedWeekDays(Locale.US).first())
         assertEquals(7, orderedWeekDays(Locale.US).toSet().size)
+    }
+
+    private val workdays = listOf(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY)
+
+    /** 2024-01-01 is a Monday, so the day of this month is the day of the week. */
+    private fun at(dayOfMonth: Int, time: String) =
+        LocalDateTime.of(2024, 1, dayOfMonth, 0, 0).with(LocalTime.parse(time))
+
+    @Test
+    fun `without rules the feature is always active`() {
+        assertEquals(ScheduleStatus.AlwaysActive, scheduleStatus(emptyList(), at(3, "10:30")))
+        val everyDayAllDay = listOf(rule(emptyList(), "00:00", "00:00"))
+        assertEquals(ScheduleStatus.AlwaysActive, scheduleStatus(everyDayAllDay, at(3, "10:30")))
+    }
+
+    @Test
+    fun `the status names the next change, a weekend away if need be`() {
+        val rules = listOf(rule(workdays, "09:00", "17:00"))
+        assertEquals(ScheduleStatus.ActiveUntil(at(3, "17:00")), scheduleStatus(rules, at(3, "10:30")))
+        assertEquals(ScheduleStatus.InactiveUntil(at(8, "09:00")), scheduleStatus(rules, at(5, "17:00")))
+    }
+
+    @Test
+    fun `a rule across midnight ends the next morning`() {
+        val rules = listOf(rule(listOf(FRIDAY), "22:00", "02:00"))
+        assertEquals(ScheduleStatus.ActiveUntil(at(6, "02:00")), scheduleStatus(rules, at(5, "23:59")))
+    }
+
+    @Test
+    fun `hours are labelled the way the locale tells time`() {
+        assertEquals("18", hourLabel(18, Locale.GERMANY))
+        assertEquals("24", hourLabel(24, Locale.GERMANY))
+        assertEquals("6 PM", hourLabel(18, Locale.US))
+        assertEquals("12 AM", hourLabel(24, Locale.US))
+    }
+
+    @Test
+    fun `three or more days in a row read as a range`() {
+        assertEquals("Mon-Fri", dayRangesText(workdays, Locale.UK))
+        assertEquals("Mon, Tue, Thu", dayRangesText(listOf(THURSDAY, MONDAY, TUESDAY), Locale.UK))
+    }
+
+    @Test
+    fun `the weekend stays together where the week starts on Sunday`() {
+        assertEquals("Sat, Sun", dayRangesText(listOf(SATURDAY, SUNDAY), Locale.US))
+        assertEquals("Fri-Mon", dayRangesText(listOf(FRIDAY, SATURDAY, SUNDAY, MONDAY), Locale.US))
+        assertEquals("Fri-Mon", dayRangesText(listOf(FRIDAY, SATURDAY, SUNDAY, MONDAY), Locale.UK))
     }
 }
