@@ -2,17 +2,18 @@ package com.flx_apps.digitaldetox.ui.widgets
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 
 /**
@@ -43,10 +44,11 @@ fun SimpleListTile(
     androidx.compose.material3.ListItem(
         headlineContent = { Text(titleText) },
         supportingContent = { Text(subtitleText) },
-        trailingContent = trailing,
+        trailingContent = if (effectivelyEnabled) trailing else {
+            { Box(modifier = Modifier.inert()) { trailing() } }
+        },
         modifier = Modifier
             .alpha(if (effectivelyEnabled) 1f else 0.5f)
-            .blockInteractionWhenLocked(!effectivelyEnabled)
             .combinedClickable(
                 enabled = effectivelyEnabled, onClick = onClick, onLongClick = onLongClick
             ),
@@ -56,20 +58,20 @@ fun SimpleListTile(
 }
 
 /**
- * Keeps touches from reaching the tile's trailing controls, which have no idea the settings are
- * locked. Only the presses are taken: a switch or checkbox reacts to nothing else, while the moves
- * have to stay untouched for the list around the tile to scroll when a drag starts on it.
+ * Keeps the trailing control of a locked or disabled tile from reacting, since the control itself
+ * has no idea: no press, no key and no accessibility service gets through, and screen readers lose
+ * its state along with its action. Of the touches only the presses are taken, as a switch or
+ * checkbox reacts to nothing else, while the moves have to stay untouched for the list around the
+ * tile to scroll when a drag starts on it.
  */
-private fun Modifier.blockInteractionWhenLocked(isLocked: Boolean): Modifier {
-    if (!isLocked) return this
-    return this
-        .pointerInput(Unit) {
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Initial)
-                    event.changes.forEach { if (it.changedToDownIgnoreConsumed()) it.consume() }
-                }
+private fun Modifier.inert(): Modifier = this
+    .pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                event.changes.forEach { if (it.changedToDownIgnoreConsumed()) it.consume() }
             }
         }
-        .semantics { disabled() }
-}
+    }
+    .focusProperties { canFocus = false }
+    .clearAndSetSemantics {}
