@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,8 +15,8 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.isEnabled
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
@@ -36,9 +35,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * What a [SimpleListTile] still does while the settings are locked: its control takes no tap, no
- * key press and no action from an accessibility service, but a drag that starts on it scrolls the
- * list around it like anywhere else.
+ * What a [SimpleListTile] still does while the settings are locked: its checkbox takes no tap, no
+ * key press and no action from an accessibility service, though screen readers still read it and
+ * the tile's value, and a drag that starts on it scrolls the list around it like anywhere else.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -53,18 +52,24 @@ class LockedTileTest {
         CompositionLocalProvider(LocalSettingsLocked provides locked) {
             LazyColumn(state = listState, modifier = Modifier.height(400.dp)) {
                 item { header() }
+                item {
+                    SimpleListTile(
+                        titleText = "Wait", subtitleText = "Locked", trailing = { Text("15 min") }
+                    )
+                }
                 items(30) { index ->
                     SimpleListTile(
                         titleText = "Setting $index",
                         subtitleText = "Locked",
-                        trailing = { Checkbox(checked = false, onCheckedChange = { toggled = true }) }
+                        checked = false,
+                        onCheckedChange = { toggled = true }
                     )
                 }
             }
         }
     }
 
-    // by position: a locked control is gone from the semantics tree, so a tag could not find it
+    // by position: the tile draws the checkbox itself, so there is no tag to find it by
     private fun tapControl() = composeRule.onNodeWithText("Setting 1").performTouchInput {
         click(Offset(right - 40.dp.toPx(), centerY))
     }
@@ -107,10 +112,10 @@ class LockedTileTest {
     }
 
     @Test
-    fun `accessibility services find nothing to act on in a locked tile`() {
+    fun `accessibility services can read a locked tile but not act on it`() {
         showTiles(locked = true)
-        composeRule.onAllNodesWithText("Setting", substring = true).fetchSemanticsNodes()
-            .let { assertTrue(it.isNotEmpty()) }
+        composeRule.onNodeWithText("15 min").assertExists()
+        assertTrue(composeRule.onAllNodes(isToggleable()).fetchSemanticsNodes().isNotEmpty())
         composeRule.onAllNodes(hasClickAction() and isEnabled()).assertCountEquals(0)
     }
 }

@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.InvertColors
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -139,11 +138,9 @@ fun SystemGrayscaleTile(
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_systemGrayscale),
         subtitleText = stringResource(id = R.string.feature_grayscale_systemGrayscale_description),
-        trailing = {
-            Checkbox(checked = viewModel.systemGrayscale.collectAsState().value,
-                onCheckedChange = {
-                    if (viewModel.toggleSystemGrayscale()) featureViewModel.refreshActiveState()
-                })
+        checked = viewModel.systemGrayscale.collectAsState().value,
+        onCheckedChange = {
+            if (viewModel.toggleSystemGrayscale()) featureViewModel.refreshActiveState()
         },
         leadingIcon = Icons.Default.InvertColors
     )
@@ -176,10 +173,9 @@ fun ScreenFilterTile(
         } else {
             screenFilterDescription()
         },
-        trailing = {
-            Checkbox(checked = enabled, onCheckedChange = {
-                if (viewModel.toggleScreenFilter()) featureViewModel.refreshActiveState()
-            })
+        checked = enabled,
+        onCheckedChange = {
+            if (viewModel.toggleScreenFilter()) featureViewModel.refreshActiveState()
         },
         onClick = { viewModel.setShowScreenFilterSheet(true) },
         leadingIcon = Icons.Default.FilterAlt
@@ -331,11 +327,9 @@ fun ExtraDimTile(
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_extraDim),
         subtitleText = stringResource(id = R.string.feature_grayscale_extraDim_description),
-        trailing = {
-            Checkbox(checked = viewModel.extraDimActivated.collectAsState().value,
-                onCheckedChange = {
-                    if (viewModel.toggleExtraDim()) featureViewModel.refreshActiveState()
-                })
+        checked = viewModel.extraDimActivated.collectAsState().value,
+        onCheckedChange = {
+            if (viewModel.toggleExtraDim()) featureViewModel.refreshActiveState()
         },
         onLongClick = { NavigationUtil.openExtraDimSettings(context) },
         leadingIcon = Icons.Default.BrightnessLow
@@ -350,12 +344,8 @@ fun IgnoreFullScreenAppsTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = 
     SimpleListTile(
         titleText = stringResource(id = R.string.feature_grayscale_ignoreNonFullScreen),
         subtitleText = stringResource(id = R.string.feature_grayscale_ignoreNonFullScreen_description),
-        trailing = {
-            Checkbox(checked = viewModel.ignoreNonFullScreenApps.collectAsState().value,
-                onCheckedChange = {
-                    viewModel.toggleIgnoreNonFullScreenApps()
-                })
-        },
+        checked = viewModel.ignoreNonFullScreenApps.collectAsState().value,
+        onCheckedChange = { viewModel.toggleIgnoreNonFullScreenApps() },
         leadingIcon = Icons.Default.Fullscreen
     )
 }
