@@ -19,6 +19,7 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.util.TrustedClock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +39,7 @@ val CommitmentPasswordFeatureId = Feature.createId(CommitmentPasswordFeature::cl
  * - BCrypt hashing (work factor 12) stored in EncryptedSharedPreferences
  * - Max 3 attempts → 5-minute cooldown
  * - 24-hour recovery period for forgotten passphrases
+ * - Both waits run on [TrustedClock], so setting the date forward cuts neither short
  * - Device Admin required; Device Owner enables uninstall blocking
  */
 object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
@@ -162,19 +164,19 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         return getEncryptedPrefs(context).contains(KEY_PASSWORD_HASH)
     }
 
-    fun isLockedOut(): Boolean = System.currentTimeMillis() < lockoutUntil
+    fun isLockedOut(): Boolean = TrustedClock.now() < lockoutUntil
 
     fun getRemainingLockoutTime(): Long =
-        (lockoutUntil - System.currentTimeMillis()).coerceAtLeast(0L)
+        (lockoutUntil - TrustedClock.now()).coerceAtLeast(0L)
 
     fun isRecoveryInProgress(): Boolean =
-        recoveryInitiatedAt > 0 && System.currentTimeMillis() < recoveryInitiatedAt + RECOVERY_DURATION_MS
+        recoveryInitiatedAt > 0 && TrustedClock.now() < recoveryInitiatedAt + RECOVERY_DURATION_MS
 
     fun isRecoveryReady(): Boolean =
-        recoveryInitiatedAt > 0 && System.currentTimeMillis() >= recoveryInitiatedAt + RECOVERY_DURATION_MS
+        recoveryInitiatedAt > 0 && TrustedClock.now() >= recoveryInitiatedAt + RECOVERY_DURATION_MS
 
     fun getRemainingRecoveryTime(): Long =
-        (recoveryInitiatedAt + RECOVERY_DURATION_MS - System.currentTimeMillis()).coerceAtLeast(0L)
+        (recoveryInitiatedAt + RECOVERY_DURATION_MS - TrustedClock.now()).coerceAtLeast(0L)
 
     // endregion
 
@@ -287,7 +289,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
             } else {
                 failedAttempts++
                 if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
-                    lockoutUntil = System.currentTimeMillis() + LOCKOUT_DURATION_MS
+                    lockoutUntil = TrustedClock.sync() + LOCKOUT_DURATION_MS
                     Timber.w("User locked out after $failedAttempts failed attempts")
                 }
             }
@@ -304,7 +306,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     // region Recovery
 
     fun initiateRecovery(context: Context) {
-        recoveryInitiatedAt = System.currentTimeMillis()
+        recoveryInitiatedAt = TrustedClock.sync()
         failedAttempts = 0
         lockoutUntil = 0L
         scheduleRecoveryNotification(context)

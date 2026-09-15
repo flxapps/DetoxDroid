@@ -36,9 +36,12 @@ class PasswordRecoveryWorker @AssistedInject constructor(
         private const val NOTIFICATION_CHANNEL_ID = "commitment_password_recovery"
         private const val NOTIFICATION_ID = 2001
 
-        fun schedule(context: Context) {
+        fun schedule(
+            context: Context,
+            delayMs: Long = CommitmentPasswordFeature.RECOVERY_DURATION_MS
+        ) {
             val workRequest = OneTimeWorkRequestBuilder<PasswordRecoveryWorker>()
-                .setInitialDelay(24, TimeUnit.HOURS)
+                .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
                 .addTag(WORK_NAME)
                 .build()
             WorkManager.getInstance(context)
@@ -56,11 +59,12 @@ class PasswordRecoveryWorker @AssistedInject constructor(
         return try {
             if (CommitmentPasswordFeature.isRecoveryReady()) {
                 sendRecoveryReadyNotification()
-                Result.success()
-            } else {
-                Timber.w("Recovery not ready when worker ran — rescheduling not needed")
-                Result.failure()
+            } else if (CommitmentPasswordFeature.isRecoveryInProgress()) {
+                // WorkManager plans on the wall clock, so a date set forward runs this before the
+                // wait is over
+                schedule(applicationContext, CommitmentPasswordFeature.getRemainingRecoveryTime())
             }
+            Result.success()
         } catch (e: Exception) {
             Timber.e(e, "Failed to send recovery notification")
             Result.failure()
