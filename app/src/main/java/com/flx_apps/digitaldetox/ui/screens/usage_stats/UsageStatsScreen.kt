@@ -52,6 +52,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.review.AppReviewController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -260,6 +261,11 @@ fun UsageStatsScreen(
 
                 if (state.topApps.isEmpty()) {
                     item {
+                        // An empty period is not a missing permission: a user who has granted usage
+                        // access and simply has no data yet should not be sent to a settings page
+                        // that already says yes.
+                        val hasUsageAccess =
+                            remember { UsageAccessUtil.hasUsageAccess(context) }
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -267,12 +273,16 @@ fun UsageStatsScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                stringResource(R.string.usageStats_noData),
-                                style = MaterialTheme.typography.bodyLarge
+                                stringResource(
+                                    if (hasUsageAccess) R.string.usageStats_noData
+                                    else R.string.usageStats_usageAccessRequired
+                                ), style = MaterialTheme.typography.bodyLarge
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
-                                Text(stringResource(R.string.action_grantPermission))
+                            if (!hasUsageAccess) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
+                                    Text(stringResource(R.string.action_grantPermission))
+                                }
                             }
                         }
                     }

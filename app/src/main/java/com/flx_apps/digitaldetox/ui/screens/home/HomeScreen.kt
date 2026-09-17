@@ -76,6 +76,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import java.time.Instant
@@ -573,12 +574,22 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         )
                     }
                 } else {
+                    // No data is not the same thing as no permission. Offering "Grant Permission"
+                    // to somebody who granted it long ago sends them to a settings page that
+                    // already says yes, and leaves them with nothing to try.
+                    val hasUsageAccess = remember(lifecycleState) {
+                        UsageAccessUtil.hasUsageAccess(context)
+                    }
                     Text(
-                        text = stringResource(id = R.string.home_screenTime_unavailable),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        text = stringResource(
+                            id = if (hasUsageAccess) R.string.home_screenTime_unavailable
+                            else R.string.usageStats_usageAccessRequired
+                        ), modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
-                        Text(text = stringResource(id = R.string.action_grantPermission))
+                    if (!hasUsageAccess) {
+                        OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
+                            Text(text = stringResource(id = R.string.action_grantPermission))
+                        }
                     }
                 }
             }

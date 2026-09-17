@@ -72,6 +72,7 @@
     <string name="home_state_inactive">Stopped</string>
     <string name="home_screenTime_today">Screen time today</string>
     <string name="home_screenTime_unavailable">Screen time unavailable</string>
+    <string name="usageStats_usageAccessRequired">DetoxDroid needs usage access to show your screen time.</string>
     <string name="home_uninstall">Uninstall DetoxDroid</string>
     <string name="home_uninstall_hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
     <string name="home_uninstall_blocked_hint">Disabled while Commitment Password is active.</string>
