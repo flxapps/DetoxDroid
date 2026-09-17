@@ -280,6 +280,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // place every way of switching DetoxDroid on passes through, including the system settings.
         ServiceReliabilityScheduler.schedule(this)
         ServiceReliabilityScheduler.scheduleNextScheduleBoundary(this)
+        DetoxDroidDeviceAdminReceiver.allowSystemBackups(this)
     }
 
     /**
