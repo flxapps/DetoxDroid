@@ -609,7 +609,7 @@
     <string name="about_patron_link" translatable="false">https://liberapay.com/DetoxDroid/donate</string>
     <string name="about_patron_subtitle">A small monthly amount helps more than a one-off.</string>
     <string name="about_bitcoin">Send Bitcoin</string>
-    <string name="about_bitcoin_subtitle">Straight to my wallet. The network fee makes it better for bigger amounts.</string>
+    <string name="about_bitcoin_subtitle">Straight to my wallet. The network fee makes it better for bigger amounts ;)</string>
     <string name="about_bitcoin_message">Send any amount to this address from your Bitcoin wallet.</string>
     <string name="about_bitcoin_copy">Copy address</string>
     <string name="about_bitcoin_copied">Address copied</string>

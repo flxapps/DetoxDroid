@@ -601,7 +601,7 @@
     <string name="about_patron">Förderer werden</string>
     <string name="about_patron_subtitle">Ein kleiner monatlicher Beitrag hilft mehr als eine einmalige Spende.</string>
     <string name="about_bitcoin">Bitcoin schicken</string>
-    <string name="about_bitcoin_subtitle">Direkt in meine Wallet. Wegen der Netzwerkgebühr eher was für größere Beträge.</string>
+    <string name="about_bitcoin_subtitle">Direkt in meine Wallet. Wegen der Netzwerkgebühr eher was für größere Beträge ;)</string>
     <string name="about_bitcoin_message">Schick einen beliebigen Betrag aus deiner Bitcoin-Wallet an diese Adresse.</string>
     <string name="about_bitcoin_copy">Adresse kopieren</string>
     <string name="about_bitcoin_copied">Adresse kopiert</string>
