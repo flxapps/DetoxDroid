@@ -141,8 +141,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents, the
-     * share sheet) whose window events must not be treated as "an app was opened".
+     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, the share sheet)
+     * whose window events must not be treated as "an app was opened".
      *
      * The share sheet is the reason the list carries three spellings of one thing: it was an
      * internal activity until Android 13 unbundled it into its own package, and OEMs ship both.
@@ -152,12 +152,33 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private val ignoredEventClassPrefixes = listOf(
         "android.inputmethodservice.SoftInputWindow",
         "com.android.systemui.volume",
-        "com.android.quickstep.RecentsActivity",
         "com.android.internal.app.ChooserActivity",
         "com.android.internal.app.ResolverActivity",
         "com.android.intentresolver."
     )
-    private var ignoredPackages = mutableSetOf<String>()
+
+    /**
+     * Packages whose windows never mean "an app was opened". The system UI package covers the
+     * notification shade, the quick settings panel and the keyguard: each of them opens on top of
+     * the app the user is in and leaves it in front, but on the skins where the shade reports
+     * itself as a full-screen window it would otherwise become the foreground app and the screen
+     * filter would follow it there and stay, because collapsing the shade does not have to emit a
+     * window event for the app underneath.
+     *
+     * The enabled keyboards are added to this in [onCreate].
+     */
+    private var ignoredPackages = mutableSetOf("com.android.systemui")
+
+    /**
+     * Whether a window is the recents/overview screen. Recents carries a different class name on
+     * every skin, and on several of them it lives inside the launcher's own package, so a list of
+     * exact class names only ever covers the devices somebody has reported from: matching the name
+     * covers the rest. An app that ships a screen of its own by that name is already the foreground
+     * package by the time it opens one, so its event is deduplicated before it reaches here.
+     */
+    private fun isRecentsWindow(className: String) =
+        className.contains("recents", ignoreCase = true) ||
+                className.contains("overview", ignoreCase = true)
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
     private var screenTurnedOnReceiver = ScreenTurnedOnReceiver()
     private val commitmentPasswordTamperGuard by lazy {
@@ -368,6 +389,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val className = accessibilityEvent.className?.toString().orEmpty()
         if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
             ignoredPackages.contains(packageName) ||
+            isRecentsWindow(className) ||
             isOwnOverlayWindow(packageName, className)
         ) {
             // ignore events that are known to be irrelevant, without treating them as an app
