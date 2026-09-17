@@ -1,7 +1,10 @@
 package com.flx_apps.digitaldetox.ui.screens.about
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,14 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,14 +34,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,8 +56,13 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.premium.PremiumSupport
+import com.flx_apps.digitaldetox.ui.screens.premium.BitcoinAddressDialog
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
+import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
+import com.flx_apps.digitaldetox.util.DebugLog
+import java.text.NumberFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +91,8 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
+    var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
+    val versionTaps = remember(activity) { VersionTapCountdown(activity) }
 
     Scaffold(
         topBar = {
@@ -124,6 +140,11 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // a gesture detector rather than clickable: no ripple, and screen readers
+                        // keep reading it as plain text
+                        modifier = Modifier.pointerInput(versionTaps) {
+                            detectTapGestures { versionTaps.onTap() }
+                        }
                     )
                     Text(
                         text = stringResource(id = R.string.about_summary),
@@ -134,105 +155,172 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
 
-            sectionHeader(settingsSection)
-            switchItem(
-                icon = Icons.Default.Notifications,
-                title = keepAliveTitle,
-                subtitle = keepAliveSubtitle,
-                checked = keepAlive,
-                onCheckedChange = {
-                    keepAlive = it
-                    ReliabilitySettings.keepServiceAliveEnabled = it
-                    DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+            item {
+                SectionHeader(settingsSection)
+                SettingsGroup {
+                    SwitchTile(
+                        icon = Icons.Default.Notifications,
+                        title = keepAliveTitle,
+                        subtitle = keepAliveSubtitle,
+                        checked = keepAlive,
+                        onCheckedChange = {
+                            keepAlive = it
+                            ReliabilitySettings.keepServiceAliveEnabled = it
+                            DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+                        }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.RestartAlt,
+                        title = onboardingTitle,
+                        subtitle = onboardingSubtitle,
+                        onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
+                    )
                 }
-            )
-            linkItem(
-                icon = Icons.Default.RestartAlt,
-                title = onboardingTitle,
-                subtitle = onboardingSubtitle,
-                onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
-            )
 
-            sectionHeader(supportSection)
-            linkItem(
-                icon = Icons.Default.WorkspacePremium,
-                title = premiumTitle,
-                subtitle = premiumSubtitle,
-                onClick = { PremiumSheetController.show() }
-            )
-            supportLinkItems.forEach { (icon, texts, url) ->
-                linkItem(
-                    icon = icon,
-                    title = texts.first,
-                    subtitle = texts.second,
-                    onClick = { uriHandler.openUri(url) }
-                )
+                SectionHeader(supportSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.WorkspacePremium,
+                        title = premiumTitle,
+                        subtitle = premiumSubtitle,
+                        onClick = { PremiumSheetController.show() }
+                    )
+                    supportLinkItems.forEach { (icon, texts, url) ->
+                        LinkTile(
+                            icon = icon,
+                            title = texts.first,
+                            subtitle = texts.second,
+                            onClick = { uriHandler.openUri(url) }
+                        )
+                    }
+                    PremiumSupport.bitcoinAddress?.let { address ->
+                        var showAddress by rememberSaveable { mutableStateOf(false) }
+                        LinkTile(
+                            icon = Icons.Default.CurrencyBitcoin,
+                            title = stringResource(id = R.string.about_bitcoin),
+                            subtitle = stringResource(id = R.string.about_bitcoin_subtitle),
+                            onClick = { showAddress = true }
+                        )
+                        if (showAddress) {
+                            BitcoinAddressDialog(address, onDismiss = { showAddress = false })
+                        }
+                    }
+                    // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
+                    StoreReviewAboutTile(activity)
+                }
+
+                SectionHeader(projectSection)
+                SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.BugReport,
+                        title = reportIssueTitle,
+                        onClick = { uriHandler.openUri(reportIssueLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.Code,
+                        title = githubTitle,
+                        onClick = { uriHandler.openUri(githubLink) }
+                    )
+                    LinkTile(
+                        icon = Icons.Default.AlternateEmail,
+                        title = contactTitle,
+                        subtitle = contactSubtitle,
+                        onClick = { uriHandler.openUri(contactLink) }
+                    )
+                    SwitchTile(
+                        icon = Icons.Default.Terminal,
+                        title = stringResource(id = R.string.about_debugLog),
+                        subtitle = stringResource(id = R.string.about_debugLog_subtitle),
+                        checked = debugLog,
+                        onCheckedChange = {
+                            debugLog = it
+                            DebugLog.isEnabled = it
+                        }
+                    )
+                    if (debugLog) {
+                        val entryCount = DebugLog.entries.collectAsState().value.size
+                        LinkTile(
+                            icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                            title = stringResource(id = R.string.about_debugLog_open),
+                            subtitle = pluralStringResource(
+                                id = R.plurals.debugLog_entries,
+                                count = entryCount,
+                                NumberFormat.getIntegerInstance().format(entryCount)
+                            ),
+                            onClick = { navViewModel.openRoute(NavigationRoutes.LogViewer) }
+                        )
+                    }
+                }
             }
-            // flavor seam: a "Rate DetoxDroid" tile on Google Play, nothing in FOSS
-            storeReviewAboutItem(activity)
-
-            sectionHeader(projectSection)
-            linkItem(
-                icon = Icons.Default.BugReport,
-                title = reportIssueTitle,
-                onClick = { uriHandler.openUri(reportIssueLink) }
-            )
-            linkItem(
-                icon = Icons.Default.Code,
-                title = githubTitle,
-                onClick = { uriHandler.openUri(githubLink) }
-            )
-            linkItem(
-                icon = Icons.Default.AlternateEmail,
-                title = contactTitle,
-                subtitle = contactSubtitle,
-                onClick = { uriHandler.openUri(contactLink) }
-            )
         }
     }
 }
 
-private fun LazyListScope.sectionHeader(title: String) {
-    item {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
-        )
+/**
+ * The build number countdown from Android's settings, with a different reward: [TAPS] taps on the
+ * version line close the app. The last few taps count down in a toast, as they do there.
+ */
+private class VersionTapCountdown(private val activity: Activity?) {
+    private var taps = 0
+    private var toast: Toast? = null
+
+    fun onTap() {
+        val activity = activity ?: return
+        taps++
+        val tapsLeft = TAPS - taps
+        val message = when {
+            tapsLeft <= 0 -> activity.getString(R.string.about_version_putItDown)
+            tapsLeft <= COUNTED_DOWN_TAPS -> activity.resources.getQuantityString(
+                R.plurals.about_version_tapsLeft, tapsLeft, tapsLeft
+            )
+
+            else -> return
+        }
+        // one toast replaces the other, instead of a queue that runs on after the last tap
+        toast?.cancel()
+        toast = Toast.makeText(activity.applicationContext, message, Toast.LENGTH_SHORT).also {
+            it.show()
+        }
+        if (tapsLeft <= 0) {
+            taps = 0
+            activity.finish()
+        }
+    }
+
+    private companion object {
+        const val TAPS = 7
+        const val COUNTED_DOWN_TAPS = 4
     }
 }
 
-private fun LazyListScope.linkItem(
+@Composable
+private fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     onClick: () -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            modifier = Modifier.clickable(onClick = onClick)
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
 }
 
-private fun LazyListScope.switchItem(
+@Composable
+private fun SwitchTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    item {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = subtitle?.let { { Text(it) } },
-            leadingContent = { Icon(icon, contentDescription = null) },
-            trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-            modifier = Modifier.clickable { onCheckedChange(!checked) }
-        )
-    }
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+        modifier = Modifier.clickable { onCheckedChange(!checked) }
+    )
 }

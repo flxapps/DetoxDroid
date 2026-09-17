@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
@@ -105,27 +104,23 @@ fun AppSelectionListItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (showTags) {
-                    Row {
-                        Badge(containerColor = MaterialTheme.colorScheme.secondary) {
-                            Text(
-                                text = if (isSystemApp) {
-                                    stringResource(id = R.string.appList_badge_system)
-                                } else {
-                                    stringResource(id = R.string.appList_badge_user)
-                                },
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        if (appCategory.isNotBlank()) {
-                            Badge(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(start = 4.dp)
-                            ) {
+                // only tags that tell apps apart: "user app" and the "other" category would sit on
+                // nearly every row
+                val showCategory = appCategory.isNotBlank() &&
+                        appCategory != stringResource(id = R.string.appCategories_other)
+                if (showTags && (isSystemApp || showCategory)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (isSystemApp) {
+                            Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                                 Text(
-                                    text = appCategory,
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = stringResource(id = R.string.appList_badge_system),
+                                    style = MaterialTheme.typography.bodySmall
                                 )
+                            }
+                        }
+                        if (showCategory) {
+                            Badge(containerColor = MaterialTheme.colorScheme.secondary) {
+                                Text(text = appCategory, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }

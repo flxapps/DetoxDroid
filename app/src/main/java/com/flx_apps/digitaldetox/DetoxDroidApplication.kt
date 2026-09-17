@@ -15,14 +15,13 @@ import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
-import com.flx_apps.digitaldetox.util.CachingDebugTree
-import com.flx_apps.digitaldetox.util.InMemoryLogStore
+import com.flx_apps.digitaldetox.util.DebugLog
+import com.flx_apps.digitaldetox.util.DebugLogTree
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
 import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.workers.UsageStatsSnapshotWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
-import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -56,27 +55,32 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         super.onCreate()
         appContext = this
 
-        if (BuildConfig.DEBUG && isMainProcess()) {
-            // file-backed log store only in the main process — a second process (see the
-            // `:interactor` voice-interaction service) must not fight over the same log file
-            val logFile = File(filesDir, "app_logs.txt")
-            InMemoryLogStore.init(logFile)
-            Timber.plant(CachingDebugTree())
+        // release builds keep warnings and errors in logcat and drop the verbose event chatter (the
+        // accessibility service logs on every scroll/window event otherwise)
+        val logcatPriority = if (BuildConfig.DEBUG) Log.VERBOSE else Log.WARN
+        if (isMainProcess()) {
+            // the debug log only in the main process: a second process (see the `:interactor`
+            // voice-interaction service) must not fight over its file
+            DebugLog.init(this)
+            Timber.plant(DebugLogTree(logcatPriority))
+            Timber.i(
+                "Started DetoxDroid %s (%s, %d) on Android %s (API %d), %s %s",
+                BuildConfig.VERSION_NAME, BuildConfig.FLAVOR, BuildConfig.VERSION_CODE,
+                Build.VERSION.RELEASE, Build.VERSION.SDK_INT, Build.MANUFACTURER, Build.MODEL
+            )
 
-            // Hook into uncaught exceptions
             val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-                Timber.e(throwable, "Uncaught Exception on thread ${thread.name}")
+                if (DebugLog.isEnabled) {
+                    Timber.e(throwable, "Uncaught exception on thread ${thread.name}")
+                    DebugLog.flush()
+                }
                 defaultExceptionHandler?.uncaughtException(thread, throwable)
             }
-        } else if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
         } else {
-            // release builds: keep warnings/errors in logcat, drop the verbose event chatter
-            // (the accessibility service logs on every scroll/window event otherwise)
             Timber.plant(object : Timber.DebugTree() {
                 override fun isLoggable(tag: String?, priority: Int): Boolean =
-                    priority >= Log.WARN
+                    priority >= logcatPriority
             })
         }
 

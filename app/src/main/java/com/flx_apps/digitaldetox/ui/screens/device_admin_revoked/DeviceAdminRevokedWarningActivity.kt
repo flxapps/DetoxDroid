@@ -8,6 +8,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +17,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -184,6 +188,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
         setFinishOnTouchOutside(false)
         setWarningRequired(this, true, warningReason)
 
+        enableEdgeToEdge()
         setContent {
             DetoxDroidTheme {
                 Surface(
@@ -244,6 +249,8 @@ private fun DeviceAdminRevokedWarningScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.72f))
+            // keeps the card, and the phrase field in it, clear of the bars and the keyboard
+            .safeDrawingPadding()
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -255,6 +262,8 @@ private fun DeviceAdminRevokedWarningScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // scrolls when the keyboard leaves too little room for the whole card
+                    .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
                 Icon(

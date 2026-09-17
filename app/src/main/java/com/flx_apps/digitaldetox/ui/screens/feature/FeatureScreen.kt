@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.feature
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,12 +14,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -33,7 +36,6 @@ import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.Commitme
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
-import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 
 /**
  * A singleton that provides the snackbar host state for the feature screen and its children.
@@ -69,22 +71,29 @@ fun FeatureScreen(
         }
     }
 
-    Scaffold(snackbarHost = {
-        SnackbarHost(hostState = snackbarHostState)
-    }, topBar = {
-        LargeTopAppBar(navigationIcon = { AppBarBackButton() }, title = {
-            Column {
-                Text(stringResource(id = feature.texts.title))
-                Text(
-                    stringResource(id = feature.texts.subtitle),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }, actions = {
-            FeatureActivationSwitch(isLockedByCommitmentPassword = isFeatureSettingsLocked)
-        })
-    }) {
-        LazyColumn(modifier = Modifier.padding(it)) {
+    // the large title folds into the bar once the settings scroll
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        topBar = {
+            LargeTopAppBar(navigationIcon = { AppBarBackButton() }, title = {
+                Column {
+                    Text(stringResource(id = feature.texts.title))
+                    Text(
+                        stringResource(id = feature.texts.subtitle),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }, actions = {
+                FeatureActivationSwitch(isLockedByCommitmentPassword = isFeatureSettingsLocked)
+            }, scrollBehavior = scrollBehavior)
+        }
+    ) {
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = 16.dp),
+            modifier = Modifier.padding(it)
+        ) {
             item {
                 PasswordLockGate(featureId = featureId) {
                     FeatureScreenContent(feature)
@@ -189,6 +198,11 @@ fun FeatureActivationSwitch(
  */
 @Composable
 fun FeatureScreenContent(feature: Feature) {
-    InfoCard(infoText = stringResource(id = feature.texts.description))
+    Text(
+        text = stringResource(id = feature.texts.description),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+    )
     feature.settingsContent()
 }

@@ -29,8 +29,9 @@ You can still take intentional pauses when you need them.
 3. **Break Doom Scrolling**  
    Detects long scrolling sessions, interrupts them, and keeps that feed locked for a cooldown.
 4. **Disable Apps**  
-   Block an app behind a warning screen or deactivate it outright, launcher icon and notifications
-   included. Optionally with a daily time budget.
+   Let an app make you wait a few seconds before it opens, block it behind a warning screen, or
+   deactivate it outright, launcher icon and notifications included. With a daily time budget,
+   every open costs the wait until the budget is gone, then the app locks.
 5. **Pause Button**  
    Pause from Quick Settings, the assistant, or a long-pressed hardware button. Auto-resumes, with a
    minimum gap between pauses.
@@ -85,6 +86,7 @@ If DetoxDroid helps you, you can support development:
 - [Buy me a coffee via Ko-Fi](https://ko-fi.com/flxapps)
 - [Become a patron on LiberaPay](https://liberapay.com/DetoxDroid/donate)
 - [Donate via PayPal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=K6T2HPXE7HQBG)
+- Send Bitcoin to `bc1qj4r8srgx4arf3qxrmqqnsqnkc3rwdspx5ewvg7`
 
 ## Troubleshooting
 

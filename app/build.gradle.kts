@@ -92,6 +92,15 @@ android {
                 if (project.hasProperty("roborazzi.test.verify")) {
                     it.systemProperty("roborazzi.test.verify", "true")
                 }
+                // The screenshot tests only do anything while recording or verifying. Left in a
+                // plain run, their native graphics runtime clashes with the other Robolectric
+                // sandboxes in the same JVM, depending on the order the classes run in, and fails
+                // them instead of letting them skip.
+                if (!project.hasProperty("roborazzi.test.record") &&
+                    !project.hasProperty("roborazzi.test.verify")
+                ) {
+                    it.exclude("**/screenshot/**")
+                }
             }
         }
     }

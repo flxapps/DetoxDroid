@@ -1,12 +1,14 @@
 package com.flx_apps.digitaldetox.screenshot
 
 import android.os.Looper
+import android.os.SystemClock
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DailyAppUsageDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlay
+import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeningScreen
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavHostScreen
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
@@ -52,7 +55,7 @@ import javax.inject.Inject
 
 /**
  * Generates the Play Store / F-Droid phone screenshots into
- * `fastlane/metadata/android/<locale>/images/phoneScreenshots/1.png … 6.png`.
+ * `fastlane/metadata/android/<locale>/images/phoneScreenshots/1.png … 7.png`.
  *
  * Real app screens (home, usage-stats) are driven through the real [MainActivity]/[NavHostScreen]
  * — they cannot be instantiated standalone because `NavViewModel.navViewModel()` casts the local
@@ -151,12 +154,45 @@ class StoreScreenshotTest {
         shape = CardShape.CaptionUnder,
     ) { MockExceptionsScene() }
 
-    // ── 4 · Break doomscrolling ──────────────────────────────────────────────
+    // ── 4 · Wait before opening ──────────────────────────────────────────────
     @Test
-    fun screenshot_4_doomscrolling() = captureScene(
-        index = 4,
-        titleRes = R.string.screenshot_4_title,
-        subtitleRes = R.string.screenshot_4_subtitle,
+    fun screenshot_4_waitBeforeOpening() {
+        // The bar drains over the wait, and a clock left to run finishes it before the capture.
+        // Stopped after a few frames, the screenshot shows the bar partway down and the app not
+        // yet open.
+        composeRule.mainClock.autoAdvance = false
+        captureScene(
+            index = 4,
+            titleRes = R.string.screenshot_4_title,
+            subtitleRes = R.string.screenshot_4_subtitle,
+            style = Slot.Wait,
+            icon = { rememberVectorPainter(Icons.Outlined.HourglassTop) },
+            // Caption on top and laid out at phone height, cut below the buttons: the break screen
+            // right after it runs edge to edge with the caption below, and two dark screens framed
+            // the same way back to back would read as one. The cut also keeps the screen's own
+            // spacing, which a panel of the card's height squeezes out.
+            shape = CardShape.Bleed,
+            afterCompose = {
+                shadowOf(Looper.getMainLooper()).idle()
+                repeat(5) { composeRule.mainClock.advanceTimeByFrame() }
+            },
+        ) {
+            WaitBeforeOpeningScreen(
+                appLabel = "Instagram",
+                waitMs = 30_000L,
+                opensAtMs = SystemClock.elapsedRealtime() + 18_000L,
+                onOpen = {},
+                onLeave = {},
+            )
+        }
+    }
+
+    // ── 5 · Break doomscrolling ──────────────────────────────────────────────
+    @Test
+    fun screenshot_5_doomscrolling() = captureScene(
+        index = 5,
+        titleRes = R.string.screenshot_5_title,
+        subtitleRes = R.string.screenshot_5_subtitle,
         style = Slot.Doomscroll,
         icon = { painterResource(R.drawable.ic_scroll) },
         // Edge to edge: the break screen is a whole phone, not a panel.
@@ -168,12 +204,12 @@ class StoreScreenshotTest {
         }
     }
 
-    // ── 5 · Usage stats — In Perspective ─────────────────────────────────────
+    // ── 6 · Usage stats — In Perspective ─────────────────────────────────────
     @Test
-    fun screenshot_5_usageStats() = captureApp(
-        index = 5,
-        titleRes = R.string.screenshot_5_title,
-        subtitleRes = R.string.screenshot_5_subtitle,
+    fun screenshot_6_usageStats() = captureApp(
+        index = 6,
+        titleRes = R.string.screenshot_6_title,
+        subtitleRes = R.string.screenshot_6_subtitle,
         style = Slot.UsageStats,
         icon = { rememberVectorPainter(Icons.Outlined.QueryStats) },
         // The top-apps list carries on past the crop, which is the point of the screen.
@@ -194,12 +230,12 @@ class StoreScreenshotTest {
         },
     )
 
-    // ── 6 · Minimal launcher (text-only home screen) ─────────────────────────
+    // ── 7 · Minimal launcher (text-only home screen) ─────────────────────────
     @Test
-    fun screenshot_6_minimalLauncher() = captureScene(
-        index = 6,
-        titleRes = R.string.screenshot_6_title,
-        subtitleRes = R.string.screenshot_6_subtitle,
+    fun screenshot_7_minimalLauncher() = captureScene(
+        index = 7,
+        titleRes = R.string.screenshot_7_title,
+        subtitleRes = R.string.screenshot_7_subtitle,
         style = Slot.Launcher,
         icon = { rememberVectorPainter(Icons.Outlined.Widgets) },
         // Edge to edge: a home screen inside a 26 dp gutter stops reading as a home screen.
@@ -216,8 +252,9 @@ class StoreScreenshotTest {
         style: MarketingStyle,
         icon: @Composable () -> Painter,
         shape: CardShape,
+        afterCompose: () -> Unit = {},
         scene: @Composable () -> Unit,
-    ) = capture(index, titleRes, subtitleRes) { title, subtitle ->
+    ) = capture(index, titleRes, subtitleRes, afterCompose) { title, subtitle ->
         MarketingCard(title, subtitle, style, icon, shape) { scene() }
     }
 

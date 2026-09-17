@@ -7,6 +7,14 @@ import android.provider.Settings
 
 object NavigationUtil {
     /**
+     * An intent that takes the user to the home screen. Carries [Intent.FLAG_ACTIVITY_NEW_TASK], so
+     * it can be started from any context, including services.
+     */
+    @JvmStatic
+    fun homeScreenIntent(): Intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    /**
      * Opens the settings screen for the draw overlay permission.
      */
     @JvmStatic
@@ -45,6 +53,21 @@ object NavigationUtil {
         context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         })
+    }
+
+    /**
+     * Opens the system's Extra Dim page, where its intensity is set. The page's action is hidden
+     * from the SDK and some devices lack the page, so the accessibility settings, where Extra Dim
+     * is listed, stand in for it there.
+     */
+    @JvmStatic
+    fun openExtraDimSettings(context: Context) {
+        runCatching {
+            context.startActivity(
+                Intent("android.settings.REDUCE_BRIGHT_COLORS_SETTINGS")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }.onFailure { openAccessibilitySettings(context) }
     }
 
     /**

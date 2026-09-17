@@ -54,10 +54,10 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
     val screenFilterEffects: StateFlow<ScreenFilterEffects> = _screenFilterEffects
 
     /**
-     * Whether the dialog to set the screen filter strength should be shown.
+     * Whether the sheet with the screen filter details is shown.
      */
-    private var _showScreenFilterIntensityDialog: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val showScreenFilterIntensityDialog: StateFlow<Boolean> = _showScreenFilterIntensityDialog
+    private var _showScreenFilterSheet: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val showScreenFilterSheet: StateFlow<Boolean> = _showScreenFilterSheet
 
     /**
      * Whether the extra dim feature is activated.
@@ -165,10 +165,10 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
     }
 
     /**
-     * Sets whether the dialog to set the screen filter strength should be shown.
+     * Sets whether the sheet with the screen filter details is shown.
      */
-    fun setShowScreenFilterIntensityDialog(show: Boolean) {
-        _showScreenFilterIntensityDialog.value = show
+    fun setShowScreenFilterSheet(show: Boolean) {
+        _showScreenFilterSheet.value = show
     }
 
     /**

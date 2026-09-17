@@ -71,6 +71,7 @@ object Slot {
     val Hero = MarketingStyle(accent = Color(0xFF97A9F2), background = Color(0xFF141B3A))
     val Grayscale = MarketingStyle(accent = Color(0xFF6FD2E0), background = Color(0xFF0A2B36))
     val Exceptions = MarketingStyle(accent = Color(0xFFF5CD5C), background = Color(0xFF16233C))
+    val Wait = MarketingStyle(accent = Color(0xFFF2A585), background = Color(0xFF2A1812))
     val Doomscroll = MarketingStyle(accent = Color(0xFF7BD5AF), background = Color(0xFF092519))
     val UsageStats = MarketingStyle(accent = Color(0xFF7BB8F4), background = Color(0xFF09192A))
     val Launcher = MarketingStyle(accent = Color(0xFFB399E6), background = Color(0xFF1C1726))

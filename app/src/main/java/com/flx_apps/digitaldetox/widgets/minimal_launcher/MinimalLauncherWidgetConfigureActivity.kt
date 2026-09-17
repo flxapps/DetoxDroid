@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -95,6 +96,7 @@ class MinimalLauncherWidgetConfigureActivity : ComponentActivity() {
             return
         }
 
+        enableEdgeToEdge()
         setContent {
             DetoxDroidTheme {
                 // the persisted selection is loaded off the main thread; the screen shows its

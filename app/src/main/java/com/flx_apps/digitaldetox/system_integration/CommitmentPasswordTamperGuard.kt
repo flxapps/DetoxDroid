@@ -179,7 +179,7 @@ internal class CommitmentPasswordTamperGuard(
             )
             return
         }
-        Toast.makeText(service, service.getString(attemptType.toastMessageRes), Toast.LENGTH_LONG).show()
+        Toast.makeText(service, service.getString(attemptType.messageRes), Toast.LENGTH_LONG).show()
     }
 
     companion object {

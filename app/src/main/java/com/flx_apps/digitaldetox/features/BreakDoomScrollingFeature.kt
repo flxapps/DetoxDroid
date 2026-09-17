@@ -37,6 +37,7 @@ import com.flx_apps.digitaldetox.util.ScrollDistanceEstimator
 import com.flx_apps.digitaldetox.util.ScrollSessionMonitor
 import com.flx_apps.digitaldetox.util.ScrollSessionSnapshot
 import com.flx_apps.digitaldetox.util.SelfExpiringHashMap
+import com.flx_apps.digitaldetox.util.appLabel
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
@@ -486,16 +487,11 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             } else {
                 R.string.feature_doomScrolling_cooldown_context_surface
             },
-            appLabel(context, packageName),
+            context.appLabel(packageName),
             remainingMinutes
         )
         openBreakScreen(context, packageName, BreakScreenMode.COOLDOWN, text)
     }
-
-    private fun appLabel(context: Context, packageName: String): String = runCatching {
-        val pm = context.packageManager
-        pm.getApplicationInfo(packageName, 0).loadLabel(pm).toString()
-    }.getOrDefault(packageName)
 
     private fun openBreakScreen(
         context: Context,

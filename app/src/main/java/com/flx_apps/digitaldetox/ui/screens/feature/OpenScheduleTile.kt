@@ -16,22 +16,30 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.schedule.timeSpanText
+import com.flx_apps.digitaldetox.ui.screens.schedule.weekDaysText
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 
 /**
- * A tile that opens the schedule screen
+ * A tile that opens the schedule screen. A single rule is spelled out, since "1 rule" says nothing
+ * about when the feature runs.
  */
 @Composable
 fun OpenScheduleTile(
     featureViewModel: FeatureViewModel = viewModel(),
     navViewModel: NavViewModel = viewModel(viewModelStoreOwner = LocalContext.current as MainActivity)
 ) {
-    val rulesCount = (featureViewModel.feature as SupportsScheduleFeature).scheduleRules.size
+    val context = LocalContext.current
+    val rules = (featureViewModel.feature as SupportsScheduleFeature).scheduleRules
     SimpleListTile(titleText = stringResource(id = R.string.feature_settings_schedule),
-        subtitleText = if (rulesCount == 0) stringResource(id = R.string.feature_settings_schedule_hint_activeAllTheTime)
-        else stringResource(
-            id = R.string.feature_settings_schedule_hint, rulesCount
-        ),
+        subtitleText = when (rules.size) {
+            0 -> stringResource(id = R.string.feature_settings_schedule_hint_activeAllTheTime)
+            1 -> rules.first().let {
+                "${weekDaysText(context, it.daysOfWeek)}, ${timeSpanText(context, it.start, it.end)}"
+            }
+
+            else -> stringResource(id = R.string.feature_settings_schedule_hint, rules.size)
+        },
         trailing = {
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,

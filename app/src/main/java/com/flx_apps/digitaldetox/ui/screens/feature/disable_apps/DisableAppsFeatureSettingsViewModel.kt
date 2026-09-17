@@ -25,11 +25,14 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
     val operationMode = _operationMode.asStateFlow()
 
     /**
-     * The allowed daily screen time in minutes.
+     * The allowed daily screen time in minutes, or [DisableAppsFeature.NO_DAILY_LIMIT].
      * @see [DisableAppsFeature.allowedDailyScreenTime]
      */
-    private val _allowedDailyScreenTime =
-        MutableStateFlow(TimeUnit.MILLISECONDS.toMinutes(DisableAppsFeature.allowedDailyScreenTime))
+    private val _allowedDailyScreenTime = MutableStateFlow(
+        DisableAppsFeature.allowedDailyScreenTime.let {
+            if (it == DisableAppsFeature.NO_DAILY_LIMIT) it else TimeUnit.MILLISECONDS.toMinutes(it)
+        }
+    )
     val allowedDailyTime = _allowedDailyScreenTime.asStateFlow()
 
     /**
@@ -37,6 +40,20 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
      */
     private val _dailyScreenTimePickerDialogVisible = MutableStateFlow(false)
     val dailyScreenTimePickerDialogVisible = _dailyScreenTimePickerDialogVisible.asStateFlow()
+
+    /**
+     * How long the listed apps make the user wait before they open, in seconds (0 = no wait).
+     * @see [DisableAppsFeature.waitBeforeOpening]
+     */
+    private val _waitBeforeOpening =
+        MutableStateFlow(TimeUnit.MILLISECONDS.toSeconds(DisableAppsFeature.waitBeforeOpening).toInt())
+    val waitBeforeOpening = _waitBeforeOpening.asStateFlow()
+
+    /**
+     * Whether the picker dialog for [waitBeforeOpening] is visible.
+     */
+    private val _waitPickerDialogVisible = MutableStateFlow(false)
+    val waitPickerDialogVisible = _waitPickerDialogVisible.asStateFlow()
 
     /**
      * Changes the operation mode of the feature.
@@ -68,10 +85,34 @@ class DisableAppsFeatureSettingsViewModel @Inject constructor(application: Appli
 
     /**
      * Sets the allowed daily screen time.
-     * @param minutes The allowed daily screen time in minutes.
+     * @param minutes The allowed daily screen time in minutes, or
+     * [DisableAppsFeature.NO_DAILY_LIMIT].
      */
     fun setAllowedDailyScreenTime(minutes: Long) {
-        DisableAppsFeature.allowedDailyScreenTime = TimeUnit.MINUTES.toMillis(minutes)
+        val noLimit = minutes == DisableAppsFeature.NO_DAILY_LIMIT
+        if (noLimit && DisableAppsFeature.operationMode == DisableAppsMode.DEACTIVATE) {
+            // nothing may stay deactivated without a limit, and the operation mode that could
+            // otherwise bring the apps back is not selectable then
+            DisableAppsFeature.setAppsDeactivated(getApplication(), false, forceOperation = true)
+        }
+        DisableAppsFeature.allowedDailyScreenTime =
+            if (noLimit) minutes else TimeUnit.MINUTES.toMillis(minutes)
         _allowedDailyScreenTime.value = minutes
+    }
+
+    /**
+     * Sets the visibility of the picker dialog for [waitBeforeOpening].
+     */
+    fun setShowWaitPickerDialog(visible: Boolean) {
+        _waitPickerDialogVisible.value = visible
+    }
+
+    /**
+     * Sets how long the listed apps make the user wait before they open.
+     * @param seconds The wait in seconds, 0 for none.
+     */
+    fun setWaitBeforeOpening(seconds: Int) {
+        DisableAppsFeature.waitBeforeOpening = TimeUnit.SECONDS.toMillis(seconds.toLong())
+        _waitBeforeOpening.value = seconds
     }
 }

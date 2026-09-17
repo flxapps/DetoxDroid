@@ -2,10 +2,11 @@
 <!-- Strings used exclusively by the Roborazzi store-screenshot test (StoreScreenshotTest).
      They are bundled in the APK but only ever rendered during the screenshot test run.
 
-     Screenshot order (fastlane phoneScreenshots/1.png … 6.png):
-       1  Home            4  Break doomscrolling
-       2  Grayscale       5  Usage stats (In Perspective)
-       3  App exceptions  6  Minimal launcher
+     Screenshot order (fastlane phoneScreenshots/1.png … 7.png):
+       1  Home            5  Break doomscrolling
+       2  Grayscale       6  Usage stats (In Perspective)
+       3  App exceptions  7  Minimal launcher
+       4  Wait before opening
 
      To add a marketing locale, drop a translated copy of this file into the matching
      res/values-XX/ folder — the next `./gradlew :app:generateScreenshots` run will
@@ -20,12 +21,15 @@
     <string name="screenshot_3_title">…without losing the apps you need.</string>
     <string name="screenshot_3_subtitle">Keep maps, camera and messengers in full colour with per-app exceptions.</string>
 
-    <string name="screenshot_4_title">Break infinite scrolling.</string>
-    <string name="screenshot_4_subtitle">Caught doomscrolling? DetoxDroid gently interrupts and sends you on your way.</string>
+    <string name="screenshot_4_title">A moment to think twice.</string>
+    <string name="screenshot_4_subtitle">Distracting apps open only after a short wait, long enough to catch the reflex.</string>
 
-    <string name="screenshot_5_title">Understand your habits.</string>
-    <string name="screenshot_5_subtitle">See where your time really goes — screen time, app opens, even how far you\'ve scrolled.</string>
+    <string name="screenshot_5_title">Break infinite scrolling.</string>
+    <string name="screenshot_5_subtitle">Caught doomscrolling? DetoxDroid gently interrupts and sends you on your way.</string>
 
-    <string name="screenshot_6_title">A calmer home screen.</string>
-    <string name="screenshot_6_subtitle">Swap the busy icon grid for a quiet, text-only app list.</string>
+    <string name="screenshot_6_title">Understand your habits.</string>
+    <string name="screenshot_6_subtitle">See where your time really goes — screen time, app opens, even how far you\'ve scrolled.</string>
+
+    <string name="screenshot_7_title">A calmer home screen.</string>
+    <string name="screenshot_7_subtitle">Swap the busy icon grid for a quiet, text-only app list.</string>
 </resources>

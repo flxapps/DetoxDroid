@@ -21,6 +21,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import timber.log.Timber
 
 /**
@@ -114,8 +115,7 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
      * to finish a task before going to the home screen.
      */
     fun closeOverlay(secondsUntilGoToHomeScreen: Long = 0) {
-        val intentToHome = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-            .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+        val intentToHome = NavigationUtil.homeScreenIntent()
         if (secondsUntilGoToHomeScreen <= 0) {
             // go to home screen immediately
             startActivity(intentToHome)
