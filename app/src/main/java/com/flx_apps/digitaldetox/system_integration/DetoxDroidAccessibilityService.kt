@@ -227,6 +227,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // filter it finds, and a second run would remember its own.
         FeaturesProvider.reloadActiveFeatures()
         FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
+        // Only a feature that is starting gets to hand the system's display settings back, and a
+        // feature outside its schedule never starts. The daltonizer and extra dim are secure
+        // settings, so they survive a reboot, and so does our record of having set them: without
+        // this the screen stays gray until the schedule next opens and closes again.
+        if (!FeaturesProvider.activeFeatures.contains(GrayscaleAppsFeature)) {
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(this) }.onFailure {
+                Timber.w(it, "Could not restore the display filters on service start")
+            }
+        }
         updateState()
 
         UsageStatsTracker.init(this)
