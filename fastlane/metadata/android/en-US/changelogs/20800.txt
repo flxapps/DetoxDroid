@@ -1,0 +1,11 @@
+### Release v2.8.0
+
+✨ New Features
+- add a short wait before distracting apps open, before or instead of locking them
+- see each schedule as a week and set its times on a 24-hour dial
+- set up the screen filter in one place, with a strength slider
+
+🐛 Bug Fixes
+- stop a keyboard, TalkBack or a date set forward from getting past the passphrase
+- stop counting time in a listed app while Disable Apps is paused
+- stop typing in a text field from counting as doom scrolling
