@@ -20,6 +20,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
+import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.DistractionCandidate
@@ -148,7 +149,7 @@ class OnboardingViewModel @Inject constructor(
             val totals = HashMap<String, Long>()
             UsageStatsProvider.queryDailyUsage(USAGE_DAYS).forEach { (_, statsByApp) ->
                 statsByApp.forEach { (packageName, stats) ->
-                    totals.merge(packageName, stats.totalTimeInForeground, Long::plus)
+                    totals.merge(packageName, stats.screenTimeMs, Long::plus)
                 }
             }
             totals.mapValues { it.value / USAGE_DAYS }

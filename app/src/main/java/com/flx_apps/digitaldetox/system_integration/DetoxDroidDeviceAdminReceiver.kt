@@ -41,6 +41,29 @@ class DetoxDroidDeviceAdminReceiver : DeviceAdminReceiver() {
             }.onFailure { Timber.e(it, "setUninstallBlocked failed") }
         }
 
+        /**
+         * Puts the system backup service back on. Android switches it off as soon as a device
+         * owner exists, and DetoxDroid becomes one only to hide apps from the launcher and to
+         * block its own uninstall. Neither has anything to do with backups, so taking device
+         * ownership should not quietly stop the user's scheduled backups from running.
+         *
+         * A device owner is allowed to set this, so it is safe to re-assert on every start.
+         */
+        fun allowSystemBackups(context: Context) {
+            if (!isGranted(context)) return
+            kotlin.runCatching {
+                val dpm =
+                    context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager?
+                        ?: return
+                val componentName =
+                    ComponentName(context, DetoxDroidDeviceAdminReceiver::class.java)
+                if (!dpm.isBackupServiceEnabled(componentName)) {
+                    dpm.setBackupServiceEnabled(componentName, true)
+                    Timber.d("re-enabled the system backup service")
+                }
+            }.onFailure { Timber.w(it, "could not re-enable the system backup service") }
+        }
+
         fun createRequestDeviceAdminIntent(context: Context, explanation: String): Intent {
             return Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
                 putExtra(

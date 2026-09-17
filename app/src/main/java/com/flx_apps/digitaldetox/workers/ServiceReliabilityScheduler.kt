@@ -1,12 +1,17 @@
 package com.flx_apps.digitaldetox.workers
 
 import android.content.Context
+import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.feature_types.nextTransitionAfter
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 /**
@@ -37,6 +42,29 @@ object ServiceReliabilityScheduler {
             ServiceWatchdogWorker.WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             request
+        )
+    }
+
+    /**
+     * Arms a wake-up for the next moment any feature's schedule opens or closes, so a boundary
+     * passed while nobody is using the phone still takes effect. Re-armed by the worker itself
+     * after every run, and whenever the schedules change.
+     */
+    fun scheduleNextScheduleBoundary(context: Context) {
+        val workManager = WorkManager.getInstance(context)
+        val next = FeaturesProvider.featureList.filterIsInstance<SupportsScheduleFeature>()
+            .flatMap { it.scheduleRules }.nextTransitionAfter(LocalDateTime.now())
+        if (next == null || !AccessibilityServiceController.isEnabledInSettings(context)) {
+            workManager.cancelUniqueWork(ScheduleBoundaryWorker.WORK_NAME)
+            return
+        }
+        val delayMs =
+            Duration.between(LocalDateTime.now(), next).toMillis().coerceAtLeast(0L)
+        val request = OneTimeWorkRequestBuilder<ScheduleBoundaryWorker>().setInitialDelay(
+            delayMs, TimeUnit.MILLISECONDS
+        ).build()
+        workManager.enqueueUniqueWork(
+            ScheduleBoundaryWorker.WORK_NAME, ExistingWorkPolicy.REPLACE, request
         )
     }
 

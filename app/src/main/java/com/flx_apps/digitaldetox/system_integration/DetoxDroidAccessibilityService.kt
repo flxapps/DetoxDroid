@@ -141,15 +141,44 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
-     * window events must not be treated as "an app was opened".
+     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, the share sheet)
+     * whose window events must not be treated as "an app was opened".
+     *
+     * The share sheet is the reason the list carries three spellings of one thing: it was an
+     * internal activity until Android 13 unbundled it into its own package, and OEMs ship both.
+     * Left in, it alternates with the app underneath, and because each switch toggles the screen
+     * filter the result is a flicker that lasts as long as the sheet is open.
      */
     private val ignoredEventClassPrefixes = listOf(
         "android.inputmethodservice.SoftInputWindow",
         "com.android.systemui.volume",
-        "com.android.quickstep.RecentsActivity"
+        "com.android.internal.app.ChooserActivity",
+        "com.android.internal.app.ResolverActivity",
+        "com.android.intentresolver."
     )
-    private var ignoredPackages = mutableSetOf<String>()
+
+    /**
+     * Packages whose windows never mean "an app was opened". The system UI package covers the
+     * notification shade, the quick settings panel and the keyguard: each of them opens on top of
+     * the app the user is in and leaves it in front, but on the skins where the shade reports
+     * itself as a full-screen window it would otherwise become the foreground app and the screen
+     * filter would follow it there and stay, because collapsing the shade does not have to emit a
+     * window event for the app underneath.
+     *
+     * The enabled keyboards are added to this in [onCreate].
+     */
+    private var ignoredPackages = mutableSetOf("com.android.systemui")
+
+    /**
+     * Whether a window is the recents/overview screen. Recents carries a different class name on
+     * every skin, and on several of them it lives inside the launcher's own package, so a list of
+     * exact class names only ever covers the devices somebody has reported from: matching the name
+     * covers the rest. An app that ships a screen of its own by that name is already the foreground
+     * package by the time it opens one, so its event is deduplicated before it reaches here.
+     */
+    private fun isRecentsWindow(className: String) =
+        className.contains("recents", ignoreCase = true) ||
+                className.contains("overview", ignoreCase = true)
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
     private var screenTurnedOnReceiver = ScreenTurnedOnReceiver()
     private val commitmentPasswordTamperGuard by lazy {
@@ -227,6 +256,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // filter it finds, and a second run would remember its own.
         FeaturesProvider.reloadActiveFeatures()
         FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
+        // Only a feature that is starting gets to hand the system's display settings back, and a
+        // feature outside its schedule never starts. The daltonizer and extra dim are secure
+        // settings, so they survive a reboot, and so does our record of having set them: without
+        // this the screen stays gray until the schedule next opens and closes again.
+        if (!FeaturesProvider.activeFeatures.contains(GrayscaleAppsFeature)) {
+            runCatching { GrayscaleAppsFeature.restoreSystemFilters(this) }.onFailure {
+                Timber.w(it, "Could not restore the display filters on service start")
+            }
+        }
         updateState()
 
         UsageStatsTracker.init(this)
@@ -241,6 +279,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // The watchdog is only scheduled while there is something to watch, and this is the one
         // place every way of switching DetoxDroid on passes through, including the system settings.
         ServiceReliabilityScheduler.schedule(this)
+        ServiceReliabilityScheduler.scheduleNextScheduleBoundary(this)
+        DetoxDroidDeviceAdminReceiver.allowSystemBackups(this)
     }
 
     /**
@@ -351,6 +391,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val className = accessibilityEvent.className?.toString().orEmpty()
         if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
             ignoredPackages.contains(packageName) ||
+            isRecentsWindow(className) ||
             isOwnOverlayWindow(packageName, className)
         ) {
             // ignore events that are known to be irrelevant, without treating them as an app

@@ -70,11 +70,14 @@ import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
+import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
+import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import java.time.Instant
@@ -431,8 +434,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val stats = remember(lifecycleState) { UsageStatsProvider.getUpdatedUsageStatsToday() }
     val selectedIndex = remember { mutableStateOf(-1) }
 
-    val chartStats = stats.values.sortedByDescending { it.totalTimeInForeground }.take(5)
-    val screenTime = stats.values.sumOf { it.totalTimeInForeground }
+    val chartStats = stats.values.sortedByDescending { it.screenTimeMs }.take(5)
+    val screenTime = stats.values.sumOf { it.screenTimeMs }
     val colors = listOf(
         colorResource(id = R.color.pink),
         colorResource(id = R.color.orange),
@@ -444,7 +447,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val packageManager = LocalContext.current.packageManager
     val otherLabel = stringResource(id = R.string.usageStats_other)
     val otherTime =
-        (screenTime - chartStats.sumOf { it.totalTimeInForeground }.toFloat()).coerceAtLeast(1f)
+        (screenTime - chartStats.sumOf { it.screenTimeMs }.toFloat()).coerceAtLeast(1f)
 
     // apps can disappear from PackageManager while still being present in today's usage stats
     val slices = chartStats.map { appStats ->
@@ -452,7 +455,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
             packageManager.getApplicationInfo(appStats.packageName, 0)
                 .loadLabel(packageManager).toString()
         }.getOrDefault(appStats.packageName)
-        label to appStats.totalTimeInForeground.toFloat()
+        label to appStats.screenTimeMs.toFloat()
     }.plus(otherLabel to otherTime)
 
     val totalValue = slices.fold(0f) { acc, pair -> acc + pair.second }.coerceAtLeast(1f)
@@ -539,7 +542,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     if (idx >= 0 && idx < chartStats.count()) {
                         val selectedStat = chartStats[idx]
                         Text(
-                            text = selectedStat.totalTimeInForeground.milliseconds.toHrMinString(context),
+                            text = selectedStat.screenTimeMs.milliseconds.toHrMinString(context),
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center
                         )
@@ -572,12 +575,33 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         )
                     }
                 } else {
+                    // No data is not the same thing as no permission. Offering "Grant Permission"
+                    // to somebody who granted it long ago sends them to a settings page that
+                    // already says yes, and leaves them with nothing to try.
+                    val hasUsageAccess = remember(lifecycleState) {
+                        UsageAccessUtil.hasUsageAccess(context)
+                    }
                     Text(
-                        text = stringResource(id = R.string.home_screenTime_unavailable),
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        text = stringResource(
+                            id = if (hasUsageAccess) R.string.home_screenTime_unavailable
+                            else R.string.usageStats_usageAccessRequired
+                        ), modifier = Modifier.padding(vertical = 8.dp)
                     )
-                    OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
-                        Text(text = stringResource(id = R.string.action_grantPermission))
+                    if (!hasUsageAccess) {
+                        OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
+                            Text(text = stringResource(id = R.string.action_grantPermission))
+                        }
+                        if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
+                            Text(
+                                text = stringResource(id = R.string.permissions_restrictedSettings_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            OutlinedButton(onClick = { NavigationUtil.openAppInfoSettings(context) }) {
+                                Text(text = stringResource(id = R.string.action_openAppInfo))
+                            }
+                        }
                     }
                 }
             }

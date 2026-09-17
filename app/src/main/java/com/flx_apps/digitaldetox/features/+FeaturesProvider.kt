@@ -69,6 +69,15 @@ object FeaturesProvider {
      */
     fun reloadActiveFeatures() = reload(notifyTransitions = false)
 
+    /**
+     * Applies a schedule boundary that has been crossed, starting and stopping the features it
+     * affects. [activeFeatures] already does this when it is read, but only a read makes it happen,
+     * and on a phone nobody touches the next read can be an hour late. Do Not Disturb is the case
+     * that shows: left on past the end of its window, it silences calls until the user next picks
+     * the phone up and something happens to ask which features are active.
+     */
+    fun applyScheduleTransitions() = reload(notifyTransitions = true)
+
     private fun reload(notifyTransitions: Boolean) {
         val previouslyActive = _activeFeatures
         _activeFeatures = featureList.filter { it.isActive() }.toSet()
