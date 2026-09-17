@@ -35,6 +35,7 @@ import com.flx_apps.digitaldetox.system_integration.ScreenFilterSpec
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import timber.log.Timber
 
 const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled"
 const val DISPLAY_DALTONIZER = "accessibility_display_daltonizer"
@@ -306,11 +307,19 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     ) {
         if (ignoreNonFullScreenApps && !accessibilityEvent.isFullScreen) {
             // we are not in full screen mode, so we do not want to interfere with the app
+            Timber.d("grayscale: $packageName skipped, window is not full screen")
             return
         }
         // the effects should be on while an app covered by the exception list config is in the
         // foreground (and the daily color allowance, if any, is used up)
         val shouldApplyEffects = packageName != OwnPackage && appliesTo(packageName)
+        // Every report of grayscale applying to the wrong app comes down to one of three things:
+        // which package the service decided was in front, whether the exception list covers it,
+        // and what the filter state already was. None of them is visible from the outside, and the
+        // answer that arrives with a bug report is a screen that "sometimes" stays gray.
+        Timber.d(
+            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType"
+        )
 
         if (!shouldApplyEffects) {
             // the effects should not be turned on, so we increase the used up screen time
@@ -363,6 +372,9 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private fun setEffectsActive(
         context: Context, active: Boolean
     ): Boolean {
+        Timber.d(
+            "grayscale: effects -> $active (systemGrayscale=$systemGrayscale extraDim=$extraDim " + "screenFilter=$screenFilterMode)"
+        )
         ScreenFilterOverlay.apply(context, if (active) currentScreenFilterSpec(context) else null)
         areEffectsActive = active
 
