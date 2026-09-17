@@ -14,6 +14,7 @@ import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
+import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.DistancePerspective
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +144,7 @@ class UsageStatsViewModel @Inject constructor(
         val perApp = osStats.mapValues { (pkg, stat) ->
             AggregatedAppStats(
                 packageName = pkg,
-                totalTimeMs = stat.totalTimeInForeground,
+                totalTimeMs = stat.screenTimeMs,
                 launchCount = events.launchCounts[pkg] ?: 0,
                 sessionCount = sessionCounts[pkg] ?: 0,
                 scrollCount = UsageStatsTracker.scrollEventCounter.countFor(pkg),
@@ -155,7 +156,7 @@ class UsageStatsViewModel @Inject constructor(
         val yesterdayStartMs =
             today.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val yesterdayTotal = UsageStatsProvider.queryForPeriod(yesterdayStartMs, startMs)
-            .values.sumOf { it.totalTimeInForeground }
+            .values.sumOf { it.screenTimeMs }
         val yesterdayUnlocks =
             UsageStatsProvider.queryEventCounts(yesterdayStartMs, startMs).unlockCount
 
@@ -302,7 +303,7 @@ class UsageStatsViewModel @Inject constructor(
                     rowId = DailyAppUsage.createRowId(date, pkg),
                     date = date,
                     packageName = pkg,
-                    totalTimeMs = stat.totalTimeInForeground,
+                    totalTimeMs = stat.screenTimeMs,
                     sessionCount = 0,
                     launchCount = 0,
                     scrollCount = 0,
@@ -369,7 +370,7 @@ class UsageStatsViewModel @Inject constructor(
         }
 
         val prevTotal = UsageStatsProvider.queryForPeriod(prevStartMs, prevEndMs)
-            .values.sumOf { it.totalTimeInForeground }
+            .values.sumOf { it.screenTimeMs }
         val prevUnlocks = UsageStatsProvider.queryEventCounts(prevStartMs, prevEndMs).unlockCount
         return (if (prevTotal > 0) currentTotal - prevTotal else null) to
             (if (prevUnlocks > 0) currentUnlocks - prevUnlocks else null)
