@@ -279,6 +279,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // The watchdog is only scheduled while there is something to watch, and this is the one
         // place every way of switching DetoxDroid on passes through, including the system settings.
         ServiceReliabilityScheduler.schedule(this)
+        ServiceReliabilityScheduler.scheduleNextScheduleBoundary(this)
     }
 
     /**

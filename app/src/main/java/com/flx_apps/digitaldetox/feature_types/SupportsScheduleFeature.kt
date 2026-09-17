@@ -52,6 +52,24 @@ fun Collection<FeatureScheduleRule>.isScheduled(atDateTime: LocalDateTime): Bool
     isEmpty() || any { it.isActive(atDateTime) }
 
 /**
+ * The next moment after [from] at which any of these rules could start or end, or null when there
+ * is nothing to wait for (no rules means the feature simply runs).
+ *
+ * Candidates are generated for every calendar day rather than only for the days a rule applies to,
+ * so the answer can name a boundary that turns out to change nothing. Waking up for one of those
+ * costs a re-evaluation that finds the same set of active features, which is cheaper than the
+ * arithmetic that would be needed to rule it out.
+ */
+fun Collection<FeatureScheduleRule>.nextTransitionAfter(from: LocalDateTime): LocalDateTime? {
+    if (isEmpty()) return null
+    val boundaries = flatMap { listOf(it.start, it.end) }.distinct()
+    return (0L..7L).asSequence().flatMap { dayOffset ->
+        val date = from.toLocalDate().plusDays(dayOffset)
+        boundaries.asSequence().map { date.atTime(it) }
+    }.filter { it.isAfter(from) }.minOrNull()
+}
+
+/**
  * A rule for when a feature should be active. A rule consists of a time range and a day of the
  * week. The feature will be active during the time range on the specified day of the week. If
  * multiple rules apply, the feature will be active if at least one of them is active.

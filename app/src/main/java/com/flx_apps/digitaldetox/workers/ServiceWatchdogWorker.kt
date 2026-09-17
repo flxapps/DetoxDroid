@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
@@ -51,6 +52,12 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         }
 
         if (isBound) {
+            // Safety net for the one-shot boundary wake-up: WorkManager can drop it, and a missed
+            // schedule boundary leaves a feature running past its window.
+            runCatching { FeaturesProvider.applyScheduleTransitions() }.onFailure {
+                Timber.w(it, "ServiceWatchdogWorker: could not apply schedule transitions")
+            }
+            ServiceReliabilityScheduler.scheduleNextScheduleBoundary(appContext)
             resetOutageState()
             return Result.success()
         }
