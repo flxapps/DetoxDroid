@@ -1,7 +1,10 @@
 package com.flx_apps.digitaldetox.ui.screens.about
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -88,6 +92,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
     var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
+    val versionTaps = remember(activity) { VersionTapCountdown(activity) }
 
     Scaffold(
         topBar = {
@@ -135,6 +140,11 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // a gesture detector rather than clickable: no ripple, and screen readers
+                        // keep reading it as plain text
+                        modifier = Modifier.pointerInput(versionTaps) {
+                            detectTapGestures { versionTaps.onTap() }
+                        }
                     )
                     Text(
                         text = stringResource(id = R.string.about_summary),
@@ -243,6 +253,43 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 }
             }
         }
+    }
+}
+
+/**
+ * The build number countdown from Android's settings, with a different reward: [TAPS] taps on the
+ * version line close the app. The last few taps count down in a toast, as they do there.
+ */
+private class VersionTapCountdown(private val activity: Activity?) {
+    private var taps = 0
+    private var toast: Toast? = null
+
+    fun onTap() {
+        val activity = activity ?: return
+        taps++
+        val tapsLeft = TAPS - taps
+        val message = when {
+            tapsLeft <= 0 -> activity.getString(R.string.about_version_putItDown)
+            tapsLeft <= COUNTED_DOWN_TAPS -> activity.resources.getQuantityString(
+                R.plurals.about_version_tapsLeft, tapsLeft, tapsLeft
+            )
+
+            else -> return
+        }
+        // one toast replaces the other, instead of a queue that runs on after the last tap
+        toast?.cancel()
+        toast = Toast.makeText(activity.applicationContext, message, Toast.LENGTH_SHORT).also {
+            it.show()
+        }
+        if (tapsLeft <= 0) {
+            taps = 0
+            activity.finish()
+        }
+    }
+
+    private companion object {
+        const val TAPS = 7
+        const val COUNTED_DOWN_TAPS = 4
     }
 }
 

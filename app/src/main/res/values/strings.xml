@@ -611,6 +611,12 @@
     <string name="about_section_support">Support the project</string>
     <string name="about_section_project">Project &amp; contact</string>
     <string name="about_version">Version %1$s</string>
+    <!-- toasts while the version line is tapped, like the build number in Android's settings -->
+    <plurals name="about_version_tapsLeft">
+        <item quantity="one">You\'re %d tap away from putting your phone down.</item>
+        <item quantity="other">You\'re %d taps away from putting your phone down.</item>
+    </plurals>
+    <string name="about_version_putItDown">Now put it down.</string>
     <string name="about_coffee">Buy me a coffee</string>
     <string name="about_coffee_link" translatable="false">https://ko-fi.com/flxapps</string>
     <string name="about_coffee_subtitle">Every coffee helps keep DetoxDroid improving.</string>

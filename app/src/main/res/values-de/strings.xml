@@ -603,6 +603,11 @@
     <string name="about_section_support">Projekt unterstützen</string>
     <string name="about_section_project">Projekt &amp; Kontakt</string>
     <string name="about_version">Version %1$s</string>
+    <plurals name="about_version_tapsLeft">
+        <item quantity="one">Noch %d Fingertipp, dann legst du dein Handy weg.</item>
+        <item quantity="other">Noch %d Fingertipps, dann legst du dein Handy weg.</item>
+    </plurals>
+    <string name="about_version_putItDown">Jetzt leg es aber auch weg.</string>
     <string name="about_coffee">Spendier mir einen Kaffee</string>
     <string name="about_coffee_subtitle">Jeder Kaffee hilft, DetoxDroid weiterzuentwickeln.</string>
     <string name="about_patron">Förderer werden</string>
