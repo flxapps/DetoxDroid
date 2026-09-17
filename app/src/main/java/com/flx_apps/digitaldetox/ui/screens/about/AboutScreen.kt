@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +57,8 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
+import com.flx_apps.digitaldetox.util.DebugLog
+import java.text.NumberFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +87,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
+    var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
 
     Scaffold(
         topBar = {
@@ -210,6 +217,29 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         subtitle = contactSubtitle,
                         onClick = { uriHandler.openUri(contactLink) }
                     )
+                    SwitchTile(
+                        icon = Icons.Default.Terminal,
+                        title = stringResource(id = R.string.about_debugLog),
+                        subtitle = stringResource(id = R.string.about_debugLog_subtitle),
+                        checked = debugLog,
+                        onCheckedChange = {
+                            debugLog = it
+                            DebugLog.isEnabled = it
+                        }
+                    )
+                    if (debugLog) {
+                        val entryCount = DebugLog.entries.collectAsState().value.size
+                        LinkTile(
+                            icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                            title = stringResource(id = R.string.about_debugLog_open),
+                            subtitle = pluralStringResource(
+                                id = R.plurals.debugLog_entries,
+                                count = entryCount,
+                                NumberFormat.getIntegerInstance().format(entryCount)
+                            ),
+                            onClick = { navViewModel.openRoute(NavigationRoutes.LogViewer) }
+                        )
+                    }
                 }
             }
         }

@@ -612,5 +612,43 @@
     <string name="about_github">Auf GitHub mitwirken</string>
     <string name="about_onboarding">DetoxDroid neu einrichten</string>
     <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
+    <string name="about_debugLog">Debug-Log</string>
+    <string name="about_debugLog_subtitle">Hält fest, was DetoxDroid so macht, für Fehlerberichte. Bleibt auf dem Handy und wird beim Ausschalten gelöscht.</string>
+    <string name="about_debugLog_open">Debug-Log öffnen</string>
+    <!-- endregion -->
+
+    <!-- region Debug log -->
+    <string name="debugLog_title">Debug-Log</string>
+    <plurals name="debugLog_entries">
+        <item quantity="one">%1$s Eintrag</item>
+        <item quantity="other">%1$s Einträge</item>
+    </plurals>
+    <plurals name="debugLog_entriesShown">
+        <item quantity="one">%1$s von %2$s Eintrag</item>
+        <item quantity="other">%1$s von %2$s Einträgen</item>
+    </plurals>
+    <string name="debugLog_level_all">Alle</string>
+    <string name="debugLog_level_info">Info</string>
+    <string name="debugLog_level_warnings">Warnungen</string>
+    <string name="debugLog_level_errors">Fehler</string>
+    <string name="debugLog_tag_remove">Alle Tags zeigen</string>
+    <string name="debugLog_share">Log teilen</string>
+    <string name="debugLog_clear">Log leeren</string>
+    <string name="debugLog_clear_title">Debug-Log leeren?</string>
+    <string name="debugLog_clear_message">Alles, was bisher aufgezeichnet wurde, wird gelöscht. Solange das Log an ist, kommen neue Einträge dazu.</string>
+    <string name="debugLog_clear_confirm">Leeren</string>
+    <string name="debugLog_empty_title">Noch nichts aufgezeichnet</string>
+    <string name="debugLog_empty_message">Sobald DetoxDroid was tut, tauchen hier Einträge auf.</string>
+    <string name="debugLog_noMatch_title">Keine passenden Einträge</string>
+    <string name="debugLog_noMatch_reset">Filter zurücksetzen</string>
+    <string name="debugLog_run_current">Läuft seit %1$s</string>
+    <string name="debugLog_run_past">%1$s bis %2$s</string>
+    <plurals name="debugLog_moreLines">
+        <item quantity="one">%1$d weitere Zeile</item>
+        <item quantity="other">%1$d weitere Zeilen</item>
+    </plurals>
+    <string name="debugLog_copied">Eintrag kopiert</string>
+    <string name="debugLog_newest">Zu den neuesten Einträgen</string>
+    <string name="debugLog_hint">Tipp auf einen Eintrag, um ihn aufzuklappen, halt ihn gedrückt, um ihn zu kopieren, und tipp auf sein Tag, um nur dieses Tag zu sehen.</string>
     <!-- endregion -->
 </resources>

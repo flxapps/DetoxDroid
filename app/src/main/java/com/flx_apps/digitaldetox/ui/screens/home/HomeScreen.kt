@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -64,7 +63,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -184,11 +182,6 @@ private fun AppBar(
             }
         },
         actions = {
-            if (BuildConfig.DEBUG) {
-                IconButton(onClick = { navViewModel.openRoute(NavigationRoutes.LogViewer) }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "View Logs")
-                }
-            }
             IconButton(onClick = { navViewModel.openRoute(NavigationRoutes.About) }) {
                 Icon(
                     Icons.Default.Settings,
