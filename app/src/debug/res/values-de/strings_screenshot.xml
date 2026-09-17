@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- German marketing copy for the Roborazzi store screenshots.
-     Auto-discovered by ScreenshotConfig — `./gradlew :app:generateScreenshots` now also
-     renders fastlane/metadata/android/de-DE/images/phoneScreenshots/1.png … 7.png. -->
+     Auto-discovered by ScreenshotConfig — `./gradlew :app:generateScreenshots` renders
+     fastlane/metadata/android/de-DE/images/phoneScreenshots/1.png … 7.png from it. -->
 <resources>
     <string name="screenshot_1_title">Digital Detox als Normalzustand.</string>
     <string name="screenshot_1_subtitle">DetoxDroid fährt deine Handynutzung leise herunter – ganz unauffällig im Hintergrund.</string>

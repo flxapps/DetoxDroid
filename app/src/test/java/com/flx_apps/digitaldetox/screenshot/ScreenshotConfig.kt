@@ -17,12 +17,15 @@ private const val STRINGS_SCREENSHOT = "strings_screenshot.xml"
  * [STRINGS_SCREENSHOT] files. The default `values/` folder maps to en-US. Additional locales in
  * `values-XX(-rYY)/` subdirectories are added in alphabetical order.
  *
- * **To add a new marketing locale**, create `src/main/res/values-XX/strings_screenshot.xml` with
+ * **To add a new marketing locale**, create `src/debug/res/values-XX/strings_screenshot.xml` with
  * translated captions — no code changes required. The next test run generates screenshots for it.
+ *
+ * The captions sit in the debug source set (the one the test builds against) so that they never
+ * reach a release build.
  */
 val MARKETING_LOCALES: List<MarketingLocale> by lazy {
     // Try module-relative path first, then project-relative path (depends on the gradle CWD).
-    val candidates = listOf(File("src/main/res"), File("app/src/main/res"))
+    val candidates = listOf(File("src/debug/res"), File("app/src/debug/res"))
     val resDir = candidates.firstOrNull { it.exists() && it.isDirectory }
         ?: error("Could not find res/ directory in: ${candidates.map { it.absolutePath }}")
 
