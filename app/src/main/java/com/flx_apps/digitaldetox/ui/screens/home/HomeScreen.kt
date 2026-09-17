@@ -76,6 +76,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -589,6 +590,17 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     if (!hasUsageAccess) {
                         OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
                             Text(text = stringResource(id = R.string.action_grantPermission))
+                        }
+                        if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
+                            Text(
+                                text = stringResource(id = R.string.permissions_restrictedSettings_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            OutlinedButton(onClick = { NavigationUtil.openAppInfoSettings(context) }) {
+                                Text(text = stringResource(id = R.string.action_openAppInfo))
+                            }
                         }
                     }
                 }

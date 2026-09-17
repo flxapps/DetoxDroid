@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.premium.PremiumManager
@@ -52,6 +53,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.review.AppReviewController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 import java.time.format.DateTimeFormatter
@@ -282,6 +284,17 @@ fun UsageStatsScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
                                     Text(stringResource(R.string.action_grantPermission))
+                                }
+                                if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        stringResource(R.string.permissions_restrictedSettings_hint),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    OutlinedButton(onClick = { NavigationUtil.openAppInfoSettings(context) }) {
+                                        Text(stringResource(R.string.action_openAppInfo))
+                                    }
                                 }
                             }
                         }
