@@ -141,13 +141,21 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents) whose
-     * window events must not be treated as "an app was opened".
+     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, recents, the
+     * share sheet) whose window events must not be treated as "an app was opened".
+     *
+     * The share sheet is the reason the list carries three spellings of one thing: it was an
+     * internal activity until Android 13 unbundled it into its own package, and OEMs ship both.
+     * Left in, it alternates with the app underneath, and because each switch toggles the screen
+     * filter the result is a flicker that lasts as long as the sheet is open.
      */
     private val ignoredEventClassPrefixes = listOf(
         "android.inputmethodservice.SoftInputWindow",
         "com.android.systemui.volume",
-        "com.android.quickstep.RecentsActivity"
+        "com.android.quickstep.RecentsActivity",
+        "com.android.internal.app.ChooserActivity",
+        "com.android.internal.app.ResolverActivity",
+        "com.android.intentresolver."
     )
     private var ignoredPackages = mutableSetOf<String>()
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
