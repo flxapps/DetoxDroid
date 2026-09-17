@@ -156,7 +156,7 @@ class WaitBeforeOpeningActivity : ComponentActivity() {
  * opening the app only once the bar is empty.
  */
 @Composable
-private fun WaitBeforeOpeningScreen(
+internal fun WaitBeforeOpeningScreen(
     appLabel: String,
     waitMs: Long,
     opensAtMs: Long,
