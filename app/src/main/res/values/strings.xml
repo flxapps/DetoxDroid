@@ -86,6 +86,15 @@
     <string name="home_batteryOptimization_action">Allow</string>
     <string name="home_batteryOptimization_why">Why?</string>
     <string name="home_batteryOptimization_dismiss">Not now</string>
+
+    <!-- the droid at the bottom of the home screen: it snores at night and catches fast tappers -->
+    <string name="home_droid_snore" translatable="false">z</string>
+    <string name="home_droid_asleep">I\'m asleep. You should be too.</string>
+    <string name="home_droid_caught_message">Looks like you are stuck in a logo-tapping loop.</string>
+    <plurals name="home_droid_caught_context">
+        <item quantity="one">You\'ve tapped a logo %1$d times in %2$d second.</item>
+        <item quantity="other">You\'ve tapped a logo %1$d times in %2$d seconds.</item>
+    </plurals>
     <!-- endregion -->
 
     <!-- region App Lists & Categories -->

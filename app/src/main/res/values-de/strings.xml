@@ -84,6 +84,13 @@
     <string name="home_batteryOptimization_action">Erlauben</string>
     <string name="home_batteryOptimization_why">Warum?</string>
     <string name="home_batteryOptimization_dismiss">Nicht jetzt</string>
+
+    <string name="home_droid_asleep">Ich schlafe. Solltest du eigentlich auch.</string>
+    <string name="home_droid_caught_message">Sieht aus, als hättest du dich festgetippt.</string>
+    <plurals name="home_droid_caught_context">
+        <item quantity="one">Du hast in %2$d Sekunde %1$d-mal auf ein Logo getippt.</item>
+        <item quantity="other">Du hast in %2$d Sekunden %1$d-mal auf ein Logo getippt.</item>
+    </plurals>
     <!-- endregion -->
 
     <!-- region App Lists & Categories -->

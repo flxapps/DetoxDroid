@@ -3,7 +3,6 @@ package com.flx_apps.digitaldetox.ui.screens.home
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -95,14 +94,18 @@ fun HomeScreen(
 ) {
     val detoxDroidState: DetoxDroidState = homeViewModel.detoxDroidState.collectAsState().value
     val snackbarHostState = remember { SnackbarHostState() }
-    Scaffold(snackbarHost = {
-        SnackbarHost(hostState = snackbarHostState)
-    }, topBar = {
-        AppBar(detoxDroidState)
-    }, floatingActionButton = {
-        StartStopActionButton(detoxDroidState)
-    }) {
-        HomeScreenContent(it)
+    val droidState = rememberSleepyDroidState()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }, topBar = {
+            AppBar(detoxDroidState)
+        }, floatingActionButton = {
+            StartStopActionButton(detoxDroidState)
+        }) {
+            HomeScreenContent(it, droidState)
+        }
+        DroidCaughtOverlay(droidState)
     }
     HomeScreenSnackbarContents(snackbarHostState)
 }
@@ -239,7 +242,7 @@ private fun StartStopActionButton(
  * The content of the home screen. It displays the screen time chart and a list of all features.
  */
 @Composable
-private fun HomeScreenContent(it: PaddingValues) {
+private fun HomeScreenContent(it: PaddingValues, droidState: SleepyDroidState) {
     LazyColumn(
         modifier = Modifier.padding(it),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -260,13 +263,11 @@ private fun HomeScreenContent(it: PaddingValues) {
                 OpenAboutTile()
             }
             // bottom logo, with room below it for the start/stop button to float over
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = null,
+            SleepyDroid(
+                state = droidState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp, bottom = 80.dp)
-                    .size(76.dp)
             )
         }
     }
