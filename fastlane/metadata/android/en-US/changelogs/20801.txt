@@ -1,0 +1,14 @@
+### Release v2.8.1
+
+✨ New Features
+- explain Android's restricted settings when a grant fails
+- log why an app was grayscaled, for bug reports
+
+🐛 Bug Fixes
+- turn DetoxDroid off without the adb permission
+- stop the screen staying gray after a reboot
+- stop the filter flickering in recents and sharing
+- report the time an app is really on screen
+- end Do Not Disturb when its schedule ends
+- keep system backups working while device owner
+- stop the setup wizard replacing locked settings
