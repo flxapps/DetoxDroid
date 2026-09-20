@@ -1,15 +1,18 @@
 package com.flx_apps.digitaldetox.system_integration
 
+import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 
 /**
- * Programmatically enables/disables the [DetoxDroidAccessibilityService] by editing the secure
- * setting that lists enabled accessibility services. This requires the WRITE_SECURE_SETTINGS
- * permission — without it, [Settings.Secure.putString] throws and callers must fall back to
- * sending the user to the accessibility system settings.
+ * Programmatically enables/disables the [DetoxDroidAccessibilityService].
+ *
+ * Enabling means editing the secure setting that lists enabled accessibility services, which needs
+ * the WRITE_SECURE_SETTINGS permission: without it [Settings.Secure.putString] throws and callers
+ * must fall back to sending the user to the accessibility system settings. Disabling does not,
+ * see [deactivate].
  */
 object AccessibilityServiceController {
     /**
@@ -60,9 +63,21 @@ object AccessibilityServiceController {
 
     /**
      * Disables the accessibility service.
+     *
+     * A connected service can switch itself off through [AccessibilityService.disableSelf], which
+     * needs no permission and clears the secure setting on its own. Without that path, stopping
+     * DetoxDroid required WRITE_SECURE_SETTINGS just like starting it, so a user who never granted
+     * it could turn the app on and then not off again.
+     *
+     * Editing the setting directly stays as the fallback for the case where the component is
+     * listed as enabled but no instance is connected.
      * @see DetoxDroidAccessibilityService
      */
     fun deactivate(context: Context): Boolean {
+        DetoxDroidAccessibilityService.instance?.let {
+            it.disableSelf()
+            return true
+        }
         Settings.Secure.putString(
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,

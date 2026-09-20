@@ -4,11 +4,30 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.os.Build
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.TenSecondsInMs
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
+
+/**
+ * How long an app was actually on screen.
+ *
+ * Android counts two different things. [UsageStats.totalTimeInForeground] is the time an activity
+ * spent resumed, which keeps running while the app sits behind the lock screen, a dialog or the
+ * share sheet. [UsageStats.totalTimeVisible] is the time the app's window was really visible, and
+ * it is what the system's own screen-time figures are built from. Reporting the first one is why
+ * our numbers read higher than the ones the user can hold them up against.
+ *
+ * Visible time only exists from Android 10; below that there is nothing better to use.
+ */
+val UsageStats.screenTimeMs: Long
+    get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        totalTimeVisible.takeIf { it > 0 } ?: totalTimeInForeground
+    } else {
+        totalTimeInForeground
+    }
 
 object UsageStatsProvider {
 
@@ -43,7 +62,7 @@ object UsageStatsProvider {
     }
 
     fun getScreenTimeForApps(apps: List<String>): Long {
-        return apps.sumOf { usageStatsToday[it]?.totalTimeInForeground ?: 0L }
+        return apps.sumOf { usageStatsToday[it]?.screenTimeMs ?: 0L }
     }
 
     /**
@@ -55,6 +74,11 @@ object UsageStatsProvider {
             UsageStatsManager.INTERVAL_DAILY, startMs, endMs
         ).filter {
             it.lastTimeUsed >= startMs && it.totalTimeInForeground > 0
+        }.distinctBy {
+            // One query can hand back the same daily bucket more than once, and add() below sums
+            // whatever it is given, so a bucket that arrives twice reads as an app used for twice
+            // as long as it was.
+            it.packageName to it.firstTimeStamp
         }.groupingBy {
             it.packageName
         }.aggregate { _, accumulator: UsageStats?, element: UsageStats, first ->

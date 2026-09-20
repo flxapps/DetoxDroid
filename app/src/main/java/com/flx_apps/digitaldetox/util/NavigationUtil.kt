@@ -46,6 +46,18 @@ object NavigationUtil {
     }
 
     /**
+     * Opens this app's entry in the system settings. That page carries the overflow menu with
+     * "Allow restricted settings", which is the only way past a greyed-out special-access switch.
+     */
+    @JvmStatic
+    fun openAppInfoSettings(context: Context) {
+        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        })
+    }
+
+    /**
      * Opens the accessibility services settings screen.
      */
     @JvmStatic

@@ -4,8 +4,12 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
@@ -36,6 +40,22 @@ object OnboardingState {
     /** Whether the pending grayscale activation still waits for its (WRITE_SECURE_SETTINGS) grant. */
     val isGrayscaleActivationPending: Boolean
         get() = GrayscaleAppsFeature.id in pendingFeatureActivations
+
+    /**
+     * The features onboarding writes when it finishes. A re-run replaces their app lists, their
+     * budgets and their activation, so it can take away as much protection as editing them by
+     * hand would.
+     */
+    val configuredFeatures: List<Feature>
+        get() = listOf(BreakDoomScrollingFeature, GrayscaleAppsFeature, DisableAppsFeature)
+
+    /**
+     * Whether the commitment password currently protects any of [configuredFeatures]. Re-running
+     * onboarding is then off limits until the passphrase is entered, or it would be a way around
+     * it.
+     */
+    val isOnboardingLocked: Boolean
+        get() = configuredFeatures.any { CommitmentPasswordFeature.isFeatureLocked(it.id) }
 
     /**
      * Whether the onboarding flow should be shown on app start. Users of previous versions that

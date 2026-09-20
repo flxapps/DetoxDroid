@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Terminal
@@ -42,6 +43,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -52,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.activity.compose.LocalActivity
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
@@ -59,6 +62,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.ui.screens.premium.BitcoinAddressDialog
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.util.DebugLog
@@ -85,12 +89,16 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val premiumSubtitle = stringResource(id = R.string.premium_tile_subtitle)
     val onboardingTitle = stringResource(id = R.string.about_onboarding)
     val onboardingSubtitle = stringResource(id = R.string.about_onboarding_subtitle)
+    val onboardingLockedSubtitle = stringResource(id = R.string.about_onboarding_locked_subtitle)
     val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
     val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
     val settingsSection = stringResource(id = R.string.about_section_settings)
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
+    // observed so the tile opens up the moment the passphrase is entered on a feature screen
+    val commitmentPasswordToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    val onboardingLocked = remember(commitmentPasswordToken) { OnboardingState.isOnboardingLocked }
     var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
     val versionTaps = remember(activity) { VersionTapCountdown(activity) }
 
@@ -169,10 +177,13 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                             DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
                         }
                     )
+                    // the wizard rewrites the app lists and budgets of the very features the
+                    // commitment password protects, so it is out of reach while they are locked
                     LinkTile(
-                        icon = Icons.Default.RestartAlt,
+                        icon = if (onboardingLocked) Icons.Default.Lock else Icons.Default.RestartAlt,
                         title = onboardingTitle,
-                        subtitle = onboardingSubtitle,
+                        subtitle = if (onboardingLocked) onboardingLockedSubtitle else onboardingSubtitle,
+                        enabled = !onboardingLocked,
                         onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
                     )
                 }
@@ -298,13 +309,16 @@ private fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
         leadingContent = { Icon(icon, contentDescription = null) },
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier
+            .alpha(if (enabled) 1f else 0.5f)
+            .clickable(enabled = enabled, onClick = onClick)
     )
 }
 

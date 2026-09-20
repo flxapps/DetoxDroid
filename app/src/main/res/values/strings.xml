@@ -37,6 +37,7 @@
     <string name="action_ok">OK</string>
     <string name="action_close">Close</string>
     <string name="action_grantPermission">Grant Permission</string>
+    <string name="action_openAppInfo">Open app info</string>
     <string name="action_requestPermissions">This feature needs additional permissions.</string>
     <string name="action_search">Search</string>
     <string name="action_search_close">Close Search</string>
@@ -72,6 +73,8 @@
     <string name="home_state_inactive">Stopped</string>
     <string name="home_screenTime_today">Screen time today</string>
     <string name="home_screenTime_unavailable">Screen time unavailable</string>
+    <string name="usageStats_usageAccessRequired">DetoxDroid needs usage access to show your screen time.</string>
+    <string name="permissions_restrictedSettings_hint">If the switch is greyed out, Android is holding it back because DetoxDroid was not installed from an app store. Open the app info, tap the three-dot menu and choose "Allow restricted settings" first.</string>
     <string name="home_uninstall">Uninstall DetoxDroid</string>
     <string name="home_uninstall_hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
     <string name="home_uninstall_blocked_hint">Disabled while Commitment Password is active.</string>
@@ -638,6 +641,7 @@
     <string name="about_reportIssue_link" translatable="false">https://github.com/flxapps/DetoxDroid/issues/new</string>
     <string name="about_onboarding">Set up DetoxDroid again</string>
     <string name="about_onboarding_subtitle">Replay the welcome tour and starter presets</string>
+    <string name="about_onboarding_locked_subtitle">That would replace the settings you locked. Unlock them first.</string>
     <string name="about_debugLog">Debug log</string>
     <string name="about_debugLog_subtitle">Records what DetoxDroid does, for bug reports. Stays on this phone and is deleted when you turn it off.</string>
     <string name="about_debugLog_open">Open the debug log</string>
