@@ -627,6 +627,7 @@
     <string name="about_github">Auf GitHub mitwirken</string>
     <string name="about_onboarding">DetoxDroid neu einrichten</string>
     <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
+    <string name="about_onboarding_locked_subtitle">Das würde deine gesperrten Einstellungen überschreiben. Entsperre sie zuerst.</string>
     <string name="about_debugLog">Debug-Log</string>
     <string name="about_debugLog_subtitle">Hält fest, was DetoxDroid so macht, für Fehlerberichte. Bleibt auf dem Handy und wird beim Ausschalten gelöscht.</string>
     <string name="about_debugLog_open">Debug-Log öffnen</string>

@@ -641,6 +641,7 @@
     <string name="about_reportIssue_link" translatable="false">https://github.com/flxapps/DetoxDroid/issues/new</string>
     <string name="about_onboarding">Set up DetoxDroid again</string>
     <string name="about_onboarding_subtitle">Replay the welcome tour and starter presets</string>
+    <string name="about_onboarding_locked_subtitle">That would replace the settings you locked. Unlock them first.</string>
     <string name="about_debugLog">Debug log</string>
     <string name="about_debugLog_subtitle">Records what DetoxDroid does, for bug reports. Stays on this phone and is deleted when you turn it off.</string>
     <string name="about_debugLog_open">Open the debug log</string>
