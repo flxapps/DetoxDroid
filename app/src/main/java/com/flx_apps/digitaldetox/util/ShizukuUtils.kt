@@ -22,6 +22,16 @@ object ShizukuUtils {
     const val SHIZUKU_MANAGER_PACKAGE_NAME = "moe.shizuku.manager"
 
     /**
+     * A valid Android package name and nothing else. Every caller that interpolates a package name
+     * into a shell command runs it through here first.
+     */
+    private val PACKAGE_NAME_REGEX =
+        Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+    /** @see PACKAGE_NAME_REGEX */
+    fun isSafePackageName(packageName: String) = PACKAGE_NAME_REGEX.matches(packageName)
+
+    /**
      * Checks if the Shizuku app is installed (regardless of whether its service is running).
      */
     fun isShizukuInstalled(): Boolean {

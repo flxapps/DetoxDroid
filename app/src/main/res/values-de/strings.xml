@@ -268,8 +268,10 @@
     <string name="feature_disableApps_waitBeforeOpening_off">Aus</string>
     <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Bildschirmzeit sind die Apps sofort gesperrt, da gibt\'s nichts zu warten. Stell erst eine Zeit ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Betriebsmodus</string>
-    <string name="feature_disableApps_operationMode_description">Sollen Apps mit einem Hinweisbildschirm gesperrt oder vollständig deaktiviert werden? Deaktivieren braucht zusätzliche Berechtigungen.</string>
+    <string name="feature_disableApps_operationMode_description">Blockieren legt einen Warnbildschirm über die App. Pausieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
+    <string name="feature_disableApps_operationMode_suspend">Pausieren</string>
+    <string name="feature_disableApps_operationMode_suspend_needsShizuku">Zum Pausieren von Apps muss Shizuku laufen.</string>
     <string name="feature_disableApps_operationMode_deactivate">Deaktivieren</string>
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>

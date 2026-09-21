@@ -21,10 +21,6 @@ import timber.log.Timber
  *    touch recents; a no-op for other packages since Android 14, but harmless.
  */
 object ForceStopUtil {
-    /** Valid Android package name — also guards the value interpolated into the shell command. */
-    private val PACKAGE_NAME_REGEX =
-        Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
-
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
@@ -33,7 +29,7 @@ object ForceStopUtil {
      */
     fun tryForceStop(context: Context, packageName: String) {
         val appContext = context.applicationContext
-        if (!PACKAGE_NAME_REGEX.matches(packageName) || packageName == appContext.packageName) {
+        if (!ShizukuUtils.isSafePackageName(packageName) || packageName == appContext.packageName) {
             Timber.d("Skipping force-stop for %s", packageName)
             return
         }
