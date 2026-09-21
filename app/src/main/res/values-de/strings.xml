@@ -605,6 +605,15 @@
     <string name="about_summary">Mach Digital Detox zu deinem Normalzustand.</string>
     <string name="about_tile_subtitle">Einstellungen, Projektinfos und die Kaffeekasse.</string>
     <string name="about_section_settings">Einstellungen</string>
+    <string name="about_backup_export">Einstellungen in Datei sichern</string>
+    <string name="about_backup_export_subtitle">Alles, was du eingestellt hast, in einer Datei, die dir gehört. Die Bildschirmzeit-Historie ist nicht dabei.</string>
+    <string name="about_backup_restore">Einstellungen aus Datei laden</string>
+    <string name="about_backup_restore_subtitle">Liest eine Datei ein und startet DetoxDroid neu.</string>
+    <string name="about_backup_restore_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt.</string>
+    <string name="about_backup_restore_confirm">Das überschreibt alles, was in der Datei steht, und startet DetoxDroid neu. Dein Commitment-Passwort gehört nicht dazu und bleibt, wie es ist.</string>
+    <string name="about_backup_restore_confirm_action">Laden</string>
+    <string name="about_backup_export_failed">Die Datei konnte nicht geschrieben werden.</string>
+    <string name="about_backup_restore_failed">In dieser Datei stehen keine DetoxDroid-Einstellungen.</string>
     <string name="about_section_support">Projekt unterstützen</string>
     <string name="about_section_project">Projekt &amp; Kontakt</string>
     <string name="about_version">Version %1$s</string>

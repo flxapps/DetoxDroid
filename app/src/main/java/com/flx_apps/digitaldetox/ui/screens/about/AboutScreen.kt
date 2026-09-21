@@ -186,6 +186,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         enabled = !onboardingLocked,
                         onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
                     )
+                    ConfigBackupTiles()
                 }
 
                 SectionHeader(supportSection)
@@ -305,7 +306,7 @@ private class VersionTapCountdown(private val activity: Activity?) {
 }
 
 @Composable
-private fun LinkTile(
+internal fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
