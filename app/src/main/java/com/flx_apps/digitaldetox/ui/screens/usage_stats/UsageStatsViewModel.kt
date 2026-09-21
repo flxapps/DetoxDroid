@@ -44,6 +44,27 @@ class UsageStatsViewModel @Inject constructor(
 
     private var lastSnapshotElapsedMs = 0L
 
+    /**
+     * What the user has left out of the numbers, read once per refresh so that every aggregate in
+     * one snapshot is built from the same answer.
+     */
+    private var excludedPackages: Set<String> = emptySet()
+    private var excludedCategories: Set<Int> = emptySet()
+
+    /** [ApplicationInfo.category] per package; a package manager lookup per app per refresh adds up. */
+    private val categoryCache = mutableMapOf<String, Int>()
+
+    private fun categoryOf(packageName: String): Int = categoryCache.getOrPut(packageName) {
+        runCatching {
+            getApplication<Application>().packageManager.getApplicationInfo(packageName, 0).category
+        }.getOrDefault(ApplicationInfo.CATEGORY_UNDEFINED)
+    }
+
+    private fun isExcluded(packageName: String) =
+        packageName in excludedPackages || categoryOf(packageName) in excludedCategories
+
+    private val hasExclusions get() = excludedPackages.isNotEmpty() || excludedCategories.isNotEmpty()
+
     fun setTimeFrame(timeFrame: TimeFrame) {
         _uiState.update { it.copy(timeFrame = timeFrame, selectedDay = null) }
         refresh()
@@ -73,6 +94,26 @@ class UsageStatsViewModel @Inject constructor(
             UsageStatsSettings.hourlyRate = rate
             _uiState.update { it.copy(hourlyRate = rate) }
         }
+    }
+
+    /** Leaves [packageName] out of the numbers, or counts it again. */
+    fun setAppExcluded(packageName: String, excluded: Boolean) {
+        UsageStatsSettings.excludedApps = if (excluded) {
+            UsageStatsSettings.excludedApps + packageName
+        } else {
+            UsageStatsSettings.excludedApps - packageName
+        }
+        refresh()
+    }
+
+    /** Leaves a whole [ApplicationInfo.category] out of the numbers, or counts it again. */
+    fun setCategoryExcluded(categoryId: Int, excluded: Boolean) {
+        UsageStatsSettings.excludedCategories = if (excluded) {
+            UsageStatsSettings.excludedCategories + categoryId
+        } else {
+            UsageStatsSettings.excludedCategories - categoryId
+        }
+        refresh()
     }
 
     /**
@@ -106,6 +147,8 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     private suspend fun refreshHistoryMetadata() {
+        excludedPackages = UsageStatsSettings.excludedApps
+        excludedCategories = UsageStatsSettings.excludedCategories
         val retentionStart = LocalDate.now().minusMonths(HISTORY_RETENTION_MONTHS)
         val historyDays = repository.getHistoricalDayCount(retentionStart, LocalDate.now())
         val earliest = repository.getEarliestHistoryDate()
@@ -138,10 +181,10 @@ class UsageStatsViewModel @Inject constructor(
         val nowMs = System.currentTimeMillis()
 
         val osStats = UsageStatsProvider.queryForPeriod(startMs, nowMs)
-        val events = UsageStatsProvider.queryEventCounts(startMs, nowMs)
+        val events = UsageStatsProvider.queryEventCounts(startMs, nowMs) { !isExcluded(it) }
         val sessionCounts = UsageStatsProvider.groupSessionCounts(events.sessions)
 
-        val perApp = osStats.mapValues { (pkg, stat) ->
+        val allApps = osStats.mapValues { (pkg, stat) ->
             AggregatedAppStats(
                 packageName = pkg,
                 totalTimeMs = stat.screenTimeMs,
@@ -151,12 +194,13 @@ class UsageStatsViewModel @Inject constructor(
                 scrollDistancePx = UsageStatsTracker.scrollDistanceCounter.countFor(pkg).toLong()
             )
         }
+        val perApp = allApps.filterKeys { !isExcluded(it) }
         val total = perApp.values.sumOf { it.totalTimeMs }
 
         val yesterdayStartMs =
             today.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val yesterdayTotal = UsageStatsProvider.queryForPeriod(yesterdayStartMs, startMs)
-            .values.sumOf { it.screenTimeMs }
+            .filterKeys { !isExcluded(it) }.values.sumOf { it.screenTimeMs }
         val yesterdayUnlocks =
             UsageStatsProvider.queryEventCounts(yesterdayStartMs, startMs).unlockCount
 
@@ -187,7 +231,9 @@ class UsageStatsViewModel @Inject constructor(
                 weekdayAverages = FloatArray(7),
                 detoxImpact = detoxImpact,
                 effectiveDays = 1,
-                scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx })
+                scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
+                excludedApps = buildExcludedApps(allApps),
+                categories = buildCategoryFilters(allApps)
             )
         }
     }
@@ -197,7 +243,8 @@ class UsageStatsViewModel @Inject constructor(
         val today = LocalDate.now()
         val days = (end.toEpochDay() - start.toEpochDay() + 1).toInt().coerceAtLeast(1)
 
-        val rows = withBackfilledRecentDays(repository.getHistorical(start, end), start, end)
+        val allRows = withBackfilledRecentDays(repository.getHistorical(start, end), start, end)
+        val rows = allRows.filterNot { isExcluded(it.packageName) }
 
         // per-day totals, zero-filled so the time axis has no silent gaps
         val totalsByDate = rows.groupBy { it.date }
@@ -210,6 +257,9 @@ class UsageStatsViewModel @Inject constructor(
 
         val selectedDay = _uiState.value.selectedDay
         val focusRows = if (selectedDay != null) rows.filter { it.date == selectedDay } else rows
+        val allFocusRows =
+            if (selectedDay != null) allRows.filter { it.date == selectedDay } else allRows
+        val allPerApp = aggregateByPackage(allFocusRows, emptyMap(), emptyMap())
         val focusStart = selectedDay ?: start
         val focusEnd = selectedDay ?: end
 
@@ -219,7 +269,8 @@ class UsageStatsViewModel @Inject constructor(
         } else {
             focusEnd.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         }
-        val events = UsageStatsProvider.queryEventCounts(eventsStartMs, eventsEndMs)
+        val events =
+            UsageStatsProvider.queryEventCounts(eventsStartMs, eventsEndMs) { !isExcluded(it) }
         val sessionCounts = UsageStatsProvider.groupSessionCounts(events.sessions)
 
         val perApp = aggregateByPackage(focusRows, events.launchCounts, sessionCounts)
@@ -227,6 +278,8 @@ class UsageStatsViewModel @Inject constructor(
         // Unlocks and hour histograms: for ranges beyond the OS event-log retention (and for
         // selected days that may lie beyond it), prefer the persisted daily device stats. Short
         // ranges keep using the live event log, which also covers days DetoxDroid wasn't running.
+        // The persisted buckets are device-level with no per-app breakdown, so for those ranges the
+        // "when" chart still counts apps the user left out of everything else.
         val deviceRows = when {
             selectedDay != null -> repository.getDeviceStats(selectedDay, selectedDay)
             days > EVENT_LOG_RELIABLE_DAYS -> repository.getDeviceStats(start, end)
@@ -277,7 +330,9 @@ class UsageStatsViewModel @Inject constructor(
                 weekdayAverages = weekdayAverages(byDay),
                 detoxImpact = detoxImpact,
                 effectiveDays = days,
-                scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx })
+                scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
+                excludedApps = buildExcludedApps(allPerApp),
+                categories = buildCategoryFilters(allPerApp)
             )
         }
     }
@@ -358,7 +413,7 @@ class UsageStatsViewModel @Inject constructor(
 
         if (days > EVENT_LOG_RELIABLE_DAYS) {
             val totalDelta = if (repository.getHistoricalDayCount(prevStart, prevEnd) >= minCoverageDays) {
-                currentTotal - repository.getTotalScreenTimeInRange(prevStart, prevEnd)
+                currentTotal - previousRoomTotal(prevStart, prevEnd)
             } else null
             val unlockDelta = if (
                 currentUnlocksFromHistory &&
@@ -370,10 +425,20 @@ class UsageStatsViewModel @Inject constructor(
         }
 
         val prevTotal = UsageStatsProvider.queryForPeriod(prevStartMs, prevEndMs)
-            .values.sumOf { it.screenTimeMs }
+            .filterKeys { !isExcluded(it) }.values.sumOf { it.screenTimeMs }
         val prevUnlocks = UsageStatsProvider.queryEventCounts(prevStartMs, prevEndMs).unlockCount
         return (if (prevTotal > 0) currentTotal - prevTotal else null) to
             (if (prevUnlocks > 0) currentUnlocks - prevUnlocks else null)
+    }
+
+    /**
+     * Screen time of the previous period out of Room. With nothing left out this is one SQL sum;
+     * with exclusions it has to walk the per-app rows, which is why the cheap path is kept.
+     */
+    private suspend fun previousRoomTotal(start: LocalDate, end: LocalDate): Long {
+        if (!hasExclusions) return repository.getTotalScreenTimeInRange(start, end)
+        return repository.getHistorical(start, end)
+            .filterNot { isExcluded(it.packageName) }.sumOf { it.totalTimeMs }
     }
 
     /**
@@ -400,26 +465,72 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     private fun buildTopApps(perApp: Map<String, AggregatedAppStats>): List<AppUsageStat> {
-        val pm = getApplication<Application>().packageManager
         return perApp.values
             .filter { it.totalTimeMs >= MIN_APP_FOREGROUND_TIME_MS }
             .sortedByDescending { it.totalTimeMs }
-            .map { stat ->
-                AppUsageStat(
-                    packageName = stat.packageName,
-                    label = runCatching {
-                        pm.getApplicationInfo(stat.packageName, 0).loadLabel(pm).toString()
-                    }.getOrDefault(stat.packageName),
-                    totalTimeMs = stat.totalTimeMs,
-                    launchCount = stat.launchCount,
-                    sessionCount = stat.sessionCount,
-                    scrollEventCount = stat.scrollCount,
-                    scrollIntensityScore = scrollIntensityScore(stat.scrollCount, stat.totalTimeMs),
-                    scrollsPerMinute = scrollsPerMinute(stat.scrollCount, stat.totalTimeMs),
-                    scrollDistanceMeters = pixelsToMeters(stat.scrollDistancePx),
-                    detoxBadges = detoxBadgesFor(stat.packageName)
+            .map { toAppUsageStat(it) }
+    }
+
+    /**
+     * The apps the user named to be left out, whether or not they were used in the period. Built
+     * from the stored selection so that one with no usage in the selected period can still be
+     * brought back. Apps left out through their category are not in here: the category is where
+     * they are brought back.
+     */
+    private fun buildExcludedApps(allApps: Map<String, AggregatedAppStats>): List<AppUsageStat> {
+        return excludedPackages
+            .map { pkg ->
+                toAppUsageStat(
+                    allApps[pkg] ?: AggregatedAppStats(pkg, 0L, 0, 0, 0, 0L)
                 )
             }
+            .sortedWith(compareByDescending<AppUsageStat> { it.totalTimeMs }.thenBy { it.label })
+    }
+
+    /**
+     * Every category with usage in the period, so the sheet can offer the whole of it at once.
+     * Categories that only the user's own exclusions would name are in here as well, because a
+     * category whose apps are all left out still has to be reachable to undo that.
+     */
+    private fun buildCategoryFilters(
+        allApps: Map<String, AggregatedAppStats>
+    ): List<UsageCategoryFilter> {
+        val context = getApplication<Application>()
+        val fallbackLabel = context.getString(R.string.usageStats_category_other)
+        val timeByCategory = mutableMapOf<Int, Long>()
+        for ((pkg, stat) in allApps) {
+            timeByCategory.merge(categoryOf(pkg), stat.totalTimeMs, Long::plus)
+        }
+        excludedCategories.forEach { timeByCategory.putIfAbsent(it, 0L) }
+        return timeByCategory.entries
+            .map { (categoryId, totalTimeMs) ->
+                UsageCategoryFilter(
+                    categoryId = categoryId,
+                    label = ApplicationInfo.getCategoryTitle(context, categoryId)?.toString()
+                        ?: fallbackLabel,
+                    totalTimeMs = totalTimeMs,
+                    isExcluded = categoryId in excludedCategories
+                )
+            }
+            .sortedByDescending { it.totalTimeMs }
+    }
+
+    private fun toAppUsageStat(stat: AggregatedAppStats): AppUsageStat {
+        val pm = getApplication<Application>().packageManager
+        return AppUsageStat(
+            packageName = stat.packageName,
+            label = runCatching {
+                pm.getApplicationInfo(stat.packageName, 0).loadLabel(pm).toString()
+            }.getOrDefault(stat.packageName),
+            totalTimeMs = stat.totalTimeMs,
+            launchCount = stat.launchCount,
+            sessionCount = stat.sessionCount,
+            scrollEventCount = stat.scrollCount,
+            scrollIntensityScore = scrollIntensityScore(stat.scrollCount, stat.totalTimeMs),
+            scrollsPerMinute = scrollsPerMinute(stat.scrollCount, stat.totalTimeMs),
+            scrollDistanceMeters = pixelsToMeters(stat.scrollDistancePx),
+            detoxBadges = detoxBadgesFor(stat.packageName)
+        )
     }
 
     private fun detoxBadgesFor(packageName: String): List<DetoxBadge> = buildList {
@@ -458,15 +569,11 @@ class UsageStatsViewModel @Inject constructor(
         perApp: Map<String, AggregatedAppStats>
     ): Map<String, Long> {
         val context = getApplication<Application>()
-        val pm = context.packageManager
         val fallbackLabel = context.getString(R.string.usageStats_category_other)
         val byCategory = mutableMapOf<String, Long>()
         for ((pkg, stat) in perApp) {
-            val category = runCatching {
-                pm.getApplicationInfo(pkg, 0).category
-            }.getOrDefault(ApplicationInfo.CATEGORY_UNDEFINED)
-            val label =
-                ApplicationInfo.getCategoryTitle(context, category)?.toString() ?: fallbackLabel
+            val label = ApplicationInfo.getCategoryTitle(context, categoryOf(pkg))?.toString()
+                ?: fallbackLabel
             byCategory.merge(label, stat.totalTimeMs, Long::plus)
         }
         return byCategory.entries.sortedByDescending { it.value }

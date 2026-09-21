@@ -43,6 +43,17 @@ data class AggregatedAppStats(
     val scrollDistancePx: Long
 )
 
+/**
+ * An app category with usage in the selected period, and whether the screen counts it.
+ * [categoryId] is the OS-assigned [android.content.pm.ApplicationInfo.category].
+ */
+data class UsageCategoryFilter(
+    val categoryId: Int,
+    val label: String,
+    val totalTimeMs: Long,
+    val isExcluded: Boolean
+)
+
 /** Everything the usage stats screen renders, emitted as one consistent snapshot. */
 data class UsageStatsUiState(
     val timeFrame: TimeFrame = TimeFrame.TODAY,
@@ -68,5 +79,13 @@ data class UsageStatsUiState(
     /** Total physical scroll distance in the period (the "scroll odometer"). */
     val scrollDistanceMeters: Double = 0.0,
     /** Self-declared value of an hour, in local currency (0 = life-cost reframing disabled). */
-    val hourlyRate: Int = 0
+    val hourlyRate: Int = 0,
+    /**
+     * The apps the user named to be left out, so they can be brought back. Built from the stored
+     * selection rather than from the period, because an app with no usage in the period would
+     * otherwise be impossible to un-exclude.
+     */
+    val excludedApps: List<AppUsageStat> = emptyList(),
+    /** Every category with usage in the period, counted or not. */
+    val categories: List<UsageCategoryFilter> = emptyList()
 )

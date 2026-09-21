@@ -440,6 +440,11 @@
     <string name="usageStats_scrollIntensity_score">scroll intensity</string>
     <string name="usageStats_scrollIntensity_detail">%1$d scrolls · %2$.1f/min</string>
     <string name="usageStats_scrollIntensity_info">Combines total scroll count with the rate per minute (using a sqrt weighting) so brief bursts cannot outrank sustained doom-scrolling. Higher = more doom-scrolling.</string>
+    <string name="usageStats_exclusions_title">Left out of the numbers</string>
+    <string name="usageStats_exclusions_description">Screen time counts how long an app was on screen, not what you were doing with it. A sleep tracker running all night looks the same as a feed you scrolled all night. Leave those out here.</string>
+    <string name="usageStats_exclusions_categories">Whole categories</string>
+    <string name="usageStats_exclusions_leftOut">Currently left out</string>
+    <string name="usageStats_exclusions_counted">Currently counted</string>
     <string name="usageStats_showMore">Show more</string>
     <string name="usageStats_showLess">Show less</string>
     <string name="usageStats_sort">Sort by</string>

@@ -667,4 +667,9 @@
     <string name="debugLog_newest">Zu den neuesten Einträgen</string>
     <string name="debugLog_hint">Tipp auf einen Eintrag, um ihn aufzuklappen, halt ihn gedrückt, um ihn zu kopieren, und tipp auf sein Tag, um nur dieses Tag zu sehen.</string>
     <!-- endregion -->
+    <string name="usageStats_exclusions_title">Nicht mitgezählt</string>
+    <string name="usageStats_exclusions_description">Die Bildschirmzeit misst, wie lange eine App zu sehen war, nicht, was du damit gemacht hast. Ein Schlaftracker, der die ganze Nacht läuft, sieht genauso aus wie ein Feed, durch den du die ganze Nacht gescrollt hast. Solche Apps kannst du hier rauslassen.</string>
+    <string name="usageStats_exclusions_categories">Ganze Kategorien</string>
+    <string name="usageStats_exclusions_leftOut">Zählt gerade nicht mit</string>
+    <string name="usageStats_exclusions_counted">Zählt gerade mit</string>
 </resources>

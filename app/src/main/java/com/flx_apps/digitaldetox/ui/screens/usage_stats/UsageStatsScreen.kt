@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -77,6 +78,7 @@ fun UsageStatsScreen(
     val isPremiumUnlocked by PremiumManager.isPremiumUnlocked.collectAsState()
     val selectedApp = remember { mutableStateOf<AppUsageStat?>(null) }
     val showCustomPicker = remember { mutableStateOf(false) }
+    val showExclusions = remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(TopAppsSort.SCREEN_TIME) }
     var sortExpanded by remember { mutableStateOf(false) }
     val sortedApps = remember(state.topApps, sortMode) {
@@ -121,6 +123,14 @@ fun UsageStatsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showExclusions.value = true }) {
+                        Icon(
+                            Icons.Default.VisibilityOff,
+                            contentDescription = stringResource(R.string.usageStats_exclusions_title)
                         )
                     }
                 }
@@ -316,6 +326,24 @@ fun UsageStatsScreen(
                     app = app,
                     trendData = viewModel.appTrend.collectAsState().value,
                     onFeatureChanged = { viewModel.refresh() }
+                )
+            }
+        }
+
+        if (showExclusions.value) {
+            val exclusionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ModalBottomSheet(
+                onDismissRequest = { showExclusions.value = false },
+                sheetState = exclusionsSheetState
+            ) {
+                UsageStatsExclusionsSheet(
+                    state = state,
+                    onAppExcluded = { packageName, excluded ->
+                        viewModel.setAppExcluded(packageName, excluded)
+                    },
+                    onCategoryExcluded = { categoryId, excluded ->
+                        viewModel.setCategoryExcluded(categoryId, excluded)
+                    }
                 )
             }
         }
