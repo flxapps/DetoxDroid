@@ -85,14 +85,13 @@ fun GrayscaleAppsFeatureSettingsSection(
     val canWriteSecureSettings = hasWriteSecureSettingsPermission()
     SettingsGroup {
         ShizukuWizardTile()
-        OpenAppExceptionsTile(subtitleText = stringResource(
-            id = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
+        OpenAppExceptionsTile(
+            subtitleRes = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
                 R.string.feature_grayscale_exceptions_summary_notList
             } else {
                 R.string.feature_grayscale_exceptions_summary_onlyList
-            },
-            GrayscaleAppsFeature.appExceptions.size
-        ))
+            }
+        )
         OpenScheduleTile()
         if (canWriteSecureSettings) SystemGrayscaleTile()
         ScreenFilterTile()

@@ -42,4 +42,21 @@ object ApplicationInfoRepository {
                 }
         return installedApps
     }
+
+    /**
+     * How many of [packageNames] the package manager still knows about. A feature's app selection
+     * survives the apps it names, so it can hold packages that are long gone; those are not apps
+     * the feature acts on and must not be counted as such. Matches what [getInstalledApps] returns,
+     * so a selection summary and the selection list itself always arrive at the same number.
+     */
+    fun countInstalled(packageNames: Set<String>): Int {
+        val packageManager = DetoxDroidApplication.appContext.packageManager
+        return packageNames.count { packageName ->
+            runCatching {
+                packageManager.getApplicationInfo(
+                    packageName, PackageManager.MATCH_UNINSTALLED_PACKAGES
+                )
+            }.isSuccess
+        }
+    }
 }

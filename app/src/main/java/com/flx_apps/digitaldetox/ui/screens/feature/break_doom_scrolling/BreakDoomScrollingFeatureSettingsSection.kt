@@ -52,14 +52,13 @@ fun BreakDoomScrollingFeatureSettingsSection(
 
     SettingsGroup {
         val listType = BreakDoomScrollingFeature.appExceptionListType
-        OpenAppExceptionsTile(subtitleText = stringResource(
-            id = if (listType == AppExceptionListType.NOT_LIST) {
+        OpenAppExceptionsTile(
+            subtitleRes = if (listType == AppExceptionListType.NOT_LIST) {
                 R.string.feature_doomScrolling_exceptions_summary_notList
             } else {
                 R.string.feature_doomScrolling_exceptions_summary_onlyList
-            },
-            BreakDoomScrollingFeature.appExceptions.size
-        ))
+            }
+        )
         OpenScheduleTile()
         SimpleListTile(
             titleText = stringResource(id = R.string.feature_doomScrolling_timeUntilWarning),

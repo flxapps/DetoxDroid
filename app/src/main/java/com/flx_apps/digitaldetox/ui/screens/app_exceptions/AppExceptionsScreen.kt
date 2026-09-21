@@ -194,7 +194,7 @@ fun InstalledAppsList(
 private fun CopyExceptionsFromButton(
     settingsLocked: Boolean, viewModel: AppExceptionsViewModel = viewModel()
 ) {
-    val copySources = remember { viewModel.copySources() }
+    val copySources = viewModel.copySources.collectAsState().value
     if (copySources.isEmpty()) return
     var showDialog by remember { mutableStateOf(false) }
 
