@@ -170,6 +170,35 @@ fun UsageStatsScreen(
                     }
                 }
 
+                if (state.isSelfMeasured) {
+                    item {
+                        ElevatedCard(shape = CARD_SHAPE, modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        stringResource(R.string.usageStats_selfMeasured),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                OutlinedButton(
+                                    onClick = { NavigationUtil.openUsageAccessSettings(context) },
+                                    modifier = Modifier.padding(top = 8.dp)
+                                ) {
+                                    Text(stringResource(R.string.action_grantPermission))
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (state.availableHistoryDays < MIN_DAYS_FOR_HISTORY_HINT) {
                     item {
                         ElevatedCard(

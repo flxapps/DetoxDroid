@@ -99,7 +99,12 @@ object UsageStatsProvider {
         val unlockCount: Int,
         val unlockHourBuckets: IntArray,
         val sessions: List<SessionInfo>
-    )
+    ) {
+        companion object {
+            /** What the event log amounts to when there is no permission to read it. */
+            val EMPTY = EventCounts(emptyMap(), IntArray(24), 0, IntArray(24), emptyList())
+        }
+    }
 
     /**
      * Walks the OS usage-event log for [startMs]..[endMs] and derives per-app launch counts,

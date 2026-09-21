@@ -402,6 +402,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * the ones a running pause suspends.
      */
     private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
+        // usage statistics are pure measurement and keep counting during a pause —
+        // a pause only suspends the interventions below
+        UsageStatsTracker.onForegroundApp(packageName)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(

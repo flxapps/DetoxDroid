@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.flx_apps.digitaldetox.system_integration.UsageStatsSnapshotEntryPoint
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.DailyAppCounter
+import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import com.flx_apps.digitaldetox.util.ScrollDeltaCalibrator
 import com.flx_apps.digitaldetox.util.ScrollDistanceEstimator
 import dagger.hilt.android.EntryPointAccessors
@@ -40,6 +41,12 @@ object UsageStatsTracker {
      * estimated from the screen height — see [ScrollDistanceEstimator].
      */
     val scrollDistanceCounter = DailyAppCounter()
+
+    /**
+     * Foreground time DetoxDroid measures itself, for the phones where the OS will not hand its
+     * own numbers over.
+     */
+    val foregroundTimeRecorder = ForegroundTimeRecorder()
 
     /** Weights scroll events by their in-app relative scroll distance (see the class docs). */
     private val scrollCalibrator = ScrollDeltaCalibrator()
@@ -87,10 +94,26 @@ object UsageStatsTracker {
      * since the last debounced snapshot. Call from [android.app.Service.onDestroy].
      */
     fun shutdown() {
+        foregroundTimeRecorder.closeSession()
         scope.launch {
             runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
                 .onFailure { Timber.w(it, "Final scroll snapshot on shutdown failed") }
         }
+    }
+
+    /**
+     * Registers that [packageName] came to the front. Pure measurement: it keeps running through a
+     * pause, which only suspends what the features do about it.
+     */
+    fun onForegroundApp(packageName: String) {
+        foregroundTimeRecorder.onForegroundApp(packageName)
+        maybeSnapshotCounters()
+    }
+
+    /** The screen going off ends the session; nothing is in front of a screen that is off. */
+    fun onScreenTurnedOff() {
+        foregroundTimeRecorder.closeSession()
+        maybeSnapshotCounters()
     }
 
     /**
@@ -107,15 +130,21 @@ object UsageStatsTracker {
             scrollDistanceCounter.increment(pkg, distancePx.toDouble())
         }
 
+        maybeSnapshotCounters()
+    }
+
+    /**
+     * Persists the live counters at most every [SCROLL_SNAPSHOT_DEBOUNCE_MS], so at most that much
+     * is lost to a force-close. Counters only: this runs every few minutes of use, and walking the
+     * whole day's OS event log for it made DetoxDroid *itself* the battery drain.
+     */
+    private fun maybeSnapshotCounters() {
         val now = SystemClock.elapsedRealtime()
-        if (now - lastSnapshotMs >= SCROLL_SNAPSHOT_DEBOUNCE_MS) {
-            lastSnapshotMs = now
-            scope.launch {
-                // counters-only: this ran every few minutes of active scrolling and walking the
-                // whole day's OS event log for it made DetoxDroid *itself* the battery drain
-                runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
-                    .onFailure { Timber.w(it, "Scroll-triggered snapshot failed") }
-            }
+        if (now - lastSnapshotMs < SCROLL_SNAPSHOT_DEBOUNCE_MS) return
+        lastSnapshotMs = now
+        scope.launch {
+            runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
+                .onFailure { Timber.w(it, "Debounced counter snapshot failed") }
         }
     }
 }

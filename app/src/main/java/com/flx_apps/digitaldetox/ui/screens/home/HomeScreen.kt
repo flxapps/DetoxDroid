@@ -69,8 +69,7 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
-import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
-import com.flx_apps.digitaldetox.system_integration.screenTimeMs
+import com.flx_apps.digitaldetox.system_integration.TodayScreenTime
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
@@ -431,11 +430,13 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val context = LocalContext.current
     // keyed on the lifecycle state: refresh when the user returns to the screen, but never
     // re-query the (blocking) UsageStatsManager on ordinary recompositions such as slice taps
-    val stats = remember(lifecycleState) { UsageStatsProvider.getUpdatedUsageStatsToday() }
+    val stats = remember(lifecycleState) {
+        TodayScreenTime.byPackage(context).entries.sortedByDescending { it.value }
+    }
     val selectedIndex = remember { mutableStateOf(-1) }
 
-    val chartStats = stats.values.sortedByDescending { it.screenTimeMs }.take(5)
-    val screenTime = stats.values.sumOf { it.screenTimeMs }
+    val chartStats = stats.take(5)
+    val screenTime = stats.sumOf { it.value }
     val colors = listOf(
         colorResource(id = R.color.pink),
         colorResource(id = R.color.orange),
@@ -447,15 +448,14 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val packageManager = LocalContext.current.packageManager
     val otherLabel = stringResource(id = R.string.usageStats_other)
     val otherTime =
-        (screenTime - chartStats.sumOf { it.screenTimeMs }.toFloat()).coerceAtLeast(1f)
+        (screenTime - chartStats.sumOf { it.value }).toFloat().coerceAtLeast(1f)
 
     // apps can disappear from PackageManager while still being present in today's usage stats
-    val slices = chartStats.map { appStats ->
+    val slices = chartStats.map { (packageName, timeMs) ->
         val label = runCatching {
-            packageManager.getApplicationInfo(appStats.packageName, 0)
-                .loadLabel(packageManager).toString()
-        }.getOrDefault(appStats.packageName)
-        label to appStats.screenTimeMs.toFloat()
+            packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
+        }.getOrDefault(packageName)
+        label to timeMs.toFloat()
     }.plus(otherLabel to otherTime)
 
     val totalValue = slices.fold(0f) { acc, pair -> acc + pair.second }.coerceAtLeast(1f)
@@ -540,9 +540,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 if (stats.isNotEmpty()) {
                     val idx = selectedIndex.value
                     if (idx >= 0 && idx < chartStats.count()) {
-                        val selectedStat = chartStats[idx]
                         Text(
-                            text = selectedStat.screenTimeMs.milliseconds.toHrMinString(context),
+                            text = chartStats[idx].value.milliseconds.toHrMinString(context),
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center
                         )

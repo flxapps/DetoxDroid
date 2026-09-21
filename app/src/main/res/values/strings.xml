@@ -399,6 +399,7 @@
     <string name="usageStats_timeframe_custom_inputFormat">d/M/yyyy</string>
     <string name="usageStats_timeframe_custom_switchToCalendar">Switch to calendar selection</string>
     <string name="usageStats_timeframe_custom_switchToInput">Switch to text input</string>
+    <string name="usageStats_selfMeasured">Your phone will not let DetoxDroid read the system\'s screen time, so these numbers are its own: only what it saw while it was running.</string>
     <string name="usageStats_improvesOverTime">Stats get better the longer DetoxDroid runs. Scroll data only exists while it is active.</string>
     <string name="usageStats_dailyAverage">Daily avg: %s</string>
     <string name="usageStats_dailyAverage_short">daily avg</string>

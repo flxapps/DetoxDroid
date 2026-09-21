@@ -6,6 +6,8 @@ import com.flx_apps.digitaldetox.data.DailyDeviceStats
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
+import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsage
+import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -13,6 +15,7 @@ import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.DailyAppCounter
+import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
@@ -20,12 +23,21 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Which instrument the per-day, per-app numbers come from. The OS keeps the better record and is
+ * used wherever it can be; [SELF_MEASURED] is what is left on a phone that will not grant usage
+ * access.
+ * @see ForegroundTimeRecorder
+ */
+enum class UsageSource { OS, SELF_MEASURED }
+
 /** Coordinates historical usage stats between the OS UsageStatsManager and the Room DAO. */
 @Singleton
 class UsageStatsRepository @Inject constructor(
     private val dao: DailyAppUsageDao,
     private val grayscaleDao: DailyGrayscaleStatsDao,
-    private val deviceStatsDao: DailyDeviceStatsDao
+    private val deviceStatsDao: DailyDeviceStatsDao,
+    private val selfMeasuredDao: SelfMeasuredAppUsageDao
 ) {
     private val snapshotMutex = Mutex()
     private var counterBaselineDate: LocalDate? = null
@@ -118,7 +130,7 @@ class UsageStatsRepository @Inject constructor(
         )
 
         snapshotGrayscaleToday()
-    }
+    }.also { snapshotSelfMeasuredToday() }
 
     private suspend fun snapshotGrayscaleToday() {
         val today = LocalDate.now()
@@ -198,7 +210,7 @@ class UsageStatsRepository @Inject constructor(
             )
         }
         dao.upsertAll(rows)
-    }
+    }.also { snapshotSelfMeasuredToday() }
 
     private fun resetCounterBaselinesIfNeeded(today: LocalDate) {
         if (counterBaselineDate == today) return
@@ -234,34 +246,88 @@ class UsageStatsRepository @Inject constructor(
         return grayscaleDao.getTotalGrayscaleTimeInRange(start, end) ?: 0L
     }
 
-    suspend fun getHistorical(start: LocalDate, end: LocalDate): List<DailyAppUsage> {
-        return dao.getRange(start, end)
+    suspend fun getHistorical(
+        start: LocalDate, end: LocalDate, source: UsageSource = UsageSource.OS
+    ): List<DailyAppUsage> = when (source) {
+        UsageSource.OS -> dao.getRange(start, end)
+        UsageSource.SELF_MEASURED -> selfMeasuredDao.getRange(start, end).map { it.asDailyAppUsage() }
     }
 
-    suspend fun getHistoricalDayCount(start: LocalDate, end: LocalDate): Int {
-        return dao.getDayCountInRange(start, end)
+    suspend fun getHistoricalDayCount(
+        start: LocalDate, end: LocalDate, source: UsageSource = UsageSource.OS
+    ): Int = when (source) {
+        UsageSource.OS -> dao.getDayCountInRange(start, end)
+        UsageSource.SELF_MEASURED -> selfMeasuredDao.getDayCountInRange(start, end)
     }
 
     /** Returns the summed screen time of all Room rows in [start]..[end] (inclusive). */
-    suspend fun getTotalScreenTimeInRange(start: LocalDate, end: LocalDate): Long {
-        return dao.getTotalTimeInRange(start, end) ?: 0L
+    suspend fun getTotalScreenTimeInRange(
+        start: LocalDate, end: LocalDate, source: UsageSource = UsageSource.OS
+    ): Long = when (source) {
+        UsageSource.OS -> dao.getTotalTimeInRange(start, end) ?: 0L
+        UsageSource.SELF_MEASURED -> selfMeasuredDao.getTotalTimeInRange(start, end) ?: 0L
     }
 
     suspend fun getAppHistorical(
-        packageName: String, start: LocalDate, end: LocalDate
-    ): List<DailyAppUsage> {
-        return dao.getForPackageInRange(packageName, start, end)
+        packageName: String,
+        start: LocalDate,
+        end: LocalDate,
+        source: UsageSource = UsageSource.OS
+    ): List<DailyAppUsage> = when (source) {
+        UsageSource.OS -> dao.getForPackageInRange(packageName, start, end)
+        UsageSource.SELF_MEASURED ->
+            selfMeasuredDao.getForPackageInRange(packageName, start, end).map { it.asDailyAppUsage() }
     }
 
-    suspend fun getEarliestHistoryDate(): LocalDate? {
-        return dao.getEarliestDate()
-    }
+    suspend fun getEarliestHistoryDate(source: UsageSource = UsageSource.OS): LocalDate? =
+        when (source) {
+            UsageSource.OS -> dao.getEarliestDate()
+            UsageSource.SELF_MEASURED -> selfMeasuredDao.getEarliestDate()
+        }
 
     suspend fun pruneOlderThan(cutoff: LocalDate): Int {
         val prunedApps = dao.deleteOlderThan(cutoff)
         val prunedGrayscale = grayscaleDao.deleteOlderThan(cutoff)
         val prunedDeviceStats = deviceStatsDao.deleteOlderThan(cutoff)
-        return prunedApps + prunedGrayscale + prunedDeviceStats
+        val prunedSelfMeasured = selfMeasuredDao.deleteOlderThan(cutoff)
+        return prunedApps + prunedGrayscale + prunedDeviceStats + prunedSelfMeasured
+    }
+
+    /**
+     * A self-measured row in the shape everything downstream reads. The fields the OS fills and we
+     * cannot are left at zero rather than guessed at.
+     */
+    private fun SelfMeasuredAppUsage.asDailyAppUsage() = DailyAppUsage(
+        rowId = rowId,
+        date = date,
+        packageName = packageName,
+        totalTimeMs = foregroundTimeMs,
+        sessionCount = launchCount,
+        launchCount = launchCount,
+        scrollCount = 0,
+        scrollDistancePx = 0,
+        breakCount = 0,
+        blockCount = 0
+    )
+
+    /**
+     * Writes today's self-measured foreground time to its own table. The live values are seeded
+     * from the persisted ones on start ([restoreTodayCounters]) and only grow, so the larger of
+     * the two is always the complete one and a plain overwrite is correct.
+     */
+    suspend fun snapshotSelfMeasuredToday() = snapshotMutex.withLock {
+        val today = LocalDate.now()
+        val live = UsageStatsTracker.foregroundTimeRecorder.snapshot(today)
+        if (live.isEmpty()) return@withLock
+        selfMeasuredDao.upsertAll(live.map { (packageName, time) ->
+            SelfMeasuredAppUsage(
+                rowId = SelfMeasuredAppUsage.createRowId(today, packageName),
+                date = today,
+                packageName = packageName,
+                foregroundTimeMs = time.foregroundMs,
+                launchCount = time.launchCount
+            )
+        })
     }
 
     /** Returns the persisted device stats (unlocks, hour histograms) for [start]..[end]. */
@@ -293,6 +359,12 @@ class UsageStatsRepository @Inject constructor(
         restoreCounter(rows, DailyAppUsage::scrollDistancePx, UsageStatsTracker.scrollDistanceCounter, scrollDistanceBaselines)
         restoreCounter(rows, DailyAppUsage::breakCount, BreakDoomScrollingFeature.breakCounter, breakCounterBaselines)
         restoreCounter(rows, DailyAppUsage::blockCount, DisableAppsFeature.blockCounter, blockCounterBaselines)
+        UsageStatsTracker.foregroundTimeRecorder.restore(
+            selfMeasuredDao.getForDate(today).associate {
+                it.packageName to ForegroundTimeRecorder.AppTime(it.foregroundTimeMs, it.launchCount)
+            },
+            today = today
+        )
     }
 
     private fun restoreCounter(

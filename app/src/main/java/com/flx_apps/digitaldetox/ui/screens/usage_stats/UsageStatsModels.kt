@@ -87,5 +87,10 @@ data class UsageStatsUiState(
      */
     val excludedApps: List<AppUsageStat> = emptyList(),
     /** Every category with usage in the period, counted or not. */
-    val categories: List<UsageCategoryFilter> = emptyList()
+    val categories: List<UsageCategoryFilter> = emptyList(),
+    /**
+     * Whether these numbers are DetoxDroid's own measurement rather than the system's, which it
+     * falls back to where usage access cannot be granted.
+     */
+    val isSelfMeasured: Boolean = false
 )

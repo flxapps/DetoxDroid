@@ -7,8 +7,13 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [DailyAppUsage::class, DailyGrayscaleStats::class, DailyDeviceStats::class],
-    version = 3,
+    entities = [
+        DailyAppUsage::class,
+        DailyGrayscaleStats::class,
+        DailyDeviceStats::class,
+        SelfMeasuredAppUsage::class
+    ],
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(LocalDbTypeConverters::class)
@@ -16,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dailyAppUsageDao(): DailyAppUsageDao
     abstract fun dailyGrayscaleStatsDao(): DailyGrayscaleStatsDao
     abstract fun dailyDeviceStatsDao(): DailyDeviceStatsDao
+    abstract fun selfMeasuredAppUsageDao(): SelfMeasuredAppUsageDao
 
     companion object {
         /** v2 adds the [DailyDeviceStats] table (persisted unlock counts and hour histograms). */
@@ -38,6 +44,25 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     "ALTER TABLE `daily_app_usage` " +
                         "ADD COLUMN `scrollDistancePx` INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
+        /** v4 adds the [SelfMeasuredAppUsage] table (foreground time we measured ourselves). */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `self_measured_app_usage` (" +
+                        "`row_id` TEXT NOT NULL, " +
+                        "`date` TEXT NOT NULL, " +
+                        "`packageName` TEXT NOT NULL, " +
+                        "`foregroundTimeMs` INTEGER NOT NULL, " +
+                        "`launchCount` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`row_id`))"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_self_measured_app_usage_date` " +
+                        "ON `self_measured_app_usage` (`date`)"
                 )
             }
         }
