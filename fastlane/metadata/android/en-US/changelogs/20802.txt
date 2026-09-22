@@ -1,0 +1,4 @@
+### Release v2.8.2
+
+🐛 Bug Fixes
+- don't crash when the keystore cannot read its own store
