@@ -7,11 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.data.EncryptedPrefs
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
@@ -36,7 +35,7 @@ val CommitmentPasswordFeatureId = Feature.createId(CommitmentPasswordFeature::cl
  * and DetoxDroid cannot be stopped until the session is unlocked.
  *
  * Security:
- * - BCrypt hashing (work factor 12) stored in EncryptedSharedPreferences
+ * - BCrypt hashing (work factor 12) stored in an [EncryptedPrefs] store
  * - Max 3 attempts → 5-minute cooldown
  * - 24-hour recovery period for forgotten passphrases
  * - Both waits run on [TrustedClock], so setting the date forward cuts neither short
@@ -118,28 +117,49 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     /**
-     * Cached [EncryptedSharedPreferences] instance. Creating one is expensive (Keystore access +
-     * file I/O) and [isFeatureProtected] is called from the UI for every feature tile, so the
-     * instance is created once per process.
+     * Cached store instance. Opening one is expensive (Keystore access + file I/O) and
+     * [isFeatureProtected] is called from the UI for every feature tile, so it is opened once
+     * per process.
      */
     @Volatile
     private var encryptedPrefs: SharedPreferences? = null
 
-    private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        return encryptedPrefs ?: synchronized(this) {
-            encryptedPrefs ?: run {
-                val appContext = context.applicationContext
-                val masterKey = MasterKey.Builder(appContext)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-                EncryptedSharedPreferences.create(
-                    appContext,
-                    PREFS_NAME,
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                ).also { encryptedPrefs = it }
-            }
+    /**
+     * Set once the store turned out to be unopenable, so that opening it is not retried for every
+     * caller that asks. The next app start tries once more.
+     */
+    @Volatile
+    private var encryptedPrefsUnavailable = false
+
+    /**
+     * The store holding the hash, or null on a device whose keystore will not give one at all.
+     * Callers have to cope with null rather than assume the passphrase can be reached.
+     *
+     * [EncryptedPrefs.open] drops the file when the keystore can no longer decrypt it, so the
+     * passphrase can disappear here. That leaves it unset, a state the rest of the feature and the
+     * settings UI already handle.
+     */
+    private fun getEncryptedPrefs(context: Context): SharedPreferences? {
+        encryptedPrefs?.let { return it }
+        if (encryptedPrefsUnavailable) return null
+        synchronized(this) {
+            encryptedPrefs?.let { return it }
+            if (encryptedPrefsUnavailable) return null
+            val prefs = EncryptedPrefs.open(context, PREFS_NAME, ::onPasswordStoreDiscarded)
+            encryptedPrefs = prefs
+            encryptedPrefsUnavailable = prefs == null
+            return prefs
         }
+    }
+
+    /**
+     * The hash went with the discarded store, so the attempt counters and a recovery that was
+     * waiting on it no longer point at anything.
+     */
+    private fun onPasswordStoreDiscarded() {
+        failedAttempts = 0
+        lockoutUntil = 0L
+        recoveryInitiatedAt = 0L
     }
 
     // region Session
@@ -161,7 +181,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     // region Password state helpers
 
     fun isPasswordSet(context: Context): Boolean {
-        return getEncryptedPrefs(context).contains(KEY_PASSWORD_HASH)
+        return getEncryptedPrefs(context)?.contains(KEY_PASSWORD_HASH) == true
     }
 
     fun isLockedOut(): Boolean = TrustedClock.now() < lockoutUntil
@@ -264,9 +284,10 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     fun setPassword(context: Context, password: String): Boolean {
+        val prefs = getEncryptedPrefs(context) ?: return false
         return try {
             val hash = BCrypt.hashpw(password, BCrypt.gensalt(12))
-            getEncryptedPrefs(context).edit().putString(KEY_PASSWORD_HASH, hash).apply()
+            prefs.edit().putString(KEY_PASSWORD_HASH, hash).apply()
             failedAttempts = 0
             lockoutUntil = 0L
             recoveryInitiatedAt = 0L
@@ -280,7 +301,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
     fun verifyPassword(context: Context, password: String): Boolean {
         if (isLockedOut()) return false
-        val hash = getEncryptedPrefs(context).getString(KEY_PASSWORD_HASH, null) ?: return false
+        val hash = getEncryptedPrefs(context)?.getString(KEY_PASSWORD_HASH, null) ?: return false
         return try {
             val valid = BCrypt.checkpw(password, hash)
             if (valid) {
@@ -321,7 +342,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
     fun completeRecovery(context: Context): Boolean {
         if (!isRecoveryReady()) return false
-        getEncryptedPrefs(context).edit().remove(KEY_PASSWORD_HASH).apply()
+        getEncryptedPrefs(context)?.edit()?.remove(KEY_PASSWORD_HASH)?.apply()
         recoveryInitiatedAt = 0L
         failedAttempts = 0
         lockoutUntil = 0L
@@ -331,7 +352,7 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     fun clearPasswordData(context: Context) {
-        getEncryptedPrefs(context).edit().clear().apply()
+        getEncryptedPrefs(context)?.edit()?.clear()?.apply()
         failedAttempts = 0
         lockoutUntil = 0L
         recoveryInitiatedAt = 0L
