@@ -144,8 +144,10 @@ fun FeatureActivationSwitch(
                         cpViewModel.showWalkthroughDialog()
                     }
                 } else {
-                    // Disabling: require passphrase if currently locked
-                    if (CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()) {
+                    // Disabling: require passphrase if currently locked. Asking for one that is
+                    // not stored would be a dead end, so this goes through the same check as the
+                    // settings below rather than off isActivated alone.
+                    if (CommitmentPasswordFeature.isFeatureLocked(CommitmentPasswordFeatureId)) {
                         cpViewModel.showUnlockToDisableDialog()
                     } else {
                         // Unlocked – disable directly
