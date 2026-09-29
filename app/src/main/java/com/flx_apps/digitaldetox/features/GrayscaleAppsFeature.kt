@@ -2,8 +2,10 @@ package com.flx_apps.digitaldetox.features
 
 import android.content.ContentResolver
 import android.content.Context
+import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ import com.flx_apps.digitaldetox.system_integration.ScreenFilterSpec
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.util.RecentEvents
 import timber.log.Timber
 
 const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled"
@@ -250,6 +253,27 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
     /**
+     * Watches the system color filter while the feature runs. The filter is an ordinary system
+     * setting with a switch of its own (Settings, Accessibility, Color correction, which the
+     * settings search leads straight to), and switching it off there is otherwise only noticed
+     * when the next app that is not meant to be gray has come and gone.
+     */
+    private val systemFilterObserver by lazy {
+        object : ContentObserver(mainHandler) {
+            override fun onChange(selfChange: Boolean) {
+                kotlin.runCatching { reassertSystemFilter(DetoxDroidApplication.appContext) }
+                    .onFailure { Timber.w(it, "Could not check the system color filter") }
+            }
+        }
+    }
+
+    /**
+     * How often the filter was put back lately. Something that keeps switching it off faster than
+     * a person could is not a person, and is not worth a tug of war over a system setting.
+     */
+    private val recentReassertions = RecentEvents()
+
+    /**
      * Fires when the color-screen-time allowance is expected to run out mid-session. Without it,
      * the filter would only engage on the next window change, so a user could stay inside a single
      * color app indefinitely. [ScreenTimeTrackingFeature.trackingSinceTimestamp] doubles as the
@@ -286,6 +310,15 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         reclaimStrandedFilters(context)
         restoreSystemFilters(context)
         areEffectsActive = false
+        context.applicationContext.contentResolver.let {
+            it.unregisterContentObserver(systemFilterObserver)
+            it.registerContentObserver(
+                Settings.Secure.getUriFor(DISPLAY_DALTONIZER_ENABLED), false, systemFilterObserver
+            )
+            it.registerContentObserver(
+                Settings.Secure.getUriFor(DISPLAY_DALTONIZER), false, systemFilterObserver
+            )
+        }
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         // Evaluate against the actual foreground app when the service knows it: after a resume
         // (or feature toggle) no new window event arrives while the user stays inside the current
@@ -302,6 +335,8 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     override fun onPause(context: Context) {
         mainHandler.removeCallbacks(allowanceExhaustedChecker)
+        context.applicationContext.contentResolver.unregisterContentObserver(systemFilterObserver)
+        recentReassertions.clear()
         setEffectsActive(context, false)
     }
 
@@ -358,8 +393,39 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // only touch the system settings and the window manager if the state should change
             setEffectsActive(context, shouldApplyEffects)
             areEffectsActive = shouldApplyEffects
+        } else {
+            // nothing to change as far as we know, which is the case the observer is there for;
+            // this catches what it missed
+            reassertSystemFilter(context)
         }
     }
+
+    /**
+     * Puts the system color filter back to grayscale if it was changed from outside while the
+     * feature holds it there. What was saved of the user's own color correction is left alone: it
+     * was read before the filter went on, and the state found here is not one to return to.
+     * @return whether the filter had to be put back
+     */
+    fun reassertSystemFilter(context: Context): Boolean {
+        if (!areEffectsActive || !isDaltonizerApplied || !systemGrayscale) return false
+        if (!writeSecureSettingsPermission.hasPermissions(context)) return false
+        val contentResolver = context.contentResolver
+        val enabled = getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
+        val mode = getSecureInt(contentResolver, DISPLAY_DALTONIZER, 0)
+        if (enabled == 1 && mode == 0) return false
+        val now = SystemClock.elapsedRealtime()
+        if (recentReassertions.record(now, ReassertionWindowMs) > MaxReassertionsPerWindow) {
+            Timber.w("grayscale: the system filter keeps being changed, leaving it alone for now")
+            return false
+        }
+        Timber.i("grayscale: system filter was changed from outside (enabled=$enabled mode=$mode), putting it back")
+        Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER, 0)
+        Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
+        return true
+    }
+
+    private const val ReassertionWindowMs = 10_000L
+    private const val MaxReassertionsPerWindow = 5
 
     /**
      * When the screen is turned off, the used up screen time is increased by the time since the
