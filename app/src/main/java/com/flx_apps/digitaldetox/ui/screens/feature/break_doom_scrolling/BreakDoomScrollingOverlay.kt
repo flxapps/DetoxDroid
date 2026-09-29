@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.OverlayContent
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.widgets.DrainingBar
@@ -86,6 +87,7 @@ fun BreakDoomScrollingOverlay() {
     BreakDoomScrollingOverlayContent(
         mode = overlayService?.mode ?: BreakScreenMode.WARNING,
         contextText = overlayService?.contextText,
+        canFinishFirst = !EmergencyBrakeFeature.covers(BreakDoomScrollingFeature),
         onExitApp = {
             overlayService?.let { service ->
                 service.closeOverlay()
@@ -106,8 +108,8 @@ fun BreakDoomScrollingOverlay() {
 /**
  * The break screen that is shown over a doom-scrolling app, in one of three variants
  * (see [BreakScreenMode]). All variants offer an immediate exit; [BreakScreenMode.WARNING]
- * additionally offers to finish the current item first, and [BreakScreenMode.GUIDE_OUT] counts
- * down and exits by itself.
+ * additionally offers to finish the current item first unless a brake is running, and
+ * [BreakScreenMode.GUIDE_OUT] counts down and exits by itself.
  */
 @Composable
 fun BreakDoomScrollingOverlayContent(
@@ -115,6 +117,7 @@ fun BreakDoomScrollingOverlayContent(
     contextText: String?,
     onExitApp: () -> Unit,
     onFinishFirst: () -> Unit,
+    canFinishFirst: Boolean = true,
 ) {
     InterventionScreen(
         icon = when (mode) {
@@ -148,7 +151,7 @@ fun BreakDoomScrollingOverlayContent(
             text = stringResource(id = R.string.feature_doomScrolling_warning_exit),
             onClick = onExitApp
         )
-        if (mode == BreakScreenMode.WARNING) {
+        if (mode == BreakScreenMode.WARNING && canFinishFirst) {
             InterventionSecondaryButton(
                 text = stringResource(id = R.string.feature_doomScrolling_warning_finishFirst),
                 onClick = onFinishFirst

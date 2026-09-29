@@ -147,6 +147,15 @@ object PauseButtonFeature : Feature(), LockableFeature {
             resume()
             return
         }
+        if (EmergencyBrakeFeature.isBraking()) {
+            // a pause would undo the brake with one tap, which is the tap it was pulled against
+            Toast.makeText(
+                context,
+                context.getString(R.string.feature_brake_noPause, EmergencyBrakeFeature.endsAtText()),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
         val timeSincePauseEnd = System.currentTimeMillis() - pauseUntil
         if (pauseUntil > 0 && timeSincePauseEnd < timeBetweenPausesDuration) {
             // ignore pause and tell the user how long they have to wait (rounded up)

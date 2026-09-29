@@ -65,6 +65,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -142,6 +143,15 @@ private fun HomeScreenSnackbarContents(
             )
             homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
         })
+    } else if (snackbarState == HomeScreenSnackbarState.BrakeRunning) {
+        LaunchedEffect(key1 = snackbarState, block = {
+            snackbarHostState.showSnackbar(
+                message = context.getString(
+                    R.string.feature_brake_stop_locked, EmergencyBrakeFeature.endsAtText()
+                ),
+            )
+            homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
+        })
     }
 }
 
@@ -154,6 +164,11 @@ private fun HomeScreenSnackbarContents(
 private fun AppBar(
     detoxDroidState: DetoxDroidState, navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
+    // observed so the status line follows a brake being pulled or running out
+    val brakeStateToken = EmergencyBrakeFeature.stateToken.collectAsState().value
+    val braking = remember(brakeStateToken, detoxDroidState) {
+        detoxDroidState == DetoxDroidState.Active && EmergencyBrakeFeature.isBraking()
+    }
     TopAppBar(
         title = {
             Column {
@@ -162,7 +177,7 @@ private fun AppBar(
                     StatusIndicator(
                         indicatorColor = colorResource(
                             id = when (detoxDroidState) {
-                                DetoxDroidState.Active -> R.color.green
+                                DetoxDroidState.Active -> if (braking) R.color.blue else R.color.green
                                 DetoxDroidState.Inactive -> R.color.gray
                                 DetoxDroidState.Paused -> R.color.yellow
                             }
@@ -171,10 +186,17 @@ private fun AppBar(
                     Text(
                         text = stringResource(
                             id = when (detoxDroidState) {
-                                DetoxDroidState.Active -> R.string.home_state_active
+                                DetoxDroidState.Active -> if (braking) {
+                                    R.string.home_state_braking
+                                } else {
+                                    R.string.home_state_active
+                                }
+
                                 DetoxDroidState.Inactive -> R.string.home_state_inactive
                                 DetoxDroidState.Paused -> R.string.home_state_paused
-                            }, if (detoxDroidState == DetoxDroidState.Paused) {
+                            }, if (braking) {
+                                EmergencyBrakeFeature.endsAtText()
+                            } else if (detoxDroidState == DetoxDroidState.Paused) {
                                 // show the actual end of the running pause, not "now + duration"
                                 Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
                                     .atZone(ZoneId.systemDefault()).toLocalTime().format(

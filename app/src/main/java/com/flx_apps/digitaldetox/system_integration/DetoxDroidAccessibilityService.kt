@@ -22,6 +22,7 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
@@ -245,6 +246,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         registerTransientPackages()
 
+        // a brake outlives the process, and the features below start under it
+        EmergencyBrakeFeature.restore(this)
+
         // Reload before starting anything, so the periodic reload cannot take a feature that is
         // being started here for one whose schedule just opened and start it a second time.
         // onStart is not idempotent everywhere: DoNotDisturbFeature remembers the interruption
@@ -405,6 +409,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // usage statistics are pure measurement and keep counting during a pause —
         // a pause only suspends the interventions below
         UsageStatsTracker.onForegroundApp(packageName)
+        // the timer for the end of a brake does not run while the phone sleeps
+        EmergencyBrakeFeature.settle(this)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
@@ -479,10 +485,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
     private fun startForegroundService() {
         val isPausing = PauseButtonFeature.isPausing()
+        val isBraking = EmergencyBrakeFeature.isBraking()
         val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
             .setContentTitle(getString(R.string.app_displayName))
             .setContentText(
-                if (isPausing) {
+                if (isBraking) {
+                    getString(
+                        R.string.app_notification_brakeUntil, EmergencyBrakeFeature.endsAtText()
+                    )
+                } else if (isPausing) {
                     // show the actual end of the pause instead of a bare "Paused"
                     getString(
                         R.string.app_notification_pausedUntil,
@@ -495,14 +506,24 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             .setSmallIcon(R.drawable.ic_pause)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
-        if (isPausing) {
-            // live countdown to the end of the pause in the collapsed notification
-            builder.setWhen(PauseButtonFeature.pauseUntil)
+        if (isBraking || isPausing) {
+            // live countdown to the end of the brake or the pause in the collapsed notification
+            builder.setWhen(
+                if (isBraking) EmergencyBrakeFeature.endsAtWallClock() else PauseButtonFeature.pauseUntil
+            )
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
         }
-        // Only offer the pause/resume action when the Pause feature is actually enabled.
-        if (PauseButtonFeature.isActivated) {
+        if (EmergencyBrakeFeature.canUndo()) {
+            builder.addAction(
+                R.drawable.ic_brake,
+                getString(R.string.app_notification_action_undoBrake),
+                EmergencyBrakeReceiver.undoIntent(this)
+            )
+        }
+        // Only offer the pause/resume action when the Pause feature is actually enabled, and not
+        // under a brake, which refuses a pause.
+        if (PauseButtonFeature.isActivated && !isBraking) {
             val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
                 action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
             }
@@ -540,8 +561,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     fun updateForegroundNotification() {
         // Run as a foreground service only when the user opted into the keepalive, or while a pause
-        // is active (the pause notification needs it). Otherwise stay a plain bound service.
-        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated) {
+        // is active (the pause notification needs it), or a brake. Otherwise stay a plain bound
+        // service.
+        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
+            EmergencyBrakeFeature.isBraking()
+        ) {
             startForegroundService()
         } else {
             runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }

@@ -225,6 +225,13 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
+     * Under a brake every app is filtered, the home screen included, whatever the app list says.
+     * The list itself is left alone, so the end of the brake returns to the selection as it was.
+     */
+    override fun appliesTo(packageName: String): Boolean =
+        EmergencyBrakeFeature.covers(this) || super<SupportsAppExceptionsFeature>.appliesTo(packageName)
+
+    /**
      * The allowed daily color screen time in milliseconds. Once this limit is reached, the grayscale
      * filter will be turned on and will stay on until the next day.
      */
@@ -312,18 +319,26 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         // the effects should be on while an app covered by the exception list config is in the
         // foreground (and the daily color allowance, if any, is used up)
+        val braking = EmergencyBrakeFeature.covers(this)
         val shouldApplyEffects = packageName != OwnPackage && appliesTo(packageName)
         // Every report of grayscale applying to the wrong app comes down to one of three things:
-        // which package the service decided was in front, whether the exception list covers it,
-        // and what the filter state already was. None of them is visible from the outside, and the
-        // answer that arrives with a bug report is a screen that "sometimes" stays gray.
+        // which package the service decided was in front, whether the exception list covers it
+        // (or a brake overrides it), and what the filter state already was. None of them is
+        // visible from the outside, and the answer that arrives with a bug report is a screen
+        // that "sometimes" stays gray.
         Timber.d(
-            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType"
+            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType braking=$braking"
         )
 
         if (!shouldApplyEffects) {
             // the effects should not be turned on, so we increase the used up screen time
             eventuallyIncreaseUsedUpScreenTime()
+        } else if (braking) {
+            // A brake neither grants the color allowance nor spends it: it covers apps the
+            // allowance was never meant for, and an hour of gray maps would otherwise use up
+            // the minutes of color the listed apps have left for the day.
+            eventuallyIncreaseUsedUpScreenTime()
+            mainHandler.removeCallbacks(allowanceExhaustedChecker)
         } else {
             eventuallyStartTracking()
             // currentUsedUpScreenTime() includes the running tracking session, so the allowance

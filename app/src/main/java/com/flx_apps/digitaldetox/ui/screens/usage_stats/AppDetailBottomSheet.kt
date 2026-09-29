@@ -42,6 +42,7 @@ import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.toShortDurationString
@@ -212,13 +213,22 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
     val onToggled: () -> Unit = remember(app.packageName) {
         { version++; onFeatureChanged() }
     }
-    val grayscaleActive = GrayscaleAppsFeature.isActivated
-    val doomScrollingActive = BreakDoomScrollingFeature.isActivated
-    val disableAppsActive = DisableAppsFeature.isActivated
+    // a running brake locks the app lists like every other setting of the features it covers
+    val braking = EmergencyBrakeFeature.isBraking()
+    val grayscaleActive = GrayscaleAppsFeature.isActivated &&
+            !EmergencyBrakeFeature.locksSettings(GrayscaleAppsFeature.id)
+    val doomScrollingActive = BreakDoomScrollingFeature.isActivated &&
+            !EmergencyBrakeFeature.locksSettings(BreakDoomScrollingFeature.id)
+    val disableAppsActive = DisableAppsFeature.isActivated &&
+            !EmergencyBrakeFeature.locksSettings(DisableAppsFeature.id)
 
     if (!grayscaleActive && !doomScrollingActive && !disableAppsActive) {
         Text(
-            stringResource(R.string.usageStats_noActiveFeatures),
+            if (braking) {
+                stringResource(
+                    R.string.usageStats_lockedByBrake, EmergencyBrakeFeature.endsAtText()
+                )
+            } else stringResource(R.string.usageStats_noActiveFeatures),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

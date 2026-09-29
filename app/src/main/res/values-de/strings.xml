@@ -6,6 +6,8 @@
     <string name="app_quickSettingsTile">DetoxDroid pausieren</string>
     <string name="app_quickSettingsTile_paused">DetoxDroid ist für %d Minuten pausiert.</string>
     <string name="app_quickSettingsTile_noPause">Nächste Pause erst in %d Minuten.</string>
+    <string name="app_brakeTile">Notbremse</string>
+    <string name="app_brakeTile_until">Bis %s</string>
     <string name="app_accessibilityService_name">DetoxDroid-Bedienungshilfe</string>
     <string name="app_accessibilityService_description">Setzt deine Regeln in Echtzeit um, je nachdem, welche App gerade offen ist.</string>
     <string name="app_notification_active">Digital Detox ist aktiv</string>
@@ -16,6 +18,8 @@
     <string name="app_notification_alertChannelName">DetoxDroid-Hinweise</string>
     <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
     <string name="app_notification_pausedUntil">Pausiert bis %s</string>
+    <string name="app_notification_brakeUntil">Notbremse bis %s</string>
+    <string name="app_notification_action_undoBrake">Zurücknehmen</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
     <string name="reliability_serviceDown_message">Dein Telefon hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>
@@ -68,6 +72,7 @@
     <string name="home_stop">DetoxDroid stoppen</string>
     <string name="home_state_active">Läuft</string>
     <string name="home_state_paused">Pausiert bis %s</string>
+    <string name="home_state_braking">Notbremse bis %s</string>
     <string name="home_state_inactive">Gestoppt</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
@@ -221,6 +226,40 @@
     <string name="feature_pause_affectedFeatures_dialogHint">Lege fest, welche Funktionen eine Pause abschaltet. Nicht markierte laufen einfach weiter.</string>
     <!-- endregion -->
 
+    <!-- region Feature: Emergency Brake -->
+    <string name="feature_brake">Notbremse</string>
+    <string name="feature_brake_subtitle">Alles auf streng, sofort</string>
+    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abrutschst. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, so streng wie es eben geht: Der ganze Bildschirm wird grau, deine gelisteten Apps sind gesperrt, egal wie viel Budget noch übrig ist, Zeitpläne zählen nicht, und pausieren geht auch nicht.</string>
+    <string name="feature_brake_status_off">Such dir aus, wie lange, und zieh.</string>
+    <string name="feature_brake_status_notActivated">Schalte die Notbremse erst oben ein.</string>
+    <string name="feature_brake_status_notRunning">DetoxDroid läuft nicht, da gibt es nichts zu bremsen.</string>
+    <string name="feature_brake_status_on">Die Notbremse ist bis %s gezogen. So lange sind die Einstellungen gesperrt.</string>
+    <string name="feature_brake_status_ending">Du wolltest raus. Um %s löst sich die Notbremse.</string>
+    <string name="feature_brake_pull">Notbremse ziehen</string>
+    <string name="feature_brake_extend">Verlängern</string>
+    <string name="feature_brake_undo">Zurücknehmen</string>
+    <string name="feature_brake_endEarly">Früher beenden</string>
+    <string name="feature_brake_endEarly_message">Die Notbremse löst sich %d Minuten, nachdem du fragst, und bleibt bis dahin gezogen. Du kannst es dir in der Zeit ja noch anders überlegen.</string>
+    <string name="feature_brake_endEarly_confirm">Wartezeit starten</string>
+    <string name="feature_brake_keepOn">Doch drinlassen</string>
+    <string name="feature_brake_noPause">Keine Pause, solange die Notbremse gezogen ist. Sie läuft bis %s.</string>
+    <string name="feature_brake_stop_locked">Die Notbremse ist bis %s gezogen. So lange lässt sich DetoxDroid nicht stoppen.</string>
+    <string name="feature_brake_banner_locked">Die Notbremse ist bis %s gezogen. So lange sind die Einstellungen gesperrt.</string>
+    <string name="feature_brake_ways">So ziehst du sie</string>
+    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Sie zieht so lange, wie du zuletzt gewählt hast.</string>
+    <string name="feature_brake_fromQuickSettings_alreadyAdded">Die Notbremse ist schon in deinen Schnelleinstellungen.</string>
+    <string name="feature_brake_autoPull_header">Von selbst ziehen</string>
+    <string name="feature_brake_autoPull">Für mich ziehen</string>
+    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, zieht sich die Notbremse für %3$s. Zählt nur, solange \"Doom Scrolling\" durchbrechen an ist.</string>
+    <string name="feature_brake_autoPull_breaks">Wie oft erwischt</string>
+    <string name="feature_brake_autoPull_breaks_description">So oft muss es passieren, über alle Apps gezählt.</string>
+    <string name="feature_brake_autoPull_window">Innerhalb von</string>
+    <string name="feature_brake_autoPull_window_description">Liegt mehr Zeit dazwischen, zählt es nicht zusammen.</string>
+    <string name="feature_brake_autoPull_duration">Dauer der Notbremse</string>
+    <string name="feature_brake_autoPull_duration_description">Hat sie sich selbst gezogen, lässt sie sich nicht zurücknehmen, nur früher beenden.</string>
+    <string name="feature_brake_affectedFeatures_dialogHint">Lege fest, was die Notbremse verschärft. Nicht markierte Funktionen laufen einfach wie immer.</string>
+    <!-- endregion -->
+
     <!-- region Feature: Break Doom Scrolling -->
     <string name="feature_doomScrolling">\"Doom Scrolling\" durchbrechen</string>
     <string name="feature_doomScrolling_subtitle">Wenn der Feed einfach nicht aufhört</string>
@@ -245,6 +284,8 @@
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
     <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei. Diesmal pausiert die ganze App.</string>
+    <string name="feature_doomScrolling_warning_context_brakePulled">Das war Nummer %1$d in kurzer Zeit. Die Notbremse ist bis %2$s gezogen.</string>
+    <string name="feature_doomScrolling_warning_context_braking">Die Notbremse ist gezogen, die App ist also bis %s weg.</string>
     <string name="feature_doomScrolling_guideOut_title">Abgemacht ist abgemacht</string>
     <string name="feature_doomScrolling_guideOut_message">Hoffentlich hat sich\'s gelohnt. Zurück zum Startbildschirm.</string>
     <string name="feature_doomScrolling_cooldown_title">Noch in der Abkühlphase</string>
@@ -421,6 +462,7 @@
     <string name="usageStats_appDetails">Details</string>
     <string name="usageStats_quickActions">Schnellaktionen</string>
     <string name="usageStats_noActiveFeatures">Nichts zu verwalten, es läuft keine Funktion</string>
+    <string name="usageStats_lockedByBrake">Nichts zu verwalten, solange die Notbremse gezogen ist, also bis %s</string>
     <string name="usageStats_addGrayscale">Zu Graustufen hinzufügen</string>
     <string name="usageStats_removeGrayscale">Aus Graustufen entfernen</string>
     <string name="usageStats_addScrollGuard">Scroll-Schutz hinzufügen</string>
@@ -611,6 +653,7 @@
     <string name="about_backup_restore">Einstellungen aus Datei laden</string>
     <string name="about_backup_restore_subtitle">Liest eine Datei ein und startet DetoxDroid neu.</string>
     <string name="about_backup_restore_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt.</string>
+    <string name="about_backup_restore_braking_subtitle">Gesperrt, solange die Notbremse gezogen ist.</string>
     <string name="about_backup_restore_confirm">Das überschreibt alles, was in der Datei steht, und startet DetoxDroid neu. Dein Commitment-Passwort gehört nicht dazu und bleibt, wie es ist.</string>
     <string name="about_backup_restore_confirm_action">Laden</string>
     <string name="about_backup_export_failed">Die Datei konnte nicht geschrieben werden.</string>

@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
@@ -72,7 +73,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId),
-    LockableFeature, PausableFeature {
+    LockableFeature, PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
@@ -194,14 +195,36 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * Whether the listed apps may still be used today: always with [NO_DAILY_LIMIT], never with a
-     * limit of 0, otherwise until the used up screen time reaches [allowedDailyScreenTime].
+     * limit of 0, otherwise until the used up screen time reaches [allowedDailyScreenTime]. Under
+     * a brake the budget counts as spent, whatever is left of it.
      */
-    private fun hasScreenTimeLeft(): Boolean = when (allowedDailyScreenTime) {
-        NO_DAILY_LIMIT -> true
-        0L -> false
+    internal fun hasScreenTimeLeft(): Boolean = when {
+        EmergencyBrakeFeature.covers(this) -> false
+        allowedDailyScreenTime == NO_DAILY_LIMIT -> true
+        allowedDailyScreenTime == 0L -> false
         // includes the running tracking session, so the budget also runs out while the user stays
         // inside a single tracked app
         else -> currentUsedUpScreenTime() < allowedDailyScreenTime
+    }
+
+    /**
+     * A brake takes the listed apps away the moment it is pulled, where the mode can do that
+     * without one of them being opened first, and its end hands them back while there is budget
+     * left. Blocking has nothing to do here: its screen goes up when a listed app is opened.
+     */
+    override fun onBrakeChanged(context: Context) {
+        if (hasScreenTimeLeft()) {
+            if (operationMode == DisableAppsMode.DEACTIVATE) {
+                setAppsDeactivated(context, false, forceOperation = true)
+            }
+            releaseSuspendedAppsIfEntitled()
+            return
+        }
+        when (operationMode) {
+            DisableAppsMode.BLOCK -> {}
+            DisableAppsMode.DEACTIVATE -> setAppsDeactivated(context, true)
+            DisableAppsMode.SUSPEND -> AppSuspender.suspend(disableableApps)
+        }
     }
 
     /**

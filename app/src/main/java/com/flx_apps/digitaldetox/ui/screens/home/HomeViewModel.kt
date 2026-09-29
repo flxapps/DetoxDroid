@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
@@ -20,7 +21,7 @@ import javax.inject.Inject
  * The state of the snackbar on the home screen.
  */
 enum class HomeScreenSnackbarState {
-    Hidden, ShowStartAcccessibilityServiceManually, CommitmentPasswordLocked
+    Hidden, ShowStartAcccessibilityServiceManually, CommitmentPasswordLocked, BrakeRunning
 }
 
 @HiltViewModel
@@ -53,6 +54,12 @@ class HomeViewModel @Inject constructor(
             && !CommitmentPasswordFeature.isSessionUnlocked()
         ) {
             setSnackbarState(HomeScreenSnackbarState.CommitmentPasswordLocked)
+            return null
+        }
+
+        // stopping DetoxDroid would end a brake on the spot
+        if (detoxDroidState.value != DetoxDroidState.Inactive && EmergencyBrakeFeature.isBraking()) {
+            setSnackbarState(HomeScreenSnackbarState.BrakeRunning)
             return null
         }
 
@@ -98,6 +105,10 @@ class HomeViewModel @Inject constructor(
     fun uninstallDetoxDroid(): Boolean {
         if (CommitmentPasswordFeature.isActivated) {
             setSnackbarState(HomeScreenSnackbarState.CommitmentPasswordLocked)
+            return false
+        }
+        if (EmergencyBrakeFeature.isBraking()) {
+            setSnackbarState(HomeScreenSnackbarState.BrakeRunning)
             return false
         }
         DetoxDroidAccessibilityService.instance?.onDestroy()

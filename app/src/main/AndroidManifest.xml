@@ -202,6 +202,22 @@
             android:name=".system_integration.PauseInteractionService"
             android:exported="false" />
         <service
+            android:name=".system_integration.EmergencyBrakeTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_brake"
+            android:label="@string/app_brakeTile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name=".system_integration.EmergencyBrakeReceiver"
+            android:exported="false" />
+        <service
             android:name=".system_integration.PauseTileService"
             android:exported="true"
             android:icon="@drawable/ic_launcher_foreground_outlined"

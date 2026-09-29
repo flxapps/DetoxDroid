@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -29,8 +30,8 @@ import kotlin.system.exitProcess
  *
  * Two things are deliberately left out of both directions, see [isBackedUp]. A backup that carried
  * the commitment password's state would be a way around it: export while unlocked, then import the
- * old state back over a lock that is in force. The premium flag is left out for the same shape of
- * reason.
+ * old state back over a lock that is in force. A running brake stays out for the same reason, and
+ * so does the premium flag.
  */
 object ConfigBackup {
     const val MIME_TYPE = "application/json"
@@ -62,7 +63,8 @@ object ConfigBackup {
      * @see ConfigBackup
      */
     fun isBackedUp(keyName: String) =
-        keyName !in EXCLUDED_KEYS && !keyName.startsWith("${CommitmentPasswordFeatureId}_")
+        keyName !in EXCLUDED_KEYS && keyName !in EmergencyBrakeFeature.runningStateKeys &&
+                !keyName.startsWith("${CommitmentPasswordFeatureId}_")
 
     /** The current configuration as the text that goes into the file. */
     suspend fun export(): String {

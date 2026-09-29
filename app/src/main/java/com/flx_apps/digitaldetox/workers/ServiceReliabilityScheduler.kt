@@ -4,6 +4,7 @@ import android.content.Context
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.feature_types.nextTransitionAfter
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -12,6 +13,8 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.Instant
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /**
@@ -47,13 +50,20 @@ object ServiceReliabilityScheduler {
 
     /**
      * Arms a wake-up for the next moment any feature's schedule opens or closes, so a boundary
-     * passed while nobody is using the phone still takes effect. Re-armed by the worker itself
-     * after every run, and whenever the schedules change.
+     * passed while nobody is using the phone still takes effect. The end of a running brake is
+     * such a boundary as well. Re-armed by the worker itself after every run, and whenever the
+     * schedules change.
      */
     fun scheduleNextScheduleBoundary(context: Context) {
         val workManager = WorkManager.getInstance(context)
-        val next = FeaturesProvider.featureList.filterIsInstance<SupportsScheduleFeature>()
-            .flatMap { it.scheduleRules }.nextTransitionAfter(LocalDateTime.now())
+        val brakeEnd = EmergencyBrakeFeature.endsAtWallClock().takeIf { it > 0L }?.let {
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
+        }
+        val next = listOfNotNull(
+            FeaturesProvider.featureList.filterIsInstance<SupportsScheduleFeature>()
+                .flatMap { it.scheduleRules }.nextTransitionAfter(LocalDateTime.now()),
+            brakeEnd
+        ).minOrNull()
         if (next == null || !AccessibilityServiceController.isEnabledInSettings(context)) {
             workManager.cancelUniqueWork(ScheduleBoundaryWorker.WORK_NAME)
             return

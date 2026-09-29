@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.ConfigBackup
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,8 +43,13 @@ fun ConfigBackupTiles() {
     val scope = rememberCoroutineScope()
     var pendingImport by remember { mutableStateOf<Uri?>(null) }
     val commitmentPasswordToken by CommitmentPasswordFeature.stateToken.collectAsState()
-    val restoreLocked = remember(commitmentPasswordToken) {
-        FeaturesProvider.featureList.any { CommitmentPasswordFeature.isFeatureLocked(it.id) }
+    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    // a file from before the brake would put looser settings back over it
+    val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
+    val restoreLocked = remember(commitmentPasswordToken, braking) {
+        braking || FeaturesProvider.featureList.any {
+            CommitmentPasswordFeature.isFeatureLocked(it.id)
+        }
     }
     val exportFailed = stringResource(id = R.string.about_backup_export_failed)
     val importFailed = stringResource(id = R.string.about_backup_restore_failed)
@@ -79,7 +85,9 @@ fun ConfigBackupTiles() {
         icon = if (restoreLocked) Icons.Default.Lock else Icons.Default.SettingsBackupRestore,
         title = stringResource(id = R.string.about_backup_restore),
         subtitle = stringResource(
-            id = if (restoreLocked) {
+            id = if (braking) {
+                R.string.about_backup_restore_braking_subtitle
+            } else if (restoreLocked) {
                 R.string.about_backup_restore_locked_subtitle
             } else {
                 R.string.about_backup_restore_subtitle

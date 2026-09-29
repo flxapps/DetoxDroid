@@ -9,6 +9,7 @@ import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -50,12 +51,15 @@ object OnboardingState {
         get() = listOf(BreakDoomScrollingFeature, GrayscaleAppsFeature, DisableAppsFeature)
 
     /**
-     * Whether the commitment password currently protects any of [configuredFeatures]. Re-running
-     * onboarding is then off limits until the passphrase is entered, or it would be a way around
-     * it.
+     * Whether the commitment password or a running brake currently protects any of
+     * [configuredFeatures]. Re-running onboarding is then off limits until the passphrase is
+     * entered or the brake has ended, or it would be a way around them.
      */
     val isOnboardingLocked: Boolean
-        get() = configuredFeatures.any { CommitmentPasswordFeature.isFeatureLocked(it.id) }
+        get() = configuredFeatures.any {
+            CommitmentPasswordFeature.isFeatureLocked(it.id) ||
+                    EmergencyBrakeFeature.locksSettings(it.id)
+        }
 
     /**
      * Whether the onboarding flow should be shown on app start. Users of previous versions that

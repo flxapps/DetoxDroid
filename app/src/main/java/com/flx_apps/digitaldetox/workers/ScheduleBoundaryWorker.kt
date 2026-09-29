@@ -5,13 +5,14 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import timber.log.Timber
 
 /**
- * Wakes up at the end (or start) of a feature's schedule and applies the change, then arms itself
- * for the next boundary. Without it a schedule only takes effect when something else happens to
+ * Wakes up at the end (or start) of a feature's schedule, or at the end of a brake, and applies
+ * the change, then arms itself for the next boundary. Without it a schedule only takes effect when something else happens to
  * ask which features are active, which on an idle phone can be a long time after the fact.
  */
 @HiltWorker
@@ -21,7 +22,10 @@ class ScheduleBoundaryWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         Timber.i("ScheduleBoundaryWorker: applying schedule transitions")
-        runCatching { FeaturesProvider.applyScheduleTransitions() }.onFailure {
+        runCatching {
+            EmergencyBrakeFeature.settle(appContext)
+            FeaturesProvider.applyScheduleTransitions()
+        }.onFailure {
             Timber.w(it, "ScheduleBoundaryWorker: could not apply schedule transitions")
         }
         ServiceReliabilityScheduler.scheduleNextScheduleBoundary(appContext)

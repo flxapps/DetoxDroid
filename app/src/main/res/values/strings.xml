@@ -8,6 +8,8 @@
     <string name="app_quickSettingsTile">Pause DetoxDroid</string>
     <string name="app_quickSettingsTile_paused">DetoxDroid has been paused for %d minutes.</string>
     <string name="app_quickSettingsTile_noPause">Take another pause in %d minutes.</string>
+    <string name="app_brakeTile">Emergency Brake</string>
+    <string name="app_brakeTile_until">Until %s</string>
     <string name="app_accessibilityService_name">DetoxDroid Accessibility Service</string>
     <string name="app_accessibilityService_description">Applies your DetoxDroid rules in real time based on the app you are using.</string>
     <string name="app_notification_active">Digital Detox is active</string>
@@ -18,6 +20,8 @@
     <string name="app_notification_alertChannelName">DetoxDroid alerts</string>
     <string name="app_notification_alertChannelDescription">Tells you when your phone has stopped DetoxDroid</string>
     <string name="app_notification_pausedUntil">Paused until %s</string>
+    <string name="app_notification_brakeUntil">Brake on until %s</string>
+    <string name="app_notification_action_undoBrake">Undo</string>
     <string name="reliability_serviceDown_title">DetoxDroid stopped</string>
     <string name="reliability_serviceDown_message">Your phone stopped DetoxDroid in the background. Tap to start it again.</string>
     <string name="reliability_keepAlive_title">Keep DetoxDroid running</string>
@@ -70,6 +74,7 @@
     <string name="home_stop">Stop DetoxDroid</string>
     <string name="home_state_active">Running</string>
     <string name="home_state_paused">Paused until %s</string>
+    <string name="home_state_braking">Brake on until %s</string>
     <string name="home_state_inactive">Stopped</string>
     <string name="home_screenTime_today">Screen time today</string>
     <string name="home_screenTime_unavailable">Screen time unavailable</string>
@@ -226,6 +231,40 @@
     <string name="feature_pause_affectedFeatures_dialogHint">Choose which features a pause turns off. Unchecked features keep running during a pause.</string>
     <!-- endregion -->
 
+    <!-- region Feature: Emergency Brake -->
+    <string name="feature_brake">Emergency Brake</string>
+    <string name="feature_brake_subtitle">Everything strict, right now</string>
+    <string name="feature_brake_description">For the moment you notice you\'re slipping. For a set time, every feature you have switched on runs at its strictest: the whole screen goes gray, your listed apps are blocked whatever is left of their budget, schedules don\'t count, and pausing is off.</string>
+    <string name="feature_brake_status_off">Pick how long, then pull.</string>
+    <string name="feature_brake_status_notActivated">Switch the brake on at the top first.</string>
+    <string name="feature_brake_status_notRunning">DetoxDroid isn\'t running, so there is nothing to brake.</string>
+    <string name="feature_brake_status_on">The brake is on until %s. Settings are locked until then.</string>
+    <string name="feature_brake_status_ending">You asked to end it. The brake comes off at %s.</string>
+    <string name="feature_brake_pull">Pull the Brake</string>
+    <string name="feature_brake_extend">Extend</string>
+    <string name="feature_brake_undo">Undo</string>
+    <string name="feature_brake_endEarly">End Early</string>
+    <string name="feature_brake_endEarly_message">The brake comes off %d minutes after you ask, and stays on until then. You can change your mind in between.</string>
+    <string name="feature_brake_endEarly_confirm">Start the Wait</string>
+    <string name="feature_brake_keepOn">Keep It On</string>
+    <string name="feature_brake_noPause">No pause while the brake is on. It runs until %s.</string>
+    <string name="feature_brake_stop_locked">The brake is on until %s. DetoxDroid can\'t be stopped until then.</string>
+    <string name="feature_brake_banner_locked">The brake is on until %s. Settings are locked until then.</string>
+    <string name="feature_brake_ways">Ways to pull it</string>
+    <string name="feature_brake_fromQuickSettings_description">Tap to put the brake tile into your Quick Settings. It pulls for as long as you last picked.</string>
+    <string name="feature_brake_fromQuickSettings_alreadyAdded">The brake tile is already in your Quick Settings.</string>
+    <string name="feature_brake_autoPull_header">Pulling itself</string>
+    <string name="feature_brake_autoPull">Pull It for Me</string>
+    <string name="feature_brake_autoPull_description">Caught doom scrolling %1$d times within %2$d min, and the brake goes on for %3$s. Only counts while Break \"Doom Scrolling\" is on.</string>
+    <string name="feature_brake_autoPull_breaks">Times Caught</string>
+    <string name="feature_brake_autoPull_breaks_description">How often it takes, counted across all apps.</string>
+    <string name="feature_brake_autoPull_window">Within</string>
+    <string name="feature_brake_autoPull_window_description">Further apart than this, and they don\'t add up.</string>
+    <string name="feature_brake_autoPull_duration">Brake Duration</string>
+    <string name="feature_brake_autoPull_duration_description">A brake that pulled itself can\'t be undone, only ended early.</string>
+    <string name="feature_brake_affectedFeatures_dialogHint">Choose which features the brake tightens. Unchecked features carry on as usual.</string>
+    <!-- endregion -->
+
     <!-- region Feature: Break Doom Scrolling -->
     <string name="feature_doomScrolling">Break \"Doom Scrolling\"</string>
     <string name="feature_doomScrolling_subtitle">For when the feed won\'t end</string>
@@ -250,6 +289,8 @@
     <string name="feature_doomScrolling_warning_context_intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_endless">This feed just keeps loading more. You\'ve been at it for %1$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_probation">Back at it right after a break. This time the whole app pauses.</string>
+    <string name="feature_doomScrolling_warning_context_brakePulled">That was number %1$d in a short time. The brake is on until %2$s.</string>
+    <string name="feature_doomScrolling_warning_context_braking">The brake is on, so this app is away until %s.</string>
     <string name="feature_doomScrolling_guideOut_title">A deal\'s a deal</string>
     <string name="feature_doomScrolling_guideOut_message">Hope it was a good one. Taking you home now.</string>
     <string name="feature_doomScrolling_cooldown_title">Still cooling down</string>
@@ -426,6 +467,7 @@
     <string name="usageStats_appDetails">Details</string>
     <string name="usageStats_quickActions">Quick Actions</string>
     <string name="usageStats_noActiveFeatures">Nothing to manage, no feature is active</string>
+    <string name="usageStats_lockedByBrake">Nothing to manage while the brake is on, until %s</string>
     <string name="usageStats_addGrayscale">Add to grayscale</string>
     <string name="usageStats_removeGrayscale">Remove from grayscale</string>
     <string name="usageStats_addScrollGuard">Add doom scroll guard</string>
@@ -624,6 +666,7 @@
     <string name="about_backup_restore">Restore Settings from a File</string>
     <string name="about_backup_restore_subtitle">Reads a file back and restarts DetoxDroid.</string>
     <string name="about_backup_restore_locked_subtitle">Locked while your commitment password is in force.</string>
+    <string name="about_backup_restore_braking_subtitle">Locked while the brake is on.</string>
     <string name="about_backup_restore_confirm">This overwrites what the file covers and restarts DetoxDroid. Your commitment password is not part of it and stays as it is.</string>
     <string name="about_backup_restore_confirm_action">Restore</string>
     <string name="about_backup_export_failed">Could not write the file.</string>
