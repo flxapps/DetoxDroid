@@ -67,6 +67,9 @@ const val MinScreenFilterIntensity = 10
 /** Blur radius in dp at full intensity: a feed reduced to shapes, headlines still guessable. */
 const val MaxScreenFilterBlurDp = 3.5f
 
+/** The most blur an app gets that is gray only because of a brake: a haze, every word readable. */
+const val SoftenedBlurDp = 1f
+
 val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
 
 /**
@@ -389,16 +392,33 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             }
         }
 
+        // an app that is only gray because of the brake gets the light version of the blur
+        val softened = braking && !super<SupportsAppExceptionsFeature>.appliesTo(packageName)
         if (shouldApplyEffects != areEffectsActive) {
             // only touch the system settings and the window manager if the state should change
+            isScreenFilterSoftened = softened
             setEffectsActive(context, shouldApplyEffects)
             areEffectsActive = shouldApplyEffects
         } else {
-            // nothing to change as far as we know, which is the case the observer is there for;
-            // this catches what it missed
+            if (areEffectsActive && softened != isScreenFilterSoftened) {
+                // gray stays, only the filter changes strength between a listed app and the rest
+                isScreenFilterSoftened = softened
+                ScreenFilterOverlay.apply(context, currentScreenFilterSpec(context))
+            }
+            // nothing else to change as far as we know, which is the case the observer is there
+            // for; this catches what it missed
             reassertSystemFilter(context)
         }
     }
+
+    /**
+     * Whether the screen filter is on an app the brake alone made gray. Such an app is one the
+     * user needs (maps, the phone, the bank), so it gets the wash but only a haze of the blur:
+     * [SoftenedBlurDp] keeps text readable while the screen still looks like it is under a brake.
+     * The listed apps keep the blur as set.
+     */
+    internal var isScreenFilterSoftened = false
+        private set
 
     /**
      * Puts the system color filter back to grayscale if it was changed from outside while the
@@ -610,7 +630,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // linear, now that the ceiling is low enough for the top of the slider to still be
             // worth reaching. Legibility drops off within the first few pixels of radius, so the
             // whole usable range sits between roughly one and ten of them.
-            blurDp = if (blur) intensity * MaxScreenFilterBlurDp else 0f
+            blurDp = when {
+                !blur -> 0f
+                isScreenFilterSoftened -> minOf(intensity * MaxScreenFilterBlurDp, SoftenedBlurDp)
+                else -> intensity * MaxScreenFilterBlurDp
+            }
         )
     }
 

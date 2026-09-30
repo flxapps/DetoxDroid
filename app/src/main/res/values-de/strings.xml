@@ -236,7 +236,7 @@
     <string name="feature_brake_status_on">Die Notbremse ist bis %s gezogen. So lange sind die Einstellungen gesperrt.</string>
     <string name="feature_brake_status_ending">Du wolltest raus. Um %s löst sich die Notbremse.</string>
     <string name="feature_brake_pull">Notbremse ziehen</string>
-    <string name="feature_brake_extend">Verlängern</string>
+    <string name="feature_brake_extendBy">Um %s verlängern</string>
     <string name="feature_brake_undo">Zurücknehmen</string>
     <string name="feature_brake_endEarly">Früher beenden</string>
     <string name="feature_brake_endEarly_message">Die Notbremse löst sich %d Minuten, nachdem du fragst, und bleibt bis dahin gezogen. Du kannst es dir in der Zeit ja noch anders überlegen.</string>
@@ -257,7 +257,6 @@
     <string name="feature_brake_autoPull_window_description">Liegt mehr Zeit dazwischen, zählt es nicht zusammen.</string>
     <string name="feature_brake_autoPull_duration">Dauer der Notbremse</string>
     <string name="feature_brake_autoPull_duration_description">Hat sie sich selbst gezogen, lässt sie sich nicht zurücknehmen, nur früher beenden.</string>
-    <string name="feature_brake_affectedFeatures_dialogHint">Lege fest, was die Notbremse verschärft. Nicht markierte Funktionen laufen einfach wie immer.</string>
     <!-- endregion -->
 
     <!-- region Feature: Break Doom Scrolling -->

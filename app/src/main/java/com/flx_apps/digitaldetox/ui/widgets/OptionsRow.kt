@@ -14,9 +14,7 @@ import androidx.compose.ui.res.stringResource
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 
 /**
- * Displays a set of mutually exclusive options as [FilterChip]s in a [ChipFlowRow]. The selected
- * chip is rendered in full primary color with a check mark — the default secondaryContainer is too
- * close to card backgrounds to read at a glance.
+ * Displays a set of mutually exclusive options as [OptionChip]s in a [ChipFlowRow].
  * @param options A map of text resources to option values
  * @param selectedOption The currently selected option
  * @param onOptionSelected A callback that is called when an option is selected
@@ -33,27 +31,40 @@ fun OptionsRow(
     val effectivelyEnabled = enabled && !LocalSettingsLocked.current
     ChipFlowRow {
         options.forEach { (textRes, option) ->
-            val selected = option == selectedOption
-            FilterChip(
-                selected = selected,
-                onClick = { onOptionSelected(option) },
+            OptionChip(
+                label = stringResource(id = textRes),
+                selected = option == selectedOption,
                 enabled = effectivelyEnabled,
-                label = { Text(text = stringResource(id = textRes)) },
-                leadingIcon = if (selected) {
-                    {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                        )
-                    }
-                } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                ),
+                onClick = { onOptionSelected(option) },
             )
         }
     }
+}
+
+/**
+ * One choice out of several. The selected chip is rendered in full primary color with a check
+ * mark — the default secondaryContainer is too close to card backgrounds to read at a glance.
+ */
+@Composable
+fun OptionChip(label: String, selected: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        enabled = enabled,
+        label = { Text(text = label) },
+        leadingIcon = if (selected) {
+            {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            }
+        } else null,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    )
 }

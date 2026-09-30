@@ -10,6 +10,7 @@ import com.flx_apps.digitaldetox.features.DoNotDisturbFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.TrustedClock
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -62,9 +63,10 @@ class EmergencyBrakeTest {
         pass(TimeUnit.DAYS.toMillis(1))
         EmergencyBrakeFeature.settle(context)
         EmergencyBrakeFeature.isActivated = false
-        EmergencyBrakeFeature.brakeExemptFeatureIds = emptySet()
         EmergencyBrakeFeature.autoPull = false
         EmergencyBrakeFeature.lastDuration = halfAnHour
+        // the singletons outlive the test class, so a filter left on would reach the next one
+        GrayscaleAppsFeature.onPause(context)
         GrayscaleAppsFeature.isActivated = false
         GrayscaleAppsFeature.scheduleRules = emptySet()
         GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.NOT_LIST
@@ -228,13 +230,43 @@ class EmergencyBrakeTest {
     }
 
     @Test
-    fun anExemptFeatureIsLeftAsItIs() {
-        EmergencyBrakeFeature.brakeExemptFeatureIds = setOf(DoNotDisturbFeature.id)
+    fun itCoversEveryPausableFeatureAndNothingElse() {
         EmergencyBrakeFeature.pull(context, halfAnHour)
 
-        assertFalse(EmergencyBrakeFeature.covers(DoNotDisturbFeature))
-        assertFalse(EmergencyBrakeFeature.locksSettings(DoNotDisturbFeature.id))
+        assertTrue(EmergencyBrakeFeature.covers(DoNotDisturbFeature))
         assertTrue(EmergencyBrakeFeature.covers(BreakDoomScrollingFeature))
+        assertFalse(EmergencyBrakeFeature.covers(CommitmentPasswordFeature))
+        assertFalse(EmergencyBrakeFeature.covers(EmergencyBrakeFeature))
+    }
+
+    @Test
+    fun extendingAddsToTheEndShownAndTakesBackAnEndRequest() {
+        EmergencyBrakeFeature.pull(context, TimeUnit.HOURS.toMillis(2))
+        assertTrue(EmergencyBrakeFeature.extend(context, halfAnHour))
+        assertEquals(TimeUnit.MINUTES.toMillis(150), EmergencyBrakeFeature.remainingMs())
+
+        EmergencyBrakeFeature.requestEnd(context)
+        assertEquals(EmergencyBrakeFeature.EndWaitMs, EmergencyBrakeFeature.remainingMs())
+        EmergencyBrakeFeature.extend(context, halfAnHour)
+        assertFalse(EmergencyBrakeFeature.isEndRequested())
+        assertEquals(EmergencyBrakeFeature.EndWaitMs + halfAnHour, EmergencyBrakeFeature.remainingMs())
+
+        assertFalse(EmergencyBrakeFeature.extend(context, 0L))
+    }
+
+    @Test
+    fun anAppThatIsGrayOnlyBecauseOfTheBrakeGetsTheSoftenedFilter() {
+        GrayscaleAppsFeature.isActivated = true
+        EmergencyBrakeFeature.pull(context, halfAnHour)
+
+        GrayscaleAppsFeature.onAppOpened(context, unlisted, AccessibilityEventUtil.createEvent())
+        assertTrue(GrayscaleAppsFeature.isScreenFilterSoftened)
+        GrayscaleAppsFeature.onAppOpened(context, listed, AccessibilityEventUtil.createEvent())
+        assertFalse(GrayscaleAppsFeature.isScreenFilterSoftened)
+
+        pass(halfAnHour)
+        GrayscaleAppsFeature.onAppOpened(context, listed, AccessibilityEventUtil.createEvent())
+        assertFalse(GrayscaleAppsFeature.isScreenFilterSoftened)
     }
 
     @Test

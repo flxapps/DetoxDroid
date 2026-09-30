@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
@@ -72,8 +71,8 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     /** How long a brake that was pulled by hand can be taken back, for the tile tapped by accident. */
     val UndoWindowMs: Long = TimeUnit.SECONDS.toMillis(30)
 
-    /** The durations on offer, in minutes. */
-    val DurationsInMinutes = listOf(15, 30, 60, 120, 240)
+    /** The durations on offer, in minutes: as many as fit one row of chips. */
+    val DurationsInMinutes = listOf(30, 60, 120, 240, 480)
 
     /**
      * How long the last brake pulled by hand was set to run. The quick settings tile pulls this
@@ -81,14 +80,6 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
      */
     var lastDuration: Long by DataStoreProperty(
         longPreferencesKey("${id}_lastDuration"), TimeUnit.MINUTES.toMillis(30)
-    )
-
-    /**
-     * The ids of the features the brake leaves as they are. Stored as an exclusion set, so a
-     * feature added later is covered by default.
-     */
-    var brakeExemptFeatureIds: Set<FeatureId> by DataStoreProperty(
-        stringSetPreferencesKey("${id}_exemptFeatureIds"), setOf()
     )
 
     /**
@@ -144,10 +135,6 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
     }
 
-    /** The features a brake can tighten, in UI order. */
-    val brakableFeatures: List<Feature>
-        get() = FeaturesProvider.featureList.filter { it is PausableFeature }
-
     /**
      * When the running brake ends, in [TrustedClock] time, or 0 without one. A request to end it
      * early moves this forward.
@@ -160,17 +147,19 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
 
     fun isBraking(): Boolean = brakeUntil != 0L && TrustedClock.now() < endsAt()
 
-    /** Whether a running brake tightens [feature]. */
+    /**
+     * Whether a running brake tightens [feature]. There is no picking: every feature that can be
+     * paused is covered, and one that is switched off stays off.
+     */
     fun covers(feature: Feature): Boolean =
-        brakeUntil != 0L && feature is PausableFeature && feature.id !in brakeExemptFeatureIds && isBraking()
+        brakeUntil != 0L && feature is PausableFeature && isBraking()
 
     /**
      * Whether a running brake locks the settings of the feature with [featureId]. The commitment
-     * password keeps its own lock, and a feature the brake leaves alone can be changed.
+     * password keeps its own lock.
      */
     fun locksSettings(featureId: FeatureId): Boolean =
         brakeUntil != 0L && featureId != CommitmentPasswordFeatureId &&
-                featureId !in brakeExemptFeatureIds &&
                 FeaturesProvider.getFeatureById(featureId) is LockableFeature && isBraking()
 
     /** Whether the end of the running brake has been asked for and is being waited out. */
@@ -221,6 +210,21 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         if (!automatic) lastDuration = durationMs
         Timber.i("Brake pulled for ${durationMs / 1000}s (automatic=$automatic)")
         apply(context)
+        return true
+    }
+
+    /**
+     * Makes the running brake last [byMs] longer than it would have, counted from the end the
+     * user was shown, so "until 21:30" plus half an hour reads 22:00. A request to end it early is
+     * taken back by this: asking for more is the opposite of asking out.
+     * @return whether anything changed
+     */
+    fun extend(context: Context, byMs: Long): Boolean {
+        if (!isBraking() || byMs <= 0L) return false
+        brakeUntil = endsAt() + byMs
+        endRequestedAt = 0L
+        Timber.i("Brake extended by ${byMs / 1000}s")
+        refresh(context)
         return true
     }
 
@@ -307,9 +311,7 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         }
         if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return
         val foregroundPackage = service.currentForegroundPackage
-        FeaturesProvider.activeFeatures.filter {
-            it is PausableFeature && it.id !in brakeExemptFeatureIds
-        }.forEach {
+        FeaturesProvider.activeFeatures.filter { it is PausableFeature }.forEach {
             kotlin.runCatching {
                 (it as? BrakeAwareFeature)?.onBrakeChanged(context)
                 if (foregroundPackage.isNotEmpty() && it is OnAppOpenedSubscriptionFeature) {

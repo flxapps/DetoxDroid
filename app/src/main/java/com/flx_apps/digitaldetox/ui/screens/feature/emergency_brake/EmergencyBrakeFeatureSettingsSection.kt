@@ -2,12 +2,12 @@ package com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.GridView
@@ -15,11 +15,11 @@ import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Timelapse
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -39,10 +39,9 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
-import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
-import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
+import com.flx_apps.digitaldetox.ui.widgets.OptionChip
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -72,7 +71,8 @@ private fun rememberBrakeState(): BrakeState {
 }
 
 /**
- * The settings section for the emergency brake: the brake itself on top, what it is made of below.
+ * The settings section for the emergency brake: the brake itself on top, the ways to pull it
+ * below. Which features it tightens is not a setting: every feature that is switched on.
  */
 @Composable
 fun EmergencyBrakeFeatureSettingsSection(
@@ -80,7 +80,6 @@ fun EmergencyBrakeFeatureSettingsSection(
 ) {
     when (viewModel.visibleDialog.collectAsState().value) {
         EmergencyBrakeDialog.END_EARLY -> EndEarlyDialog()
-        EmergencyBrakeDialog.AFFECTED_FEATURES -> AffectedFeaturesDialog()
         EmergencyBrakeDialog.AUTO_PULL_BREAKS -> AutoPullBreaksDialog()
         EmergencyBrakeDialog.AUTO_PULL_WINDOW -> AutoPullWindowDialog()
         EmergencyBrakeDialog.AUTO_PULL_DURATION -> AutoPullDurationDialog()
@@ -101,19 +100,16 @@ fun EmergencyBrakeFeatureSettingsSection(
             AutoPullDurationTile()
         }
     }
-    AdvancedSettings(
-        summary = stringResource(id = R.string.feature_pause_affectedFeatures),
-        initiallyExpanded = viewModel.exemptFeatureIds.collectAsState().value.isNotEmpty()
-    ) {
-        AffectedFeaturesTile()
-    }
 }
 
 /**
- * The brake: how long, and the button that pulls it. While one runs it says until when, and
- * offers what is left to do about it. None of this is held back by locked settings, which a
+ * The brake: how long, and the button that pulls it. While one runs, the same chips say how much
+ * longer, and the button extends by that. None of this is held back by locked settings, which a
  * running brake brings with it: pulling and extending only tighten, and ending early is the wait
  * it is meant to be.
+ *
+ * Not an [IconCard]: the chips need the card's full width to stay on one row, so the icon sits
+ * with the status line only.
  */
 @Composable
 private fun BrakeCard(
@@ -125,61 +121,82 @@ private fun BrakeCard(
     val activated = featureViewModel.featureIsActive.collectAsState().value
     val running =
         DetoxDroidAccessibilityService.state.collectAsState().value != DetoxDroidState.Inactive
+    val usable = activated && running
     val duration = viewModel.duration.collectAsState().value
-    IconCard(icon = Icons.Default.PanTool) {
-        Text(
-            text = when {
-                brake.endRequested -> stringResource(R.string.feature_brake_status_ending, brake.endsAt)
-                brake.braking -> stringResource(R.string.feature_brake_status_on, brake.endsAt)
-                !activated -> stringResource(R.string.feature_brake_status_notActivated)
-                !running -> stringResource(R.string.feature_brake_status_notRunning)
-                else -> stringResource(R.string.feature_brake_status_off)
-            }, style = MaterialTheme.typography.bodyMedium
+    val durationText = formatDurationMsCompact(context, TimeUnit.MINUTES.toMillis(duration.toLong()))
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
-        ChipFlowRow(modifier = Modifier.padding(top = 12.dp)) {
-            EmergencyBrakeFeature.DurationsInMinutes.forEach { minutes ->
-                FilterChip(
-                    selected = minutes == duration,
-                    onClick = { viewModel.setDuration(minutes) },
-                    enabled = activated && running,
-                    label = {
-                        Text(
-                            formatDurationMsCompact(
-                                context, TimeUnit.MINUTES.toMillis(minutes.toLong())
-                            )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row {
+                Icon(
+                    imageVector = Icons.Default.PanTool,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = when {
+                        brake.endRequested -> stringResource(
+                            R.string.feature_brake_status_ending, brake.endsAt
                         )
-                    })
+
+                        brake.braking -> stringResource(R.string.feature_brake_status_on, brake.endsAt)
+                        !activated -> stringResource(R.string.feature_brake_status_notActivated)
+                        !running -> stringResource(R.string.feature_brake_status_notRunning)
+                        else -> stringResource(R.string.feature_brake_status_off)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
             }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            when {
-                brake.canUndo -> TextButton(onClick = { viewModel.undo() }) {
-                    Text(stringResource(R.string.feature_brake_undo))
-                }
-
-                brake.endRequested -> TextButton(onClick = { viewModel.withdrawEndRequest() }) {
-                    Text(stringResource(R.string.feature_brake_keepOn))
-                }
-
-                brake.braking -> TextButton(onClick = {
-                    viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.END_EARLY)
-                }) {
-                    Text(stringResource(R.string.feature_brake_endEarly))
+            ChipFlowRow(modifier = Modifier.padding(top = 16.dp)) {
+                EmergencyBrakeFeature.DurationsInMinutes.forEach { minutes ->
+                    OptionChip(
+                        label = formatDurationMsCompact(
+                            context, TimeUnit.MINUTES.toMillis(minutes.toLong())
+                        ),
+                        selected = minutes == duration,
+                        enabled = usable,
+                        onClick = { viewModel.setDuration(minutes) },
+                    )
                 }
             }
-            if (brake.braking) {
-                OutlinedButton(onClick = { viewModel.pull() }) {
-                    Text(stringResource(R.string.feature_brake_extend))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                when {
+                    brake.canUndo -> TextButton(onClick = { viewModel.undo() }) {
+                        Text(stringResource(R.string.feature_brake_undo))
+                    }
+
+                    brake.endRequested -> TextButton(onClick = { viewModel.withdrawEndRequest() }) {
+                        Text(stringResource(R.string.feature_brake_keepOn))
+                    }
+
+                    brake.braking -> TextButton(onClick = {
+                        viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.END_EARLY)
+                    }) {
+                        Text(stringResource(R.string.feature_brake_endEarly))
+                    }
                 }
-            } else {
-                Button(onClick = { viewModel.pull() }, enabled = activated && running) {
-                    Text(stringResource(R.string.feature_brake_pull))
+                if (brake.braking) {
+                    OutlinedButton(onClick = { viewModel.extend() }) {
+                        Text(stringResource(R.string.feature_brake_extendBy, durationText))
+                    }
+                } else {
+                    Button(onClick = { viewModel.pull() }, enabled = usable) {
+                        Text(stringResource(R.string.feature_brake_pull))
+                    }
                 }
             }
         }
@@ -327,72 +344,5 @@ private fun AutoPullDurationDialog(viewModel: EmergencyBrakeFeatureSettingsViewM
         onDismissRequest = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) },
         label = { formatDurationMsCompact(context, TimeUnit.MINUTES.toMillis(it.toLong())) },
         range = 15..240 step 15
-    )
-}
-
-/**
- * A tile that opens a dialog for choosing which features a brake tightens.
- * @see EmergencyBrakeFeature.brakeExemptFeatureIds
- */
-@Composable
-private fun AffectedFeaturesTile(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
-    val exempt = viewModel.exemptFeatureIds.collectAsState().value
-    val total = viewModel.brakableFeatures.size
-    val affected = total - viewModel.brakableFeatures.count { it.id in exempt }
-    SimpleListTile(
-        leadingIcon = Icons.Default.Tune,
-        titleText = stringResource(id = R.string.feature_pause_affectedFeatures),
-        subtitleText = if (affected == total) {
-            stringResource(id = R.string.feature_pause_affectedFeatures_all)
-        } else {
-            stringResource(id = R.string.feature_pause_affectedFeatures_count, affected, total)
-        },
-        onClick = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.AFFECTED_FEATURES) },
-    )
-}
-
-/**
- * A dialog listing every feature a brake can tighten with a checkbox. Unchecked ones are left as
- * they are while a brake runs.
- */
-@Composable
-private fun AffectedFeaturesDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
-    val exempt = viewModel.exemptFeatureIds.collectAsState().value
-    AlertDialog(
-        onDismissRequest = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) },
-        title = { Text(text = stringResource(id = R.string.feature_pause_affectedFeatures)) },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(id = R.string.feature_brake_affectedFeatures_dialogHint),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                viewModel.brakableFeatures.forEach { feature ->
-                    val affected = feature.id !in exempt
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                viewModel.setFeatureAffectedByBrake(feature.id, !affected)
-                            }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = affected, onCheckedChange = {
-                            viewModel.setFeatureAffectedByBrake(feature.id, it)
-                        })
-                        Text(
-                            text = stringResource(id = feature.texts.title),
-                            modifier = Modifier.padding(start = 8.dp),
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) }) {
-                Text(text = stringResource(id = R.string.action_close))
-            }
-        },
     )
 }

@@ -241,7 +241,7 @@
     <string name="feature_brake_status_on">The brake is on until %s. Settings are locked until then.</string>
     <string name="feature_brake_status_ending">You asked to end it. The brake comes off at %s.</string>
     <string name="feature_brake_pull">Pull the Brake</string>
-    <string name="feature_brake_extend">Extend</string>
+    <string name="feature_brake_extendBy">Extend by %s</string>
     <string name="feature_brake_undo">Undo</string>
     <string name="feature_brake_endEarly">End Early</string>
     <string name="feature_brake_endEarly_message">The brake comes off %d minutes after you ask, and stays on until then. You can change your mind in between.</string>
@@ -262,7 +262,6 @@
     <string name="feature_brake_autoPull_window_description">Further apart than this, and they don\'t add up.</string>
     <string name="feature_brake_autoPull_duration">Brake Duration</string>
     <string name="feature_brake_autoPull_duration_description">A brake that pulled itself can\'t be undone, only ended early.</string>
-    <string name="feature_brake_affectedFeatures_dialogHint">Choose which features the brake tightens. Unchecked features carry on as usual.</string>
     <!-- endregion -->
 
     <!-- region Feature: Break Doom Scrolling -->

@@ -9,8 +9,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.Feature
-import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +22,7 @@ import javax.inject.Inject
  * We use an enum, as only one dialog can be shown at a time.
  */
 enum class EmergencyBrakeDialog {
-    NONE, END_EARLY, AFFECTED_FEATURES, AUTO_PULL_BREAKS, AUTO_PULL_WINDOW, AUTO_PULL_DURATION
+    NONE, END_EARLY, AUTO_PULL_BREAKS, AUTO_PULL_WINDOW, AUTO_PULL_DURATION
 }
 
 /**
@@ -43,12 +41,6 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
 
     private val _visibleDialog = MutableStateFlow(EmergencyBrakeDialog.NONE)
     val visibleDialog = _visibleDialog.asStateFlow()
-
-    /** All features a brake can tighten. */
-    val brakableFeatures: List<Feature> = EmergencyBrakeFeature.brakableFeatures
-
-    private val _exemptFeatureIds = MutableStateFlow(EmergencyBrakeFeature.brakeExemptFeatureIds)
-    val exemptFeatureIds = _exemptFeatureIds.asStateFlow()
 
     private val _autoPull = MutableStateFlow(EmergencyBrakeFeature.autoPull)
     val autoPull = _autoPull.asStateFlow()
@@ -76,12 +68,17 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
         _visibleDialog.value = dialog
     }
 
-    /** Pulls the brake for the picked duration, or extends the running one. */
+    /** Pulls the brake for the picked duration. */
     fun pull() {
-        EmergencyBrakeFeature.pull(
-            getApplication(), TimeUnit.MINUTES.toMillis(_duration.value.toLong())
-        )
+        EmergencyBrakeFeature.pull(getApplication(), pickedDurationMs())
     }
+
+    /** Makes the running brake last the picked duration longer. */
+    fun extend() {
+        EmergencyBrakeFeature.extend(getApplication(), pickedDurationMs())
+    }
+
+    private fun pickedDurationMs(): Long = TimeUnit.MINUTES.toMillis(_duration.value.toLong())
 
     fun undo() {
         EmergencyBrakeFeature.undo(getApplication())
@@ -94,17 +91,6 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
 
     fun withdrawEndRequest() {
         EmergencyBrakeFeature.withdrawEndRequest(getApplication())
-    }
-
-    /**
-     * Sets whether a brake tightens [featureId]. Persisted as an exclusion set on
-     * [EmergencyBrakeFeature].
-     */
-    fun setFeatureAffectedByBrake(featureId: FeatureId, affected: Boolean) {
-        val exempt =
-            if (affected) _exemptFeatureIds.value - featureId else _exemptFeatureIds.value + featureId
-        EmergencyBrakeFeature.brakeExemptFeatureIds = exempt
-        _exemptFeatureIds.value = exempt
     }
 
     fun toggleAutoPull() {
