@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.widgets
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -39,8 +38,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -159,16 +161,24 @@ fun InterventionSecondaryButton(text: String, onClick: () -> Unit, enabled: Bool
  * A thin bar draining from [startFraction] to empty over [durationMs]; calls [onFinished] when it
  * runs out. It owns the timing, so what the bar shows and what happens at its end can never drift
  * apart.
+ *
+ * The bar is driven from the frame clock rather than an animation, because animations obey the
+ * system's animator duration scale: with animations switched off in the accessibility settings an
+ * animated bar would be empty on its first frame, and a wait that ends with it would be no wait.
  */
 @Composable
 fun DrainingBar(durationMs: Long, onFinished: () -> Unit, startFraction: Float = 1f) {
     val currentOnFinished by rememberUpdatedState(onFinished)
-    val progress = remember { Animatable(startFraction) }
+    var progress by remember { mutableFloatStateOf(startFraction) }
     LaunchedEffect(Unit) {
-        progress.animateTo(
-            targetValue = 0f,
-            animationSpec = tween(durationMillis = durationMs.toInt(), easing = LinearEasing)
-        )
+        val startNanos = withFrameNanos { it }
+        val durationNanos = durationMs.coerceAtLeast(0L) * 1_000_000L
+        while (true) {
+            val elapsedNanos = withFrameNanos { it } - startNanos
+            if (elapsedNanos >= durationNanos) break
+            progress = startFraction * (1f - elapsedNanos.toFloat() / durationNanos)
+        }
+        progress = 0f
         currentOnFinished()
     }
     Box(
@@ -181,7 +191,7 @@ fun DrainingBar(durationMs: Long, onFinished: () -> Unit, startFraction: Float =
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(progress.value)
+                .fillMaxWidth(progress)
                 .height(4.dp)
                 .background(Color.White.copy(alpha = 0.85f))
         )
