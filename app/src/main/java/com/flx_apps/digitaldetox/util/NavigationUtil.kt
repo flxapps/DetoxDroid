@@ -4,8 +4,26 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import timber.log.Timber
 
 object NavigationUtil {
+    /**
+     * Starts the first of [intents] that has an activity to handle it. Settings pages are not
+     * uniform across ROMs: a page that AOSP has can be missing on a vendor build, and a hidden
+     * action may or may not be wired up, so a plain [Context.startActivity] can throw for a tap
+     * that works everywhere else. The last intent should be one every device has.
+     * @return whether any of them started
+     */
+    private fun startFirstAvailable(context: Context, vararg intents: Intent): Boolean {
+        intents.forEach { intent ->
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            runCatching { context.startActivity(intent) }
+                .onSuccess { return true }
+                .onFailure { Timber.w("no activity for ${intent.action}: ${it.message}") }
+        }
+        return false
+    }
+
     /**
      * An intent that takes the user to the home screen. Carries [Intent.FLAG_ACTIVITY_NEW_TASK], so
      * it can be started from any context, including services.
@@ -19,10 +37,15 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openOverlayPermissionsSettings(context: Context) {
-        context.startActivity(Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.parse("package:${context.packageName}")
-        ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
+        startFirstAvailable(
+            context,
+            Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}")
+            ),
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
+            appInfoSettingsIntent(context)
+        )
     }
 
     /**
@@ -30,9 +53,28 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openDoNotDisturbSystemSettings(context: Context) {
-        context.startActivity(Intent(
-            Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-        ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
+        startFirstAvailable(
+            context,
+            Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS),
+            Intent(Settings.ACTION_SOUND_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
+        )
+    }
+
+    /**
+     * Opens the page where Do Not Disturb itself is set up (what gets through, schedules). Its
+     * action is hidden from the SDK and some vendor builds have no page behind it, so the
+     * permission page and the sound settings, where Do Not Disturb lives, stand in for it.
+     */
+    @JvmStatic
+    fun openDoNotDisturbSettings(context: Context) {
+        startFirstAvailable(
+            context,
+            Intent("android.settings.ZEN_MODE_PRIORITY_SETTINGS"),
+            Intent("android.settings.ZEN_MODE_SETTINGS"),
+            Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS),
+            Intent(Settings.ACTION_SOUND_SETTINGS)
+        )
     }
 
     /**
@@ -40,9 +82,12 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openUsageAccessSettings(context: Context) {
-        context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
+        startFirstAvailable(
+            context,
+            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
+            Intent(Settings.ACTION_SECURITY_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
+        )
     }
 
     /**
@@ -51,20 +96,22 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openAppInfoSettings(context: Context) {
-        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.fromParts("package", context.packageName, null)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
+        startFirstAvailable(context, appInfoSettingsIntent(context), Intent(Settings.ACTION_SETTINGS))
     }
+
+    private fun appInfoSettingsIntent(context: Context): Intent =
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
 
     /**
      * Opens the accessibility services settings screen.
      */
     @JvmStatic
     fun openAccessibilitySettings(context: Context) {
-        context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
+        startFirstAvailable(
+            context, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), Intent(Settings.ACTION_SETTINGS)
+        )
     }
 
     /**
@@ -74,12 +121,12 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openExtraDimSettings(context: Context) {
-        runCatching {
-            context.startActivity(
-                Intent("android.settings.REDUCE_BRIGHT_COLORS_SETTINGS")
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }.onFailure { openAccessibilitySettings(context) }
+        startFirstAvailable(
+            context,
+            Intent("android.settings.REDUCE_BRIGHT_COLORS_SETTINGS"),
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
+        )
     }
 
     /**
@@ -87,12 +134,7 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openDeveloperSettings(context: Context) {
-        runCatching {
-            context.startActivity(
-                Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                })
-        }
+        startFirstAvailable(context, Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
     }
 
     /**
@@ -101,11 +143,12 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openAppNotificationSettings(context: Context) {
-        runCatching {
-            context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+        startFirstAvailable(
+            context,
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            })
-        }
+            },
+            appInfoSettingsIntent(context)
+        )
     }
 }

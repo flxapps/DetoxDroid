@@ -1,8 +1,8 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.do_not_disturb
 
 import android.app.Application
-import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -13,9 +13,6 @@ class DoNotDisturbFeatureSettingsViewModel @Inject constructor(application: Appl
      * Opens the system settings for the do not disturb feature.
      */
     fun openDoNotDisturbSystemSettings() {
-        val intent = Intent("android.settings.ZEN_MODE_PRIORITY_SETTINGS").apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        getApplication<Application>().startActivity(intent)
+        NavigationUtil.openDoNotDisturbSettings(getApplication())
     }
 }
