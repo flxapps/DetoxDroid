@@ -667,6 +667,7 @@
     <string name="about_summary">Make digital detox your default.</string>
     <string name="about_tile_subtitle">Settings, project info and the tip jar.</string>
     <string name="about_section_settings">Settings</string>
+    <string name="about_section_backup">Backup</string>
     <string name="about_backup_export">Save Settings to a File</string>
     <string name="about_backup_export_subtitle">Everything you have configured, in one file you keep. Screen time history is not in it.</string>
     <string name="about_backup_restore">Restore Settings from a File</string>
@@ -700,7 +701,7 @@
     <string name="about_backup_preview_noChanges">Nothing in it differs from what is set now.</string>
     <string name="about_backup_preview_excluded">Not in the file: your commitment password, a running brake, the screen time history.</string>
     <string name="about_theme">Theme</string>
-    <string name="about_theme_system">Follow the system</string>
+    <string name="about_theme_system">System</string>
     <string name="about_theme_light">Light</string>
     <string name="about_theme_dark">Dark</string>
     <string name="about_section_support">Support the project</string>

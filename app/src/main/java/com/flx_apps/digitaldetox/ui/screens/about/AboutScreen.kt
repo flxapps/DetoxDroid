@@ -5,12 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,21 +24,22 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,7 +52,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -109,6 +104,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val keepAliveLockedSubtitle = stringResource(id = R.string.reliability_keepAlive_locked_subtitle)
     val keepAliveBrakingSubtitle = stringResource(id = R.string.about_backup_restore_braking_subtitle)
     val settingsSection = stringResource(id = R.string.about_section_settings)
+    val backupSection = stringResource(id = R.string.about_section_backup)
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
@@ -215,6 +211,10 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         enabled = !onboardingLocked,
                         onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
                     )
+                }
+
+                SectionHeader(backupSection)
+                SettingsGroup {
                     ConfigBackupTiles()
                 }
 
@@ -373,62 +373,46 @@ private fun SwitchTile(
 }
 
 /**
- * Light, dark, or whatever the system says. The choice applies on the spot, every open screen
- * included, see [AppearanceSettings].
+ * Light, dark, or whatever the system says, as three segments in one row. The choice applies on
+ * the spot, every open screen included, see [AppearanceSettings].
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ThemeTile() {
     val mode by AppearanceSettings.themeMode.collectAsState()
-    var showDialog by rememberSaveable { mutableStateOf(false) }
-    val labels = mapOf(
-        AppearanceSettings.ThemeMode.SYSTEM to R.string.about_theme_system,
-        AppearanceSettings.ThemeMode.LIGHT to R.string.about_theme_light,
-        AppearanceSettings.ThemeMode.DARK to R.string.about_theme_dark,
+    val options = listOf(
+        Triple(AppearanceSettings.ThemeMode.SYSTEM, R.string.about_theme_system, Icons.Default.BrightnessAuto),
+        Triple(AppearanceSettings.ThemeMode.LIGHT, R.string.about_theme_light, Icons.Default.LightMode),
+        Triple(AppearanceSettings.ThemeMode.DARK, R.string.about_theme_dark, Icons.Default.DarkMode),
     )
-    LinkTile(
-        icon = when (mode) {
-            AppearanceSettings.ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
-            AppearanceSettings.ThemeMode.LIGHT -> Icons.Default.LightMode
-            AppearanceSettings.ThemeMode.DARK -> Icons.Default.DarkMode
-        },
-        title = stringResource(id = R.string.about_theme),
-        subtitle = stringResource(id = labels.getValue(mode)),
-        onClick = { showDialog = true }
-    )
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(stringResource(id = R.string.about_theme)) },
-            text = {
-                Column(modifier = Modifier.selectableGroup()) {
-                    labels.forEach { (option, labelRes) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .selectable(
-                                    selected = option == mode,
-                                    role = Role.RadioButton,
-                                    onClick = {
-                                        AppearanceSettings.setThemeMode(option)
-                                        showDialog = false
-                                    }
+    ListItem(
+        headlineContent = { Text(stringResource(id = R.string.about_theme)) },
+        leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
+        supportingContent = {
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                options.forEachIndexed { index, (option, labelRes, icon) ->
+                    SegmentedButton(
+                        selected = option == mode,
+                        onClick = { AppearanceSettings.setThemeMode(option) },
+                        shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                        icon = {
+                            SegmentedButtonDefaults.Icon(active = option == mode) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
                                 )
-                                .padding(vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = option == mode, onClick = null)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(stringResource(id = labelRes))
+                            }
                         }
+                    ) {
+                        Text(stringResource(id = labelRes), maxLines = 1)
                     }
                 }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(id = R.string.action_cancel))
-                }
             }
-        )
-    }
+        }
+    )
 }

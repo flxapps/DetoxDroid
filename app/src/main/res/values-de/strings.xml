@@ -654,6 +654,7 @@
     <string name="about_summary">Mach Digital Detox zu deinem Normalzustand.</string>
     <string name="about_tile_subtitle">Einstellungen, Projektinfos und die Kaffeekasse.</string>
     <string name="about_section_settings">Einstellungen</string>
+    <string name="about_section_backup">Sicherung</string>
     <string name="about_backup_export">Einstellungen in Datei sichern</string>
     <string name="about_backup_export_subtitle">Alles, was du eingestellt hast, in einer Datei, die dir gehört. Die Bildschirmzeit-Historie ist nicht dabei.</string>
     <string name="about_backup_restore">Einstellungen aus Datei laden</string>
@@ -687,7 +688,7 @@
     <string name="about_backup_preview_noChanges">Nichts darin unterscheidet sich von jetzt.</string>
     <string name="about_backup_preview_excluded">Nicht in der Datei: dein Commitment-Passwort, eine laufende Notbremse, die Bildschirmzeit-Historie.</string>
     <string name="about_theme">Design</string>
-    <string name="about_theme_system">Wie das System</string>
+    <string name="about_theme_system">System</string>
     <string name="about_theme_light">Hell</string>
     <string name="about_theme_dark">Dunkel</string>
     <string name="about_section_support">Projekt unterstützen</string>
