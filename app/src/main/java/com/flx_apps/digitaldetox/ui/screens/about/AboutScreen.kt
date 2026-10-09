@@ -55,6 +55,7 @@ import androidx.activity.compose.LocalActivity
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
@@ -92,6 +93,8 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val onboardingLockedSubtitle = stringResource(id = R.string.about_onboarding_locked_subtitle)
     val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
     val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
+    val keepAliveLockedSubtitle = stringResource(id = R.string.reliability_keepAlive_locked_subtitle)
+    val keepAliveBrakingSubtitle = stringResource(id = R.string.about_backup_restore_braking_subtitle)
     val settingsSection = stringResource(id = R.string.about_section_settings)
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
@@ -99,6 +102,13 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     // observed so the tile opens up the moment the passphrase is entered on a feature screen
     val commitmentPasswordToken by CommitmentPasswordFeature.stateToken.collectAsState()
     val onboardingLocked = remember(commitmentPasswordToken) { OnboardingState.isOnboardingLocked }
+    // switching the keep-alive off and swiping DetoxDroid away is a way to stop it, which the
+    // password and the brake both refuse on the home screen, so the switch follows their lock
+    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
+    val keepAliveLocked = remember(commitmentPasswordToken, braking) {
+        braking || CommitmentPasswordFeature.isFeatureLocked(CommitmentPasswordFeature.id)
+    }
     var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
     val versionTaps = remember(activity) { VersionTapCountdown(activity) }
 
@@ -167,10 +177,15 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 SectionHeader(settingsSection)
                 SettingsGroup {
                     SwitchTile(
-                        icon = Icons.Default.Notifications,
+                        icon = if (keepAliveLocked) Icons.Default.Lock else Icons.Default.Notifications,
                         title = keepAliveTitle,
-                        subtitle = keepAliveSubtitle,
+                        subtitle = when {
+                            braking -> keepAliveBrakingSubtitle
+                            keepAliveLocked -> keepAliveLockedSubtitle
+                            else -> keepAliveSubtitle
+                        },
                         checked = keepAlive,
+                        enabled = !keepAliveLocked,
                         onCheckedChange = {
                             keepAlive = it
                             ReliabilitySettings.keepServiceAliveEnabled = it
@@ -329,13 +344,16 @@ private fun SwitchTile(
     title: String,
     subtitle: String? = null,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
         leadingContent = { Icon(icon, contentDescription = null) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-        modifier = Modifier.clickable { onCheckedChange(!checked) }
+        trailingContent = {
+            Switch(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
+        },
+        modifier = Modifier.clickable(enabled = enabled) { onCheckedChange(!checked) }
     )
 }

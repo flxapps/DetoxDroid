@@ -26,6 +26,7 @@
     <string name="reliability_serviceDown_message">Your phone stopped DetoxDroid in the background. Tap to start it again.</string>
     <string name="reliability_keepAlive_title">Keep DetoxDroid running</string>
     <string name="reliability_keepAlive_subtitle">Show an ongoing notification so the system is less likely to stop DetoxDroid in the background.</string>
+    <string name="reliability_keepAlive_locked_subtitle">Locked while your commitment password is in force. Switching this off and swiping DetoxDroid away would stop it.</string>
     <string name="reliability_battery_title">Allow unrestricted battery</string>
     <string name="reliability_battery_subtitle">Stops the system from putting DetoxDroid to sleep. Recommended if your phone aggressively closes background apps.</string>
     <string name="reliability_onboarding_title">Stay reliable</string>
