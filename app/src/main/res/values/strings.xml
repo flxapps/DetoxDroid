@@ -699,6 +699,10 @@
     </plurals>
     <string name="about_backup_preview_noChanges">Nothing in it differs from what is set now.</string>
     <string name="about_backup_preview_excluded">Not in the file: your commitment password, a running brake, the screen time history.</string>
+    <string name="about_theme">Theme</string>
+    <string name="about_theme_system">Follow the system</string>
+    <string name="about_theme_light">Light</string>
+    <string name="about_theme_dark">Dark</string>
     <string name="about_section_support">Support the project</string>
     <string name="about_section_project">Project &amp; contact</string>
     <string name="about_version">Version %1$s</string>

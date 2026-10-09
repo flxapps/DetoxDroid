@@ -686,6 +686,10 @@
     </plurals>
     <string name="about_backup_preview_noChanges">Nichts darin unterscheidet sich von jetzt.</string>
     <string name="about_backup_preview_excluded">Nicht in der Datei: dein Commitment-Passwort, eine laufende Notbremse, die Bildschirmzeit-Historie.</string>
+    <string name="about_theme">Design</string>
+    <string name="about_theme_system">Wie das System</string>
+    <string name="about_theme_light">Hell</string>
+    <string name="about_theme_dark">Dunkel</string>
     <string name="about_section_support">Projekt unterstützen</string>
     <string name="about_section_project">Projekt &amp; Kontakt</string>
     <string name="about_version">Version %1$s</string>

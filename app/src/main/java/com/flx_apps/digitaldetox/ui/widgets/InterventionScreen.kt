@@ -71,7 +71,7 @@ fun InterventionScreen(
 ) {
     // the screen is dark whatever the system theme, and hosted by an activity the theme also
     // colors the system bars, which must not come out light on it
-    DetoxDroidTheme(darkTheme = true) {
+    DetoxDroidTheme(darkTheme = true, syncSystemBars = false) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
