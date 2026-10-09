@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox.data
 
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
@@ -11,8 +12,10 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -41,6 +44,8 @@ object ConfigBackup {
 
     private const val KEY_VERSION = "formatVersion"
     private const val KEY_CREATED_AT = "createdAt"
+    private const val KEY_APP_VERSION_NAME = "appVersionName"
+    private const val KEY_APP_VERSION_CODE = "appVersionCode"
     private const val KEY_VALUES = "values"
     private const val KEY_TYPE = "type"
     private const val KEY_VALUE = "value"
@@ -66,31 +71,117 @@ object ConfigBackup {
         keyName !in EXCLUDED_KEYS && keyName !in EmergencyBrakeFeature.runningStateKeys &&
                 !keyName.startsWith("${CommitmentPasswordFeatureId}_")
 
+    /** What a settings file says about itself, and what it holds. */
+    class BackupFile(
+        val createdAt: LocalDate?,
+        val appVersionName: String?,
+        val appVersionCode: Int?,
+        val values: Map<String, Any>,
+    )
+
+    /** One feature's share of a file, for the user to look at before restoring. */
+    data class FeatureSummary(
+        val featureId: String,
+        @StringRes val titleRes: Int?,
+        val isActivated: Boolean?,
+        val appCount: Int?,
+    )
+
+    /**
+     * What restoring a file would do on this phone, see [preview].
+     * @param values the entries that would be written, the file's values minus what [isBackedUp]
+     * keeps out and minus what [applicable] drops
+     * @param changes how many of them differ from what is set right now
+     * @param otherSettings entries that belong to no feature this build knows, or to none at all
+     */
+    class Preview(
+        val file: BackupFile,
+        val values: Map<String, Any>,
+        val features: List<FeatureSummary>,
+        val otherSettings: Int,
+        val changes: Int,
+    ) {
+        val isFromNewerVersion: Boolean
+            get() = (file.appVersionCode ?: 0) > BuildConfig.VERSION_CODE
+    }
+
     /** The current configuration as the text that goes into the file. */
-    suspend fun export(): String {
-        val values = DataStore.data.first().asMap()
-            .filterKeys { isBackedUp(it.name) }
-            .map { (key, value) -> key.name to value }
-            .toMap()
-        return serialize(values)
+    suspend fun export(): String = serialize(currentValues())
+
+    private suspend fun currentValues(): Map<String, Any> = DataStore.data.first().asMap()
+        .filterKeys { isBackedUp(it.name) }
+        .map { (key, value) -> key.name to value }
+        .toMap()
+
+    /**
+     * Reads [json] and works out what restoring it would mean here, without writing anything.
+     * Throws on a file that is not a settings file, like [parse].
+     */
+    suspend fun preview(json: String): Preview {
+        val file = read(json)
+        val current = currentValues()
+        val values = applicable(file.values.filterKeys { isBackedUp(it) }, current)
+        val knownFeatureIds = FeaturesProvider.featureList.map { it.id }.toSet()
+        val byFeature = values.keys.groupBy { featureIdOf(it) }
+        val features = FeaturesProvider.featureList.filter { it.id in byFeature }.map { feature ->
+            FeatureSummary(
+                featureId = feature.id,
+                titleRes = feature.texts.title,
+                isActivated = values["${feature.id}_isActivated"] as? Boolean,
+                appCount = (values["${feature.id}_appExceptions"] as? Set<*>)?.size
+            )
+        }
+        return Preview(
+            file = file,
+            values = values,
+            features = features,
+            otherSettings = byFeature.filterKeys { it !in knownFeatureIds }.values.sumOf { it.size },
+            changes = values.count { (name, value) -> current[name] != value }
+        )
     }
 
     /**
-     * Writes the values in [json] back, leaving preferences the file does not name alone.
-     * @return how many values were restored
+     * Writes [values] back (the file's values as [preview] filtered them), leaving preferences the
+     * file does not name alone.
+     * @return how many values were written
      */
-    suspend fun import(json: String): Int {
-        val values = parse(json).filterKeys { isBackedUp(it) }
+    suspend fun import(values: Map<String, Any>): Int {
         if (values.isEmpty()) return 0
+        var written = 0
         DataStore.edit { preferences ->
             for ((name, value) in values) {
                 val key = keyFor(name, value) ?: continue
                 @Suppress("UNCHECKED_CAST")
                 preferences[key as Preferences.Key<Any>] = value
+                written++
             }
         }
-        return values.size
+        return written
     }
+
+    /** Reads [json] and writes it back, see [preview] and [import]. */
+    suspend fun import(json: String): Int = import(preview(json).values)
+
+    /**
+     * Keeps the entries of a file that can be written over [current] without breaking a reader.
+     * Preferences are typed by key, and every feature reads its keys as one fixed type: a value
+     * stored under a name the app reads as an Int has to be an Int, or the read throws at the next
+     * start. A file written by a version that stored the same name differently is the case; such
+     * an entry is dropped rather than failing the whole restore. Names not set yet are taken as
+     * they are.
+     */
+    internal fun applicable(
+        fileValues: Map<String, Any>, current: Map<String, Any>
+    ): Map<String, Any> = fileValues.filter { (name, value) ->
+        val existing = current[name] ?: return@filter true
+        when (value) {
+            is Set<*> -> existing is Set<*>
+            else -> existing::class == value::class
+        }
+    }
+
+    /** The feature a preference belongs to, by the key convention `${featureId}_name`. */
+    private fun featureIdOf(keyName: String) = keyName.substringBefore('_')
 
     /**
      * Restarts DetoxDroid so the imported values are the ones it runs on. Every feature reads its
@@ -106,7 +197,11 @@ object ConfigBackup {
         exitProcess(0)
     }
 
-    internal fun serialize(values: Map<String, Any>): String {
+    internal fun serialize(
+        values: Map<String, Any>,
+        appVersionName: String = BuildConfig.VERSION_NAME,
+        appVersionCode: Int = BuildConfig.VERSION_CODE,
+    ): String {
         val entries = JSONObject()
         for ((name, value) in values) {
             val entry = JSONObject()
@@ -127,17 +222,24 @@ object ConfigBackup {
         return JSONObject()
             .put(KEY_VERSION, FORMAT_VERSION)
             .put(KEY_CREATED_AT, LocalDate.now().toString())
+            .put(KEY_APP_VERSION_NAME, appVersionName)
+            .put(KEY_APP_VERSION_CODE, appVersionCode)
             .put(KEY_VALUES, entries)
             .toString(2)
     }
 
+    /** The values of a backup file, see [read]. */
+    internal fun parse(json: String): Map<String, Any> = read(json).values
+
     /**
      * Reads a backup file. Throws on anything that is not one; an entry whose type is not known
-     * (a file from a later version) is skipped rather than failing the whole import.
+     * (a file from a later version) is skipped rather than failing the whole import, and so is a
+     * header field that is missing or malformed.
      */
-    internal fun parse(json: String): Map<String, Any> {
-        val root = JSONObject(json)
-        require(root.has(KEY_VALUES)) { "not a DetoxDroid settings file" }
+    internal fun read(json: String): BackupFile {
+        val root = runCatching { JSONObject(json) }
+            .getOrElse { throw IllegalArgumentException("not a DetoxDroid settings file", it) }
+        require(root.optJSONObject(KEY_VALUES) != null) { "not a DetoxDroid settings file" }
         val entries = root.getJSONObject(KEY_VALUES)
         val values = mutableMapOf<String, Any>()
         for (name in entries.keys()) {
@@ -157,7 +259,13 @@ object ConfigBackup {
             }
             values[name] = value
         }
-        return values
+        return BackupFile(
+            createdAt = root.optString(KEY_CREATED_AT).takeIf { it.isNotEmpty() }
+                ?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+            appVersionName = root.optString(KEY_APP_VERSION_NAME).takeIf { it.isNotEmpty() },
+            appVersionCode = root.optInt(KEY_APP_VERSION_CODE).takeIf { root.has(KEY_APP_VERSION_CODE) },
+            values = values
+        )
     }
 
     private fun keyFor(name: String, value: Any): Preferences.Key<*>? = when (value) {

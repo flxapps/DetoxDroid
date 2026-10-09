@@ -670,13 +670,35 @@
     <string name="about_backup_export">Save Settings to a File</string>
     <string name="about_backup_export_subtitle">Everything you have configured, in one file you keep. Screen time history is not in it.</string>
     <string name="about_backup_restore">Restore Settings from a File</string>
-    <string name="about_backup_restore_subtitle">Reads a file back and restarts DetoxDroid.</string>
+    <string name="about_backup_restore_subtitle">Shows what the file holds first, then restarts DetoxDroid.</string>
     <string name="about_backup_restore_locked_subtitle">Locked while your commitment password is in force.</string>
     <string name="about_backup_restore_braking_subtitle">Locked while the brake is on.</string>
-    <string name="about_backup_restore_confirm">This overwrites what the file covers and restarts DetoxDroid. Your commitment password is not part of it and stays as it is.</string>
-    <string name="about_backup_restore_confirm_action">Restore</string>
+    <string name="about_backup_restore_confirm_action">Restore and restart</string>
     <string name="about_backup_export_failed">Could not write the file.</string>
+    <string name="about_backup_export_saved">Saved as %s</string>
     <string name="about_backup_restore_failed">That file does not hold DetoxDroid settings.</string>
+    <string name="about_backup_restore_readFailed">Could not read that file.</string>
+    <string name="about_backup_restore_nothingApplies">Nothing in that file applies to this version of DetoxDroid.</string>
+    <string name="about_backup_preview_title">Restore these settings?</string>
+    <string name="about_backup_preview_saved">Saved on %1$s with DetoxDroid %2$s</string>
+    <string name="about_backup_preview_savedUnknownVersion">Saved on %s</string>
+    <string name="about_backup_preview_newerVersion">Written by a newer DetoxDroid. Whatever this version does not know is left out.</string>
+    <string name="about_backup_preview_on">On</string>
+    <string name="about_backup_preview_off">Off</string>
+    <plurals name="about_backup_preview_apps">
+        <item quantity="one">%d app</item>
+        <item quantity="other">%d apps</item>
+    </plurals>
+    <plurals name="about_backup_preview_otherSettings">
+        <item quantity="one">%d more setting</item>
+        <item quantity="other">%d more settings</item>
+    </plurals>
+    <plurals name="about_backup_preview_changes">
+        <item quantity="one">%d setting differs from what is set now.</item>
+        <item quantity="other">%d settings differ from what is set now.</item>
+    </plurals>
+    <string name="about_backup_preview_noChanges">Nothing in it differs from what is set now.</string>
+    <string name="about_backup_preview_excluded">Not in the file: your commitment password, a running brake, the screen time history.</string>
     <string name="about_section_support">Support the project</string>
     <string name="about_section_project">Project &amp; contact</string>
     <string name="about_version">Version %1$s</string>

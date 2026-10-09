@@ -66,4 +66,48 @@ class ConfigBackupTest {
     fun someOtherJsonFileIsRefused() {
         ConfigBackup.parse("""{ "notes": ["a shopping list"] }""")
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun somethingThatIsNotJsonIsRefusedTheSameWay() {
+        ConfigBackup.parse("<html>not even close</html>")
+    }
+
+    @Test
+    fun theFileSaysWhichBuildWroteItAndWhen() {
+        val file = ConfigBackup.read(
+            ConfigBackup.serialize(mapOf("A_b" to 1), appVersionName = "2.9.0", appVersionCode = 20900)
+        )
+        assertEquals("2.9.0", file.appVersionName)
+        assertEquals(20900, file.appVersionCode)
+        assertEquals(java.time.LocalDate.now(), file.createdAt)
+    }
+
+    @Test
+    fun aFileWithoutAHeaderStillReads() {
+        val file = ConfigBackup.read("""{ "values": { "A_b": { "type": "boolean", "value": true } } }""")
+        assertEquals(null, file.createdAt)
+        assertEquals(null, file.appVersionName)
+        assertEquals(null, file.appVersionCode)
+        assertEquals(mapOf<String, Any>("A_b" to true), file.values)
+    }
+
+    @Test
+    fun anEntryWhoseTypeChangedSinceIsDroppedInsteadOfBreakingTheReader() {
+        val fromTheFile = mapOf<String, Any>(
+            "Feature_budget" to 30,            // once an Int, now stored as a Long
+            "Feature_isActivated" to true,
+            "Feature_appExceptions" to setOf("a"),
+            "Feature_newSetting" to "x"         // not on this phone yet
+        )
+        val current = mapOf<String, Any>(
+            "Feature_budget" to 30L,
+            "Feature_isActivated" to false,
+            "Feature_appExceptions" to hashSetOf("b")
+        )
+        val applicable = ConfigBackup.applicable(fromTheFile, current)
+        assertEquals(
+            setOf("Feature_isActivated", "Feature_appExceptions", "Feature_newSetting"),
+            applicable.keys
+        )
+    }
 }

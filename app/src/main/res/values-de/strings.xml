@@ -657,13 +657,35 @@
     <string name="about_backup_export">Einstellungen in Datei sichern</string>
     <string name="about_backup_export_subtitle">Alles, was du eingestellt hast, in einer Datei, die dir gehört. Die Bildschirmzeit-Historie ist nicht dabei.</string>
     <string name="about_backup_restore">Einstellungen aus Datei laden</string>
-    <string name="about_backup_restore_subtitle">Liest eine Datei ein und startet DetoxDroid neu.</string>
+    <string name="about_backup_restore_subtitle">Zeigt erst, was in der Datei steckt, und startet DetoxDroid dann neu.</string>
     <string name="about_backup_restore_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt.</string>
     <string name="about_backup_restore_braking_subtitle">Gesperrt, solange die Notbremse gezogen ist.</string>
-    <string name="about_backup_restore_confirm">Das überschreibt alles, was in der Datei steht, und startet DetoxDroid neu. Dein Commitment-Passwort gehört nicht dazu und bleibt, wie es ist.</string>
-    <string name="about_backup_restore_confirm_action">Laden</string>
+    <string name="about_backup_restore_confirm_action">Laden und neu starten</string>
     <string name="about_backup_export_failed">Die Datei konnte nicht geschrieben werden.</string>
+    <string name="about_backup_export_saved">Gesichert als %s</string>
     <string name="about_backup_restore_failed">In dieser Datei stehen keine DetoxDroid-Einstellungen.</string>
+    <string name="about_backup_restore_readFailed">Die Datei ließ sich nicht lesen.</string>
+    <string name="about_backup_restore_nothingApplies">Nichts in dieser Datei passt zu dieser DetoxDroid-Version.</string>
+    <string name="about_backup_preview_title">Diese Einstellungen laden?</string>
+    <string name="about_backup_preview_saved">Gesichert am %1$s mit DetoxDroid %2$s</string>
+    <string name="about_backup_preview_savedUnknownVersion">Gesichert am %s</string>
+    <string name="about_backup_preview_newerVersion">Stammt von einer neueren DetoxDroid-Version. Was diese Version nicht kennt, bleibt halt draußen.</string>
+    <string name="about_backup_preview_on">An</string>
+    <string name="about_backup_preview_off">Aus</string>
+    <plurals name="about_backup_preview_apps">
+        <item quantity="one">%d App</item>
+        <item quantity="other">%d Apps</item>
+    </plurals>
+    <plurals name="about_backup_preview_otherSettings">
+        <item quantity="one">%d weitere Einstellung</item>
+        <item quantity="other">%d weitere Einstellungen</item>
+    </plurals>
+    <plurals name="about_backup_preview_changes">
+        <item quantity="one">%d Einstellung ist anders als jetzt.</item>
+        <item quantity="other">%d Einstellungen sind anders als jetzt.</item>
+    </plurals>
+    <string name="about_backup_preview_noChanges">Nichts darin unterscheidet sich von jetzt.</string>
+    <string name="about_backup_preview_excluded">Nicht in der Datei: dein Commitment-Passwort, eine laufende Notbremse, die Bildschirmzeit-Historie.</string>
     <string name="about_section_support">Projekt unterstützen</string>
     <string name="about_section_project">Projekt &amp; Kontakt</string>
     <string name="about_version">Version %1$s</string>
