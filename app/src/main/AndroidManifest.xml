@@ -205,7 +205,7 @@
             android:name=".system_integration.EmergencyBrakeTileService"
             android:exported="true"
             android:icon="@drawable/ic_brake"
-            android:label="@string/app_brakeTile"
+            android:label="@string/feature_brake"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
                 android:name="android.service.quicksettings.TOGGLEABLE_TILE"

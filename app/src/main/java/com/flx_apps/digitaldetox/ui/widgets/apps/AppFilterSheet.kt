@@ -49,11 +49,11 @@ fun AppFilterSheet(
                         FilterChip(
                             selected = showSystemApps,
                             onClick = onToggleSystemApps,
-                            label = { Text(stringResource(id = R.string.exceptionsList_filter_systemApps)) })
+                            label = { Text(stringResource(id = R.string.appList_filter_systemApps)) })
                         FilterChip(
                             selected = showUserApps,
                             onClick = onToggleUserApps,
-                            label = { Text(stringResource(id = R.string.exceptionsList_filter_userApps)) })
+                            label = { Text(stringResource(id = R.string.appList_filter_userApps)) })
                     }
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),

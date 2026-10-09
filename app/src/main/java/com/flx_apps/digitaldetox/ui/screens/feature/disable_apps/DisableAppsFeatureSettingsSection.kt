@@ -81,7 +81,7 @@ fun WaitBeforeOpeningTile(
     val appsCanOpen = viewModel.allowedDailyTime.collectAsState().value != 0L
     val label = { seconds: Int ->
         if (seconds == 0) {
-            context.getString(R.string.feature_disableApps_waitBeforeOpening_off)
+            context.getString(R.string.state_off)
         } else {
             context.getString(R.string.duration_seconds_short, seconds)
         }
@@ -153,16 +153,16 @@ fun AllowedDailyTimeTile(
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                 Text(
                     if (hasDailyLimit) {
-                        stringResource(id = R.string.time_minutes, allowedDailyScreenTimeInMinutes)
+                        stringResource(id = R.string.duration_minutes, allowedDailyScreenTimeInMinutes)
                     } else {
                         stringResource(id = R.string.feature_disableApps_allowedDailyTime_noLimit)
                     }
                 )
                 Text(
                     modifier = Modifier.padding(top = 8.dp), text = stringResource(
-                        id = R.string.time_minutes, usedUpScreenTime
+                        id = R.string.duration_minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
-                        id = R.string.time_minutes_used
+                        id = R.string.duration_minutes_used
                     ), style = MaterialTheme.typography.labelVerySmall, textAlign = TextAlign.Center
                 )
             }

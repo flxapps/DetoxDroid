@@ -106,7 +106,7 @@ fun ShizukuSetupScreen(
                         .fillMaxWidth()
                         .padding(top = 16.dp)
                 ) {
-                    Text(stringResource(id = R.string.shizukuSetup_completed_done))
+                    Text(stringResource(id = R.string.action_done))
                 }
                 return@Column
             }
@@ -125,7 +125,7 @@ fun ShizukuSetupScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     OutlinedButton(onClick = { viewModel.grantViaRoot() }) {
-                        Text(stringResource(id = R.string.shizukuSetup_rooted_go))
+                        Text(stringResource(id = R.string.noPermissions_rooted_go))
                     }
                 }
             }
@@ -183,7 +183,7 @@ fun ShizukuSetupScreen(
                 active = setupState == ShizukuSetupState.READY
             ) {
                 Button(onClick = { viewModel.grantViaShizuku() }) {
-                    Text(stringResource(id = R.string.shizukuSetup_step4_go))
+                    Text(stringResource(id = R.string.action_grantPermission))
                 }
             }
         }

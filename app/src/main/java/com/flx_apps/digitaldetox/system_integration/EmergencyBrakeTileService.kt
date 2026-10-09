@@ -23,7 +23,7 @@ class EmergencyBrakeTileService : TileService() {
             EmergencyBrakeFeature.canUndo() -> EmergencyBrakeFeature.undo(this)
             else -> Toast.makeText(
                 this,
-                getString(R.string.app_notification_brakeUntil, EmergencyBrakeFeature.endsAtText()),
+                getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText()),
                 Toast.LENGTH_SHORT
             ).show()
         }

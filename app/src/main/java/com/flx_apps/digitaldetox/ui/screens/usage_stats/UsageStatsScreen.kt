@@ -327,7 +327,7 @@ fun UsageStatsScreen(
                                 if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        stringResource(R.string.permissions_restrictedSettings_hint),
+                                        stringResource(R.string.usageStats_usageAccess_restrictedSettingsHint),
                                         style = MaterialTheme.typography.bodySmall,
                                         textAlign = TextAlign.Center
                                     )

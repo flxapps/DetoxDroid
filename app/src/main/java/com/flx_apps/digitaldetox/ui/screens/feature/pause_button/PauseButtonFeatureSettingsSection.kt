@@ -224,7 +224,7 @@ private fun PauseDurationTile(viewModel: PauseButtonFeatureSettingsViewModel = v
         trailing = {
             Text(
                 stringResource(
-                    id = R.string.time_minutes, viewModel.pauseDuration.collectAsState().value
+                    id = R.string.duration_minutes, viewModel.pauseDuration.collectAsState().value
                 )
             )
         },
@@ -249,7 +249,7 @@ private fun MinimumTimeBetweenPausesTile(viewModel: PauseButtonFeatureSettingsVi
         trailing = {
             Text(
                 stringResource(
-                    id = R.string.time_minutes,
+                    id = R.string.duration_minutes,
                     viewModel.timeBetweenPausesDuration.collectAsState().value
                 )
             )
@@ -280,7 +280,7 @@ fun PauseDurationDialog(
             viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
         },
         label = {
-            context.getString(R.string.time_minutes, it)
+            context.getString(R.string.duration_minutes, it)
         },
         range = 1..15
     )
@@ -304,7 +304,7 @@ fun TimeBetweenPausesDialog(
             viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
         },
         label = {
-            context.getString(R.string.time_minutes, it)
+            context.getString(R.string.duration_minutes, it)
         },
         range = 0..120
     )

@@ -138,7 +138,7 @@ private fun BrakeLockBanner(featureId: String?) {
     IconCard(icon = Icons.Default.Lock) {
         Text(
             text = stringResource(
-                R.string.feature_brake_banner_locked, EmergencyBrakeFeature.endsAtText()
+                R.string.feature_brake_status_on, EmergencyBrakeFeature.endsAtText()
             ),
             style = MaterialTheme.typography.bodyMedium
         )

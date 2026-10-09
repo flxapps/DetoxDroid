@@ -197,7 +197,7 @@ private fun PremiumUnlockedContent(
         SupportButtons(uriHandler, highlightFirst = false)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.premium_action_done))
+            Text(stringResource(R.string.action_done))
         }
         if (PremiumSupport.allowsFreeUnlock) {
             // resetting a *paid* entitlement makes no sense, so this is FOSS-only

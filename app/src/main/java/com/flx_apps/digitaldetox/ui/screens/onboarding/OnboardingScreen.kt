@@ -192,7 +192,7 @@ private fun OnboardingBottomBar(
                 stringResource(
                     id = when (step) {
                         OnboardingStep.WELCOME -> R.string.onboarding_action_getStarted
-                        OnboardingStep.DONE -> R.string.onboarding_action_finish
+                        OnboardingStep.DONE -> R.string.home_start
                         else -> R.string.onboarding_action_next
                     }
                 )

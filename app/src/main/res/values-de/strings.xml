@@ -1,12 +1,11 @@
 <resources>
-    <!-- German translation. Informal "du" throughout.
+    <!-- German translation. Informal "du" throughout, „“ quotes, "Handy" rather than "Telefon".
          Translate the intent, not the words. See AGENTS.md § Localization. -->
 
     <!-- region App & Services -->
     <string name="app_quickSettingsTile">DetoxDroid pausieren</string>
     <string name="app_quickSettingsTile_paused">DetoxDroid ist für %d Minuten pausiert.</string>
     <string name="app_quickSettingsTile_noPause">Nächste Pause erst in %d Minuten.</string>
-    <string name="app_brakeTile">Notbremse</string>
     <string name="app_brakeTile_until">Bis %s</string>
     <string name="app_accessibilityService_name">DetoxDroid-Bedienungshilfe</string>
     <string name="app_accessibilityService_description">Setzt deine Regeln in Echtzeit um, je nachdem, welche App gerade offen ist.</string>
@@ -17,21 +16,18 @@
     <string name="app_notification_channelDescription">Hält DetoxDroid im Hintergrund aktiv</string>
     <string name="app_notification_alertChannelName">DetoxDroid-Hinweise</string>
     <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
-    <string name="app_notification_pausedUntil">Pausiert bis %s</string>
-    <string name="app_notification_brakeUntil">Notbremse bis %s</string>
-    <string name="app_notification_action_undoBrake">Zurücknehmen</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
-    <string name="reliability_serviceDown_message">Dein Telefon hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
+    <string name="reliability_serviceDown_message">Dein Handy hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>
     <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
-    <string name="reliability_keepAlive_locked_subtitle">Gesperrt, solange das Commitment-Passwort aktiv ist. Hier ausschalten und DetoxDroid wegwischen würde es ja stoppen.</string>
+    <string name="reliability_keepAlive_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt. Ohne die Benachrichtigung ließe sich DetoxDroid einfach wegwischen.</string>
     <string name="reliability_battery_title">Uneingeschränkten Akku erlauben</string>
-    <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Telefon Hintergrund-Apps aggressiv schließt.</string>
+    <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Handy Hintergrund-Apps aggressiv schließt.</string>
     <string name="reliability_onboarding_title">Zuverlässig bleiben</string>
-    <string name="reliability_onboarding_message">Manche Telefone stoppen Hintergrund-Apps, um Akku zu sparen. Dabei geht DetoxDroid schon mal unbemerkt mit aus. Diese optionalen Einstellungen helfen, dass es weiterläuft.</string>
+    <string name="reliability_onboarding_message">Manche Handys stoppen Hintergrund-Apps, um Akku zu sparen. Dabei geht DetoxDroid schon mal unbemerkt mit aus. Diese optionalen Einstellungen helfen, dass es weiterläuft.</string>
     <!-- endregion -->
 
-    <!-- region Common Actions -->
+    <!-- region Common Actions & States -->
     <string name="action_go">Los</string>
     <string name="action_save">Speichern</string>
     <string name="action_delete">Löschen</string>
@@ -39,19 +35,21 @@
     <string name="action_cancel">Abbrechen</string>
     <string name="action_ok">OK</string>
     <string name="action_close">Schließen</string>
+    <string name="action_done">Fertig</string>
     <string name="action_grantPermission">Berechtigung erteilen</string>
     <string name="action_openAppInfo">App-Info öffnen</string>
     <string name="action_requestPermissions">Für diese Funktion fehlen noch Berechtigungen.</string>
     <string name="action_search">Suchen</string>
     <string name="action_search_close">Suche schließen</string>
     <string name="action_filter">Filtern</string>
+    <string name="state_on">An</string>
+    <string name="state_off">Aus</string>
     <!-- endregion -->
 
     <!-- region Common Formats -->
-    <string name="time_minutes">%d Min.</string>
-    <string name="time_minutes_used">genutzt</string>
-    <string name="duration_hoursMinutes">%1$d Std. %2$d Min.</string>
     <string name="duration_minutes">%d Min.</string>
+    <string name="duration_minutes_used">genutzt</string>
+    <string name="duration_hoursMinutes">%1$d Std. %2$d Min.</string>
     <string name="duration_hours_short">%dh</string>
     <string name="duration_minutes_short">%dmin</string>
     <string name="duration_hoursCompact">%1$dh%2$dmin</string>
@@ -77,8 +75,6 @@
     <string name="home_state_inactive">Gestoppt</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
-    <string name="usageStats_usageAccessRequired">DetoxDroid braucht Zugriff auf die Nutzungsdaten, um dir deine Bildschirmzeit zu zeigen.</string>
-    <string name="permissions_restrictedSettings_hint">Wenn der Schalter ausgegraut ist, blockiert Android ihn, weil DetoxDroid nicht aus einem App-Store kommt. Öffne die App-Info, tippe auf das Drei-Punkte-Menü und erlaube dort zuerst die eingeschränkten Einstellungen.</string>
     <string name="home_uninstall">DetoxDroid deinstallieren</string>
     <string name="home_uninstall_hint">Weil DetoxDroid erweiterte Berechtigungen hat, schlägt das Deinstallieren oft fehl. Tippe hier, um sie vorher zu entziehen.</string>
     <string name="home_uninstall_blocked_hint">Deaktiviert, solange das Commitment-Passwort aktiv ist.</string>
@@ -86,10 +82,10 @@
     <string name="home_uninstall_dialog_message">DetoxDroid gibt seine Berechtigungen ab, danach kannst du es ganz normal deinstallieren.\n\nBei einer Neuinstallation musst du sie erneut erteilen.</string>
     <string name="home_finishSetup_title">Einrichtung abschließen</string>
     <string name="home_finishSetup_message">Die Graustufen warten nur noch auf eine Berechtigung.</string>
-    <string name="home_finishSetup_message_overlay">Scroll-Pausen und App-Sperre brauchen noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
+    <string name="home_finishSetup_message_overlay">Scroll-Pausen und App-Sperre brauchen noch die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="home_finishSetup_action">Abschließen</string>
     <string name="home_batteryOptimization_title">DetoxDroid aktiv halten</string>
-    <string name="home_batteryOptimization_message">Dein Telefon stoppt DetoxDroid möglicherweise im Hintergrund. Erlaube die Ausführung ohne Akku-Einschränkungen, damit deine Regeln weiter greifen.</string>
+    <string name="home_batteryOptimization_message">Dein Handy stoppt DetoxDroid womöglich im Hintergrund. Lass es ohne Akku-Einschränkungen laufen, damit deine Regeln weiter greifen.</string>
     <string name="home_batteryOptimization_action">Erlauben</string>
     <string name="home_batteryOptimization_why">Warum?</string>
     <string name="home_batteryOptimization_dismiss">Nicht jetzt</string>
@@ -107,8 +103,8 @@
     <string name="appList_section_available">Verfügbare Apps</string>
     <string name="appList_selected_empty">Noch keine Apps ausgewählt.</string>
     <string name="appList_badge_system">System</string>
-    <string name="exceptionsList_filter_userApps">Nutzer-Apps</string>
-    <string name="exceptionsList_filter_systemApps">System-Apps</string>
+    <string name="appList_filter_userApps">Nutzer-Apps</string>
+    <string name="appList_filter_systemApps">System-Apps</string>
     <string name="appCategories_video">Video</string>
     <string name="appCategories_music">Musik</string>
     <string name="appCategories_audio">Audio</string>
@@ -118,7 +114,7 @@
     <string name="appCategories_dating">Dating</string>
     <string name="appCategories_news">Nachrichten</string>
     <string name="appCategories_maps">Karten</string>
-    <string name="appCategories_social">Soziales</string>
+    <string name="appCategories_social">Social Media</string>
     <string name="appCategories_productivity">Produktivität</string>
     <string name="appCategories_games">Spiele</string>
     <string name="appCategories_image">Bilder</string>
@@ -135,15 +131,15 @@
     <string name="feature_settings_exceptions_listType">Funktion gilt für</string>
     <string name="feature_settings_exceptions_listType_notList">Alle Apps außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList">Nur ausgewählte Apps</string>
-    <string name="feature_settings_exceptions_switchListType_title">Ausgewählte Apps behalten?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList">Deine %d ausgewählten Apps wären dann nicht mehr die einzigen betroffenen, sondern die einzigen verschonten.</string>
-    <string name="feature_settings_exceptions_switchListType_toOnlyList">Deine %d ausgewählten Apps wären dann nicht mehr verschont, sondern die einzigen betroffenen.</string>
-    <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
-    <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
     <string name="feature_settings_exceptions_copyFrom">Übernehmen von …</string>
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Auswahl übernehmen von</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die App-Auswahl einer anderen Funktion hierher. Die aktuelle Auswahl ist damit weg.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d Apps</string>
+    <string name="feature_settings_exceptions_switchListType_title">Ausgewählte Apps behalten?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList">Bisher gilt die Funktion nur für deine %d ausgewählten Apps. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList">Bisher sind deine %d ausgewählten Apps ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
+    <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
+    <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
@@ -164,11 +160,11 @@
     <!-- endregion -->
 
     <!-- region Feature: Do Not Disturb -->
-    <string name="feature_doNotDisturb">Modus \"Bitte nicht stören\"</string>
+    <string name="feature_doNotDisturb">Modus „Bitte nicht stören“</string>
     <string name="feature_doNotDisturb_subtitle">Ruhe als Grundeinstellung</string>
-    <string name="feature_doNotDisturb_description">Schaltet \"Bitte nicht stören\" automatisch ein, solange DetoxDroid läuft. Ausnahmen legst du in den Systemeinstellungen fest.</string>
+    <string name="feature_doNotDisturb_description">Schaltet „Bitte nicht stören“ automatisch ein, solange DetoxDroid läuft. Ausnahmen legst du in den Systemeinstellungen fest.</string>
     <string name="feature_doNotDisturb_systemSettings">Systemeinstellungen</string>
-    <string name="feature_doNotDisturb_systemSettings_description">In den Android-Einstellungen kannst du \"Bitte nicht stören\" genauer einstellen.</string>
+    <string name="feature_doNotDisturb_systemSettings_description">In den Android-Einstellungen kannst du „Bitte nicht stören“ genauer einstellen.</string>
     <!-- endregion -->
 
     <!-- region Feature: Grayscale -->
@@ -191,7 +187,7 @@
     <string name="feature_grayscale_screenFilter_description">Echte Graustufen brauchen einmalig einen Computer oder Shizuku. Bis dahin zieht ein Filter ablenkenden Apps die Farbe ab und macht sie unscharf.</string>
     <string name="feature_grayscale_screenFilter_description_granted">Läuft zusätzlich zum Graustufenfilter des Systems. Du hast das Original schon, das hier lohnt sich also nur, wenn dich Graustufen allein zu wenig stören.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filterstärke</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">Wie weit es geht. Je stärker, desto schlechter lesbar wird Text.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">Wie stark der Filter eingreift. Je stärker, desto schlechter lässt sich Text lesen.</string>
     <string name="feature_grayscale_screenFilter_effects">Was der Filter macht</string>
     <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 oder neuer, und im Energiesparmodus schaltet das System sie ab.</string>
     <string name="feature_grayscale_screenFilter_effects_shade">Schleier</string>
@@ -234,54 +230,53 @@
 
     <!-- region Feature: Emergency Brake -->
     <string name="feature_brake">Notbremse</string>
-    <string name="feature_brake_subtitle">Alles auf streng, sofort</string>
-    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abrutschst. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, so streng wie es eben geht: Der ganze Bildschirm wird grau, deine gelisteten Apps sind gesperrt, egal wie viel Budget noch übrig ist, Zeitpläne zählen nicht, und pausieren geht auch nicht.</string>
-    <string name="feature_brake_status_off">Such dir aus, wie lange, und zieh.</string>
+    <string name="feature_brake_subtitle">Alle Regeln auf Anschlag, sofort</string>
+    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abdriftest. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, auf der strengsten Stufe: Der ganze Bildschirm wird grau, deine Apps aus der Liste sind gesperrt, egal wie viel Zeit heute noch übrig wäre, Zeitpläne gelten nicht, und pausieren kannst du auch nicht.</string>
+    <string name="feature_brake_status_off">Wähl aus, wie lange, und los geht\'s.</string>
     <string name="feature_brake_status_notActivated">Schalte die Notbremse erst oben ein.</string>
     <string name="feature_brake_status_notRunning">DetoxDroid läuft nicht, da gibt es nichts zu bremsen.</string>
-    <string name="feature_brake_status_on">Die Notbremse ist bis %s gezogen. So lange sind die Einstellungen gesperrt.</string>
-    <string name="feature_brake_status_ending">Du wolltest raus. Um %s löst sich die Notbremse.</string>
+    <string name="feature_brake_status_on">Die Notbremse läuft bis %s. So lange sind die Einstellungen gesperrt.</string>
+    <string name="feature_brake_status_ending">Du wolltest früher raus. Um %s ist die Notbremse vorbei.</string>
     <string name="feature_brake_pull">Notbremse ziehen</string>
     <string name="feature_brake_extendBy">Um %s verlängern</string>
     <string name="feature_brake_undo">Zurücknehmen</string>
     <string name="feature_brake_endEarly">Früher beenden</string>
-    <string name="feature_brake_endEarly_message">Die Notbremse löst sich %d Minuten, nachdem du fragst, und bleibt bis dahin gezogen. Du kannst es dir in der Zeit ja noch anders überlegen.</string>
+    <string name="feature_brake_endEarly_message">Nach dem Tippen dauert es noch %d Minuten, bis die Notbremse vorbei ist. Bis dahin bleibt alles gesperrt, und du kannst es dir noch anders überlegen.</string>
     <string name="feature_brake_endEarly_confirm">Wartezeit starten</string>
-    <string name="feature_brake_keepOn">Doch drinlassen</string>
-    <string name="feature_brake_noPause">Keine Pause, solange die Notbremse gezogen ist. Sie läuft bis %s.</string>
-    <string name="feature_brake_stop_locked">Die Notbremse ist bis %s gezogen. So lange lässt sich DetoxDroid nicht stoppen.</string>
-    <string name="feature_brake_banner_locked">Die Notbremse ist bis %s gezogen. So lange sind die Einstellungen gesperrt.</string>
-    <string name="feature_brake_ways">So ziehst du sie</string>
-    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Sie zieht so lange, wie du zuletzt gewählt hast.</string>
+    <string name="feature_brake_keepOn">Doch anlassen</string>
+    <string name="feature_brake_noPause">Keine Pause, solange die Notbremse läuft. Sie geht bis %s.</string>
+    <string name="feature_brake_stop_locked">Die Notbremse läuft bis %s. So lange lässt sich DetoxDroid nicht stoppen.</string>
+    <string name="feature_brake_ways">So löst du sie aus</string>
+    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Ein Tipp dort, und sie läuft so lange wie beim letzten Mal.</string>
     <string name="feature_brake_fromQuickSettings_alreadyAdded">Die Notbremse ist schon in deinen Schnelleinstellungen.</string>
-    <string name="feature_brake_autoPull_header">Von selbst ziehen</string>
-    <string name="feature_brake_autoPull">Für mich ziehen</string>
-    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, zieht sich die Notbremse für %3$s. Zählt nur, solange \"Doom Scrolling\" durchbrechen an ist.</string>
+    <string name="feature_brake_autoPull_header">Von selbst auslösen</string>
+    <string name="feature_brake_autoPull">Automatisch auslösen</string>
+    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doom Scrolling durchbrechen“ an ist.</string>
     <string name="feature_brake_autoPull_breaks">Wie oft erwischt</string>
     <string name="feature_brake_autoPull_breaks_description">So oft muss es passieren, über alle Apps gezählt.</string>
     <string name="feature_brake_autoPull_window">Innerhalb von</string>
     <string name="feature_brake_autoPull_window_description">Liegt mehr Zeit dazwischen, zählt es nicht zusammen.</string>
     <string name="feature_brake_autoPull_duration">Dauer der Notbremse</string>
-    <string name="feature_brake_autoPull_duration_description">Hat sie sich selbst gezogen, lässt sie sich nicht zurücknehmen, nur früher beenden.</string>
+    <string name="feature_brake_autoPull_duration_description">Hat sie von selbst ausgelöst, lässt sie sich nicht zurücknehmen, nur früher beenden.</string>
     <!-- endregion -->
 
     <!-- region Feature: Break Doom Scrolling -->
-    <string name="feature_doomScrolling">\"Doom Scrolling\" durchbrechen</string>
+    <string name="feature_doomScrolling">„Doom Scrolling“ durchbrechen</string>
     <string name="feature_doomScrolling_subtitle">Wenn der Feed einfach nicht aufhört</string>
     <string name="feature_doomScrolling_description">EXPERIMENTELL: erkennt lange Scroll-Sessions und bietet dir einen Ausstieg an.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Zeit bis zur Warnung</string>
-    <string name="feature_doomScrolling_timeUntilWarning_description">So lange darf Doom Scrolling laufen, bevor eine Warnung erscheint.</string>
-    <string name="feature_doomScrolling_exceptions_summary_notList">In %d Apps wird nicht auf Doom Scrolling geachtet.</string>
-    <string name="feature_doomScrolling_exceptions_summary_onlyList">In %d Apps wird auf Doom Scrolling geachtet.</string>
+    <string name="feature_doomScrolling_timeUntilWarning_description">So lange darfst du scrollen, bevor die Warnung kommt.</string>
+    <string name="feature_doomScrolling_exceptions_summary_notList">%d Apps sind von der Scroll-Erkennung ausgenommen.</string>
+    <string name="feature_doomScrolling_exceptions_summary_onlyList">Die Scroll-Erkennung läuft in %d Apps.</string>
     <string name="feature_doomScrolling_cooldownTime">Abkühlphase</string>
     <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App nach einer Pause gesperrt (oder nur der Feed, der sie ausgelöst hat).</string>
     <string name="feature_doomScrolling_sensitivity">Empfindlichkeit</string>
-    <string name="feature_doomScrolling_sensitivity_description">Wie schnell zügiges Scrollen eine Pause auslöst. \"Streng\" greift am frühesten ein. Endlose Feeds werden immer erkannt.</string>
+    <string name="feature_doomScrolling_sensitivity_description">Wie schnell zügiges Scrollen eine Pause auslöst. „Streng“ greift am frühesten ein. Endlose Feeds werden immer erkannt.</string>
     <string name="feature_doomScrolling_sensitivity_relaxed">Entspannt</string>
     <string name="feature_doomScrolling_sensitivity_balanced">Ausgewogen</string>
     <string name="feature_doomScrolling_sensitivity_strict">Streng</string>
 
-    <!-- overlay shown when a doom-scrolling session is detected -->
+    <!-- overlay shown when a doomscrolling session is detected -->
     <string name="feature_doomScrolling_warning_title">Aufwachen!</string>
     <string name="feature_doomScrolling_warning_message">Sieht aus, als hättest du dich festgescrollt.</string>
     <string name="feature_doomScrolling_warning_exit">Hol mich hier raus</string>
@@ -289,8 +284,8 @@
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
     <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei. Diesmal pausiert die ganze App.</string>
-    <string name="feature_doomScrolling_warning_context_brakePulled">Das war Nummer %1$d in kurzer Zeit. Die Notbremse ist bis %2$s gezogen.</string>
-    <string name="feature_doomScrolling_warning_context_braking">Die Notbremse ist gezogen, die App ist also bis %s weg.</string>
+    <string name="feature_doomScrolling_warning_context_brakePulled">Das war Nummer %1$d in kurzer Zeit. Die Notbremse läuft jetzt bis %2$s.</string>
+    <string name="feature_doomScrolling_warning_context_braking">Die Notbremse läuft, also bleibt die App bis %s zu.</string>
     <string name="feature_doomScrolling_guideOut_title">Abgemacht ist abgemacht</string>
     <string name="feature_doomScrolling_guideOut_message">Hoffentlich hat sich\'s gelohnt. Zurück zum Startbildschirm.</string>
     <string name="feature_doomScrolling_cooldown_title">Noch in der Abkühlphase</string>
@@ -311,13 +306,12 @@
     <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
     <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
     <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht die App sofort auf, bis der Bildschirm wieder ausgeht.</string>
-    <string name="feature_disableApps_waitBeforeOpening_off">Aus</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Bildschirmzeit sind die Apps sofort gesperrt, da gibt\'s nichts zu warten. Stell erst eine Zeit ein oder „Kein Limit“.</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget sind die Apps sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Betriebsmodus</string>
-    <string name="feature_disableApps_operationMode_description">Blockieren legt einen Warnbildschirm über die App. Pausieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
+    <string name="feature_disableApps_operationMode_description">Sperren legt einen Warnbildschirm über die App. Einfrieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
-    <string name="feature_disableApps_operationMode_suspend">Pausieren</string>
-    <string name="feature_disableApps_operationMode_suspend_needsShizuku">Zum Pausieren von Apps muss Shizuku laufen.</string>
+    <string name="feature_disableApps_operationMode_suspend">Einfrieren</string>
+    <string name="feature_disableApps_operationMode_suspend_needsShizuku">Zum Einfrieren von Apps muss Shizuku laufen.</string>
     <string name="feature_disableApps_operationMode_deactivate">Deaktivieren</string>
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
@@ -335,7 +329,7 @@
     <string name="feature_commitmentPassword_subtitle">Einstellungen mit einer Passphrase sperren</string>
     <string name="feature_commitmentPassword_description">Schütze ausgewählte Einstellungen mit einer Passphrase, damit du sie nicht impulsiv änderst. Benötigt Geräteadministrator-Rechte.</string>
     <string name="feature_commitmentPassword_requiresDeviceAdmin_message">Erteile Geräteadministrator-Rechte, um das Commitment-Passwort zu aktivieren.</string>
-    <string name="feature_commitmentPassword_walkthrough_title">Bevor du das aktivierst</string>
+    <string name="feature_commitmentPassword_walkthrough_title">Bevor du das einschaltest</string>
     <string name="feature_commitmentPassword_walkthrough_lock">Sperrt die Einstellungen, die du auswählst</string>
     <string name="feature_commitmentPassword_walkthrough_passphrase">Ändern kannst du sie nur mit deiner Passphrase</string>
     <string name="feature_commitmentPassword_walkthrough_stop">Solange sie gesperrt sind, lässt sich DetoxDroid nicht stoppen</string>
@@ -345,7 +339,7 @@
     <string name="feature_commitmentPassword_walkthrough_proceed">Verstanden</string>
     <string name="feature_commitmentPassword_generated_title">Deine Passphrase</string>
     <string name="feature_commitmentPassword_generated_message">Sichere diese Passphrase jetzt. Ohne sie kannst du geschützte Einstellungen nicht mehr ändern.</string>
-    <string name="feature_commitmentPassword_generated_hint">Schreib sie auf oder leg sie an einem sicheren Ort ab, bevor du fortfährst.</string>
+    <string name="feature_commitmentPassword_generated_hint">Schreib sie auf oder leg sie an einem sicheren Ort ab, bevor du weitermachst.</string>
     <string name="feature_commitmentPassword_generated_copied">Passphrase in die Zwischenablage kopiert</string>
     <string name="feature_commitmentPassword_generated_confirm">Ich habe die Passphrase gesichert</string>
     <string name="feature_commitmentPassword_copy">Passphrase kopieren</string>
@@ -376,21 +370,21 @@
     <string name="feature_commitmentPassword_disable_title">Schutz deaktivieren?</string>
     <string name="feature_commitmentPassword_disable_enterPassword">Gib deine Passphrase ein, um das Commitment-Passwort zu deaktivieren.</string>
     <string name="feature_commitmentPassword_disable">Schutz deaktivieren</string>
-    <string name="feature_commitmentPassword_banner_locked">Einstellungen gesperrt. Zum Bearbeiten Passphrase eingeben.</string>
+    <string name="feature_commitmentPassword_banner_locked">Einstellungen gesperrt. Zum Bearbeiten brauchst du deine Passphrase.</string>
     <string name="feature_commitmentPassword_banner_unlocked">Einstellungen für diese Sitzung entsperrt.</string>
     <string name="feature_commitmentPassword_lockAgain">Wieder sperren</string>
-    <string name="feature_commitmentPassword_lockedBadge">Durch Commitment-Passwort gesperrt</string>
-    <string name="feature_commitmentPassword_selectFeatures">Funktionen zum Sperren auswählen</string>
+    <string name="feature_commitmentPassword_lockedBadge">Durch dein Commitment-Passwort gesperrt</string>
+    <string name="feature_commitmentPassword_selectFeatures">Zu sperrende Funktionen</string>
     <string name="feature_commitmentPassword_selectAll">Alle</string>
     <string name="feature_commitmentPassword_selectNone">Keine</string>
     <string name="feature_commitmentPassword_featuresSelected">%1$d von %2$d Funktionen ausgewählt</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: mit Device Owner verstärken</string>
-    <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort läuft schon mit Geräteadministrator-Rechten. Device Owner verhindert zusätzlich, dass DetoxDroid deinstalliert wird. Tippe für den ADB-Befehl.</string>
+    <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort kommt mit Geräteadministrator-Rechten aus. Device Owner verhindert zusätzlich, dass sich DetoxDroid deinstallieren lässt. Tippe für den ADB-Befehl.</string>
     <string name="feature_commitmentPassword_stop_locked">Stoppen ist durch das Commitment-Passwort gesperrt. Entsperre zuerst die Einstellungen.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_title">Gerade gesperrt</string>
+    <string name="feature_commitmentPassword_tamper_overlay_title">Geht gerade nicht</string>
     <string name="feature_commitmentPassword_tamper_overlay_message_uninstall">Solange deine Einstellungen gesperrt sind, lässt sich DetoxDroid nicht deinstallieren.</string>
     <string name="feature_commitmentPassword_tamper_overlay_message_deviceAdmin">Solange deine Einstellungen gesperrt sind, lässt sich der Geräteadministrator von DetoxDroid nicht ausschalten.</string>
-    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Solange deine Einstellungen gesperrt sind, lassen sich die Bedienungshilfen von DetoxDroid nicht ausschalten.</string>
+    <string name="feature_commitmentPassword_tamper_overlay_message_accessibility">Solange deine Einstellungen gesperrt sind, lässt sich die Bedienungshilfe von DetoxDroid nicht ausschalten.</string>
     <string name="feature_commitmentPassword_tamper_overlay_reassurance">Du bist wieder auf dem Startbildschirm, und dein Schutz bleibt an.</string>
     <string name="feature_commitmentPassword_tamper_overlay_action_backHome">Zurück zum Start</string>
     <string name="feature_commitmentPassword_tamper_iconDescription">Warnsymbol</string>
@@ -402,8 +396,8 @@
     <string name="deviceAdminRevoked_prompt">Tippe zum Fortfahren genau diesen Satz ab:</string>
     <string name="deviceAdminRevoked_requiredPhrase">Ich treffe gerade eine kurzfristige Entscheidung, die ich bereuen werde</string>
     <string name="deviceAdminRevoked_inputLabel">Satz eingeben</string>
-    <string name="deviceAdminRevoked_continue">Verstanden, fortfahren</string>
-    <string name="deviceAdminRevoked_reenable_explanation">Der Geräteadministrator macht dein Commitment schwerer zu umgehen. Aktiviere ihn wieder, um den vollen Schutz herzustellen.</string>
+    <string name="deviceAdminRevoked_continue">Verstanden, weiter</string>
+    <string name="deviceAdminRevoked_reenable_explanation">Mit Geräteadministrator-Rechten lässt sich dein Commitment schwerer umgehen. Aktiviere sie wieder, dann ist der Schutz wieder komplett.</string>
     <string name="deviceAdminRevoked_disableRequestedWarning">Das Commitment-Passwort ist aktiv. Ohne Geräteadministrator lässt sich DetoxDroid leichter deinstallieren und umgehen.</string>
     <string name="accessibilityDisabledWarning_title">Bedienungshilfe wurde deaktiviert</string>
     <string name="accessibilityDisabledWarning_message">Die DetoxDroid-Bedienungshilfe wurde abgeschaltet, obwohl das Commitment-Passwort aktiv ist. Aktiviere sie wieder, damit deine Einstellungen weiter greifen.</string>
@@ -428,6 +422,8 @@
     <!-- region Usage Stats -->
     <string name="usageStats_more">Mehr</string>
     <string name="usageStats_title">App-Nutzung</string>
+    <string name="usageStats_usageAccessRequired">DetoxDroid braucht Zugriff auf die Nutzungsdaten, um dir deine Bildschirmzeit zu zeigen.</string>
+    <string name="usageStats_usageAccess_restrictedSettingsHint">Wenn der Schalter ausgegraut ist, blockiert Android ihn, weil DetoxDroid nicht aus einem App-Store kommt. Öffne die App-Info, tippe auf das Drei-Punkte-Menü und erlaube dort zuerst die eingeschränkten Einstellungen.</string>
     <string name="usageStats_timeframe_today">Heute</string>
     <string name="usageStats_timeframe_last7Days">7 Tage</string>
     <string name="usageStats_timeframe_last30Days">30 Tage</string>
@@ -463,11 +459,10 @@
     <string name="usageStats_sessions_short">Sitzungen</string>
     <string name="usageStats_avgSession">Ø Sitzung</string>
     <string name="usageStats_unlocks_short">Entsperrungen</string>
-    <string name="usageStats_other">Sonstige</string>
     <string name="usageStats_appDetails">Details</string>
     <string name="usageStats_quickActions">Schnellaktionen</string>
-    <string name="usageStats_noActiveFeatures">Nichts zu verwalten, es läuft keine Funktion</string>
-    <string name="usageStats_lockedByBrake">Nichts zu verwalten, solange die Notbremse gezogen ist, also bis %s</string>
+    <string name="usageStats_noActiveFeatures">Nichts zu verwalten, es ist keine Funktion an</string>
+    <string name="usageStats_lockedByBrake">Nichts zu verwalten, solange die Notbremse läuft, also bis %s</string>
     <string name="usageStats_lockedByPassword">Nichts zu verwalten, solange dein Commitment-Passwort diese Einstellungen sperrt</string>
     <string name="usageStats_addGrayscale">Zu Graustufen hinzufügen</string>
     <string name="usageStats_removeGrayscale">Aus Graustufen entfernen</string>
@@ -480,12 +475,16 @@
     <string name="usageStats_trend7d">7-Tage-Trend</string>
     <string name="usageStats_screenUnlocks">Entsperrungen</string>
     <string name="usageStats_appCategories">App-Kategorien</string>
-    <string name="usageStats_category_other">Sonstige</string>
     <string name="usageStats_scrollIntensity">Scroll-Intensität</string>
     <string name="usageStats_scrollIntensity_subtitle">Verbindet Scroll-Menge mit Scroll-Tempo</string>
     <string name="usageStats_scrollIntensity_score">Scroll-Intensität</string>
     <string name="usageStats_scrollIntensity_detail">%1$d Scrolls · %2$.1f/Min.</string>
-    <string name="usageStats_scrollIntensity_info">Verbindet die Gesamtzahl der Scrolls mit dem Tempo pro Minute (mit Wurzelgewichtung), damit kurze Ausreißer kein anhaltendes Doom Scrolling überholen. Höher = mehr Doom Scrolling.</string>
+    <string name="usageStats_scrollIntensity_info">Verbindet die Gesamtzahl der Scrolls mit dem Tempo pro Minute (mit Wurzelgewichtung), damit ein kurzer Ausreißer nicht über anhaltendem Doomscrolling landet. Höher heißt mehr Doomscrolling.</string>
+    <string name="usageStats_exclusions_title">Nicht mitgezählt</string>
+    <string name="usageStats_exclusions_description">Die Bildschirmzeit misst, wie lange eine App zu sehen war, nicht, was du damit gemacht hast. Ein Schlaftracker, der die ganze Nacht läuft, sieht genauso aus wie ein Feed, durch den du die ganze Nacht gescrollt hast. Solche Apps kannst du hier rauslassen.</string>
+    <string name="usageStats_exclusions_categories">Ganze Kategorien</string>
+    <string name="usageStats_exclusions_leftOut">Zählt gerade nicht mit</string>
+    <string name="usageStats_exclusions_counted">Zählt gerade mit</string>
     <string name="usageStats_showMore">Mehr anzeigen</string>
     <string name="usageStats_showLess">Weniger anzeigen</string>
     <string name="usageStats_sort">Sortieren nach</string>
@@ -494,17 +493,17 @@
     <string name="usageStats_sort_scrollIntensity">Nach Scroll-Intensität</string>
     <string name="usageStats_perspective">Zum Vergleich</string>
     <string name="usageStats_perspective_subtitle">Dieselben Zahlen, greifbar gemacht</string>
-    <string name="usageStats_perspective_footer">Ohne Wertung. So kriegst du Zeit halt eher zu fassen.</string>
-    <string name="usageStats_odometer_label">gescrollte Inhalte</string>
+    <string name="usageStats_perspective_footer">Ohne Wertung. So lässt sich Zeit halt leichter greifen.</string>
+    <string name="usageStats_odometer_label">an Inhalten vorbeigescrollt</string>
     <string name="usageStats_odometer_comparison">≈ %1$s × %2$s</string>
     <string name="usageStats_odometer_floors">≈ %1$d Stockwerke</string>
     <string name="usageStats_timeValue_setup">Was ist dir eine Stunde deiner Zeit wert?</string>
-    <string name="usageStats_timeValue_hint">Tippen und sehen, was deine Bildschirmzeit wert ist</string>
-    <string name="usageStats_timeValue_label">deine Bildschirmzeit zu %1$s</string>
+    <string name="usageStats_timeValue_hint">Tippe, um zu sehen, was deine Bildschirmzeit wert ist</string>
+    <string name="usageStats_timeValue_label">deine Bildschirmzeit bei %1$s</string>
     <string name="usageStats_timeValue_off">aus</string>
     <string name="usageStats_ratePerHour">%1$s/Std.</string>
 
-    <!-- landmarks used by the "In Perspective" scroll-distance comparisons -->
+    <!-- landmarks used by the "Zum Vergleich" scroll-distance comparisons -->
     <!-- rendered as "≈ 1,2 × <name>", so no article -->
     <string name="landmark_statueOfLiberty">Freiheitsstatue</string>
     <string name="landmark_eiffelTower">Eiffelturm</string>
@@ -521,7 +520,6 @@
     <!-- region Onboarding -->
     <string name="onboarding_action_getStarted">Los geht\'s</string>
     <string name="onboarding_action_next">Weiter</string>
-    <string name="onboarding_action_finish">DetoxDroid starten</string>
     <string name="onboarding_action_skipSetup">Einrichtung überspringen</string>
     <string name="onboarding_skipSetup_dialog_title">Einrichtung überspringen?</string>
     <string name="onboarding_skipSetup_dialog_message">Dann wird nichts eingerichtet. Jede Funktion lässt sich später einzeln einstellen, oder du startest die Einrichtung im Über-Bereich noch einmal.</string>
@@ -531,7 +529,7 @@
     <string name="onboarding_welcome_message">DetoxDroid hilft dir, aus dem Autopiloten auszusteigen: Es färbt ablenkende Apps grau, unterbricht endloses Scrollen und sperrt Apps, sobald dein Tagesbudget aufgebraucht ist. In den nächsten Schritten richten wir es so ein, wie du dein Handy wirklich benutzt.</string>
     <string name="onboarding_welcome_privacy">Alles bleibt auf deinem Gerät. DetoxDroid ist Open Source, zeigt keine Werbung und sammelt nichts.</string>
     <string name="onboarding_usageAccess_title">Finde heraus, wie du deine Zeit nutzt</string>
-    <string name="onboarding_usageAccess_message">Damit DetoxDroid dir die richtigen Apps und ein Tagesbudget vorschlagen kann, das du auch einhältst, braucht es die Berechtigung \"Nutzungsdaten\". Daraus entstehen auch deine Statistiken. Die Daten bleiben auf deinem Handy.</string>
+    <string name="onboarding_usageAccess_message">Damit DetoxDroid dir die richtigen Apps und ein Tagesbudget vorschlagen kann, das du auch einhältst, braucht es die Berechtigung „Nutzungsdaten“. Daraus entstehen auch deine Statistiken. Die Daten bleiben auf deinem Handy.</string>
     <string name="onboarding_usageAccess_grant">Nutzungsdaten-Zugriff erlauben</string>
     <string name="onboarding_usageAccess_granted">Erteilt. Jetzt können wir dir konkrete Apps vorschlagen.</string>
     <string name="onboarding_usageAccess_skipHint">Du kannst das überspringen. Dann gehen wir nach App-Kategorien.</string>
@@ -557,14 +555,14 @@
     <string name="onboarding_preset_budget_description">So viel Zeit hast du täglich für die ausgewählten Apps, bevor DetoxDroid eingreift.</string>
     <string name="onboarding_preset_budget_suggested">Vorgeschlagen anhand deiner letzten 7 Tage</string>
     <string name="onboarding_permissions_title">Ein paar Berechtigungen</string>
-    <string name="onboarding_permissions_message">Für deine Einrichtung braucht es diese Berechtigungen. Erteile, was du möchtest. Den Rest kannst du später auf den Funktionsseiten nachholen.</string>
+    <string name="onboarding_permissions_message">Deine Einrichtung braucht die Berechtigungen hier unten. Erteil, was du magst, den Rest kannst du später auf den Funktionsseiten nachholen.</string>
     <string name="onboarding_permissions_overlay">Über anderen Apps anzeigen</string>
     <string name="onboarding_permissions_overlay_description">Nötig, um Pausenbildschirme anzuzeigen und Apps zu sperren.</string>
     <string name="onboarding_permissions_notifications">Benachrichtigungen</string>
     <string name="onboarding_permissions_notifications_description">Status und Erinnerungen, während eine Detox-Funktion läuft.</string>
     <string name="onboarding_permissions_secureSettings">Graustufen-Berechtigung</string>
     <string name="onboarding_permissions_secureSettings_description">Eine spezielle Berechtigung, mit der DetoxDroid die Farbfilter des Systems steuern darf.</string>
-    <string name="onboarding_permissions_secureSettings_oneTap">Zum Erteilen tippen. Auf deinem Gerät wurde Shizuku oder Root erkannt.</string>
+    <string name="onboarding_permissions_secureSettings_oneTap">Tippe zum Erteilen. Shizuku oder Root wurde auf deinem Handy erkannt.</string>
     <string name="onboarding_permissions_secureSettings_later">Tippe für eine geführte Einrichtung. Oder lass es erst mal, wir erinnern dich auf dem Startbildschirm.</string>
     <string name="onboarding_permissions_accessibility">Bedienungshilfe</string>
     <string name="onboarding_permissions_accessibility_description">Das Herzstück von DetoxDroid: Die Bedienungshilfe erkennt, welche App gerade offen ist, und setzt deine Regeln um. Dabei verlassen keine Daten dein Gerät.</string>
@@ -577,11 +575,11 @@
         <item quantity="one">Scroll-Pausen in %d App</item>
         <item quantity="other">Scroll-Pausen in %d Apps</item>
     </plurals>
-    <string name="onboarding_done_summary_scrollBreaksPending">Scroll-Pausen sind eingerichtet. Es fehlt nur noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
+    <string name="onboarding_done_summary_scrollBreaksPending">Scroll-Pausen sind eingerichtet. Es fehlt nur noch die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="onboarding_done_summary_grayscale">Graustufen nach %s täglicher Nutzung</string>
     <string name="onboarding_done_summary_grayscaleFilter">Ablenkende Apps werden nach %s täglicher Nutzung stumpf und unscharf. Echte Graustufen brauchen noch einen einmaligen Schritt.</string>
     <string name="onboarding_done_summary_blocking">Apps gesperrt nach %s täglicher Nutzung</string>
-    <string name="onboarding_done_summary_blockingPending">Die App-Sperre ist eingerichtet. Ihr fehlt nur noch die Berechtigung \"Über anderen Apps anzeigen\".</string>
+    <string name="onboarding_done_summary_blockingPending">Die App-Sperre ist eingerichtet. Ihr fehlt nur noch die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="onboarding_done_summary_accessibilityPending">DetoxDroids Bedienungshilfe läuft noch nicht. Du kannst sie über den Startbildschirm starten.</string>
     <string name="onboarding_done_summary_nothing">Du hast keine Apps ausgewählt, deshalb wurde nichts eingerichtet. Schau dich in Ruhe auf dem Startbildschirm um.</string>
     <string name="onboarding_done_summary_rerunHint">Beim Abschließen ersetzt diese Auswahl die App-Listen und Tagesbudgets der betroffenen Funktionen.</string>
@@ -592,12 +590,11 @@
     <string name="shizukuSetup_title">Graustufen einrichten</string>
     <string name="shizukuSetup_intro">Graustufen brauchen einmalig eine Sonderberechtigung. Ohne Computer geht das am einfachsten mit Shizuku, einer kostenlosen Helfer-App. Dauert etwa fünf Minuten, und die Berechtigung übersteht auch Neustarts.</string>
     <string name="shizukuSetup_rooted">Dein Gerät scheint gerootet zu sein. Dann kannst du Shizuku überspringen und die Berechtigung direkt erteilen.</string>
-    <string name="shizukuSetup_rooted_go">Per Root erteilen</string>
     <string name="shizukuSetup_step1_title">Shizuku installieren</string>
     <string name="shizukuSetup_step1_description">Hol dir die kostenlose Shizuku-App bei Google Play.</string>
     <string name="shizukuSetup_step1_go">Play Store öffnen</string>
     <string name="shizukuSetup_step2_title">Shizuku-Dienst starten</string>
-    <string name="shizukuSetup_step2_description">Öffne Shizuku und folge \"Über Wireless-Debugging starten\". Sind die Entwickleroptionen noch nicht aktiv: Suche in den Handy-Einstellungen die \"Build-Nummer\" (meist unter \"Über das Telefon\") und tippe sie sieben Mal an, aktiviere dann \"Wireless-Debugging\" in den Entwickleroptionen. Durch die Kopplung führt dich Shizuku.</string>
+    <string name="shizukuSetup_step2_description">Öffne Shizuku und folge „Über Wireless-Debugging starten“. Sind die Entwickleroptionen noch nicht aktiv: Suche in den Handy-Einstellungen die „Build-Nummer“ (meist unter „Über das Telefon“) und tippe sie sieben Mal an, aktiviere dann „Wireless-Debugging“ in den Entwickleroptionen. Durch die Kopplung führt dich Shizuku.</string>
     <string name="shizukuSetup_step2_openShizuku">Shizuku öffnen</string>
     <string name="shizukuSetup_step2_openDeveloperSettings">Entwickleroptionen</string>
     <string name="shizukuSetup_step2_rebootHint">Nach jedem Neustart musst du Shizuku wieder starten. Die erteilte Berechtigung bleibt aber.</string>
@@ -606,23 +603,21 @@
     <string name="shizukuSetup_step3_go">Zugriff anfragen</string>
     <string name="shizukuSetup_step4_title">Graustufen-Berechtigung erteilen</string>
     <string name="shizukuSetup_step4_description">Ein Fingertipp, und DetoxDroid erteilt sich die Farbfilter-Berechtigung über Shizuku selbst.</string>
-    <string name="shizukuSetup_step4_go">Berechtigung erteilen</string>
     <string name="shizukuSetup_completed_title">Fertig!</string>
     <string name="shizukuSetup_completed_message">Die Berechtigung steht, die Graustufen sind bereit. Falls sie seit deiner Einrichtung gewartet haben, laufen sie jetzt.</string>
-    <string name="shizukuSetup_completed_done">Fertig</string>
     <!-- endregion -->
 
     <!-- region Elevated Permissions -->
-    <string name="noPermissions">Berechtigungen erforderlich</string>
-    <string name="noPermissions_text">Für diese Funktion brauchst du erweiterte Berechtigungen. Die erteilst du einmalig von einem Computer aus per ADB:</string>
-    <string name="noPermissions_text_command">adb shell \"%s\"</string>
-    <string name="noPermissions_text_visitGitHub">Die Einrichtungsschritte findest du auf <annotation type="GITHUB">GitHub</annotation>.</string>
-    <string name="noPermissions_text_rooted">Dein Gerät scheint gerootet zu sein. Du kannst die Berechtigungen per Root erteilen.</string>
-    <string name="noPermissions_text_rooted_go">Per Root erteilen</string>
-    <string name="noPermissions_text_shizuku">Shizuku ist verfügbar. Du kannst die Berechtigungen darüber erteilen.</string>
-    <string name="noPermissions_text_shizuku_go">Per Shizuku erteilen</string>
-    <string name="noPermissions_text_shizukuWizard">Kein Computer zur Hand? Richte Shizuku Schritt für Schritt direkt auf diesem Handy ein.</string>
-    <string name="noPermissions_text_shizukuWizard_go">Geführte Einrichtung</string>
+    <string name="noPermissions_title">Berechtigungen erforderlich</string>
+    <string name="noPermissions_message">Für diese Funktion brauchst du erweiterte Berechtigungen. Die erteilst du einmalig von einem Computer aus per ADB:</string>
+    <string name="noPermissions_command">adb shell \"%s\"</string>
+    <string name="noPermissions_visitGitHub">Die Einrichtungsschritte findest du auf <annotation type="GITHUB">GitHub</annotation>.</string>
+    <string name="noPermissions_rooted">Dein Gerät scheint gerootet zu sein. Du kannst die Berechtigungen per Root erteilen.</string>
+    <string name="noPermissions_rooted_go">Per Root erteilen</string>
+    <string name="noPermissions_shizuku">Shizuku ist verfügbar. Du kannst die Berechtigungen darüber erteilen.</string>
+    <string name="noPermissions_shizuku_go">Per Shizuku erteilen</string>
+    <string name="noPermissions_shizukuWizard">Kein Computer zur Hand? Richte Shizuku Schritt für Schritt direkt auf diesem Handy ein.</string>
+    <string name="noPermissions_shizukuWizard_go">Geführte Einrichtung</string>
     <!-- endregion -->
 
     <!-- region Premium -->
@@ -632,7 +627,7 @@
     <string name="premium_sheet_title_locked">%1$s freischalten</string>
     <string name="premium_sheet_subtitle">Kostenlos, quelloffen, keine Werbung. Gepflegt von einer einzigen Person.</string>
     <string name="premium_impact_title">Dein Detox bisher</string>
-    <string name="premium_impact_interventions">Mal hat DetoxDroid eingegriffen</string>
+    <string name="premium_impact_interventions">hat DetoxDroid eingegriffen</string>
     <string name="premium_impact_grayscale">in Graustufen verbracht</string>
     <string name="premium_impact_days">Tage Statistik</string>
     <string name="premium_impact_count">%d×</string>
@@ -644,7 +639,6 @@
     <string name="premium_action_donatedUnlock">Schon gespendet</string>
     <string name="premium_action_freeUnlock">Ohne Spende freischalten</string>
     <string name="premium_action_relock">Zurücksetzen</string>
-    <string name="premium_action_done">Fertig</string>
     <string name="premium_locked_footer">Die Sperre ist nur ein Schubs. Kein Tracking, keine Verpflichtung.</string>
     <string name="premium_feature_usageHistory">längere Statistik-Historie</string>
     <string name="premium_chip_lockedLabel">Premium</string>
@@ -654,16 +648,24 @@
     <string name="about_summary">Mach Digital Detox zu deinem Normalzustand.</string>
     <string name="about_tile_subtitle">Einstellungen, Projektinfos und die Kaffeekasse.</string>
     <string name="about_section_settings">Einstellungen</string>
+    <string name="about_theme">Design</string>
+    <string name="about_theme_system">System</string>
+    <string name="about_theme_light">Hell</string>
+    <string name="about_theme_dark">Dunkel</string>
+    <string name="about_onboarding">DetoxDroid neu einrichten</string>
+    <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
+    <string name="about_onboarding_locked_subtitle">Das würde deine gesperrten Einstellungen überschreiben. Entsperre sie zuerst.</string>
+    <string name="about_debugLog_subtitle">Hält fest, was DetoxDroid so macht, für Fehlerberichte. Bleibt auf dem Handy und wird beim Ausschalten gelöscht.</string>
+    <string name="about_debugLog_open">Debug-Log öffnen</string>
     <string name="about_section_backup">Sicherung</string>
-    <string name="about_backup_export">Einstellungen in Datei sichern</string>
-    <string name="about_backup_export_subtitle">Alles, was du eingestellt hast, in einer Datei, die dir gehört. Die Bildschirmzeit-Historie ist nicht dabei.</string>
-    <string name="about_backup_restore">Einstellungen aus Datei laden</string>
+    <string name="about_backup_export">Einstellungen in eine Datei sichern</string>
+    <string name="about_backup_export_subtitle">Alles, was du eingestellt hast, als Datei zum Aufheben. Der Bildschirmzeit-Verlauf ist nicht dabei.</string>
+    <string name="about_backup_export_saved">Gesichert als %s</string>
+    <string name="about_backup_export_failed">Die Datei konnte nicht geschrieben werden.</string>
+    <string name="about_backup_restore">Einstellungen aus einer Datei laden</string>
     <string name="about_backup_restore_subtitle">Zeigt erst, was in der Datei steckt, und startet DetoxDroid dann neu.</string>
     <string name="about_backup_restore_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt.</string>
-    <string name="about_backup_restore_braking_subtitle">Gesperrt, solange die Notbremse gezogen ist.</string>
-    <string name="about_backup_restore_confirm_action">Laden und neu starten</string>
-    <string name="about_backup_export_failed">Die Datei konnte nicht geschrieben werden.</string>
-    <string name="about_backup_export_saved">Gesichert als %s</string>
+    <string name="about_backup_restore_braking_subtitle">Gesperrt, solange die Notbremse läuft.</string>
     <string name="about_backup_restore_failed">In dieser Datei stehen keine DetoxDroid-Einstellungen.</string>
     <string name="about_backup_restore_readFailed">Die Datei ließ sich nicht lesen.</string>
     <string name="about_backup_restore_nothingApplies">Nichts in dieser Datei passt zu dieser DetoxDroid-Version.</string>
@@ -671,8 +673,6 @@
     <string name="about_backup_preview_saved">Gesichert am %1$s mit DetoxDroid %2$s</string>
     <string name="about_backup_preview_savedUnknownVersion">Gesichert am %s</string>
     <string name="about_backup_preview_newerVersion">Stammt von einer neueren DetoxDroid-Version. Was diese Version nicht kennt, bleibt halt draußen.</string>
-    <string name="about_backup_preview_on">An</string>
-    <string name="about_backup_preview_off">Aus</string>
     <plurals name="about_backup_preview_apps">
         <item quantity="one">%d App</item>
         <item quantity="other">%d Apps</item>
@@ -682,23 +682,13 @@
         <item quantity="other">%d weitere Einstellungen</item>
     </plurals>
     <plurals name="about_backup_preview_changes">
-        <item quantity="one">%d Einstellung ist anders als jetzt.</item>
-        <item quantity="other">%d Einstellungen sind anders als jetzt.</item>
+        <item quantity="one">%d Einstellung ist anders als aktuell eingestellt.</item>
+        <item quantity="other">%d Einstellungen sind anders als aktuell eingestellt.</item>
     </plurals>
-    <string name="about_backup_preview_noChanges">Nichts darin unterscheidet sich von jetzt.</string>
-    <string name="about_backup_preview_excluded">Nicht in der Datei: dein Commitment-Passwort, eine laufende Notbremse, die Bildschirmzeit-Historie.</string>
-    <string name="about_theme">Design</string>
-    <string name="about_theme_system">System</string>
-    <string name="about_theme_light">Hell</string>
-    <string name="about_theme_dark">Dunkel</string>
+    <string name="about_backup_preview_noChanges">Alles darin ist so eingestellt wie jetzt schon.</string>
+    <string name="about_backup_preview_excluded">Nicht in der Datei: dein Commitment-Passwort, eine laufende Notbremse, der Bildschirmzeit-Verlauf.</string>
+    <string name="about_backup_preview_confirm">Laden und neu starten</string>
     <string name="about_section_support">Projekt unterstützen</string>
-    <string name="about_section_project">Projekt &amp; Kontakt</string>
-    <string name="about_version">Version %1$s</string>
-    <plurals name="about_version_tapsLeft">
-        <item quantity="one">Noch %d Fingertipp, dann legst du dein Handy weg.</item>
-        <item quantity="other">Noch %d Fingertipps, dann legst du dein Handy weg.</item>
-    </plurals>
-    <string name="about_version_putItDown">Jetzt leg es aber auch weg.</string>
     <string name="about_coffee">Spendier mir einen Kaffee</string>
     <string name="about_coffee_subtitle">Jeder Kaffee hilft, DetoxDroid weiterzuentwickeln.</string>
     <string name="about_patron">Förderer werden</string>
@@ -710,18 +700,19 @@
     <string name="about_bitcoin_copied">Adresse kopiert</string>
     <string name="about_bitcoin_openWallet">Wallet öffnen</string>
     <string name="about_bitcoin_noWallet">Auf diesem Handy ist keine Bitcoin-Wallet. Kopier einfach die Adresse.</string>
+    <string name="about_section_project">Projekt &amp; Kontakt</string>
+    <string name="about_version">Version %1$s</string>
+    <plurals name="about_version_tapsLeft">
+        <item quantity="one">Noch %d Fingertipp, dann legst du dein Handy weg.</item>
+        <item quantity="other">Noch %d Fingertipps, dann legst du dein Handy weg.</item>
+    </plurals>
+    <string name="about_version_putItDown">Jetzt leg es aber auch weg.</string>
     <string name="about_contact">Kontakt aufnehmen</string>
     <string name="about_contact_subtitle">Feature-Wünsche und Ideen sind willkommen. Ich lese alles, antworte aber nicht immer.</string>
     <string name="about_github">Auf GitHub mitwirken</string>
-    <string name="about_onboarding">DetoxDroid neu einrichten</string>
-    <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
-    <string name="about_onboarding_locked_subtitle">Das würde deine gesperrten Einstellungen überschreiben. Entsperre sie zuerst.</string>
-    <string name="about_debugLog">Debug-Log</string>
-    <string name="about_debugLog_subtitle">Hält fest, was DetoxDroid so macht, für Fehlerberichte. Bleibt auf dem Handy und wird beim Ausschalten gelöscht.</string>
-    <string name="about_debugLog_open">Debug-Log öffnen</string>
     <!-- endregion -->
 
-    <!-- region Debug log -->
+    <!-- region Debug Log -->
     <string name="debugLog_title">Debug-Log</string>
     <plurals name="debugLog_entries">
         <item quantity="one">%1$s Eintrag</item>
@@ -755,9 +746,4 @@
     <string name="debugLog_newest">Zu den neuesten Einträgen</string>
     <string name="debugLog_hint">Tipp auf einen Eintrag, um ihn aufzuklappen, halt ihn gedrückt, um ihn zu kopieren, und tipp auf sein Tag, um nur dieses Tag zu sehen.</string>
     <!-- endregion -->
-    <string name="usageStats_exclusions_title">Nicht mitgezählt</string>
-    <string name="usageStats_exclusions_description">Die Bildschirmzeit misst, wie lange eine App zu sehen war, nicht, was du damit gemacht hast. Ein Schlaftracker, der die ganze Nacht läuft, sieht genauso aus wie ein Feed, durch den du die ganze Nacht gescrollt hast. Solche Apps kannst du hier rauslassen.</string>
-    <string name="usageStats_exclusions_categories">Ganze Kategorien</string>
-    <string name="usageStats_exclusions_leftOut">Zählt gerade nicht mit</string>
-    <string name="usageStats_exclusions_counted">Zählt gerade mit</string>
 </resources>

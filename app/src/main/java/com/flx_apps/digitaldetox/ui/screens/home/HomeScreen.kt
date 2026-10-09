@@ -468,7 +468,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
-    val otherLabel = stringResource(id = R.string.usageStats_other)
+    val otherLabel = stringResource(id = R.string.appCategories_other)
     val otherTime =
         (screenTime - chartStats.sumOf { it.value }).toFloat().coerceAtLeast(1f)
 
@@ -614,7 +614,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         }
                         if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
                             Text(
-                                text = stringResource(id = R.string.permissions_restrictedSettings_hint),
+                                text = stringResource(id = R.string.usageStats_usageAccess_restrictedSettingsHint),
                                 style = MaterialTheme.typography.bodySmall,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 8.dp)

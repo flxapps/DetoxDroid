@@ -280,7 +280,7 @@ private fun RestorePreviewDialog(
                         modifier = Modifier.size(20.dp), strokeWidth = 2.dp
                     )
                 } else {
-                    Text(stringResource(id = R.string.about_backup_restore_confirm_action))
+                    Text(stringResource(id = R.string.about_backup_preview_confirm))
                 }
             }
         },
@@ -297,7 +297,7 @@ private fun FeatureRow(feature: ConfigBackup.FeatureSummary) {
     val status = listOfNotNull(
         feature.isActivated?.let {
             stringResource(
-                id = if (it) R.string.about_backup_preview_on else R.string.about_backup_preview_off
+                id = if (it) R.string.state_on else R.string.state_off
             )
         },
         feature.appCount?.let {

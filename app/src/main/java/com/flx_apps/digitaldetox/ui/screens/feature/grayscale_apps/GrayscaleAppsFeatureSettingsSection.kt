@@ -300,8 +300,8 @@ private fun effectiveScreenFilterEffects(effects: ScreenFilterEffects): ScreenFi
 private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     if (hasWriteSecureSettingsPermission()) return
     SimpleListTile(
-        titleText = stringResource(id = R.string.noPermissions_text_shizukuWizard_go),
-        subtitleText = stringResource(id = R.string.noPermissions_text_shizukuWizard),
+        titleText = stringResource(id = R.string.noPermissions_shizukuWizard_go),
+        subtitleText = stringResource(id = R.string.noPermissions_shizukuWizard),
         leadingIcon = Icons.Default.AutoFixHigh,
         trailing = {
             Icon(
@@ -377,13 +377,13 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
         subtitleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime_description),
         trailing = {
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                Text(stringResource(id = R.string.time_minutes, allowedDailyColorScreenTime))
+                Text(stringResource(id = R.string.duration_minutes, allowedDailyColorScreenTime))
                 Text(
                     modifier = Modifier.padding(top = 8.dp),
                     text = stringResource(
-                        id = R.string.time_minutes, usedUpScreenTime
+                        id = R.string.duration_minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
-                        id = R.string.time_minutes_used
+                        id = R.string.duration_minutes_used
                     ),
                     style = androidx.compose.material3.MaterialTheme.typography.labelVerySmall,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center

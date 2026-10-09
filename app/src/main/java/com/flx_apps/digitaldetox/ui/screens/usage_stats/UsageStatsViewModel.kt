@@ -550,7 +550,7 @@ class UsageStatsViewModel @Inject constructor(
         allApps: Map<String, AggregatedAppStats>
     ): List<UsageCategoryFilter> {
         val context = getApplication<Application>()
-        val fallbackLabel = context.getString(R.string.usageStats_category_other)
+        val fallbackLabel = context.getString(R.string.appCategories_other)
         val timeByCategory = mutableMapOf<Int, Long>()
         for ((pkg, stat) in allApps) {
             timeByCategory.merge(categoryOf(pkg), stat.totalTimeMs, Long::plus)
@@ -623,7 +623,7 @@ class UsageStatsViewModel @Inject constructor(
         perApp: Map<String, AggregatedAppStats>
     ): Map<String, Long> {
         val context = getApplication<Application>()
-        val fallbackLabel = context.getString(R.string.usageStats_category_other)
+        val fallbackLabel = context.getString(R.string.appCategories_other)
         val byCategory = mutableMapOf<String, Long>()
         for ((pkg, stat) in perApp) {
             val label = ApplicationInfo.getCategoryTitle(context, categoryOf(pkg))?.toString()

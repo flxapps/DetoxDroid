@@ -491,12 +491,12 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             .setContentText(
                 if (isBraking) {
                     getString(
-                        R.string.app_notification_brakeUntil, EmergencyBrakeFeature.endsAtText()
+                        R.string.home_state_braking, EmergencyBrakeFeature.endsAtText()
                     )
                 } else if (isPausing) {
                     // show the actual end of the pause instead of a bare "Paused"
                     getString(
-                        R.string.app_notification_pausedUntil,
+                        R.string.home_state_paused,
                         Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
                             .atZone(ZoneId.systemDefault()).toLocalTime()
                             .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
@@ -517,7 +517,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         if (EmergencyBrakeFeature.canUndo()) {
             builder.addAction(
                 R.drawable.ic_brake,
-                getString(R.string.app_notification_action_undoBrake),
+                getString(R.string.feature_brake_undo),
                 EmergencyBrakeReceiver.undoIntent(this)
             )
         }

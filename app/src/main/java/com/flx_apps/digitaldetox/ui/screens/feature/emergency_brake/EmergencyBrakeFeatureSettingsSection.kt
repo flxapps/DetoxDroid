@@ -285,7 +285,7 @@ private fun AutoPullWindowTile(viewModel: EmergencyBrakeFeatureSettingsViewModel
         trailing = {
             Text(
                 stringResource(
-                    id = R.string.time_minutes, viewModel.autoPullWindow.collectAsState().value
+                    id = R.string.duration_minutes, viewModel.autoPullWindow.collectAsState().value
                 )
             )
         },
@@ -329,7 +329,7 @@ private fun AutoPullWindowDialog(viewModel: EmergencyBrakeFeatureSettingsViewMod
         initialValue = viewModel.autoPullWindow.collectAsState().value,
         onValueSelected = { viewModel.setAutoPullWindow(it) },
         onDismissRequest = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) },
-        label = { context.getString(R.string.time_minutes, it) },
+        label = { context.getString(R.string.duration_minutes, it) },
         range = 10..120 step 5
     )
 }

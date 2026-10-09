@@ -270,7 +270,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     )
                     SwitchTile(
                         icon = Icons.Default.Terminal,
-                        title = stringResource(id = R.string.about_debugLog),
+                        title = stringResource(id = R.string.debugLog_title),
                         subtitle = stringResource(id = R.string.about_debugLog_subtitle),
                         checked = debugLog,
                         onCheckedChange = {

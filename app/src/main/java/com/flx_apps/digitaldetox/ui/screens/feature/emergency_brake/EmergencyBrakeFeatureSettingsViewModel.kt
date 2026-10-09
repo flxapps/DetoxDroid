@@ -122,7 +122,7 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
         val app = getApplication<Application>()
         app.getSystemService(StatusBarManager::class.java).requestAddTileService(
             ComponentName(app, EmergencyBrakeTileService::class.java),
-            app.getString(R.string.app_brakeTile),
+            app.getString(R.string.feature_brake),
             Icon.createWithResource(app, R.drawable.ic_brake),
             app.mainExecutor
         ) { result ->
