@@ -472,6 +472,7 @@
     <string name="usageStats_quickActions">Quick Actions</string>
     <string name="usageStats_noActiveFeatures">Nothing to manage, no feature is active</string>
     <string name="usageStats_lockedByBrake">Nothing to manage while the brake is on, until %s</string>
+    <string name="usageStats_lockedByPassword">Nothing to manage while your commitment password locks these settings</string>
     <string name="usageStats_addGrayscale">Add to grayscale</string>
     <string name="usageStats_removeGrayscale">Remove from grayscale</string>
     <string name="usageStats_addScrollGuard">Add doom scroll guard</string>

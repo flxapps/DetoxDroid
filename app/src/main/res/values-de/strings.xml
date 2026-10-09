@@ -467,6 +467,7 @@
     <string name="usageStats_quickActions">Schnellaktionen</string>
     <string name="usageStats_noActiveFeatures">Nichts zu verwalten, es läuft keine Funktion</string>
     <string name="usageStats_lockedByBrake">Nichts zu verwalten, solange die Notbremse gezogen ist, also bis %s</string>
+    <string name="usageStats_lockedByPassword">Nichts zu verwalten, solange dein Commitment-Passwort diese Einstellungen sperrt</string>
     <string name="usageStats_addGrayscale">Zu Graustufen hinzufügen</string>
     <string name="usageStats_removeGrayscale">Aus Graustufen entfernen</string>
     <string name="usageStats_addScrollGuard">Scroll-Schutz hinzufügen</string>

@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,6 +40,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
@@ -213,22 +215,33 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
     val onToggled: () -> Unit = remember(app.packageName) {
         { version++; onFeatureChanged() }
     }
-    // a running brake locks the app lists like every other setting of the features it covers
-    val braking = EmergencyBrakeFeature.isBraking()
-    val grayscaleActive = GrayscaleAppsFeature.isActivated &&
-            !EmergencyBrakeFeature.locksSettings(GrayscaleAppsFeature.id)
-    val doomScrollingActive = BreakDoomScrollingFeature.isActivated &&
-            !EmergencyBrakeFeature.locksSettings(BreakDoomScrollingFeature.id)
-    val disableAppsActive = DisableAppsFeature.isActivated &&
-            !EmergencyBrakeFeature.locksSettings(DisableAppsFeature.id)
+    // the chips edit the app lists, so a running brake and a commitment password in force lock
+    // them like every other setting of the features they belong to
+    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    val passwordToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
+    val manageable = remember(brakeToken, passwordToken) {
+        listOf(GrayscaleAppsFeature, BreakDoomScrollingFeature, DisableAppsFeature)
+            .filter {
+                it.isActivated && !EmergencyBrakeFeature.locksSettings(it.id) &&
+                        !CommitmentPasswordFeature.isFeatureLocked(it.id)
+            }
+    }
+    val grayscaleActive = GrayscaleAppsFeature in manageable
+    val doomScrollingActive = BreakDoomScrollingFeature in manageable
+    val disableAppsActive = DisableAppsFeature in manageable
 
-    if (!grayscaleActive && !doomScrollingActive && !disableAppsActive) {
+    if (manageable.isEmpty()) {
+        val anyActive = GrayscaleAppsFeature.isActivated || BreakDoomScrollingFeature.isActivated ||
+                DisableAppsFeature.isActivated
         Text(
-            if (braking) {
-                stringResource(
+            when {
+                braking -> stringResource(
                     R.string.usageStats_lockedByBrake, EmergencyBrakeFeature.endsAtText()
                 )
-            } else stringResource(R.string.usageStats_noActiveFeatures),
+                anyActive -> stringResource(R.string.usageStats_lockedByPassword)
+                else -> stringResource(R.string.usageStats_noActiveFeatures)
+            },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
