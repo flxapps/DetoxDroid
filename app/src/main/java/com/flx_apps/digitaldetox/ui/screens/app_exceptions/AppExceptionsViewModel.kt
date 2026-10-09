@@ -259,6 +259,14 @@ class AppExceptionsViewModel @Inject constructor(
             ?: return
         var newExceptions = source.appExceptions
         if (shouldExcludeCurrentApp) newExceptions = newExceptions - appPackageName
+        replaceExceptions(newExceptions)
+    }
+
+    /**
+     * Replaces this feature's selection with [newExceptions] and rebuilds the master list so the
+     * UI regroups immediately.
+     */
+    private fun replaceExceptions(newExceptions: Set<String>) {
         appExceptionsFeature.appExceptions = newExceptions
         if (this::_appExceptionItems.isInitialized) {
             _appExceptionItems = _appExceptionItems.map {
@@ -297,11 +305,14 @@ class AppExceptionsViewModel @Inject constructor(
     }
 
     /**
-     * Sets the type of the app exception list.
+     * Sets the type of the app exception list. The selection is kept unless [clearSelection] is set:
+     * switching the type turns the selected apps from the only ones affected into the only ones
+     * spared, or the other way round, which is rarely what a non-empty list was built for.
      * @see AppExceptionListType
      */
-    fun setExceptionListType(type: AppExceptionListType) {
+    fun setExceptionListType(type: AppExceptionListType, clearSelection: Boolean = false) {
         if (!allowedListTypes.contains(type)) return
+        if (clearSelection) replaceExceptions(emptySet())
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
     }

@@ -285,6 +285,8 @@ fun AppExceptionsListTypeSection(
     val cardIcon: ImageVector =
         if (supportsMultipleListTypes) Icons.Default.Settings else Icons.Default.Info
 
+    var pendingListType by remember { mutableStateOf<AppExceptionListType?>(null) }
+
     IconCard(
         icon = cardIcon,
         contentDescription = null
@@ -297,7 +299,15 @@ fun AppExceptionsListTypeSection(
             OptionsRow(
                 options = listTypeMap, selectedOption = selectedListType, onOptionSelected = {
                     if (settingsLocked) return@OptionsRow
-                    viewModel.setExceptionListType(it as AppExceptionListType)
+                    val newType = it as AppExceptionListType
+                    if (newType == selectedListType) return@OptionsRow
+                    // a non-empty selection changes meaning with the type: the apps the feature
+                    // was limited to become the apps it spares. Ask before carrying it over.
+                    if (toggledItemsSize > 0) {
+                        pendingListType = newType
+                    } else {
+                        viewModel.setExceptionListType(newType)
+                    }
                 })
         }
         Text(
@@ -310,6 +320,73 @@ fun AppExceptionsListTypeSection(
             ), modifier = Modifier.padding(top = 6.dp)
         )
     }
+
+    pendingListType?.let { newType ->
+        SwitchListTypeDialog(
+            newType = newType,
+            selectedCount = toggledItemsSize,
+            onKeep = {
+                viewModel.setExceptionListType(newType)
+                pendingListType = null
+            },
+            onClear = {
+                viewModel.setExceptionListType(newType, clearSelection = true)
+                pendingListType = null
+            },
+            onDismiss = { pendingListType = null })
+    }
+}
+
+/**
+ * Says what switching the list type does to the apps already selected, and offers to switch with
+ * them or with an empty list.
+ */
+@Composable
+private fun SwitchListTypeDialog(
+    newType: AppExceptionListType,
+    selectedCount: Int,
+    onKeep: () -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = R.string.feature_settings_exceptions_switchListType_title)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(
+                        id = if (newType == AppExceptionListType.NOT_LIST) {
+                            R.string.feature_settings_exceptions_switchListType_toNotList
+                        } else {
+                            R.string.feature_settings_exceptions_switchListType_toOnlyList
+                        }, selectedCount
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                listOf(
+                    R.string.feature_settings_exceptions_switchListType_keep to onKeep,
+                    R.string.feature_settings_exceptions_switchListType_clear to onClear
+                ).forEach { (labelRes, onClick) ->
+                    Text(
+                        text = stringResource(id = labelRes),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onClick)
+                            .padding(vertical = 12.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.action_cancel))
+            }
+        }
+    )
 }
 
 /**

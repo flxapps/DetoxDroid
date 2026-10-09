@@ -143,6 +143,11 @@
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Copy selection from</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Copies another feature\'s app selection over this one. The current selection is gone.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d apps</string>
+    <string name="feature_settings_exceptions_switchListType_title">Keep the selected apps?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList">Your %d selected apps would flip from the only apps affected to the only apps spared.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList">Your %d selected apps would flip from the apps spared to the only apps affected.</string>
+    <string name="feature_settings_exceptions_switchListType_keep">Keep them selected</string>
+    <string name="feature_settings_exceptions_switchListType_clear">Clear the list first</string>
     <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Feature Schedule</string>

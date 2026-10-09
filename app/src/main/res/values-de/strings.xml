@@ -134,6 +134,11 @@
     <string name="feature_settings_exceptions_listType">Funktion gilt für</string>
     <string name="feature_settings_exceptions_listType_notList">Alle Apps außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList">Nur ausgewählte Apps</string>
+    <string name="feature_settings_exceptions_switchListType_title">Ausgewählte Apps behalten?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList">Deine %d ausgewählten Apps wären dann nicht mehr die einzigen betroffenen, sondern die einzigen verschonten.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList">Deine %d ausgewählten Apps wären dann nicht mehr verschont, sondern die einzigen betroffenen.</string>
+    <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
+    <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
     <string name="feature_settings_exceptions_copyFrom">Übernehmen von …</string>
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Auswahl übernehmen von</string>
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die App-Auswahl einer anderen Funktion hierher. Die aktuelle Auswahl ist damit weg.</string>
