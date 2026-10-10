@@ -1,0 +1,11 @@
+### Release v2.9.0
+
+✨ New Features
+- pull an emergency brake that runs every feature at its strictest for a set time
+- suspend listed apps through Shizuku, between blocking and deactivating
+- save your settings to a file and read them back, here or on another phone
+
+🐛 Bug Fixes
+- stop DetoxDroid when asked to, instead of leaving it running
+- put grayscale back when Android's own setting switched it off
+- keep the passphrase when the keystore is busy right after boot
