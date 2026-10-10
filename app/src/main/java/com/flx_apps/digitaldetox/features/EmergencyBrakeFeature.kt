@@ -1,9 +1,11 @@
 package com.flx_apps.digitaldetox.features
 
+import android.content.ComponentName
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.service.quicksettings.TileService
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -20,6 +22,7 @@ import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake.EmergencyBrakeFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.RecentEvents
@@ -151,15 +154,14 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
      * Whether a running brake tightens [feature]. There is no picking: every feature that can be
      * paused is covered, and one that is switched off stays off.
      */
-    fun covers(feature: Feature): Boolean =
-        brakeUntil != 0L && feature is PausableFeature && isBraking()
+    fun covers(feature: Feature): Boolean = feature is PausableFeature && isBraking()
 
     /**
      * Whether a running brake locks the settings of the feature with [featureId]. The commitment
      * password keeps its own lock.
      */
     fun locksSettings(featureId: FeatureId): Boolean =
-        brakeUntil != 0L && featureId != CommitmentPasswordFeatureId &&
+        featureId != CommitmentPasswordFeatureId &&
                 FeaturesProvider.getFeatureById(featureId) is LockableFeature && isBraking()
 
     /** Whether the end of the running brake has been asked for and is being waited out. */
@@ -203,13 +205,14 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
             refresh(context)
             return true
         }
+        val activeBefore = FeaturesProvider.activeFeatures
         brakeUntil = until
         pulledAt = now
         endRequestedAt = 0L
         pulledAutomatically = automatic
         if (!automatic) lastDuration = durationMs
         Timber.i("Brake pulled for ${durationMs / 1000}s (automatic=$automatic)")
-        apply(context)
+        apply(context, activeBefore)
         return true
     }
 
@@ -271,17 +274,34 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
 
     /**
      * Releases a brake that has run out. Cheap enough to be called on every app switch, which is
-     * what catches the end after the phone slept through the timer.
+     * what catches the end after the phone slept through the timer. Synchronized, because the
+     * timer, the scheduler and an app switch can all arrive at the end within a moment of each
+     * other, and the features must hear of it once.
+     * @return whether a brake was released
      */
-    fun settle(context: Context) {
-        if (brakeUntil == 0L || isBraking()) return
+    @Synchronized
+    fun settle(context: Context): Boolean {
+        if (brakeUntil == 0L || isBraking()) return false
         release(context)
+        return true
+    }
+
+    /**
+     * Takes hold again after the service has started under a brake that outlived the process.
+     * The features start from their own settings; the ones with something to take hold of (apps
+     * to suspend or hide) are told that a brake is on.
+     */
+    fun reapply(context: Context) {
+        if (!isBraking()) return
+        val service = DetoxDroidAccessibilityService.instance ?: return
+        carryToFeatures(context, service.currentForegroundPackage)
     }
 
     private fun release(context: Context) {
         Timber.i("Brake released")
+        val activeBefore = FeaturesProvider.activeFeatures
         clearRunningState()
-        apply(context)
+        apply(context, activeBefore)
     }
 
     private fun clearRunningState() {
@@ -297,20 +317,29 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
      * Carries a brake that started or ended to the features. The ones it opens the schedule of
      * start or stop, and then every running one looks at the app in front again: no window event
      * is on its way while the user stays where they are.
+     * @param activeBefore the features that were active before the brake changed
      */
-    private fun apply(context: Context) {
+    private fun apply(context: Context, activeBefore: Set<Feature>) {
         refresh(context)
         val service = DetoxDroidAccessibilityService.instance ?: return
         if (PauseButtonFeature.isPausing()) {
-            // a brake ends a pause; resuming starts every feature that is active by then, which
+            // a brake ends a pause; resuming starts every feature the pause had suspended, which
             // includes the ones the brake has just opened the schedule of
             FeaturesProvider.reloadActiveFeatures()
             PauseButtonFeature.resume()
+            // a feature exempt from pauses was never suspended, so resuming leaves it alone, and
+            // one the brake has just made active has not started yet
+            FeaturesProvider.activeFeatures
+                .filter { it !in activeBefore && it.id in PauseButtonFeature.pauseExemptFeatureIds }
+                .forEach { it.onStart(context) }
         } else {
             FeaturesProvider.applyScheduleTransitions()
         }
+        carryToFeatures(context, service.currentForegroundPackage)
+    }
+
+    private fun carryToFeatures(context: Context, foregroundPackage: String) {
         if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return
-        val foregroundPackage = service.currentForegroundPackage
         FeaturesProvider.activeFeatures.filter { it is PausableFeature }.forEach {
             kotlin.runCatching {
                 (it as? BrakeAwareFeature)?.onBrakeChanged(context)
@@ -326,6 +355,12 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         _stateToken.update { it + 1 }
         scheduleEnd(context)
         DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+        // a tile that is on screen right now is only redrawn when asked
+        kotlin.runCatching {
+            TileService.requestListeningState(
+                context, ComponentName(context, EmergencyBrakeTileService::class.java)
+            )
+        }
     }
 
     /**

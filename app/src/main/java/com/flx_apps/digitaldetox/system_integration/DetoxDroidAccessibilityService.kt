@@ -149,6 +149,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * not have to send another window event when it comes back.
      */
     fun reevaluateForegroundApp() {
+        EmergencyBrakeFeature.settle(this)
         val packageName = kotlin.runCatching { rootInActiveWindow?.packageName?.toString() }
             .onFailure { Timber.w(it, "Could not read the foreground app") }
             .getOrNull().orEmpty()
@@ -255,6 +256,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // filter it finds, and a second run would remember its own.
         FeaturesProvider.reloadActiveFeatures()
         FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
+        EmergencyBrakeFeature.reapply(this)
         // Only a feature that is starting gets to hand the system's display settings back, and a
         // feature outside its schedule never starts. The daltonizer and extra dim are secure
         // settings, so they survive a reboot, and so does our record of having set them: without
@@ -368,6 +370,10 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
     private fun handleAppOpenedEvent(accessibilityEvent: AccessibilityEvent) {
+        // The timer for the end of a brake does not run while the phone sleeps, so the end is
+        // caught here. Before the monitor hears of the new window: releasing the brake re-evaluates
+        // the app that was in front, and the new one then arrives once, with its own event.
+        EmergencyBrakeFeature.settle(this)
         val signal = WindowSignal(
             packageName = accessibilityEvent.packageName?.toString().orEmpty(),
             className = accessibilityEvent.className?.toString().orEmpty(),
@@ -409,8 +415,6 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // usage statistics are pure measurement and keep counting during a pause —
         // a pause only suspends the interventions below
         UsageStatsTracker.onForegroundApp(packageName)
-        // the timer for the end of a brake does not run while the phone sleeps
-        EmergencyBrakeFeature.settle(this)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(

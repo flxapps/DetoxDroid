@@ -8,6 +8,8 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
@@ -23,8 +25,11 @@ class ScheduleBoundaryWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         Timber.i("ScheduleBoundaryWorker: applying schedule transitions")
         runCatching {
-            EmergencyBrakeFeature.settle(appContext)
-            FeaturesProvider.applyScheduleTransitions()
+            // on the main thread, where the service and the brake's own timer run it as well, so
+            // the features hear of a brake's end from one thread; releasing it applies the
+            // transitions on its own
+            val released = withContext(Dispatchers.Main) { EmergencyBrakeFeature.settle(appContext) }
+            if (!released) FeaturesProvider.applyScheduleTransitions()
         }.onFailure {
             Timber.w(it, "ScheduleBoundaryWorker: could not apply schedule transitions")
         }
