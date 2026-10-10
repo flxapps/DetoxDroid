@@ -89,7 +89,7 @@ fun FeatureScreen(
                     )
                 }
             }, actions = {
-                FeatureActivationSwitch(isLockedByCommitmentPassword = isFeatureSettingsLocked)
+                FeatureActivationSwitch(isSettingsLocked = isFeatureSettingsLocked)
             }, scrollBehavior = scrollBehavior)
         }
     ) {
@@ -117,7 +117,7 @@ fun FeatureScreen(
 fun FeatureActivationSwitch(
     featureViewModel: FeatureViewModel = viewModel(),
     navViewModel: NavViewModel = NavViewModel.navViewModel(),
-    isLockedByCommitmentPassword: Boolean = false
+    isSettingsLocked: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -167,7 +167,7 @@ fun FeatureActivationSwitch(
         )
     } else {
         Switch(modifier = Modifier.padding(end = 8.dp),
-            enabled = !isLockedByCommitmentPassword,
+            enabled = !isSettingsLocked,
             checked = featureViewModel.featureIsActive.collectAsState().value,
             onCheckedChange = {
                 if (featureViewModel.toggleFeatureActive() == null) {

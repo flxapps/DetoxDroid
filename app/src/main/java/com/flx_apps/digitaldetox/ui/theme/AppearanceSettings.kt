@@ -26,6 +26,9 @@ object AppearanceSettings {
     /** Observed by the theme, so a change applies to every open screen without a restart. */
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
+    /** Touches the object, so its stored choice is read here and not in the first composition. */
+    fun preload() = Unit
+
     fun setThemeMode(mode: ThemeMode) {
         persistedThemeMode = mode
         _themeMode.value = mode

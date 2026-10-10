@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.math.sqrt
 
@@ -60,7 +61,7 @@ class UsageStatsViewModel @Inject constructor(
     private var source: UsageSource = UsageSource.OS
 
     /** [ApplicationInfo.category] per package; a package manager lookup per app per refresh adds up. */
-    private val categoryCache = mutableMapOf<String, Int>()
+    private val categoryCache = ConcurrentHashMap<String, Int>()
 
     private fun categoryOf(packageName: String): Int = categoryCache.getOrPut(packageName) {
         runCatching {

@@ -61,14 +61,17 @@ private fun rememberLockGateState(featureId: String?): LockGateState {
 }
 
 /**
- * Whether a running brake locks the settings of [featureId], or any settings at all without one.
+ * When the running brake that locks the settings of [featureId] (or any settings at all, without
+ * one) ends, as text, or null while no brake locks them. Read in one go whenever the brake
+ * changes, so the banner below cannot show an end the brake no longer has.
  */
 @Composable
-private fun rememberBrakeLocked(featureId: String?): Boolean {
+private fun rememberBrakeLockEnd(featureId: String?): String? {
     val stateToken by EmergencyBrakeFeature.stateToken.collectAsState()
     return remember(stateToken, featureId) {
-        featureId?.let { EmergencyBrakeFeature.locksSettings(it) }
+        val locked = featureId?.let { EmergencyBrakeFeature.locksSettings(it) }
             ?: EmergencyBrakeFeature.isBraking()
+        if (locked) EmergencyBrakeFeature.endsAtText() else null
     }
 }
 
@@ -90,10 +93,11 @@ fun PasswordLockGate(
     content: @Composable () -> Unit
 ) {
     val state = rememberLockGateState(featureId)
+    val brakeEndsAt = rememberBrakeLockEnd(featureId)
 
-    if (rememberBrakeLocked(featureId)) {
+    if (brakeEndsAt != null) {
         Column {
-            if (showBanner) BrakeLockBanner(featureId)
+            if (showBanner) BrakeLockBanner(featureId, brakeEndsAt)
             CompositionLocalProvider(LocalSettingsLocked provides true) {
                 content()
             }
@@ -121,8 +125,9 @@ fun PasswordLockGate(
 @Composable
 fun SettingsLockBannerIfNeeded(featureId: String? = null) {
     val state = rememberLockGateState(featureId)
-    if (rememberBrakeLocked(featureId)) {
-        BrakeLockBanner(featureId)
+    val brakeEndsAt = rememberBrakeLockEnd(featureId)
+    if (brakeEndsAt != null) {
+        BrakeLockBanner(featureId, brakeEndsAt)
     } else if (state.isPasswordActive && state.isPasswordSet && state.isFeatureProtected) {
         SettingsLockBanner(isLocked = state.isFeatureLocked)
     }
@@ -133,13 +138,11 @@ fun SettingsLockBannerIfNeeded(featureId: String? = null) {
  * that already.
  */
 @Composable
-private fun BrakeLockBanner(featureId: String?) {
+private fun BrakeLockBanner(featureId: String?, endsAt: String) {
     if (featureId == EmergencyBrakeFeatureId) return
     IconCard(icon = Icons.Default.Lock) {
         Text(
-            text = stringResource(
-                R.string.feature_brake_status_on, EmergencyBrakeFeature.endsAtText()
-            ),
+            text = stringResource(R.string.feature_brake_status_on, endsAt),
             style = MaterialTheme.typography.bodyMedium
         )
     }

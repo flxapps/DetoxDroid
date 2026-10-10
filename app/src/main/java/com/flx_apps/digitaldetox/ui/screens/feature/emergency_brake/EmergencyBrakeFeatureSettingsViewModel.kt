@@ -1,16 +1,13 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake
 
 import android.app.Application
-import android.app.StatusBarManager
-import android.content.ComponentName
-import android.graphics.drawable.Icon
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
+import com.flx_apps.digitaldetox.util.offerQuickSettingsTile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -113,24 +110,12 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
         _autoPullDuration.value = minutes
     }
 
-    /**
-     * Asks the system to add the brake tile to the Quick Settings. The system shows its own dialog;
-     * only a tile that is already there gets no answer, so that case is confirmed here.
-     */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun requestAddQuickSettingsTile() {
-        val app = getApplication<Application>()
-        app.getSystemService(StatusBarManager::class.java).requestAddTileService(
-            ComponentName(app, EmergencyBrakeTileService::class.java),
-            app.getString(R.string.feature_brake),
-            Icon.createWithResource(app, R.drawable.ic_brake),
-            app.mainExecutor
-        ) { result ->
-            if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED) {
-                Toast.makeText(
-                    app, R.string.feature_brake_fromQuickSettings_alreadyAdded, Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
+    fun requestAddQuickSettingsTile() = offerQuickSettingsTile(
+        getApplication(),
+        EmergencyBrakeTileService::class.java,
+        R.string.feature_brake,
+        R.drawable.ic_brake,
+        R.string.feature_brake_fromQuickSettings_alreadyAdded
+    )
 }

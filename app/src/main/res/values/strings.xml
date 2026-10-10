@@ -675,7 +675,7 @@
     <string name="about_backup_restore">Restore settings from a file</string>
     <string name="about_backup_restore_subtitle">Shows what the file holds first, then restarts DetoxDroid.</string>
     <string name="about_backup_restore_locked_subtitle">Locked while your commitment password is in force.</string>
-    <string name="about_backup_restore_braking_subtitle">Locked while the brake is on.</string>
+    <string name="settings_lockedByBrake_subtitle">Locked while the brake is on.</string>
     <string name="about_backup_restore_failed">That file does not hold DetoxDroid settings.</string>
     <string name="about_backup_restore_readFailed">Could not read that file.</string>
     <string name="about_backup_restore_nothingApplies">Nothing in that file applies to this version of DetoxDroid.</string>

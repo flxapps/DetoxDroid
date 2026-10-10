@@ -312,7 +312,16 @@ class AppExceptionsViewModel @Inject constructor(
      */
     fun setExceptionListType(type: AppExceptionListType, clearSelection: Boolean = false) {
         if (!allowedListTypes.contains(type)) return
-        if (clearSelection) replaceExceptions(emptySet())
+        if (clearSelection) {
+            replaceExceptions(emptySet())
+        } else if (this::_appExceptionItems.isInitialized) {
+            // the stored selection can name apps that are gone. They were not in the count the
+            // user was asked about, and under the other type they would come back meaning the
+            // opposite of what they were picked for once reinstalled.
+            val installed = _appExceptionItems.mapTo(mutableSetOf()) { it.appInfo.packageName }
+            val kept = appExceptionsFeature.appExceptions.filterTo(mutableSetOf()) { it in installed }
+            if (kept.size != appExceptionsFeature.appExceptions.size) replaceExceptions(kept)
+        }
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
     }

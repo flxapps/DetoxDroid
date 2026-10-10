@@ -1,7 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake
 
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoMode
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Repeat
@@ -38,6 +36,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.ui.screens.feature.AddQuickSettingsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
@@ -89,7 +88,11 @@ fun EmergencyBrakeFeatureSettingsSection(
     // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         SectionHeader(title = stringResource(id = R.string.feature_brake_ways))
-        SettingsGroup { PullFromQuickSettingsTile() }
+        SettingsGroup {
+            AddQuickSettingsTile(
+                subtitleRes = R.string.feature_brake_fromQuickSettings_description,
+                onClick = { viewModel.requestAddQuickSettingsTile() })
+        }
     }
     SectionHeader(title = stringResource(id = R.string.feature_brake_autoPull_header))
     SettingsGroup {
@@ -162,7 +165,8 @@ private fun BrakeCard(
                             context, TimeUnit.MINUTES.toMillis(minutes.toLong())
                         ),
                         selected = minutes == duration,
-                        enabled = usable,
+                        // extending only tightens, so a running brake keeps its chips
+                        enabled = usable || brake.braking,
                         onClick = { viewModel.setDuration(minutes) },
                     )
                 }
@@ -175,12 +179,14 @@ private fun BrakeCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 when {
-                    brake.canUndo -> TextButton(onClick = { viewModel.undo() }) {
-                        Text(stringResource(R.string.feature_brake_undo))
-                    }
-
+                    // an end that was asked for can be taken back for as long as it is pending,
+                    // which the status line above says; the undo of a fresh brake comes second
                     brake.endRequested -> TextButton(onClick = { viewModel.withdrawEndRequest() }) {
                         Text(stringResource(R.string.feature_brake_keepOn))
+                    }
+
+                    brake.canUndo -> TextButton(onClick = { viewModel.undo() }) {
+                        Text(stringResource(R.string.feature_brake_undo))
                     }
 
                     brake.braking -> TextButton(onClick = {
@@ -225,22 +231,6 @@ private fun EndEarlyDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = v
                 Text(text = stringResource(id = R.string.action_cancel))
             }
         })
-}
-
-/**
- * Offers the brake tile to the Quick Settings, so nobody has to find it in the tile editor.
- */
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@Composable
-private fun PullFromQuickSettingsTile(
-    viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()
-) {
-    SimpleListTile(
-        leadingIcon = Icons.Default.GridView,
-        titleText = stringResource(id = R.string.feature_pause_fromQuickSettings),
-        subtitleText = stringResource(id = R.string.feature_brake_fromQuickSettings_description),
-        allowClickWhenLocked = true,
-        onClick = { viewModel.requestAddQuickSettingsTile() })
 }
 
 /**

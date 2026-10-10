@@ -665,7 +665,7 @@
     <string name="about_backup_restore">Einstellungen aus einer Datei laden</string>
     <string name="about_backup_restore_subtitle">Zeigt erst, was in der Datei steckt, und startet DetoxDroid dann neu.</string>
     <string name="about_backup_restore_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt.</string>
-    <string name="about_backup_restore_braking_subtitle">Gesperrt, solange die Notbremse läuft.</string>
+    <string name="settings_lockedByBrake_subtitle">Gesperrt, solange die Notbremse läuft.</string>
     <string name="about_backup_restore_failed">In dieser Datei stehen keine DetoxDroid-Einstellungen.</string>
     <string name="about_backup_restore_readFailed">Die Datei ließ sich nicht lesen.</string>
     <string name="about_backup_restore_nothingApplies">Nichts in dieser Datei passt zu dieser DetoxDroid-Version.</string>

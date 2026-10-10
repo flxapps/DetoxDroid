@@ -102,7 +102,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
     val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
     val keepAliveLockedSubtitle = stringResource(id = R.string.reliability_keepAlive_locked_subtitle)
-    val keepAliveBrakingSubtitle = stringResource(id = R.string.about_backup_restore_braking_subtitle)
+    val brakingSubtitle = stringResource(id = R.string.settings_lockedByBrake_subtitle)
     val settingsSection = stringResource(id = R.string.about_section_settings)
     val backupSection = stringResource(id = R.string.about_section_backup)
     val supportSection = stringResource(id = R.string.about_section_support)
@@ -190,7 +190,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         icon = if (keepAliveLocked) Icons.Default.Lock else Icons.Default.Notifications,
                         title = keepAliveTitle,
                         subtitle = when {
-                            braking -> keepAliveBrakingSubtitle
+                            braking -> brakingSubtitle
                             keepAliveLocked -> keepAliveLockedSubtitle
                             else -> keepAliveSubtitle
                         },

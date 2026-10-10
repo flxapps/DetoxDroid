@@ -164,11 +164,15 @@ private fun HomeScreenSnackbarContents(
 private fun AppBar(
     detoxDroidState: DetoxDroidState, navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
-    // observed so the status line follows a brake being pulled or running out
+    // observed so the status line follows a brake being pulled, extended or running out; the end
+    // is read here as well, since the title lambda below is not recomposed for the token alone
     val brakeStateToken = EmergencyBrakeFeature.stateToken.collectAsState().value
-    val braking = remember(brakeStateToken, detoxDroidState) {
-        detoxDroidState == DetoxDroidState.Active && EmergencyBrakeFeature.isBraking()
+    val brakeEndsAt = remember(brakeStateToken, detoxDroidState) {
+        if (detoxDroidState == DetoxDroidState.Active && EmergencyBrakeFeature.isBraking()) {
+            EmergencyBrakeFeature.endsAtText()
+        } else null
     }
+    val braking = brakeEndsAt != null
     TopAppBar(
         title = {
             Column {
@@ -194,8 +198,8 @@ private fun AppBar(
 
                                 DetoxDroidState.Inactive -> R.string.home_state_inactive
                                 DetoxDroidState.Paused -> R.string.home_state_paused
-                            }, if (braking) {
-                                EmergencyBrakeFeature.endsAtText()
+                            }, if (brakeEndsAt != null) {
+                                brakeEndsAt
                             } else if (detoxDroidState == DetoxDroidState.Paused) {
                                 // show the actual end of the running pause, not "now + duration"
                                 Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)

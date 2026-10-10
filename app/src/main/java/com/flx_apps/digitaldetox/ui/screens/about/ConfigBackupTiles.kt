@@ -144,7 +144,7 @@ fun ConfigBackupTiles() {
         title = stringResource(id = R.string.about_backup_restore),
         subtitle = stringResource(
             id = if (braking) {
-                R.string.about_backup_restore_braking_subtitle
+                R.string.settings_lockedByBrake_subtitle
             } else if (restoreLocked) {
                 R.string.about_backup_restore_locked_subtitle
             } else {
