@@ -294,6 +294,7 @@
     <string name="feature_doomScrolling_warning_message">Looks like you are stuck in a doomscrolling loop.</string>
     <string name="feature_doomScrolling_warning_exit">Get me out of here</string>
     <string name="feature_doomScrolling_warning_finishFirst">I\'ll finish this one, then leave</string>
+    <string name="feature_doomScrolling_warning_pullBrake">Pull the brake for %s</string>
     <string name="feature_doomScrolling_warning_context_intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_endless">This feed just keeps loading more. You\'ve been at it for %1$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_probation">Back at it right after a break. This time the whole app pauses.</string>

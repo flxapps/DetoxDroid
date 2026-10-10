@@ -428,6 +428,17 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     }
 
     /**
+     * Pulls the brake from the break screen of [packageName]. The app the user was caught in
+     * stays away for the rest of the brake, the way it would had the brake been on when they
+     * were caught.
+     */
+    fun pullBrake(context: Context, packageName: String) {
+        if (!EmergencyBrakeFeature.pull(context)) return
+        cooldowns.start(packageName, null, EmergencyBrakeFeature.remainingMs())
+        lastCooldownScopes[packageName] = null
+    }
+
+    /**
      * Starts the "finish what you're watching" grace after the user tapped the finish button on
      * the warning screen: the cooldown is lifted, and the user is guided out automatically once
      * they scroll on a few more times or the grace times out — whichever comes first.

@@ -287,6 +287,7 @@
     <string name="feature_doomScrolling_warning_message">Sieht aus, als hättest du dich festgescrollt.</string>
     <string name="feature_doomScrolling_warning_exit">Hol mich hier raus</string>
     <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann höre ich auf</string>
+    <string name="feature_doomScrolling_warning_pullBrake">Für %s die Notbremse ziehen</string>
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
     <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei. Diesmal pausiert die ganze App.</string>
