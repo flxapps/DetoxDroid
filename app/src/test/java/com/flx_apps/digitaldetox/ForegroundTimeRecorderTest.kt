@@ -2,7 +2,9 @@ package com.flx_apps.digitaldetox
 
 import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 
@@ -60,6 +62,43 @@ class ForegroundTimeRecorderTest {
         at(3_600_000)
         recorder.closeSession(today = nextDay)
         assertEquals(emptyMap<String, ForegroundTimeRecorder.AppTime>(), recorder.snapshot(nextDay))
+    }
+
+    @Test
+    fun theSameAppAnnouncedAgainIsNotANewLaunch() {
+        at(0)
+        recorder.onForegroundApp("com.instagram.android", today = day)
+        at(30_000)
+        recorder.onForegroundApp("com.instagram.android", today = day)
+        at(60_000)
+        recorder.closeSession(today = day)
+        val time = recorder.snapshot(today = day)["com.instagram.android"]
+        assertEquals(1, time?.launchCount)
+        assertEquals(60_000L, time?.foregroundMs)
+    }
+
+    @Test
+    fun aSessionNoticedAfterMidnightCountsFromThereOn() {
+        at(0)
+        recorder.onForegroundApp("com.instagram.android", today = day)
+        // the first look at the recorder on the new day comes from a snapshot, not from the
+        // session ending
+        at(3_600_000)
+        recorder.snapshot(today = nextDay)
+        at(3_900_000)
+        recorder.closeSession(today = nextDay)
+        assertEquals(
+            300_000L, recorder.snapshot(today = nextDay)["com.instagram.android"]?.foregroundMs
+        )
+    }
+
+    @Test
+    fun theLiveValuesAreCompleteOnceRestoredOrOnceTheDayStartedHere() {
+        assertFalse(recorder.isComplete(today = day))
+        recorder.restore(emptyMap(), today = day)
+        assertTrue(recorder.isComplete(today = day))
+        // the next day began in this process, so nothing of it could be persisted elsewhere
+        assertTrue(recorder.isComplete(today = nextDay))
     }
 
     @Test

@@ -110,10 +110,14 @@ object UsageStatsTracker {
         maybeSnapshotCounters()
     }
 
-    /** The screen going off ends the session; nothing is in front of a screen that is off. */
+    /**
+     * The screen going off ends the session; nothing is in front of a screen that is off. It is
+     * also the moment the process is most likely to be killed, so the counters are persisted now
+     * rather than when the debounce next allows it.
+     */
     fun onScreenTurnedOff() {
         foregroundTimeRecorder.closeSession()
-        maybeSnapshotCounters()
+        snapshotCounters()
     }
 
     /**
@@ -141,7 +145,11 @@ object UsageStatsTracker {
     private fun maybeSnapshotCounters() {
         val now = SystemClock.elapsedRealtime()
         if (now - lastSnapshotMs < SCROLL_SNAPSHOT_DEBOUNCE_MS) return
-        lastSnapshotMs = now
+        snapshotCounters()
+    }
+
+    private fun snapshotCounters() {
+        lastSnapshotMs = SystemClock.elapsedRealtime()
         scope.launch {
             runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
                 .onFailure { Timber.w(it, "Debounced counter snapshot failed") }

@@ -33,17 +33,24 @@ class ForegroundTimeRecorder(
      */
     private val maxSessionMs = 4L * 60 * 60 * 1000
 
-    private var day: LocalDate = LocalDate.now()
+    /** The day being measured, from the first call on. */
+    private var day: LocalDate? = null
     private val foregroundMs = ConcurrentHashMap<String, Long>()
     private val launchCounts = ConcurrentHashMap<String, Int>()
     private var openPackage: String? = null
     private var openSinceMs = 0L
+
+    /** The day whose persisted values have been folded in, see [restore]. */
+    private var restoredDay: LocalDate? = null
 
     /**
      * Records that [packageName] came to the front, which also ends the session before it.
      */
     @Synchronized
     fun onForegroundApp(packageName: String, today: LocalDate = LocalDate.now()) {
+        // the same app announced again (a dialog of it giving way to its full window) is the
+        // session going on, not a new one
+        if (packageName == openPackage) return
         closeSession(today)
         openPackage = packageName
         openSinceMs = nowMs()
@@ -52,19 +59,15 @@ class ForegroundTimeRecorder(
 
     /**
      * Ends the running session, which is what the screen turning off and the service shutting down
-     * both mean. A session that was open across midnight is dropped: how much of it belongs to
-     * which day is no longer known, and a guess here would show up as usage on a day the phone was
-     * not touched.
+     * both mean.
      */
     @Synchronized
     fun closeSession(today: LocalDate = LocalDate.now()) {
-        val rolledOver = rollOverIfNeeded(today)
-        val packageName = openPackage
-        val startedAtMs = openSinceMs
+        rollOverIfNeeded(today)
+        val packageName = openPackage ?: return
+        val durationMs = (nowMs() - openSinceMs).coerceAtLeast(0L)
         openPackage = null
         openSinceMs = 0L
-        if (packageName == null || rolledOver) return
-        val durationMs = (nowMs() - startedAtMs).coerceAtLeast(0L)
         if (durationMs in 1..maxSessionMs) {
             foregroundMs.merge(packageName, durationMs, Long::plus)
         }
@@ -93,24 +96,47 @@ class ForegroundTimeRecorder(
     }
 
     /**
-     * Seeds the live values from what was persisted, so a process restart does not restart the
-     * day's measurement at zero. The persisted values were written from here, so the larger of the
-     * two is the one that has everything.
+     * Folds in what was persisted before this process started, so a restart does not restart the
+     * day's measurement at zero. Added rather than taken over, because the live values may already
+     * hold a few seconds the persisted ones cannot; and only once per day, because the second time
+     * they would be in there already.
      */
     @Synchronized
     fun restore(times: Map<String, AppTime>, today: LocalDate = LocalDate.now()) {
         rollOverIfNeeded(today)
+        if (restoredDay == today) return
+        restoredDay = today
         for ((packageName, time) in times) {
-            foregroundMs.merge(packageName, time.foregroundMs, ::maxOf)
-            launchCounts.merge(packageName, time.launchCount, ::maxOf)
+            foregroundMs.merge(packageName, time.foregroundMs, Long::plus)
+            launchCounts.merge(packageName, time.launchCount, Int::plus)
         }
     }
 
-    private fun rollOverIfNeeded(today: LocalDate): Boolean {
-        if (today == day) return false
+    /**
+     * Whether the live values hold everything measured [today]: either the persisted values have
+     * been folded in ([restore]), or this process has been running since before the day began.
+     * Until then a snapshot is incomplete and must not replace what is persisted.
+     */
+    @Synchronized
+    fun isComplete(today: LocalDate = LocalDate.now()): Boolean {
+        rollOverIfNeeded(today)
+        return restoredDay == today
+    }
+
+    /**
+     * A new day starts from nothing. A session that is open at that moment goes on, counted for the
+     * new day from here: the part before midnight is gone, because nothing closed it on time, and
+     * that is the conservative side to err on.
+     */
+    private fun rollOverIfNeeded(today: LocalDate) {
+        if (today == day) return
+        val isFirstDay = day == null
         day = today
+        if (isFirstDay) return
         foregroundMs.clear()
         launchCounts.clear()
-        return true
+        if (openPackage != null) openSinceMs = nowMs()
+        // nothing of the new day can be persisted yet, so the live values are the whole of it
+        restoredDay = today
     }
 }

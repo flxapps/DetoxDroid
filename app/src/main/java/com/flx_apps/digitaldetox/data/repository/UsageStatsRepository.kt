@@ -250,7 +250,8 @@ class UsageStatsRepository @Inject constructor(
         start: LocalDate, end: LocalDate, source: UsageSource = UsageSource.OS
     ): List<DailyAppUsage> = when (source) {
         UsageSource.OS -> dao.getRange(start, end)
-        UsageSource.SELF_MEASURED -> selfMeasuredDao.getRange(start, end).map { it.asDailyAppUsage() }
+        UsageSource.SELF_MEASURED ->
+            selfMeasuredRows(selfMeasuredDao.getRange(start, end), dao.getRange(start, end))
     }
 
     suspend fun getHistoricalDayCount(
@@ -275,8 +276,10 @@ class UsageStatsRepository @Inject constructor(
         source: UsageSource = UsageSource.OS
     ): List<DailyAppUsage> = when (source) {
         UsageSource.OS -> dao.getForPackageInRange(packageName, start, end)
-        UsageSource.SELF_MEASURED ->
-            selfMeasuredDao.getForPackageInRange(packageName, start, end).map { it.asDailyAppUsage() }
+        UsageSource.SELF_MEASURED -> selfMeasuredRows(
+            selfMeasuredDao.getForPackageInRange(packageName, start, end),
+            dao.getForPackageInRange(packageName, start, end)
+        )
     }
 
     suspend fun getEarliestHistoryDate(source: UsageSource = UsageSource.OS): LocalDate? =
@@ -294,30 +297,44 @@ class UsageStatsRepository @Inject constructor(
     }
 
     /**
-     * A self-measured row in the shape everything downstream reads. The fields the OS fills and we
-     * cannot are left at zero rather than guessed at.
+     * Self-measured rows in the shape everything downstream reads. The scroll, break and block
+     * counters are DetoxDroid's own whichever instrument measures the time, and they live in the
+     * OS table, so they are joined in from there by row id. What stays zero is what only the OS
+     * could have filled.
      */
-    private fun SelfMeasuredAppUsage.asDailyAppUsage() = DailyAppUsage(
-        rowId = rowId,
-        date = date,
-        packageName = packageName,
-        totalTimeMs = foregroundTimeMs,
-        sessionCount = launchCount,
-        launchCount = launchCount,
-        scrollCount = 0,
-        scrollDistancePx = 0,
-        breakCount = 0,
-        blockCount = 0
-    )
+    private fun selfMeasuredRows(
+        rows: List<SelfMeasuredAppUsage>, counters: List<DailyAppUsage>
+    ): List<DailyAppUsage> {
+        val countersByRow = counters.associateBy { it.rowId }
+        return rows.map { row ->
+            val counter = countersByRow[row.rowId]
+            DailyAppUsage(
+                rowId = row.rowId,
+                date = row.date,
+                packageName = row.packageName,
+                totalTimeMs = row.foregroundTimeMs,
+                // a self-measured launch is one stretch in front, which is what a session is
+                sessionCount = row.launchCount,
+                launchCount = row.launchCount,
+                scrollCount = counter?.scrollCount ?: 0,
+                scrollDistancePx = counter?.scrollDistancePx ?: 0,
+                breakCount = counter?.breakCount ?: 0,
+                blockCount = counter?.blockCount ?: 0
+            )
+        }
+    }
 
     /**
-     * Writes today's self-measured foreground time to its own table. The live values are seeded
-     * from the persisted ones on start ([restoreTodayCounters]) and only grow, so the larger of
-     * the two is always the complete one and a plain overwrite is correct.
+     * Writes today's self-measured foreground time to its own table. Once the persisted values are
+     * folded into the live ones ([restoreTodayCounters]) the live values only grow, so a plain
+     * overwrite is correct. Before that a snapshot holds seconds where the table holds the day,
+     * and is skipped.
      */
     suspend fun snapshotSelfMeasuredToday() = snapshotMutex.withLock {
         val today = LocalDate.now()
-        val live = UsageStatsTracker.foregroundTimeRecorder.snapshot(today)
+        val recorder = UsageStatsTracker.foregroundTimeRecorder
+        if (!recorder.isComplete(today)) return@withLock
+        val live = recorder.snapshot(today)
         if (live.isEmpty()) return@withLock
         selfMeasuredDao.upsertAll(live.map { (packageName, time) ->
             SelfMeasuredAppUsage(
