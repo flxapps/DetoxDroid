@@ -69,23 +69,27 @@ object AccessibilityServiceController {
      * DetoxDroid required WRITE_SECURE_SETTINGS just like starting it, so a user who never granted
      * it could turn the app on and then not off again.
      *
-     * Editing the setting directly stays as the fallback for the case where the component is
-     * listed as enabled but no instance is connected.
+     * That only unbinds the system from the service. [activate] also starts it, and a service that
+     * is both bound and started is destroyed only once it is stopped as well, so it is stopped
+     * here too. Editing the setting directly stays as the fallback for the case where the
+     * component is listed as enabled but no instance is connected.
      * @see DetoxDroidAccessibilityService
      */
     fun deactivate(context: Context): Boolean {
-        DetoxDroidAccessibilityService.instance?.let {
-            it.disableSelf()
-            return true
+        val service = DetoxDroidAccessibilityService.instance
+        if (service != null) {
+            service.disableSelf()
+        } else {
+            Settings.Secure.putString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+                enabledAccessibilityServices(context).filterNot { it == AccessibilityServiceComponent }
+                    .joinToString(":")
+            )
         }
-        Settings.Secure.putString(
-            context.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
-            enabledAccessibilityServices(context).filterNot { it == AccessibilityServiceComponent }
-                .joinToString(":")
-        )
-        return context.stopService(
+        val stopped = context.stopService(
             Intent(context, DetoxDroidAccessibilityService::class.java)
         )
+        return service != null || stopped
     }
 }
