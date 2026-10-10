@@ -2,11 +2,13 @@ package com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake
 
 import android.app.Application
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
+import com.flx_apps.digitaldetox.system_integration.PullBrakeActivity
 import com.flx_apps.digitaldetox.util.offerQuickSettingsTile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,6 +110,16 @@ class EmergencyBrakeFeatureSettingsViewModel @Inject constructor(application: Ap
     fun setAutoPullDuration(minutes: Int) {
         EmergencyBrakeFeature.autoPullDuration = TimeUnit.MINUTES.toMillis(minutes.toLong())
         _autoPullDuration.value = minutes
+    }
+
+    /** A launcher that takes no shortcuts from apps still offers it on the long-pressed icon. */
+    fun requestHomeScreenIcon() {
+        val context = getApplication<Application>()
+        if (!PullBrakeActivity.requestHomeScreenIcon(context)) {
+            Toast.makeText(
+                context, R.string.feature_brake_fromHomeScreen_unsupported, Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)

@@ -35,9 +35,16 @@ You can still take intentional pauses when you need them.
 5. **Pause Button**  
    Pause from Quick Settings, the assistant, or a long-pressed hardware button. Auto-resumes, with a
    minimum gap between pauses.
-6. **Commitment Password**  
+6. **Emergency Brake**  
+   For the moment you notice you're slipping. For a set time, every feature you have switched on
+   runs at its strictest and the ways out close: no pause, settings locked, ending early takes a
+   ten-minute wait. Pull it from the app, the break screen, a Quick Settings tile, a home screen
+   icon, or from an automation app with
+   `am start -a com.flx_apps.digitaldetox.ACTION_PULL_BRAKE`. It can also pull itself after a few
+   doom scrolling breaks in a row.
+7. **Commitment Password**  
    Lock selected settings behind a passphrase.
-7. **Minimal Launcher Widget**  
+8. **Minimal Launcher Widget**  
    A text-only launcher for the apps you actually meant to open.
 
 ## Installation

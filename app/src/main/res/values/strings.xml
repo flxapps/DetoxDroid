@@ -258,6 +258,10 @@
     <string name="feature_brake_ways">Ways to pull it</string>
     <string name="feature_brake_fromQuickSettings_description">Tap to put the brake tile into your Quick Settings. It pulls for as long as you last picked.</string>
     <string name="feature_brake_fromQuickSettings_alreadyAdded">The brake tile is already in your Quick Settings.</string>
+    <string name="feature_brake_fromHomeScreen">Home screen</string>
+    <string name="feature_brake_fromHomeScreen_description">Tap to put a brake icon on your home screen. Long-pressing the DetoxDroid icon offers the same shortcut.</string>
+    <string name="feature_brake_fromHomeScreen_unsupported">Your launcher doesn\'t take icons from apps. Long-press the DetoxDroid icon instead.</string>
+    <string name="feature_brake_shortcut">Brake</string>
     <string name="feature_brake_autoPull_header">Pulling itself</string>
     <string name="feature_brake_autoPull">Pull it for me</string>
     <string name="feature_brake_autoPull_description">Caught doomscrolling %1$d times within %2$d min, and the brake goes on for %3$s. Only counts while Break \"Doom Scrolling\" is on.</string>

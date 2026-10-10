@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.PanTool
@@ -87,14 +88,13 @@ fun EmergencyBrakeFeatureSettingsSection(
         EmergencyBrakeDialog.NONE -> {}
     }
     BrakeCard()
-    // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        SectionHeader(title = stringResource(id = R.string.feature_brake_ways))
-        SettingsGroup {
-            AddQuickSettingsTile(
-                subtitleRes = R.string.feature_brake_fromQuickSettings_description,
-                onClick = { viewModel.requestAddQuickSettingsTile() })
-        }
+    SectionHeader(title = stringResource(id = R.string.feature_brake_ways))
+    SettingsGroup {
+        // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AddQuickSettingsTile(
+            subtitleRes = R.string.feature_brake_fromQuickSettings_description,
+            onClick = { viewModel.requestAddQuickSettingsTile() })
+        HomeScreenIconTile()
     }
     SectionHeader(title = stringResource(id = R.string.feature_brake_autoPull_header))
     SettingsGroup {
@@ -255,6 +255,21 @@ private fun EndEarlyDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = v
                 Text(text = stringResource(id = R.string.action_cancel))
             }
         })
+}
+
+/**
+ * Puts the brake on the home screen as an icon. Adding an icon changes no setting, so the tile
+ * stays tappable while the settings are locked, like the one for the quick settings.
+ * @see com.flx_apps.digitaldetox.system_integration.PullBrakeActivity
+ */
+@Composable
+private fun HomeScreenIconTile(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
+    SimpleListTile(
+        leadingIcon = Icons.Default.AddToHomeScreen,
+        titleText = stringResource(id = R.string.feature_brake_fromHomeScreen),
+        subtitleText = stringResource(id = R.string.feature_brake_fromHomeScreen_description),
+        allowClickWhenLocked = true,
+        onClick = { viewModel.requestHomeScreenIcon() })
 }
 
 /**

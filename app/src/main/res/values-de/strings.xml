@@ -251,6 +251,10 @@
     <string name="feature_brake_ways">So löst du sie aus</string>
     <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Ein Tipp dort, und sie läuft so lange wie beim letzten Mal.</string>
     <string name="feature_brake_fromQuickSettings_alreadyAdded">Die Notbremse ist schon in deinen Schnelleinstellungen.</string>
+    <string name="feature_brake_fromHomeScreen">Startbildschirm</string>
+    <string name="feature_brake_fromHomeScreen_description">Tippe hier, und die Notbremse bekommt ein eigenes Symbol auf deinem Startbildschirm. Halte das DetoxDroid-Symbol gedrückt, dann findest du sie da auch.</string>
+    <string name="feature_brake_fromHomeScreen_unsupported">Dein Launcher nimmt keine Symbole von Apps an. Halte stattdessen das DetoxDroid-Symbol gedrückt.</string>
+    <string name="feature_brake_shortcut">Notbremse</string>
     <string name="feature_brake_autoPull_header">Von selbst auslösen</string>
     <string name="feature_brake_autoPull">Automatisch auslösen</string>
     <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doom Scrolling durchbrechen“ an ist.</string>
