@@ -237,6 +237,8 @@
     <string name="feature_brake_status_notRunning">DetoxDroid läuft nicht, da gibt es nichts zu bremsen.</string>
     <string name="feature_brake_status_on">Die Notbremse läuft bis %s. So lange sind die Einstellungen gesperrt.</string>
     <string name="feature_brake_status_ending">Du wolltest früher raus. Um %s ist die Notbremse vorbei.</string>
+    <string name="feature_brake_duration">Wie lange</string>
+    <string name="feature_brake_duration_other">Andere…</string>
     <string name="feature_brake_pull">Notbremse ziehen</string>
     <string name="feature_brake_extendBy">Um %s verlängern</string>
     <string name="feature_brake_undo">Zurücknehmen</string>

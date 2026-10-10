@@ -19,7 +19,7 @@ import javax.inject.Inject
  * We use an enum, as only one dialog can be shown at a time.
  */
 enum class EmergencyBrakeDialog {
-    NONE, END_EARLY, AUTO_PULL_BREAKS, AUTO_PULL_WINDOW, AUTO_PULL_DURATION
+    NONE, DURATION, END_EARLY, AUTO_PULL_BREAKS, AUTO_PULL_WINDOW, AUTO_PULL_DURATION
 }
 
 /**

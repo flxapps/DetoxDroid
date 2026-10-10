@@ -74,7 +74,7 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     /** How long a brake that was pulled by hand can be taken back, for the tile tapped by accident. */
     val UndoWindowMs: Long = TimeUnit.SECONDS.toMillis(30)
 
-    /** The durations on offer, in minutes: as many as fit one row of chips. */
+    /** The durations on offer as chips, in minutes. Any other is picked by hand. */
     val DurationsInMinutes = listOf(30, 60, 120, 240, 480)
 
     /**

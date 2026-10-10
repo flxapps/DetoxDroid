@@ -39,6 +39,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.feature.AddQuickSettingsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
+import com.flx_apps.digitaldetox.ui.widgets.DurationPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionChip
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
@@ -78,6 +79,7 @@ fun EmergencyBrakeFeatureSettingsSection(
     viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()
 ) {
     when (viewModel.visibleDialog.collectAsState().value) {
+        EmergencyBrakeDialog.DURATION -> DurationDialog()
         EmergencyBrakeDialog.END_EARLY -> EndEarlyDialog()
         EmergencyBrakeDialog.AUTO_PULL_BREAKS -> AutoPullBreaksDialog()
         EmergencyBrakeDialog.AUTO_PULL_WINDOW -> AutoPullWindowDialog()
@@ -106,10 +108,10 @@ fun EmergencyBrakeFeatureSettingsSection(
 }
 
 /**
- * The brake: how long, and the button that pulls it. While one runs, the same chips say how much
- * longer, and the button extends by that. None of this is held back by locked settings, which a
- * running brake brings with it: pulling and extending only tighten, and ending early is the wait
- * it is meant to be.
+ * The brake: how long, and the button that pulls it. The chips offer the usual spans, the last
+ * one any other. While a brake runs, the same chips say how much longer, and the button extends
+ * by that. None of this is held back by locked settings, which a running brake brings with it:
+ * pulling and extending only tighten, and ending early is the wait it is meant to be.
  *
  * Not an [IconCard]: the chips need the card's full width to stay on one row, so the icon sits
  * with the status line only.
@@ -127,6 +129,7 @@ private fun BrakeCard(
     val usable = activated && running
     val duration = viewModel.duration.collectAsState().value
     val durationText = formatDurationMsCompact(context, TimeUnit.MINUTES.toMillis(duration.toLong()))
+    val customDuration = duration !in EmergencyBrakeFeature.DurationsInMinutes
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,17 +162,27 @@ private fun BrakeCard(
                 )
             }
             ChipFlowRow(modifier = Modifier.padding(top = 16.dp)) {
+                // extending only tightens, so a running brake keeps its chips
+                val chipsEnabled = usable || brake.braking
                 EmergencyBrakeFeature.DurationsInMinutes.forEach { minutes ->
                     OptionChip(
                         label = formatDurationMsCompact(
                             context, TimeUnit.MINUTES.toMillis(minutes.toLong())
                         ),
                         selected = minutes == duration,
-                        // extending only tightens, so a running brake keeps its chips
-                        enabled = usable || brake.braking,
+                        enabled = chipsEnabled,
                         onClick = { viewModel.setDuration(minutes) },
                     )
                 }
+                // the chip for any other span shows the one picked for as long as it is the choice
+                OptionChip(
+                    label = if (customDuration) durationText else {
+                        stringResource(R.string.feature_brake_duration_other)
+                    },
+                    selected = customDuration,
+                    enabled = chipsEnabled,
+                    onClick = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.DURATION) },
+                )
             }
             Row(
                 modifier = Modifier
@@ -207,6 +220,17 @@ private fun BrakeCard(
             }
         }
     }
+}
+
+/** Any span the chips do not offer. */
+@Composable
+private fun DurationDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
+    DurationPickerDialog(
+        titleText = stringResource(id = R.string.feature_brake_duration),
+        initialMinutes = viewModel.duration.collectAsState().value,
+        onValueSelected = { viewModel.setDuration(it) },
+        onDismissRequest = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) },
+    )
 }
 
 /**
@@ -326,13 +350,10 @@ private fun AutoPullWindowDialog(viewModel: EmergencyBrakeFeatureSettingsViewMod
 
 @Composable
 private fun AutoPullDurationDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
-    val context = LocalContext.current
-    NumberPickerDialog(
+    DurationPickerDialog(
         titleText = stringResource(id = R.string.feature_brake_autoPull_duration),
-        initialValue = viewModel.autoPullDuration.collectAsState().value,
+        initialMinutes = viewModel.autoPullDuration.collectAsState().value,
         onValueSelected = { viewModel.setAutoPullDuration(it) },
         onDismissRequest = { viewModel.setVisibilityOfDialog(EmergencyBrakeDialog.NONE) },
-        label = { formatDurationMsCompact(context, TimeUnit.MINUTES.toMillis(it.toLong())) },
-        range = 15..240 step 15
     )
 }

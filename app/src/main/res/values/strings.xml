@@ -244,6 +244,8 @@
     <string name="feature_brake_status_notRunning">DetoxDroid isn\'t running, so there is nothing to brake.</string>
     <string name="feature_brake_status_on">The brake is on until %s. Settings are locked until then.</string>
     <string name="feature_brake_status_ending">You asked to end it. The brake comes off at %s.</string>
+    <string name="feature_brake_duration">How long</string>
+    <string name="feature_brake_duration_other">Other…</string>
     <string name="feature_brake_pull">Pull the brake</string>
     <string name="feature_brake_extendBy">Extend by %s</string>
     <string name="feature_brake_undo">Undo</string>
