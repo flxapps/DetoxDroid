@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
@@ -45,15 +46,20 @@ val Context.dataStore by preferencesDataStore("detox_droid_preferences")
 fun <T> DataStore<Preferences>.persistValue(key: Preferences.Key<T>, value: T) {
     dataStorePersistScope.launch {
         try {
-            dataStorePersistMutex.withLock {
-                this@persistValue.edit { preferences ->
-                    preferences[key] = value
-                }
-            }
+            editLocked { preferences -> preferences[key] = value }
         } catch (e: Exception) {
             Timber.e(e, "Failed to persist DataStore preference %s", key.name)
         }
     }
+}
+
+/**
+ * Edits the data store behind the same lock as [persistValue], so a write that touches many keys
+ * at once (restoring a settings file) cannot interleave with a property write that lands at the
+ * same moment.
+ */
+suspend fun DataStore<Preferences>.editLocked(transform: (MutablePreferences) -> Unit) {
+    dataStorePersistMutex.withLock { edit(transform) }
 }
 
 /**

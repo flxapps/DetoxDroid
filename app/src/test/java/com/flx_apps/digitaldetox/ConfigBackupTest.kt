@@ -1,12 +1,15 @@
 package com.flx_apps.digitaldetox
 
 import com.flx_apps.digitaldetox.data.ConfigBackup
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
@@ -29,7 +32,7 @@ class ConfigBackupTest {
             "DisableAppsFeature_disableAppsMode" to "SUSPEND",
             "GrayscaleAppsFeature_appExceptions" to setOf("com.instagram.android", "com.x.app")
         )
-        val restored = ConfigBackup.parse(ConfigBackup.serialize(values))
+        val restored = ConfigBackup.read(ConfigBackup.serialize(values)).values
         assertEquals(values.keys, restored.keys)
         for ((key, value) in values) {
             assertEquals(key, value, restored[key])
@@ -49,6 +52,42 @@ class ConfigBackupTest {
     }
 
     @Test
+    fun whatDescribesThisPhoneIsNotInABackup() {
+        listOf(
+            "AppSuspender_suspendedApps",
+            "trustedClock_anchor",
+            "GrayscaleAppsFeature_daltonizerApplied",
+            "GrayscaleAppsFeature_defaultDaltonizerEnabled",
+            "GrayscaleAppsFeature_extraDimApplied",
+            "DisableAppsFeature_usedUpScreenTime",
+            "minimal_launcher_widget_selected_apps_42",
+        ).forEach { assertFalse(it, ConfigBackup.isBackedUp(it)) }
+        listOf(
+            "GrayscaleAppsFeature_exceptions",
+            "GrayscaleAppsFeature_systemGrayscale",
+            "appearance_themeMode",
+            "onboarding_completed",
+        ).forEach { assertTrue(it, ConfigBackup.isBackedUp(it)) }
+    }
+
+    @Test
+    fun thePreviewSaysWhatAFeatureHoldsInTheFile() = runBlocking {
+        DetoxDroidApplication.appContext = RuntimeEnvironment.getApplication()
+        val file = ConfigBackup.serialize(
+            mapOf(
+                "GrayscaleAppsFeature_isActivated" to true,
+                "GrayscaleAppsFeature_exceptions" to setOf("com.instagram.android", "com.x.app"),
+                "Nobody_knowsThis" to 1,
+            )
+        )
+        val preview = ConfigBackup.preview(file)
+        val grayscale = preview.features.single { it.featureId == GrayscaleAppsFeatureId }
+        assertEquals(true, grayscale.isActivated)
+        assertEquals(2, grayscale.appCount)
+        assertEquals(1, preview.otherSettings)
+    }
+
+    @Test
     fun anEntryOfAnUnknownTypeIsSkippedRatherThanFailingTheFile() {
         val fromALaterVersion = """
             {
@@ -59,17 +98,17 @@ class ConfigBackupTest {
               }
             }
         """.trimIndent()
-        assertEquals(mapOf<String, Any>("Known_key" to 3), ConfigBackup.parse(fromALaterVersion))
+        assertEquals(mapOf<String, Any>("Known_key" to 3), ConfigBackup.read(fromALaterVersion).values)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun someOtherJsonFileIsRefused() {
-        ConfigBackup.parse("""{ "notes": ["a shopping list"] }""")
+        ConfigBackup.read("""{ "notes": ["a shopping list"] }""")
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun somethingThatIsNotJsonIsRefusedTheSameWay() {
-        ConfigBackup.parse("<html>not even close</html>")
+        ConfigBackup.read("<html>not even close</html>")
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.data
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import kotlin.properties.ReadWriteProperty
+import timber.log.Timber
 import kotlin.reflect.KProperty
 
 /**
@@ -51,8 +52,15 @@ class DataStoreProperty<T, DataStoreType>(
      * Load the value from the data store on initialization.
      */
     init {
-        dataStore.loadValue<DataStoreType>(key)?.let {
-            defaultValue = dataTransformer?.transformFrom(it) ?: it as T
+        dataStore.loadValue<DataStoreType>(key)?.let { stored ->
+            // A value the transformer cannot read (an enum constant this build does not have,
+            // written by a newer one or carried in by a settings file) must not take the app down
+            // on every start. The default stands in, and the next write replaces the stored value.
+            defaultValue = runCatching { dataTransformer?.transformFrom(stored) ?: stored as T }
+                .getOrElse {
+                    Timber.w(it, "Ignoring the stored value of %s: %s", key.name, stored)
+                    defaultValue
+                }
         }
     }
 }

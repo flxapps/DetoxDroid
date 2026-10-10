@@ -6,7 +6,6 @@ import androidx.annotation.StringRes
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -16,6 +15,7 @@ import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -31,10 +31,13 @@ import kotlin.system.exitProcess
  * without anybody remembering to add it here. Usage history is not in it. That lives in Room, it is
  * measurement rather than configuration, and it is the part that grows without bound.
  *
- * Two things are deliberately left out of both directions, see [isBackedUp]. A backup that carried
- * the commitment password's state would be a way around it: export while unlocked, then import the
- * old state back over a lock that is in force. A running brake stays out for the same reason, and
- * so does the premium flag.
+ * Not everything in the map is configuration, see [isBackedUp]. The commitment password's state
+ * stays out of both directions, or a backup would be a way around it: export while unlocked, then
+ * import the old state back over a lock that is in force. A running brake stays out for the same
+ * reason, the premium flag because it is bought, and the rest because it describes this phone
+ * rather than a choice: what is suspended through Shizuku right now, the clock anchors, the system
+ * color settings the grayscale feature owes the user back, today's used-up budgets, the apps picked
+ * for a widget id that exists on no other phone. Carried over, each of them is wrong on arrival.
  */
 object ConfigBackup {
     const val MIME_TYPE = "application/json"
@@ -59,7 +62,23 @@ object ConfigBackup {
     private const val TYPE_STRING_SET = "stringSet"
 
     /** Exact preference keys that are neither written nor read back. */
-    private val EXCLUDED_KEYS = setOf("premium_unlocked")
+    private val EXCLUDED_KEYS = setOf("premium_unlocked", "onboarding_pendingFeatureActivations")
+
+    /** Key prefixes of state that belongs to this phone, see the class docs. */
+    private val EXCLUDED_PREFIXES = listOf(
+        "${CommitmentPasswordFeatureId}_",
+        "AppSuspender_",
+        "trustedClock_",
+        "minimal_launcher_widget_",
+        "premium_nudge_",
+        "review_request_",
+        "${GrayscaleAppsFeatureId}_daltonizerApplied",
+        "${GrayscaleAppsFeatureId}_defaultDaltonizer",
+        "${GrayscaleAppsFeatureId}_extraDimApplied",
+    )
+
+    /** Key suffixes of state that belongs to today, see the class docs. */
+    private val EXCLUDED_SUFFIXES = listOf("_usedUpScreenTime")
 
     fun suggestedFileName(): String = "detoxdroid-settings-${LocalDate.now()}.json"
 
@@ -69,7 +88,8 @@ object ConfigBackup {
      */
     fun isBackedUp(keyName: String) =
         keyName !in EXCLUDED_KEYS && keyName !in EmergencyBrakeFeature.runningStateKeys &&
-                !keyName.startsWith("${CommitmentPasswordFeatureId}_")
+                EXCLUDED_PREFIXES.none { keyName.startsWith(it) } &&
+                EXCLUDED_SUFFIXES.none { keyName.endsWith(it) }
 
     /** What a settings file says about itself, and what it holds. */
     class BackupFile(
@@ -128,7 +148,7 @@ object ConfigBackup {
                 featureId = feature.id,
                 titleRes = feature.texts.title,
                 isActivated = values["${feature.id}_isActivated"] as? Boolean,
-                appCount = (values["${feature.id}_appExceptions"] as? Set<*>)?.size
+                appCount = (values["${feature.id}_exceptions"] as? Set<*>)?.size
             )
         }
         return Preview(
@@ -148,7 +168,7 @@ object ConfigBackup {
     suspend fun import(values: Map<String, Any>): Int {
         if (values.isEmpty()) return 0
         var written = 0
-        DataStore.edit { preferences ->
+        DataStore.editLocked { preferences ->
             for ((name, value) in values) {
                 val key = keyFor(name, value) ?: continue
                 @Suppress("UNCHECKED_CAST")
@@ -158,9 +178,6 @@ object ConfigBackup {
         }
         return written
     }
-
-    /** Reads [json] and writes it back, see [preview] and [import]. */
-    suspend fun import(json: String): Int = import(preview(json).values)
 
     /**
      * Keeps the entries of a file that can be written over [current] without breaking a reader.
@@ -227,9 +244,6 @@ object ConfigBackup {
             .put(KEY_VALUES, entries)
             .toString(2)
     }
-
-    /** The values of a backup file, see [read]. */
-    internal fun parse(json: String): Map<String, Any> = read(json).values
 
     /**
      * Reads a backup file. Throws on anything that is not one; an entry whose type is not known
