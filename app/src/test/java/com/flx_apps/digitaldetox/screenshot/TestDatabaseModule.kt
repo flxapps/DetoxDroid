@@ -7,6 +7,7 @@ import com.flx_apps.digitaldetox.data.DailyAppUsageDao
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
 import com.flx_apps.digitaldetox.data.DatabaseModule
+import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,4 +45,8 @@ object TestDatabaseModule {
     @Provides
     fun provideDailyDeviceStatsDao(db: AppDatabase): DailyDeviceStatsDao =
         db.dailyDeviceStatsDao()
+
+    @Provides
+    fun provideSelfMeasuredAppUsageDao(db: AppDatabase): SelfMeasuredAppUsageDao =
+        db.selfMeasuredAppUsageDao()
 }

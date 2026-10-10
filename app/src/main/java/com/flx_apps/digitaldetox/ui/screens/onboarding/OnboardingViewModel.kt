@@ -13,6 +13,7 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -400,7 +401,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     /** Whether the commitment password protects the given feature and is not unlocked right now. */
-    private fun isLocked(featureId: String) = CommitmentPasswordFeature.isFeatureLocked(featureId)
+    private fun isLocked(featureId: String) =
+        CommitmentPasswordFeature.isFeatureLocked(featureId) ||
+                EmergencyBrakeFeature.locksSettings(featureId)
 
     /**
      * Activates [feature] when its required permissions are present, otherwise leaves it configured

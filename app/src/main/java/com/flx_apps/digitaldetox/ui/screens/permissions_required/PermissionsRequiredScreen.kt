@@ -68,7 +68,7 @@ fun PermissionsRequiredScreen(
 ) {
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(text = stringResource(R.string.noPermissions))
+            Text(text = stringResource(R.string.noPermissions_title))
         }, navigationIcon = {
             IconButton(onClick = {
                 navViewModel.onBackPress()
@@ -129,20 +129,20 @@ fun PermissionsRequiredScreenContent(
         )
         Spacer(modifier = Modifier.weight(0.25f))
         Text(
-            text = stringResource(id = R.string.noPermissions_text),
+            text = stringResource(id = R.string.noPermissions_message),
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(vertical = 16.dp)
         )
         Text(
             text = stringResource(
-                id = R.string.noPermissions_text_command, grantPermissionsCommand.command
+                id = R.string.noPermissions_command, grantPermissionsCommand.command
             ),
             style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
         HyperlinkText(
-            fullTextResId = R.string.noPermissions_text_visitGitHub,
+            fullTextResId = R.string.noPermissions_visitGitHub,
             linksActions = listOf("GITHUB"),
             hyperLinks = listOf("https://github.com/flxapps/DetoxDroid"),
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
@@ -155,8 +155,8 @@ fun PermissionsRequiredScreenContent(
         // Show buttons for available privilege methods
         if (isRootAvailable) {
             GrantPermissionsCard(
-                description = stringResource(id = R.string.noPermissions_text_rooted),
-                buttonText = stringResource(id = R.string.noPermissions_text_rooted_go),
+                description = stringResource(id = R.string.noPermissions_rooted),
+                buttonText = stringResource(id = R.string.noPermissions_rooted_go),
                 onGrantPermissions = {
                     // try to grant permissions using a root shell (libsu runs the callback on the main thread)
                     runCatching {
@@ -171,8 +171,8 @@ fun PermissionsRequiredScreenContent(
 
         if (isShizukuAvailable && grantPermissionsCommand.supportsShizuku) {
             GrantPermissionsCard(
-                description = stringResource(id = R.string.noPermissions_text_shizuku),
-                buttonText = stringResource(id = R.string.noPermissions_text_shizuku_go),
+                description = stringResource(id = R.string.noPermissions_shizuku),
+                buttonText = stringResource(id = R.string.noPermissions_shizuku_go),
                 onGrantPermissions = {
                     // try grant permissions using Shizuku
                     ShizukuUtils.executeCommand(grantPermissionsCommand.command) { success, _ ->
@@ -185,8 +185,8 @@ fun PermissionsRequiredScreenContent(
 
         if (grantPermissionsCommand.supportsShizuku && !isShizukuAvailable) {
             GrantPermissionsCard(
-                description = stringResource(id = R.string.noPermissions_text_shizukuWizard),
-                buttonText = stringResource(id = R.string.noPermissions_text_shizukuWizard_go),
+                description = stringResource(id = R.string.noPermissions_shizukuWizard),
+                buttonText = stringResource(id = R.string.noPermissions_shizukuWizard_go),
                 onGrantPermissions = {
                     navViewModel.openRoute(NavigationRoutes.ShizukuSetup)
                 })

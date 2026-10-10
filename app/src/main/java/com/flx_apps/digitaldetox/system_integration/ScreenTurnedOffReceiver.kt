@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 
 /**
@@ -16,6 +17,7 @@ class ScreenTurnedOffReceiver : BroadcastReceiver() {
         // put it back, and no event arrives when the user unlocks straight into the app they left.
         // Forgetting the package turns that first event back into an app switch.
         DetoxDroidAccessibilityService.instance?.forgetForegroundPackage()
+        UsageStatsTracker.onScreenTurnedOff()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScreenTurnedOffFeatures)
             .forEach {
                 (it as OnScreenTurnedOffSubscriptionFeature).onScreenTurnedOff(context)

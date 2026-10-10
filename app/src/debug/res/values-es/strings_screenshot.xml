@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spanish marketing copy for the Roborazzi store screenshots.
+     Auto-discovered by ScreenshotConfig — `./gradlew :app:generateScreenshots` renders
+     fastlane/metadata/android/es-ES/images/phoneScreenshots/1.png … 7.png from it. -->
+<resources>
+    <string name="screenshot_1_title">Desintoxicación digital, por defecto.</string>
+    <string name="screenshot_1_subtitle">DetoxDroid reduce poco a poco el uso del móvil, siempre trabajando en segundo plano.</string>
+
+    <string name="screenshot_2_title">Haz que tu móvil distraiga menos…</string>
+    <string name="screenshot_2_subtitle">Las apps que elijas pierden el color. Los feeds se sueltan mucho más fácil.</string>
+
+    <string name="screenshot_3_title">…sin perder las apps que necesitas.</string>
+    <string name="screenshot_3_subtitle">Mapas, cámara y mensajería siguen a todo color gracias a las excepciones por app.</string>
+
+    <string name="screenshot_4_title">Un momento para pensarlo dos veces.</string>
+    <string name="screenshot_4_subtitle">Las apps que distraen se abren solo tras una breve espera, la justa para frenar el reflejo.</string>
+
+    <string name="screenshot_5_title">Rompe el scroll infinito.</string>
+    <string name="screenshot_5_subtitle">¿Te ha pillado haciendo doomscrolling? DetoxDroid te interrumpe con suavidad y te manda a otra cosa.</string>
+
+    <string name="screenshot_6_title">Entiende tus hábitos.</string>
+    <string name="screenshot_6_subtitle">Mira a dónde se va tu tiempo de verdad: tiempo de pantalla, aperturas de apps e incluso cuánto has hecho scroll.</string>
+
+    <string name="screenshot_7_title">Una pantalla de inicio más tranquila.</string>
+    <string name="screenshot_7_subtitle">Cambia la cuadrícula de iconos por una lista de apps sobria, solo texto.</string>
+</resources>

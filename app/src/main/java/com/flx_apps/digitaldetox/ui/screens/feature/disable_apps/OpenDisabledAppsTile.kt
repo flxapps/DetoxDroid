@@ -14,8 +14,6 @@ import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 fun ManageDisabledAppsListTile() {
     OpenAppExceptionsTile(
         titleText = stringResource(id = R.string.feature_disableApps_manage),
-        subtitleText = stringResource(
-            id = R.string.feature_disableApps_manage_defined, DisableAppsFeature.appExceptions.size
-        ),
+        subtitleRes = R.string.feature_disableApps_manage_defined,
     )
 }

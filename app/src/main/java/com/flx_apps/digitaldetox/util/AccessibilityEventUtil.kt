@@ -4,7 +4,10 @@ import android.view.accessibility.AccessibilityEvent
 
 class AccessibilityEventUtil {
     companion object {
-        fun createEvent(eventType: Int = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED): AccessibilityEvent {
+        fun createEvent(
+            eventType: Int = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+            isFullScreen: Boolean = true
+        ): AccessibilityEvent {
             val accessibilityEvent =
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                     AccessibilityEvent(eventType)
@@ -14,7 +17,7 @@ class AccessibilityEventUtil {
                     if (packageName == null) {
                         packageName = "com.flx_apps.digitaldetox"
                     }
-                    isFullScreen = true
+                    this.isFullScreen = isFullScreen
                 }
             return accessibilityEvent
         }

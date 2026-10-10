@@ -134,10 +134,19 @@ class AppExceptionsViewModel @Inject constructor(
     val showListSettingsSheet = _showListSettingsSheet.asStateFlow()
 
     /**
-     * Holds the number of currently toggled items (i.e. items that are selected in the list).
+     * Holds the number of currently toggled items (i.e. items that are selected in the list). Only
+     * apps that are really there are counted: the stored selection outlives the apps it names, and
+     * an app that is gone is one this feature no longer acts on.
      */
     private val _toggledItemsSize = MutableStateFlow<Int>(0)
     val toggledItemsSize = _toggledItemsSize.asStateFlow()
+
+    /**
+     * The other features this feature's selection can be copied from, filled once the app list is
+     * in. Reading the package manager for every source is too slow for composition.
+     */
+    private val _copySources = MutableStateFlow<List<ExceptionsCopySource>>(emptyList())
+    val copySources = _copySources.asStateFlow()
 
     /**
      * Loads all installed apps when the view model is created in a coroutine.
@@ -173,6 +182,7 @@ class AppExceptionsViewModel @Inject constructor(
         _selectedAppCategories.value = appCategories.associateWith {
             false
         }
+        _copySources.value = loadCopySources()
         filterApps()
     }
 
@@ -216,7 +226,7 @@ class AppExceptionsViewModel @Inject constructor(
         if (toggled.isException) appExceptionsFeature.appExceptions += packageName
         else appExceptionsFeature.appExceptions -= packageName
         _appExceptionItems = _appExceptionItems.toMutableList().also { it[index] = toggled }
-        _toggledItemsSize.value = appExceptionsFeature.appExceptions.size
+        _toggledItemsSize.value = _appExceptionItems.count { it.isException }
         if (toggled.isException &&
             appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
         ) {
@@ -229,13 +239,14 @@ class AppExceptionsViewModel @Inject constructor(
      * The other features this feature's selection can be copied from: every feature with app
      * exceptions that has at least one app selected.
      */
-    fun copySources(): List<ExceptionsCopySource> {
+    private fun loadCopySources(): List<ExceptionsCopySource> {
         return FeaturesProvider.featureList
             .filter { it.id != feature.id && it is SupportsAppExceptionsFeature }
             .mapNotNull { source ->
                 val exceptions = (source as SupportsAppExceptionsFeature).appExceptions
-                if (exceptions.isEmpty()) null
-                else ExceptionsCopySource(source.id, source.texts.title, exceptions.size)
+                val appCount = ApplicationInfoRepository.countInstalled(exceptions)
+                if (appCount == 0) null
+                else ExceptionsCopySource(source.id, source.texts.title, appCount)
             }
     }
 
@@ -248,12 +259,20 @@ class AppExceptionsViewModel @Inject constructor(
             ?: return
         var newExceptions = source.appExceptions
         if (shouldExcludeCurrentApp) newExceptions = newExceptions - appPackageName
+        replaceExceptions(newExceptions)
+    }
+
+    /**
+     * Replaces this feature's selection with [newExceptions] and rebuilds the master list so the
+     * UI regroups immediately.
+     */
+    private fun replaceExceptions(newExceptions: Set<String>) {
         appExceptionsFeature.appExceptions = newExceptions
-        _toggledItemsSize.value = newExceptions.size
         if (this::_appExceptionItems.isInitialized) {
             _appExceptionItems = _appExceptionItems.map {
                 it.copy(isException = newExceptions.contains(it.appInfo.packageName))
             }
+            _toggledItemsSize.value = _appExceptionItems.count { it.isException }
             filterApps()
         }
     }
@@ -286,11 +305,23 @@ class AppExceptionsViewModel @Inject constructor(
     }
 
     /**
-     * Sets the type of the app exception list.
+     * Sets the type of the app exception list. The selection is kept unless [clearSelection] is set:
+     * switching the type turns the selected apps from the only ones affected into the only ones
+     * spared, or the other way round, which is rarely what a non-empty list was built for.
      * @see AppExceptionListType
      */
-    fun setExceptionListType(type: AppExceptionListType) {
+    fun setExceptionListType(type: AppExceptionListType, clearSelection: Boolean = false) {
         if (!allowedListTypes.contains(type)) return
+        if (clearSelection) {
+            replaceExceptions(emptySet())
+        } else if (this::_appExceptionItems.isInitialized) {
+            // the stored selection can name apps that are gone. They were not in the count the
+            // user was asked about, and under the other type they would come back meaning the
+            // opposite of what they were picked for once reinstalled.
+            val installed = _appExceptionItems.mapTo(mutableSetOf()) { it.appInfo.packageName }
+            val kept = appExceptionsFeature.appExceptions.filterTo(mutableSetOf()) { it in installed }
+            if (kept.size != appExceptionsFeature.appExceptions.size) replaceExceptions(kept)
+        }
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
     }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_brake"
+        android:shortcutId="pullBrake"
+        android:shortcutLongLabel="@string/feature_brake_pull"
+        android:shortcutShortLabel="@string/feature_brake_shortcut">
+        <intent
+            android:action="com.flx_apps.digitaldetox.ACTION_PULL_BRAKE"
+            android:targetClass="com.flx_apps.digitaldetox.system_integration.PullBrakeActivity"
+            android:targetPackage="com.flx_apps.digitaldetox" />
+    </shortcut>
+</shortcuts>

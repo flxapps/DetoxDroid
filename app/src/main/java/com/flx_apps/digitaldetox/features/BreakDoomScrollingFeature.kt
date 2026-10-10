@@ -14,6 +14,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
@@ -109,7 +110,8 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         BreakDoomScrollingFeatureId,
         defaultExceptionListType = AppExceptionListType.ONLY_LIST,
     ), SupportsScheduleFeature by SupportsScheduleFeature.Impl(BreakDoomScrollingFeatureId),
-    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature, PausableFeature {
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature, PausableFeature,
+    BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_doomScrolling,
         R.string.feature_doomScrolling_subtitle,
@@ -232,10 +234,11 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
         if (!appliesTo(pkg)) return
 
+        // under a brake every app is on probation from the start, and
         // while another surface of this app is still cooling down, the app is on probation:
         // detection fires sooner and at stricter thresholds, so moving the scrolling to a
         // different surface right after a break is caught quickly (see the class docs)
-        val onProbation = cooldowns.hasAnyCooldown(pkg)
+        val onProbation = cooldowns.hasAnyCooldown(pkg) || EmergencyBrakeFeature.covers(this)
         val sensitivity = if (onProbation) detectionSensitivity.stricter() else detectionSensitivity
         val minSessionMs = if (onProbation) probationSessionGateMs() else timeUntilWarning
 
@@ -379,18 +382,60 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         surfaceId: String?,
         contextText: String
     ) {
-        val escalateToWholeApp = cooldowns.hasAnyCooldown(packageName)
+        val onProbation = cooldowns.hasAnyCooldown(packageName)
+        // the break that is one too many pulls the brake, and is then the first one under it
+        val pulledBrake = EmergencyBrakeFeature.onDoomScrollingBreak(context)
+        val braking = EmergencyBrakeFeature.covers(this)
+        val escalateToWholeApp = onProbation || braking
         val cooldownScope = if (escalateToWholeApp) null else surfaceId
         breakCounter.increment(packageName)
         scrollSessionMonitor.reset(packageName)
         lastCooldownScopes[packageName] = cooldownScope
-        cooldowns.start(packageName, cooldownScope, cooldownTime)
-        val text = if (escalateToWholeApp) {
-            contextText + "\n" + context.getString(
+        // Under a brake the app stays away for the rest of it. Keeping messages reachable is what
+        // scoping a cooldown to the feed is for, and what the brake was pulled to go without.
+        val cooldownMs =
+            if (braking) maxOf(cooldownTime, EmergencyBrakeFeature.remainingMs()) else cooldownTime
+        cooldowns.start(packageName, cooldownScope, cooldownMs)
+        val consequence = when {
+            pulledBrake -> context.getString(
+                R.string.feature_doomScrolling_warning_context_brakePulled,
+                EmergencyBrakeFeature.autoPullBreaks,
+                EmergencyBrakeFeature.endsAtText()
+            )
+
+            braking -> context.getString(
+                R.string.feature_doomScrolling_warning_context_braking,
+                EmergencyBrakeFeature.endsAtText()
+            )
+
+            onProbation -> context.getString(
                 R.string.feature_doomScrolling_warning_context_probation
             )
-        } else contextText
+
+            else -> null
+        }
+        val text = if (consequence != null) contextText + "\n" + consequence else contextText
         openBreakScreen(context, packageName, BreakScreenMode.WARNING, text)
+    }
+
+    /**
+     * A cooldown that was started under a brake runs to the end of it. When the brake ends before
+     * that, the cooldown comes down to what it would have been without one.
+     */
+    override fun onBrakeChanged(context: Context) {
+        if (EmergencyBrakeFeature.covers(this)) return
+        cooldowns.endNoLaterThan(System.currentTimeMillis() + cooldownTime)
+    }
+
+    /**
+     * Pulls the brake from the break screen of [packageName]. The app the user was caught in
+     * stays away for the rest of the brake, the way it would had the brake been on when they
+     * were caught.
+     */
+    fun pullBrake(context: Context, packageName: String) {
+        if (!EmergencyBrakeFeature.pull(context)) return
+        cooldowns.start(packageName, null, EmergencyBrakeFeature.remainingMs())
+        lastCooldownScopes[packageName] = null
     }
 
     /**
@@ -399,6 +444,8 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
      * they scroll on a few more times or the grace times out — whichever comes first.
      */
     fun startFinishGrace(context: Context, packageName: String) {
+        // finishing first is a way out, and a brake closes those
+        if (EmergencyBrakeFeature.covers(this)) return
         val appContext = context.applicationContext
         cooldowns.clear(packageName)
         activeScrollViews.clear()

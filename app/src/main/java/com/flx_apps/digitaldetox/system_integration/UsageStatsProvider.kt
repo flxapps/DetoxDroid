@@ -99,7 +99,12 @@ object UsageStatsProvider {
         val unlockCount: Int,
         val unlockHourBuckets: IntArray,
         val sessions: List<SessionInfo>
-    )
+    ) {
+        companion object {
+            /** What the event log amounts to when there is no permission to read it. */
+            val EMPTY = EventCounts(emptyMap(), IntArray(24), 0, IntArray(24), emptyList())
+        }
+    }
 
     /**
      * Walks the OS usage-event log for [startMs]..[endMs] and derives per-app launch counts,
@@ -107,8 +112,13 @@ object UsageStatsProvider {
      *
      * Note: the OS keeps the event log only for a limited window (typically about a week), so for
      * longer ranges the results cover just the retained tail and undercount the full period.
+     *
+     * [includePackage] leaves apps out of everything that is attributed to an app. Unlocks are not:
+     * the phone was unlocked whatever the user then opened.
      */
-    fun queryEventCounts(startMs: Long, endMs: Long): EventCounts {
+    fun queryEventCounts(
+        startMs: Long, endMs: Long, includePackage: (String) -> Boolean = { true }
+    ): EventCounts {
         val events = usageStatsManager.queryEvents(startMs, endMs)
 
         val launchCounts = mutableMapOf<String, Int>()
@@ -124,7 +134,7 @@ object UsageStatsProvider {
 
         fun endCurrentSession(endTimeMs: Long) {
             val pkg = currentPkg ?: return
-            if (currentStartMs > 0) {
+            if (currentStartMs > 0 && includePackage(pkg)) {
                 val duration = endTimeMs - currentStartMs
                 if (duration > 0) {
                     sessions.add(SessionInfo(pkg, currentStartMs, endTimeMs, duration))
@@ -140,9 +150,11 @@ object UsageStatsProvider {
                 // same wire values as the deprecated MOVE_TO_FOREGROUND / MOVE_TO_BACKGROUND,
                 // so pre-API-29 events are matched as well
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
-                    launchCounts.merge(event.packageName, 1, Int::plus)
-                    cal.timeInMillis = event.timeStamp
-                    hourBuckets[cal.get(Calendar.HOUR_OF_DAY)]++
+                    if (includePackage(event.packageName)) {
+                        launchCounts.merge(event.packageName, 1, Int::plus)
+                        cal.timeInMillis = event.timeStamp
+                        hourBuckets[cal.get(Calendar.HOUR_OF_DAY)]++
+                    }
                     endCurrentSession(event.timeStamp)
                     currentPkg = event.packageName
                     currentStartMs = event.timeStamp

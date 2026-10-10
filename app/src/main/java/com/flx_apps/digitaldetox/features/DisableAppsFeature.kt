@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
@@ -28,6 +29,7 @@ import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeat
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.system_integration.AppSuspender
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
@@ -39,15 +41,19 @@ import com.flx_apps.digitaldetox.util.DailyAppCounter
 import timber.log.Timber
 
 /**
- * The [DisableAppsFeature] can either deactivate apps or block them.
- * For deactivating apps, the app needs to have DEVICE_ADMIN permission.
- * For blocking apps, the app needs to have SYSTEM_ALERT_WINDOW permission.
+ * How a listed app is kept out of reach once its daily time is up.
+ *
+ * [BLOCK] draws a screen over it and needs the overlay permission, which anyone can grant.
+ * [DEACTIVATE] hides it outright and needs device owner, which a phone with any account on it
+ * cannot give, so for most people it is not an option at all. [SUSPEND] sits between the two: the
+ * app is greyed out in the launcher and refuses to start, and all it needs is Shizuku.
  * @see NeedsPermissionsFeature
  * @see android.Manifest.permission.SYSTEM_ALERT_WINDOW
  * @see android.Manifest.permission.BIND_DEVICE_ADMIN
+ * @see AppSuspender
  */
 enum class DisableAppsMode {
-    DEACTIVATE, BLOCK,
+    DEACTIVATE, BLOCK, SUSPEND,
 }
 
 val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
@@ -67,7 +73,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId),
-    LockableFeature, PausableFeature {
+    LockableFeature, PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
@@ -189,14 +195,36 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * Whether the listed apps may still be used today: always with [NO_DAILY_LIMIT], never with a
-     * limit of 0, otherwise until the used up screen time reaches [allowedDailyScreenTime].
+     * limit of 0, otherwise until the used up screen time reaches [allowedDailyScreenTime]. Under
+     * a brake the budget counts as spent, whatever is left of it.
      */
-    private fun hasScreenTimeLeft(): Boolean = when (allowedDailyScreenTime) {
-        NO_DAILY_LIMIT -> true
-        0L -> false
+    internal fun hasScreenTimeLeft(): Boolean = when {
+        EmergencyBrakeFeature.covers(this) -> false
+        allowedDailyScreenTime == NO_DAILY_LIMIT -> true
+        allowedDailyScreenTime == 0L -> false
         // includes the running tracking session, so the budget also runs out while the user stays
         // inside a single tracked app
         else -> currentUsedUpScreenTime() < allowedDailyScreenTime
+    }
+
+    /**
+     * A brake takes the listed apps away the moment it is pulled, where the mode can do that
+     * without one of them being opened first, and its end hands them back while there is budget
+     * left. Blocking has nothing to do here: its screen goes up when a listed app is opened.
+     */
+    override fun onBrakeChanged(context: Context) {
+        if (hasScreenTimeLeft()) {
+            if (operationMode == DisableAppsMode.DEACTIVATE) {
+                setAppsDeactivated(context, false, forceOperation = true)
+            }
+            releaseSuspendedAppsIfEntitled()
+            return
+        }
+        when (operationMode) {
+            DisableAppsMode.BLOCK -> {}
+            DisableAppsMode.DEACTIVATE -> setAppsDeactivated(context, true)
+            DisableAppsMode.SUSPEND -> AppSuspender.suspend(disableableApps)
+        }
     }
 
     /**
@@ -213,6 +241,15 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         return !keyguardLocked && audioMode == AudioManager.MODE_NORMAL
     }
 
+    /**
+     * Nothing may be held back while the feature is not enforcing, so a suspension left over from
+     * an earlier run is handed back here. The budget that was used up when it was made has reset
+     * in the meantime, or the schedule that justified it has closed, or the mode has changed.
+     */
+    override fun onStart(context: Context) {
+        releaseSuspendedAppsIfEntitled()
+    }
+
     override fun onPause(context: Context) {
         // a paused feature sees no more app switches, so the time in a listed app that is still
         // open stops counting here and not when the next app shows up, maybe the next morning
@@ -223,6 +260,21 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // if the apps are deactivated, we need to reactivate them when DetoxDroid is paused
             setAppsDeactivated(context, false, forceOperation = true)
         }
+        AppSuspender.releaseAll()
+    }
+
+    /**
+     * Hands back anything that is still suspended but should not be. A suspension outlives our
+     * process and the Shizuku session that made it, and nothing in the system lifts it on its own,
+     * so every path that could have ended the enforcement calls this and the periodic service
+     * check calls it again, for the case where Shizuku was gone when it happened.
+     */
+    fun releaseSuspendedAppsIfEntitled() {
+        if (!AppSuspender.hasSuspendedApps) return
+        val stillEnforcing =
+            isActive() && operationMode == DisableAppsMode.SUSPEND && !hasScreenTimeLeft()
+        if (stillEnforcing) return
+        AppSuspender.releaseAll()
     }
 
     /**
@@ -240,6 +292,9 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // the app is not in the list of apps that should be disabled, so increase the used up
             // screen time and return
             eventuallyIncreaseUsedUpScreenTime()
+            // the line above rolls the budget over at midnight, and a suspended app cannot report
+            // its own window events, so this is where a new day reaches the listed apps
+            releaseSuspendedAppsIfEntitled()
             return
         }
         val screenTimeLeft = hasScreenTimeLeft()
@@ -279,6 +334,10 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             DisableAppsMode.DEACTIVATE -> {
                 setAppsDeactivated(context, true)
             }
+
+            DisableAppsMode.SUSPEND -> {
+                AppSuspender.suspend(disableableApps)
+            }
         }
     }
 
@@ -291,6 +350,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onScreenTurnedOff(context: Context?) {
         eventuallyIncreaseUsedUpScreenTime()
         waitedForApps.clear()
+        releaseSuspendedAppsIfEntitled()
     }
 
     /**

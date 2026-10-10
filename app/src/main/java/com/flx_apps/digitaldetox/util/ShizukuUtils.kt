@@ -22,44 +22,47 @@ object ShizukuUtils {
     const val SHIZUKU_MANAGER_PACKAGE_NAME = "moe.shizuku.manager"
 
     /**
-     * Checks if the Shizuku app is installed (regardless of whether its service is running).
+     * A valid Android package name and nothing else. Every caller that interpolates a package name
+     * into a shell command runs it through here first.
      */
-    fun isShizukuInstalled(): Boolean {
-        return try {
-            val packageManager = DetoxDroidApplication.appContext.packageManager
-            packageManager.getPackageInfo(SHIZUKU_PACKAGE_NAME, 0)
-            true
-        } catch (_: PackageManager.NameNotFoundException) {
-            // Also try the manager package
-            try {
-                val packageManager = DetoxDroidApplication.appContext.packageManager
-                packageManager.getPackageInfo(SHIZUKU_MANAGER_PACKAGE_NAME, 0)
-                true
-            } catch (_: PackageManager.NameNotFoundException) {
-                false
-            }
-        } catch (_: Exception) {
-            false
+    private val PACKAGE_NAME_REGEX =
+        Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+    /** @see PACKAGE_NAME_REGEX */
+    fun isSafePackageName(packageName: String) = PACKAGE_NAME_REGEX.matches(packageName)
+
+    /**
+     * Whether a Shizuku app is installed, whether or not its server is running.
+     *
+     * Shizuku is also distributed under other package names (forks, and builds that rename
+     * themselves so banking apps do not find them), so the package lookup is only one half: a
+     * server that answers is proof of an install under whatever name. The lookup still matters
+     * for the other half, an installed Shizuku whose server is not running, which cannot be told
+     * apart from no Shizuku at all for a renamed one.
+     */
+    fun isShizukuInstalled(): Boolean = isShizukuServerRunning() || runCatching {
+        val packageManager = DetoxDroidApplication.appContext.packageManager
+        listOf(SHIZUKU_PACKAGE_NAME, SHIZUKU_MANAGER_PACKAGE_NAME).any { packageName ->
+            runCatching { packageManager.getPackageInfo(packageName, 0) }.isSuccess
         }
+    }.getOrDefault(false)
+
+    /**
+     * Whether a Shizuku server is running and reachable. The binder arrives through this app's own
+     * provider, so it does not depend on the name the Shizuku app is installed under.
+     */
+    private fun isShizukuServerRunning(): Boolean = try {
+        Shizuku.pingBinder()
+    } catch (e: Exception) {
+        Timber.w("Shizuku binder not available: ${e.message}")
+        false
     }
 
     /**
-     * Checks if Shizuku is available and permission is granted.
-     * @return true if Shizuku can be used to execute commands
+     * Checks if Shizuku is running and can be talked to (permission not considered).
+     * @return true if Shizuku can be used to execute commands once permission is granted
      */
-    fun isShizukuAvailable(): Boolean {
-        val isInstalled = isShizukuInstalled()
-        Timber.d("Shizuku installed: $isInstalled")
-        if (isInstalled) {
-            return try {
-                Shizuku.pingBinder()
-            } catch (e: Exception) {
-                Timber.w("Shizuku binder not available: ${e.message}")
-                false
-            }
-        }
-        return false
-    }
+    fun isShizukuAvailable(): Boolean = isShizukuServerRunning()
 
     /**
      * Checks if Shizuku service is running but permission is not granted.

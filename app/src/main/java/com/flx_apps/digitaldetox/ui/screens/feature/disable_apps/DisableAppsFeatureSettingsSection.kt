@@ -51,11 +51,11 @@ fun DisableAppsFeatureSettingsSection() {
         WaitBeforeOpeningTile()
         OpenScheduleTile()
     }
-    // deactivating needs a device admin grant from a computer, so blocking is what nearly everyone
-    // keeps
+    // blocking is the only mode that needs nothing a phone cannot give, so it is what nearly
+    // everyone keeps
     AdvancedSettings(
         summary = stringResource(id = R.string.feature_disableApps_operationMode),
-        initiallyExpanded = DisableAppsFeature.operationMode == DisableAppsMode.DEACTIVATE
+        initiallyExpanded = DisableAppsFeature.operationMode != DisableAppsMode.BLOCK
     ) {
         OperationModeTile()
     }
@@ -81,7 +81,7 @@ fun WaitBeforeOpeningTile(
     val appsCanOpen = viewModel.allowedDailyTime.collectAsState().value != 0L
     val label = { seconds: Int ->
         if (seconds == 0) {
-            context.getString(R.string.feature_disableApps_waitBeforeOpening_off)
+            context.getString(R.string.state_off)
         } else {
             context.getString(R.string.duration_seconds_short, seconds)
         }
@@ -153,16 +153,16 @@ fun AllowedDailyTimeTile(
             Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
                 Text(
                     if (hasDailyLimit) {
-                        stringResource(id = R.string.time_minutes, allowedDailyScreenTimeInMinutes)
+                        stringResource(id = R.string.duration_minutes, allowedDailyScreenTimeInMinutes)
                     } else {
                         stringResource(id = R.string.feature_disableApps_allowedDailyTime_noLimit)
                     }
                 )
                 Text(
                     modifier = Modifier.padding(top = 8.dp), text = stringResource(
-                        id = R.string.time_minutes, usedUpScreenTime
+                        id = R.string.duration_minutes, usedUpScreenTime
                     ) + "\n" + stringResource(
-                        id = R.string.time_minutes_used
+                        id = R.string.duration_minutes_used
                     ), style = MaterialTheme.typography.labelVerySmall, textAlign = TextAlign.Center
                 )
             }
@@ -191,6 +191,7 @@ fun OperationModeTile(
                 Text(text = stringResource(id = R.string.feature_disableApps_operationMode_description))
                 val options = mapOf(
                     R.string.feature_disableApps_operationMode_block to DisableAppsMode.BLOCK,
+                    R.string.feature_disableApps_operationMode_suspend to DisableAppsMode.SUSPEND,
                     R.string.feature_disableApps_operationMode_deactivate to DisableAppsMode.DEACTIVATE,
                 )
                 val selectedOption =
@@ -206,27 +207,34 @@ fun OperationModeTile(
                         val selectedMode = it as DisableAppsMode
                         val modeSuccessfullyChanged =
                             disableAppsFeatureSettingsViewModel.changeOperationMode(selectedMode)
-                        if (!modeSuccessfullyChanged && selectedMode == DisableAppsMode.DEACTIVATE) {
-                            // we could not successfully change the operation mode to DEACTIVATE,
-                            // so we show a snackbar that informs the user that they need to grant
-                            // the device admin permission
-                            featureViewModel.showSnackbar(
-                                message = context.getString(R.string.action_requestPermissions),
-                                duration = SnackbarDuration.Short,
-                                actionLabel = context.getString(R.string.action_go),
-                                onResult = { snackbarResult ->
-                                    if (snackbarResult == SnackbarResult.ActionPerformed) {
-                                        navViewModel.openRoute(
-                                            NavigationRoutes.PermissionsRequired(
-                                                GrantPermissionsCommand(
-                                                    command = context.getString(R.string.rootCommand_grantDeviceAdminPermission),
-                                                    supportsShizuku = false
-                                                ),
-                                            )
-                                        )
-                                    }
-                                })
+                        if (modeSuccessfullyChanged) return@OptionsRow
+                        // the mode is not available yet, so point at what it is waiting for
+                        val route = when (selectedMode) {
+                            DisableAppsMode.DEACTIVATE -> NavigationRoutes.PermissionsRequired(
+                                GrantPermissionsCommand(
+                                    command = context.getString(R.string.rootCommand_grantDeviceAdminPermission),
+                                    supportsShizuku = false
+                                ),
+                            )
+
+                            DisableAppsMode.SUSPEND -> NavigationRoutes.ShizukuSetup
+                            DisableAppsMode.BLOCK -> return@OptionsRow
                         }
+                        featureViewModel.showSnackbar(
+                            message = context.getString(
+                                if (selectedMode == DisableAppsMode.SUSPEND) {
+                                    R.string.feature_disableApps_operationMode_suspend_needsShizuku
+                                } else {
+                                    R.string.action_requestPermissions
+                                }
+                            ),
+                            duration = SnackbarDuration.Short,
+                            actionLabel = context.getString(R.string.action_go),
+                            onResult = { snackbarResult ->
+                                if (snackbarResult == SnackbarResult.ActionPerformed) {
+                                    navViewModel.openRoute(route)
+                                }
+                            })
                     },
                 )
             }

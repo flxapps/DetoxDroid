@@ -6,6 +6,8 @@ import com.flx_apps.digitaldetox.data.DailyDeviceStats
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
+import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsage
+import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -67,8 +69,22 @@ class CountersOnlySnapshotTest {
         override suspend fun deleteOlderThan(cutoff: LocalDate) = 0
     }
 
+    private class FakeSelfMeasuredDao : SelfMeasuredAppUsageDao {
+        override suspend fun getRange(start: LocalDate, end: LocalDate) = emptyList<SelfMeasuredAppUsage>()
+        override suspend fun getForDate(date: LocalDate) = emptyList<SelfMeasuredAppUsage>()
+        override suspend fun getDayCountInRange(start: LocalDate, end: LocalDate) = 0
+        override suspend fun getTotalTimeInRange(start: LocalDate, end: LocalDate): Long? = null
+        override suspend fun getEarliestDate(): LocalDate? = null
+        override suspend fun getForPackageInRange(
+            packageName: String, start: LocalDate, end: LocalDate
+        ) = emptyList<SelfMeasuredAppUsage>()
+        override suspend fun upsertAll(usages: List<SelfMeasuredAppUsage>) = Unit
+        override suspend fun deleteOlderThan(cutoff: LocalDate) = 0
+    }
+
     private val dao = FakeAppUsageDao()
-    private val repository = UsageStatsRepository(dao, FakeGrayscaleDao(), FakeDeviceStatsDao())
+    private val repository =
+        UsageStatsRepository(dao, FakeGrayscaleDao(), FakeDeviceStatsDao(), FakeSelfMeasuredDao())
     private val today: LocalDate = LocalDate.now()
 
     private fun row(

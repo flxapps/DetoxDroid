@@ -2,8 +2,10 @@ package com.flx_apps.digitaldetox.features
 
 import android.content.ContentResolver
 import android.content.Context
+import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ import com.flx_apps.digitaldetox.system_integration.ScreenFilterSpec
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.util.RecentEvents
 import timber.log.Timber
 
 const val DISPLAY_DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled"
@@ -63,6 +66,9 @@ const val MinScreenFilterIntensity = 10
 
 /** Blur radius in dp at full intensity: a feed reduced to shapes, headlines still guessable. */
 const val MaxScreenFilterBlurDp = 3.5f
+
+/** The most blur an app gets that is gray only because of a brake: a haze, every word readable. */
+const val SoftenedBlurDp = 1f
 
 val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
 
@@ -225,6 +231,13 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
+     * Under a brake every app is filtered, the home screen included, whatever the app list says.
+     * The list itself is left alone, so the end of the brake returns to the selection as it was.
+     */
+    override fun appliesTo(packageName: String): Boolean =
+        EmergencyBrakeFeature.covers(this) || super<SupportsAppExceptionsFeature>.appliesTo(packageName)
+
+    /**
      * The allowed daily color screen time in milliseconds. Once this limit is reached, the grayscale
      * filter will be turned on and will stay on until the next day.
      */
@@ -241,6 +254,27 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         (currentUsedUpScreenTime() - allowedDailyColorScreenTime).coerceAtLeast(0L)
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+    /**
+     * Watches the system color filter while the feature runs. The filter is an ordinary system
+     * setting with a switch of its own (Settings, Accessibility, Color correction, which the
+     * settings search leads straight to), and switching it off there is otherwise only noticed
+     * when the next app that is not meant to be gray has come and gone.
+     */
+    private val systemFilterObserver by lazy {
+        object : ContentObserver(mainHandler) {
+            override fun onChange(selfChange: Boolean) {
+                kotlin.runCatching { reassertSystemFilter(DetoxDroidApplication.appContext) }
+                    .onFailure { Timber.w(it, "Could not check the system color filter") }
+            }
+        }
+    }
+
+    /**
+     * How often the filter was put back lately. Something that keeps switching it off faster than
+     * a person could is not a person, and is not worth a tug of war over a system setting.
+     */
+    private val recentReassertions = RecentEvents()
 
     /**
      * Fires when the color-screen-time allowance is expected to run out mid-session. Without it,
@@ -279,6 +313,15 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         reclaimStrandedFilters(context)
         restoreSystemFilters(context)
         areEffectsActive = false
+        context.applicationContext.contentResolver.let {
+            it.unregisterContentObserver(systemFilterObserver)
+            it.registerContentObserver(
+                Settings.Secure.getUriFor(DISPLAY_DALTONIZER_ENABLED), false, systemFilterObserver
+            )
+            it.registerContentObserver(
+                Settings.Secure.getUriFor(DISPLAY_DALTONIZER), false, systemFilterObserver
+            )
+        }
         val accessibilityEvent = AccessibilityEventUtil.createEvent()
         // Evaluate against the actual foreground app when the service knows it: after a resume
         // (or feature toggle) no new window event arrives while the user stays inside the current
@@ -295,6 +338,8 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     override fun onPause(context: Context) {
         mainHandler.removeCallbacks(allowanceExhaustedChecker)
+        context.applicationContext.contentResolver.unregisterContentObserver(systemFilterObserver)
+        recentReassertions.clear()
         setEffectsActive(context, false)
     }
 
@@ -312,18 +357,26 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         // the effects should be on while an app covered by the exception list config is in the
         // foreground (and the daily color allowance, if any, is used up)
+        val braking = EmergencyBrakeFeature.covers(this)
         val shouldApplyEffects = packageName != OwnPackage && appliesTo(packageName)
         // Every report of grayscale applying to the wrong app comes down to one of three things:
-        // which package the service decided was in front, whether the exception list covers it,
-        // and what the filter state already was. None of them is visible from the outside, and the
-        // answer that arrives with a bug report is a screen that "sometimes" stays gray.
+        // which package the service decided was in front, whether the exception list covers it
+        // (or a brake overrides it), and what the filter state already was. None of them is
+        // visible from the outside, and the answer that arrives with a bug report is a screen
+        // that "sometimes" stays gray.
         Timber.d(
-            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType"
+            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType braking=$braking"
         )
 
         if (!shouldApplyEffects) {
             // the effects should not be turned on, so we increase the used up screen time
             eventuallyIncreaseUsedUpScreenTime()
+        } else if (braking) {
+            // A brake neither grants the color allowance nor spends it: it covers apps the
+            // allowance was never meant for, and an hour of gray maps would otherwise use up
+            // the minutes of color the listed apps have left for the day.
+            eventuallyIncreaseUsedUpScreenTime()
+            mainHandler.removeCallbacks(allowanceExhaustedChecker)
         } else {
             eventuallyStartTracking()
             // currentUsedUpScreenTime() includes the running tracking session, so the allowance
@@ -339,12 +392,60 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             }
         }
 
+        // an app that is only gray because of the brake gets the light version of the blur
+        val softened = braking && !super<SupportsAppExceptionsFeature>.appliesTo(packageName)
         if (shouldApplyEffects != areEffectsActive) {
             // only touch the system settings and the window manager if the state should change
+            isScreenFilterSoftened = softened
             setEffectsActive(context, shouldApplyEffects)
             areEffectsActive = shouldApplyEffects
+        } else {
+            if (areEffectsActive && softened != isScreenFilterSoftened) {
+                // gray stays, only the filter changes strength between a listed app and the rest
+                isScreenFilterSoftened = softened
+                ScreenFilterOverlay.apply(context, currentScreenFilterSpec(context))
+            }
+            // nothing else to change as far as we know, which is the case the observer is there
+            // for; this catches what it missed
+            reassertSystemFilter(context)
         }
     }
+
+    /**
+     * Whether the screen filter is on an app the brake alone made gray. Such an app is one the
+     * user needs (maps, the phone, the bank), so it gets the wash but only a haze of the blur:
+     * [SoftenedBlurDp] keeps text readable while the screen still looks like it is under a brake.
+     * The listed apps keep the blur as set.
+     */
+    internal var isScreenFilterSoftened = false
+        private set
+
+    /**
+     * Puts the system color filter back to grayscale if it was changed from outside while the
+     * feature holds it there. What was saved of the user's own color correction is left alone: it
+     * was read before the filter went on, and the state found here is not one to return to.
+     * @return whether the filter had to be put back
+     */
+    fun reassertSystemFilter(context: Context): Boolean {
+        if (!areEffectsActive || !isDaltonizerApplied || !systemGrayscale) return false
+        if (!writeSecureSettingsPermission.hasPermissions(context)) return false
+        val contentResolver = context.contentResolver
+        val enabled = getSecureInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
+        val mode = getSecureInt(contentResolver, DISPLAY_DALTONIZER, 0)
+        if (enabled == 1 && mode == 0) return false
+        val now = SystemClock.elapsedRealtime()
+        if (recentReassertions.record(now, ReassertionWindowMs) > MaxReassertionsPerWindow) {
+            Timber.w("grayscale: the system filter keeps being changed, leaving it alone for now")
+            return false
+        }
+        Timber.i("grayscale: system filter was changed from outside (enabled=$enabled mode=$mode), putting it back")
+        Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER, 0)
+        Settings.Secure.putInt(contentResolver, DISPLAY_DALTONIZER_ENABLED, 1)
+        return true
+    }
+
+    private const val ReassertionWindowMs = 10_000L
+    private const val MaxReassertionsPerWindow = 5
 
     /**
      * When the screen is turned off, the used up screen time is increased by the time since the
@@ -529,7 +630,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // linear, now that the ceiling is low enough for the top of the slider to still be
             // worth reaching. Legibility drops off within the first few pixels of radius, so the
             // whole usable range sits between roughly one and ten of them.
-            blurDp = if (blur) intensity * MaxScreenFilterBlurDp else 0f
+            blurDp = when {
+                !blur -> 0f
+                isScreenFilterSoftened -> minOf(intensity * MaxScreenFilterBlurDp, SoftenedBlurDp)
+                else -> intensity * MaxScreenFilterBlurDp
+            }
         )
     }
 

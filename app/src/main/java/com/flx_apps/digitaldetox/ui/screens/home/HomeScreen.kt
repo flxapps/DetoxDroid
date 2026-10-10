@@ -65,12 +65,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
-import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
-import com.flx_apps.digitaldetox.system_integration.screenTimeMs
+import com.flx_apps.digitaldetox.system_integration.TodayScreenTime
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
@@ -143,6 +143,15 @@ private fun HomeScreenSnackbarContents(
             )
             homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
         })
+    } else if (snackbarState == HomeScreenSnackbarState.BrakeRunning) {
+        LaunchedEffect(key1 = snackbarState, block = {
+            snackbarHostState.showSnackbar(
+                message = context.getString(
+                    R.string.feature_brake_stop_locked, EmergencyBrakeFeature.endsAtText()
+                ),
+            )
+            homeViewModel.setSnackbarState(HomeScreenSnackbarState.Hidden)
+        })
     }
 }
 
@@ -155,6 +164,15 @@ private fun HomeScreenSnackbarContents(
 private fun AppBar(
     detoxDroidState: DetoxDroidState, navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
+    // observed so the status line follows a brake being pulled, extended or running out; the end
+    // is read here as well, since the title lambda below is not recomposed for the token alone
+    val brakeStateToken = EmergencyBrakeFeature.stateToken.collectAsState().value
+    val brakeEndsAt = remember(brakeStateToken, detoxDroidState) {
+        if (detoxDroidState == DetoxDroidState.Active && EmergencyBrakeFeature.isBraking()) {
+            EmergencyBrakeFeature.endsAtText()
+        } else null
+    }
+    val braking = brakeEndsAt != null
     TopAppBar(
         title = {
             Column {
@@ -163,7 +181,7 @@ private fun AppBar(
                     StatusIndicator(
                         indicatorColor = colorResource(
                             id = when (detoxDroidState) {
-                                DetoxDroidState.Active -> R.color.green
+                                DetoxDroidState.Active -> if (braking) R.color.blue else R.color.green
                                 DetoxDroidState.Inactive -> R.color.gray
                                 DetoxDroidState.Paused -> R.color.yellow
                             }
@@ -172,10 +190,17 @@ private fun AppBar(
                     Text(
                         text = stringResource(
                             id = when (detoxDroidState) {
-                                DetoxDroidState.Active -> R.string.home_state_active
+                                DetoxDroidState.Active -> if (braking) {
+                                    R.string.home_state_braking
+                                } else {
+                                    R.string.home_state_active
+                                }
+
                                 DetoxDroidState.Inactive -> R.string.home_state_inactive
                                 DetoxDroidState.Paused -> R.string.home_state_paused
-                            }, if (detoxDroidState == DetoxDroidState.Paused) {
+                            }, if (brakeEndsAt != null) {
+                                brakeEndsAt
+                            } else if (detoxDroidState == DetoxDroidState.Paused) {
                                 // show the actual end of the running pause, not "now + duration"
                                 Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
                                     .atZone(ZoneId.systemDefault()).toLocalTime().format(
@@ -431,11 +456,13 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val context = LocalContext.current
     // keyed on the lifecycle state: refresh when the user returns to the screen, but never
     // re-query the (blocking) UsageStatsManager on ordinary recompositions such as slice taps
-    val stats = remember(lifecycleState) { UsageStatsProvider.getUpdatedUsageStatsToday() }
+    val stats = remember(lifecycleState) {
+        TodayScreenTime.byPackage(context).entries.sortedByDescending { it.value }
+    }
     val selectedIndex = remember { mutableStateOf(-1) }
 
-    val chartStats = stats.values.sortedByDescending { it.screenTimeMs }.take(5)
-    val screenTime = stats.values.sumOf { it.screenTimeMs }
+    val chartStats = stats.take(5)
+    val screenTime = stats.sumOf { it.value }
     val colors = listOf(
         colorResource(id = R.color.pink),
         colorResource(id = R.color.orange),
@@ -445,17 +472,16 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.purple),
     )
     val packageManager = LocalContext.current.packageManager
-    val otherLabel = stringResource(id = R.string.usageStats_other)
+    val otherLabel = stringResource(id = R.string.appCategories_other)
     val otherTime =
-        (screenTime - chartStats.sumOf { it.screenTimeMs }.toFloat()).coerceAtLeast(1f)
+        (screenTime - chartStats.sumOf { it.value }).toFloat().coerceAtLeast(1f)
 
     // apps can disappear from PackageManager while still being present in today's usage stats
-    val slices = chartStats.map { appStats ->
+    val slices = chartStats.map { (packageName, timeMs) ->
         val label = runCatching {
-            packageManager.getApplicationInfo(appStats.packageName, 0)
-                .loadLabel(packageManager).toString()
-        }.getOrDefault(appStats.packageName)
-        label to appStats.screenTimeMs.toFloat()
+            packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
+        }.getOrDefault(packageName)
+        label to timeMs.toFloat()
     }.plus(otherLabel to otherTime)
 
     val totalValue = slices.fold(0f) { acc, pair -> acc + pair.second }.coerceAtLeast(1f)
@@ -540,9 +566,8 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 if (stats.isNotEmpty()) {
                     val idx = selectedIndex.value
                     if (idx >= 0 && idx < chartStats.count()) {
-                        val selectedStat = chartStats[idx]
                         Text(
-                            text = selectedStat.screenTimeMs.milliseconds.toHrMinString(context),
+                            text = chartStats[idx].value.milliseconds.toHrMinString(context),
                             style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center
                         )
@@ -593,7 +618,7 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         }
                         if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
                             Text(
-                                text = stringResource(id = R.string.permissions_restrictedSettings_hint),
+                                text = stringResource(id = R.string.usageStats_usageAccess_restrictedSettingsHint),
                                 style = MaterialTheme.typography.bodySmall,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 8.dp)

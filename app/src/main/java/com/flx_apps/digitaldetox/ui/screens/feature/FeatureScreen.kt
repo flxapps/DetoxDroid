@@ -31,6 +31,7 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
@@ -60,9 +61,11 @@ fun FeatureScreen(
     val feature = featureViewModel.feature
     val snackbarHostState = FeatureScreenSnackbarStateProvider.snackbarState
     val lockStateToken by CommitmentPasswordFeature.stateToken.collectAsState()
-    val isFeatureSettingsLocked = remember(lockStateToken, featureId) {
+    val brakeStateToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    val isFeatureSettingsLocked = remember(lockStateToken, brakeStateToken, featureId) {
         featureId != CommitmentPasswordFeatureId &&
-                CommitmentPasswordFeature.isFeatureLocked(featureId)
+                (CommitmentPasswordFeature.isFeatureLocked(featureId) ||
+                        EmergencyBrakeFeature.locksSettings(featureId))
     }
     LaunchedEffect(lockStateToken, featureId) {
         // Commitment Password can change its activation state from dialogs outside the switch toggle.
@@ -86,7 +89,7 @@ fun FeatureScreen(
                     )
                 }
             }, actions = {
-                FeatureActivationSwitch(isLockedByCommitmentPassword = isFeatureSettingsLocked)
+                FeatureActivationSwitch(isSettingsLocked = isFeatureSettingsLocked)
             }, scrollBehavior = scrollBehavior)
         }
     ) {
@@ -114,7 +117,7 @@ fun FeatureScreen(
 fun FeatureActivationSwitch(
     featureViewModel: FeatureViewModel = viewModel(),
     navViewModel: NavViewModel = NavViewModel.navViewModel(),
-    isLockedByCommitmentPassword: Boolean = false
+    isSettingsLocked: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -164,7 +167,7 @@ fun FeatureActivationSwitch(
         )
     } else {
         Switch(modifier = Modifier.padding(end = 8.dp),
-            enabled = !isLockedByCommitmentPassword,
+            enabled = !isSettingsLocked,
             checked = featureViewModel.featureIsActive.collectAsState().value,
             onCheckedChange = {
                 if (featureViewModel.toggleFeatureActive() == null) {

@@ -12,6 +12,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
@@ -95,6 +96,7 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         ServiceReliabilityScheduler.schedule(this)
         restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)
+        AppearanceSettings.preload()
         // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
         // the premium entitlement here.
         PremiumSupport.initialize(this)

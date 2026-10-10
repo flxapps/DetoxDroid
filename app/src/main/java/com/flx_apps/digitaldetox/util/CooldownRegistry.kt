@@ -69,6 +69,14 @@ class CooldownRegistry(private val nowMs: () -> Long = { System.currentTimeMilli
         return endTimes[Key(packageName, null)]
     }
 
+    /**
+     * Cuts every cooldown that would run past [latestEndMs] down to end there.
+     */
+    @Synchronized
+    fun endNoLaterThan(latestEndMs: Long) {
+        endTimes.replaceAll { _, endsAtMs -> minOf(endsAtMs, latestEndMs) }
+    }
+
     private fun prune() {
         val now = nowMs()
         endTimes.values.removeAll { it <= now }

@@ -24,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeatureId
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import kotlinx.coroutines.Dispatchers
@@ -59,10 +61,26 @@ private fun rememberLockGateState(featureId: String?): LockGateState {
 }
 
 /**
- * Wraps content that can be locked by the Commitment Password feature.
+ * When the running brake that locks the settings of [featureId] (or any settings at all, without
+ * one) ends, as text, or null while no brake locks them. Read in one go whenever the brake
+ * changes, so the banner below cannot show an end the brake no longer has.
+ */
+@Composable
+private fun rememberBrakeLockEnd(featureId: String?): String? {
+    val stateToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    return remember(stateToken, featureId) {
+        val locked = featureId?.let { EmergencyBrakeFeature.locksSettings(it) }
+            ?: EmergencyBrakeFeature.isBraking()
+        if (locked) EmergencyBrakeFeature.endsAtText() else null
+    }
+}
+
+/**
+ * Wraps content that can be locked by the Commitment Password feature, or by a running brake.
  *
  * When the password is active and the given feature is locked, provides `LocalSettingsLocked = true`
  * to child composables. A banner is shown above the content with an unlock / lock-again button.
+ * A brake locks without a way to unlock: its banner says until when.
  *
  * @param featureId The feature whose lock state to check. Pass `null` to check global activation.
  * @param showBanner Whether to show the lock/unlock banner.
@@ -75,8 +93,16 @@ fun PasswordLockGate(
     content: @Composable () -> Unit
 ) {
     val state = rememberLockGateState(featureId)
+    val brakeEndsAt = rememberBrakeLockEnd(featureId)
 
-    if (state.isPasswordActive && state.isPasswordSet && state.isFeatureProtected) {
+    if (brakeEndsAt != null) {
+        Column {
+            if (showBanner) BrakeLockBanner(featureId, brakeEndsAt)
+            CompositionLocalProvider(LocalSettingsLocked provides true) {
+                content()
+            }
+        }
+    } else if (state.isPasswordActive && state.isPasswordSet && state.isFeatureProtected) {
         Column {
             if (showBanner) {
                 SettingsLockBanner(isLocked = state.isFeatureLocked)
@@ -99,8 +125,26 @@ fun PasswordLockGate(
 @Composable
 fun SettingsLockBannerIfNeeded(featureId: String? = null) {
     val state = rememberLockGateState(featureId)
-    if (state.isPasswordActive && state.isPasswordSet && state.isFeatureProtected) {
+    val brakeEndsAt = rememberBrakeLockEnd(featureId)
+    if (brakeEndsAt != null) {
+        BrakeLockBanner(featureId, brakeEndsAt)
+    } else if (state.isPasswordActive && state.isPasswordSet && state.isFeatureProtected) {
         SettingsLockBanner(isLocked = state.isFeatureLocked)
+    }
+}
+
+/**
+ * Says that a brake keeps the settings below locked, and until when. The brake's own screen shows
+ * that already.
+ */
+@Composable
+private fun BrakeLockBanner(featureId: String?, endsAt: String) {
+    if (featureId == EmergencyBrakeFeatureId) return
+    IconCard(icon = Icons.Default.Lock) {
+        Text(
+            text = stringResource(R.string.feature_brake_status_on, endsAt),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

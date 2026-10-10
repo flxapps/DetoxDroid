@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import java.time.LocalDateTime
 
 /**
@@ -85,10 +86,12 @@ abstract class Feature {
 
     /**
      * Returns whether the feature is currently active (i.e. whether it is activated and whether
-     * there is a schedule rule that is active).
+     * there is a schedule rule that is active). A running brake opens the schedule of the
+     * features it covers.
      */
     fun isActive(atDateTime: LocalDateTime = LocalDateTime.now()): Boolean {
-        return isActivated && (this !is SupportsScheduleFeature || isScheduled(atDateTime))
+        return isActivated && (this !is SupportsScheduleFeature || isScheduled(atDateTime) ||
+                EmergencyBrakeFeature.covers(this))
     }
 }
 

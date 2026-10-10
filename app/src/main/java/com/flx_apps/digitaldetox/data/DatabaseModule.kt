@@ -18,7 +18,9 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context, AppDatabase::class.java, "detoxdroid-stats"
-        ).addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3).build()
+        ).addMigrations(
+            AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4
+        ).build()
     }
 
     @Provides
@@ -34,5 +36,10 @@ object DatabaseModule {
     @Provides
     fun provideDailyDeviceStatsDao(database: AppDatabase): DailyDeviceStatsDao {
         return database.dailyDeviceStatsDao()
+    }
+
+    @Provides
+    fun provideSelfMeasuredAppUsageDao(database: AppDatabase): SelfMeasuredAppUsageDao {
+        return database.selfMeasuredAppUsageDao()
     }
 }

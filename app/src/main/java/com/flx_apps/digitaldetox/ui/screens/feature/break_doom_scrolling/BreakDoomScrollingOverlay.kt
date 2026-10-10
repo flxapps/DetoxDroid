@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.OverlayContent
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.widgets.DrainingBar
@@ -22,6 +23,7 @@ import com.flx_apps.digitaldetox.ui.widgets.InterventionPrimaryButton
 import com.flx_apps.digitaldetox.ui.widgets.InterventionScreen
 import com.flx_apps.digitaldetox.ui.widgets.InterventionSecondaryButton
 import com.flx_apps.digitaldetox.util.ForceStopUtil
+import com.flx_apps.digitaldetox.util.formatDurationMsCompact
 
 /**
  * The variants of the doom-scrolling break screen.
@@ -86,11 +88,22 @@ fun BreakDoomScrollingOverlay() {
     BreakDoomScrollingOverlayContent(
         mode = overlayService?.mode ?: BreakScreenMode.WARNING,
         contextText = overlayService?.contextText,
+        canFinishFirst = !EmergencyBrakeFeature.covers(BreakDoomScrollingFeature),
+        brakeOffer = if (EmergencyBrakeFeature.isActivated && !EmergencyBrakeFeature.isBraking()) {
+            formatDurationMsCompact(context, EmergencyBrakeFeature.lastDuration)
+        } else null,
         onExitApp = {
             overlayService?.let { service ->
                 service.closeOverlay()
                 // best-effort: kill the doom-scrolling app so it also disappears from recents
                 // (works when Shizuku is set up; otherwise degrades gracefully, never crashes)
+                ForceStopUtil.tryForceStop(service, service.runningAppPackageName)
+            }
+        },
+        onPullBrake = {
+            overlayService?.let { service ->
+                BreakDoomScrollingFeature.pullBrake(service, service.runningAppPackageName)
+                service.closeOverlay()
                 ForceStopUtil.tryForceStop(service, service.runningAppPackageName)
             }
         },
@@ -106,8 +119,13 @@ fun BreakDoomScrollingOverlay() {
 /**
  * The break screen that is shown over a doom-scrolling app, in one of three variants
  * (see [BreakScreenMode]). All variants offer an immediate exit; [BreakScreenMode.WARNING]
- * additionally offers to finish the current item first, and [BreakScreenMode.GUIDE_OUT] counts
- * down and exits by itself.
+ * additionally offers to finish the current item first unless a brake is running, and
+ * [BreakScreenMode.GUIDE_OUT] counts down and exits by itself.
+ *
+ * Being caught is the moment the brake is for, so the screen offers it right there, as the last
+ * of the choices: it is the one that takes the longest to get out of.
+ * @param brakeOffer how long the brake would be pulled for, or null when it is not on offer:
+ * switched off, or already on
  */
 @Composable
 fun BreakDoomScrollingOverlayContent(
@@ -115,6 +133,9 @@ fun BreakDoomScrollingOverlayContent(
     contextText: String?,
     onExitApp: () -> Unit,
     onFinishFirst: () -> Unit,
+    canFinishFirst: Boolean = true,
+    brakeOffer: String? = null,
+    onPullBrake: () -> Unit = {},
 ) {
     InterventionScreen(
         icon = when (mode) {
@@ -148,10 +169,18 @@ fun BreakDoomScrollingOverlayContent(
             text = stringResource(id = R.string.feature_doomScrolling_warning_exit),
             onClick = onExitApp
         )
-        if (mode == BreakScreenMode.WARNING) {
+        if (mode == BreakScreenMode.WARNING && canFinishFirst) {
             InterventionSecondaryButton(
                 text = stringResource(id = R.string.feature_doomScrolling_warning_finishFirst),
                 onClick = onFinishFirst
+            )
+        }
+        if (mode != BreakScreenMode.GUIDE_OUT && brakeOffer != null) {
+            InterventionSecondaryButton(
+                text = stringResource(
+                    id = R.string.feature_doomScrolling_warning_pullBrake, brakeOffer
+                ),
+                onClick = onPullBrake
             )
         }
     }
@@ -165,6 +194,7 @@ private fun BreakDoomScrollingWarningPreview() {
         contextText = "You've flicked through about 42 screens in the last 3 minutes.",
         onExitApp = {},
         onFinishFirst = {},
+        brakeOffer = "30 min",
     )
 }
 

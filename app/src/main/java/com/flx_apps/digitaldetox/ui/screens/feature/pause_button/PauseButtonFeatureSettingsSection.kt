@@ -3,7 +3,6 @@ package com.flx_apps.digitaldetox.ui.screens.feature.pause_button
 import android.os.Build
 import android.view.KeyEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.annotation.RequiresApi
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AppShortcut
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.Tune
@@ -47,6 +45,7 @@ import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
+import com.flx_apps.digitaldetox.ui.screens.feature.AddQuickSettingsTile
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.KeyEventUtil
 import com.flx_apps.digitaldetox.util.NotificationHelper
@@ -73,7 +72,9 @@ fun PauseButtonFeatureSettingsSection(
     SectionHeader(title = stringResource(id = R.string.feature_pause_ways))
     SettingsGroup {
         // before Android 13 an app cannot offer its tile, it can only be dragged in by hand
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PauseFromQuickSettingsTile()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AddQuickSettingsTile(
+            subtitleRes = R.string.feature_pause_fromQuickSettings_description,
+            onClick = { viewModel.requestAddQuickSettingsTile() })
         PauseFromNotificationTile()
         PauseFromAssistantTile()
         PauseFromHardwareButtonTile()
@@ -84,20 +85,6 @@ fun PauseButtonFeatureSettingsSection(
     ) {
         AffectedFeaturesTile()
     }
-}
-
-/**
- * Offers the pause tile to the Quick Settings, so nobody has to find it in the tile editor.
- * @see PauseButtonFeatureSettingsViewModel.requestAddQuickSettingsTile
- */
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@Composable
-private fun PauseFromQuickSettingsTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
-    SimpleListTile(
-        leadingIcon = Icons.Default.GridView,
-        titleText = stringResource(id = R.string.feature_pause_fromQuickSettings),
-        subtitleText = stringResource(id = R.string.feature_pause_fromQuickSettings_description),
-        onClick = { viewModel.requestAddQuickSettingsTile() })
 }
 
 /**
@@ -224,7 +211,7 @@ private fun PauseDurationTile(viewModel: PauseButtonFeatureSettingsViewModel = v
         trailing = {
             Text(
                 stringResource(
-                    id = R.string.time_minutes, viewModel.pauseDuration.collectAsState().value
+                    id = R.string.duration_minutes, viewModel.pauseDuration.collectAsState().value
                 )
             )
         },
@@ -249,7 +236,7 @@ private fun MinimumTimeBetweenPausesTile(viewModel: PauseButtonFeatureSettingsVi
         trailing = {
             Text(
                 stringResource(
-                    id = R.string.time_minutes,
+                    id = R.string.duration_minutes,
                     viewModel.timeBetweenPausesDuration.collectAsState().value
                 )
             )
@@ -280,7 +267,7 @@ fun PauseDurationDialog(
             viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
         },
         label = {
-            context.getString(R.string.time_minutes, it)
+            context.getString(R.string.duration_minutes, it)
         },
         range = 1..15
     )
@@ -304,7 +291,7 @@ fun TimeBetweenPausesDialog(
             viewModel.setVisibilityOfDialog(PauseButtonFeatureSettingsViewModelDialog.NONE)
         },
         label = {
-            context.getString(R.string.time_minutes, it)
+            context.getString(R.string.duration_minutes, it)
         },
         range = 0..120
     )

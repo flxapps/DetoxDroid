@@ -44,7 +44,7 @@ fun BreakDoomScrollingFeatureSettingsSection(
                 viewModel.setTimeUntilNumberPickerDialogVisible(false)
             },
             label = {
-                context.getString(R.string.time_minutes, it)
+                context.getString(R.string.duration_minutes, it)
             },
             range = 1..60
         )
@@ -52,14 +52,13 @@ fun BreakDoomScrollingFeatureSettingsSection(
 
     SettingsGroup {
         val listType = BreakDoomScrollingFeature.appExceptionListType
-        OpenAppExceptionsTile(subtitleText = stringResource(
-            id = if (listType == AppExceptionListType.NOT_LIST) {
+        OpenAppExceptionsTile(
+            subtitleRes = if (listType == AppExceptionListType.NOT_LIST) {
                 R.string.feature_doomScrolling_exceptions_summary_notList
             } else {
                 R.string.feature_doomScrolling_exceptions_summary_onlyList
-            },
-            BreakDoomScrollingFeature.appExceptions.size
-        ))
+            }
+        )
         OpenScheduleTile()
         SimpleListTile(
             titleText = stringResource(id = R.string.feature_doomScrolling_timeUntilWarning),
@@ -67,7 +66,7 @@ fun BreakDoomScrollingFeatureSettingsSection(
                 id = R.string.feature_doomScrolling_timeUntilWarning_description
             ),
             trailing = {
-                Text(text = stringResource(id = R.string.time_minutes, timeUntilWarning))
+                Text(text = stringResource(id = R.string.duration_minutes, timeUntilWarning))
             },
             onClick = {
                 viewModel.setTimeUntilNumberPickerDialogVisible(true)
@@ -100,7 +99,7 @@ fun CooldownTimeTile(
                 viewModel.setCooldownTimeNumberPickerDialogVisible(false)
             },
             label = {
-                context.getString(R.string.time_minutes, it)
+                context.getString(R.string.duration_minutes, it)
             },
             range = 1..60
         )
@@ -110,7 +109,7 @@ fun CooldownTimeTile(
         titleText = stringResource(id = R.string.feature_doomScrolling_cooldownTime),
         subtitleText = stringResource(id = R.string.feature_doomScrolling_cooldownTime_description),
         trailing = {
-            Text(text = stringResource(id = R.string.time_minutes, cooldownTime))
+            Text(text = stringResource(id = R.string.duration_minutes, cooldownTime))
         },
         onClick = {
             viewModel.setCooldownTimeNumberPickerDialogVisible(true)

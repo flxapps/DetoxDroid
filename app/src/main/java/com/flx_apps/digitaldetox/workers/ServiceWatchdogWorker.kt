@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
@@ -39,6 +40,11 @@ class ServiceWatchdogWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         val shouldRun = AccessibilityServiceController.isEnabledInSettings(appContext)
         val isBound = DetoxDroidAccessibilityService.instance != null
+
+        // A suspended app stays suspended until something lifts it, and the attempt that should
+        // have done so fails silently when Shizuku is not running. This is the retry.
+        runCatching { DisableAppsFeature.releaseSuspendedAppsIfEntitled() }
+            .onFailure { Timber.w(it, "ServiceWatchdogWorker: could not release suspended apps") }
 
         if (!shouldRun) {
             // DetoxDroid is off. Anything it was holding in the system's display settings has to go

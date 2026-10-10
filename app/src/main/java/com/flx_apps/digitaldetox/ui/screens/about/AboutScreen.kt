@@ -16,11 +16,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -31,6 +35,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -55,6 +62,7 @@ import androidx.activity.compose.LocalActivity
 import com.flx_apps.digitaldetox.BuildConfig
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
@@ -63,6 +71,7 @@ import com.flx_apps.digitaldetox.ui.screens.premium.BitcoinAddressDialog
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
+import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.util.DebugLog
@@ -92,13 +101,23 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val onboardingLockedSubtitle = stringResource(id = R.string.about_onboarding_locked_subtitle)
     val keepAliveTitle = stringResource(id = R.string.reliability_keepAlive_title)
     val keepAliveSubtitle = stringResource(id = R.string.reliability_keepAlive_subtitle)
+    val keepAliveLockedSubtitle = stringResource(id = R.string.reliability_keepAlive_locked_subtitle)
+    val brakingSubtitle = stringResource(id = R.string.settings_lockedByBrake_subtitle)
     val settingsSection = stringResource(id = R.string.about_section_settings)
+    val backupSection = stringResource(id = R.string.about_section_backup)
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
     // observed so the tile opens up the moment the passphrase is entered on a feature screen
     val commitmentPasswordToken by CommitmentPasswordFeature.stateToken.collectAsState()
     val onboardingLocked = remember(commitmentPasswordToken) { OnboardingState.isOnboardingLocked }
+    // switching the keep-alive off and swiping DetoxDroid away is a way to stop it, which the
+    // password and the brake both refuse on the home screen, so the switch follows their lock
+    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
+    val keepAliveLocked = remember(commitmentPasswordToken, braking) {
+        braking || CommitmentPasswordFeature.isFeatureLocked(CommitmentPasswordFeature.id)
+    }
     var debugLog by remember { mutableStateOf(DebugLog.isEnabled) }
     val versionTaps = remember(activity) { VersionTapCountdown(activity) }
 
@@ -166,11 +185,17 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
             item {
                 SectionHeader(settingsSection)
                 SettingsGroup {
+                    ThemeTile()
                     SwitchTile(
-                        icon = Icons.Default.Notifications,
+                        icon = if (keepAliveLocked) Icons.Default.Lock else Icons.Default.Notifications,
                         title = keepAliveTitle,
-                        subtitle = keepAliveSubtitle,
+                        subtitle = when {
+                            braking -> brakingSubtitle
+                            keepAliveLocked -> keepAliveLockedSubtitle
+                            else -> keepAliveSubtitle
+                        },
                         checked = keepAlive,
+                        enabled = !keepAliveLocked,
                         onCheckedChange = {
                             keepAlive = it
                             ReliabilitySettings.keepServiceAliveEnabled = it
@@ -186,6 +211,11 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                         enabled = !onboardingLocked,
                         onClick = { navViewModel.openRoute(NavigationRoutes.Onboarding) }
                     )
+                }
+
+                SectionHeader(backupSection)
+                SettingsGroup {
+                    ConfigBackupTiles()
                 }
 
                 SectionHeader(supportSection)
@@ -240,7 +270,7 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     )
                     SwitchTile(
                         icon = Icons.Default.Terminal,
-                        title = stringResource(id = R.string.about_debugLog),
+                        title = stringResource(id = R.string.debugLog_title),
                         subtitle = stringResource(id = R.string.about_debugLog_subtitle),
                         checked = debugLog,
                         onCheckedChange = {
@@ -305,7 +335,7 @@ private class VersionTapCountdown(private val activity: Activity?) {
 }
 
 @Composable
-private fun LinkTile(
+internal fun LinkTile(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
@@ -328,13 +358,61 @@ private fun SwitchTile(
     title: String,
     subtitle: String? = null,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
         leadingContent = { Icon(icon, contentDescription = null) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-        modifier = Modifier.clickable { onCheckedChange(!checked) }
+        trailingContent = {
+            Switch(checked = checked, enabled = enabled, onCheckedChange = onCheckedChange)
+        },
+        modifier = Modifier.clickable(enabled = enabled) { onCheckedChange(!checked) }
+    )
+}
+
+/**
+ * Light, dark, or whatever the system says, as three segments in one row. The choice applies on
+ * the spot, every open screen included, see [AppearanceSettings].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeTile() {
+    val mode by AppearanceSettings.themeMode.collectAsState()
+    val options = listOf(
+        Triple(AppearanceSettings.ThemeMode.SYSTEM, R.string.about_theme_system, Icons.Default.BrightnessAuto),
+        Triple(AppearanceSettings.ThemeMode.LIGHT, R.string.about_theme_light, Icons.Default.LightMode),
+        Triple(AppearanceSettings.ThemeMode.DARK, R.string.about_theme_dark, Icons.Default.DarkMode),
+    )
+    ListItem(
+        headlineContent = { Text(stringResource(id = R.string.about_theme)) },
+        leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
+        supportingContent = {
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                options.forEachIndexed { index, (option, labelRes, icon) ->
+                    SegmentedButton(
+                        selected = option == mode,
+                        onClick = { AppearanceSettings.setThemeMode(option) },
+                        shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                        icon = {
+                            SegmentedButtonDefaults.Icon(active = option == mode) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
+                                )
+                            }
+                        }
+                    ) {
+                        Text(stringResource(id = labelRes), maxLines = 1)
+                    }
+                }
+            }
+        }
     )
 }

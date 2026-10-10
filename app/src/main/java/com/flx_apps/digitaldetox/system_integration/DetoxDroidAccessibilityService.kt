@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
@@ -19,6 +22,7 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
@@ -104,15 +108,29 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         private var exceptionHandlerInstalled = false
     }
 
-    private var lastPackage = ""
+    /**
+     * Decides which app is in front, so that the features downstream all read one answer instead
+     * of interpreting raw window events for themselves.
+     */
+    private val foregroundAppMonitor by lazy { ForegroundAppMonitor(packageName) }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
-     * The package that window events last reported as foreground ("" before the first event).
-     * Features can re-evaluate against it when they (re)start without a fresh window event —
-     * e.g. resuming from a pause while the user is still inside an affected app, where no new
-     * window event will arrive until the next app switch.
+     * Publishes a switch that had to wait out the settle window, unless something has cancelled it
+     * in the meantime.
      */
-    val currentForegroundPackage: String get() = lastPackage
+    private val settleForegroundApp = Runnable {
+        foregroundAppMonitor.settle(SystemClock.uptimeMillis())?.let { dispatchForegroundApp(it) }
+    }
+
+    /**
+     * The package that is currently in front ("" before the first window event). Features can
+     * re-evaluate against it when they (re)start without a fresh window event, e.g. resuming from
+     * a pause while the user is still inside an affected app, where no new window event will
+     * arrive until the next app switch.
+     */
+    val currentForegroundPackage: String get() = foregroundAppMonitor.currentPackage
 
     /**
      * Drops the remembered foreground package, so the next window event counts as an app switch
@@ -120,7 +138,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * down for the lock screen and need a chance to put them back on the way in.
      */
     fun forgetForegroundPackage() {
-        lastPackage = ""
+        mainHandler.removeCallbacks(settleForegroundApp)
+        foregroundAppMonitor.forget()
     }
 
     /**
@@ -130,55 +149,36 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * not have to send another window event when it comes back.
      */
     fun reevaluateForegroundApp() {
+        EmergencyBrakeFeature.settle(this)
         val packageName = kotlin.runCatching { rootInActiveWindow?.packageName?.toString() }
             .onFailure { Timber.w(it, "Could not read the foreground app") }
             .getOrNull().orEmpty()
-        if (packageName.isEmpty() || packageName == lastPackage ||
-            packageName == this.packageName || ignoredPackages.contains(packageName)
-        ) return
-        lastPackage = packageName
-        dispatchAppOpened(packageName, AccessibilityEventUtil.createEvent())
+        if (packageName == this.packageName) return
+        val decision = foregroundAppMonitor.publishNow(
+            packageName, isFullScreen = true, nowMs = SystemClock.uptimeMillis()
+        )
+        if (decision is ForegroundDecision.Changed) {
+            mainHandler.removeCallbacks(settleForegroundApp)
+            dispatchForegroundApp(decision)
+        }
     }
 
     /**
-     * Class-name prefixes of transient system surfaces (keyboard, volume dialog, the share sheet)
-     * whose window events must not be treated as "an app was opened".
-     *
-     * The share sheet is the reason the list carries three spellings of one thing: it was an
-     * internal activity until Android 13 unbundled it into its own package, and OEMs ship both.
-     * Left in, it alternates with the app underneath, and because each switch toggles the screen
-     * filter the result is a flicker that lasts as long as the sheet is open.
+     * The launcher passes through the foreground on the way from one app to the next under gesture
+     * navigation, and the keyboards do it whenever one opens. Neither is an app the user switched
+     * to.
      */
-    private val ignoredEventClassPrefixes = listOf(
-        "android.inputmethodservice.SoftInputWindow",
-        "com.android.systemui.volume",
-        "com.android.internal.app.ChooserActivity",
-        "com.android.internal.app.ResolverActivity",
-        "com.android.intentresolver."
-    )
+    private fun registerTransientPackages() {
+        val keyboards = (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+            .enabledInputMethodList.map { it.packageName }
+        foregroundAppMonitor.ignorePackages(keyboards)
+        val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val launchers = kotlin.runCatching {
+            packageManager.queryIntentActivities(homeIntent, 0).map { it.activityInfo.packageName }
+        }.onFailure { Timber.w(it, "Could not read the installed launchers") }.getOrDefault(emptyList())
+        foregroundAppMonitor.settleForPackages(launchers)
+    }
 
-    /**
-     * Packages whose windows never mean "an app was opened". The system UI package covers the
-     * notification shade, the quick settings panel and the keyguard: each of them opens on top of
-     * the app the user is in and leaves it in front, but on the skins where the shade reports
-     * itself as a full-screen window it would otherwise become the foreground app and the screen
-     * filter would follow it there and stay, because collapsing the shade does not have to emit a
-     * window event for the app underneath.
-     *
-     * The enabled keyboards are added to this in [onCreate].
-     */
-    private var ignoredPackages = mutableSetOf("com.android.systemui")
-
-    /**
-     * Whether a window is the recents/overview screen. Recents carries a different class name on
-     * every skin, and on several of them it lives inside the launcher's own package, so a list of
-     * exact class names only ever covers the devices somebody has reported from: matching the name
-     * covers the rest. An app that ships a screen of its own by that name is already the foreground
-     * package by the time it opens one, so its event is deduplicated before it reaches here.
-     */
-    private fun isRecentsWindow(className: String) =
-        className.contains("recents", ignoreCase = true) ||
-                className.contains("overview", ignoreCase = true)
     private var screenTurnedOffReceiver = ScreenTurnedOffReceiver()
     private var screenTurnedOnReceiver = ScreenTurnedOnReceiver()
     private val commitmentPasswordTamperGuard by lazy {
@@ -245,10 +245,10 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             addAction(Intent.ACTION_USER_PRESENT)
         })
 
-        // add all known keyboard packages to list of apps where we will not interfere with grayscale / color settings
-        (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).enabledInputMethodList.forEach {
-            ignoredPackages.add(it.packageName)
-        }
+        registerTransientPackages()
+
+        // a brake outlives the process, and the features below start under it
+        EmergencyBrakeFeature.restore(this)
 
         // Reload before starting anything, so the periodic reload cannot take a feature that is
         // being started here for one whose schedule just opened and start it a second time.
@@ -256,6 +256,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // filter it finds, and a second run would remember its own.
         FeaturesProvider.reloadActiveFeatures()
         FeaturesProvider.activeFeatures.forEach { it.onStart(this) }
+        EmergencyBrakeFeature.reapply(this)
         // Only a feature that is starting gets to hand the system's display settings back, and a
         // feature outside its schedule never starts. The daltonizer and extra dim are secure
         // settings, so they survive a reboot, and so does our record of having set them: without
@@ -365,50 +366,45 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Whether the event comes from a window DetoxDroid put on the screen itself rather than from a
-     * screen the user navigated to: the grayscale screen filter, the doomscroll break, the block
-     * screen. They are reported under DetoxDroid's own package, and counting one as an app switch
-     * is a loop. Showing the filter looks like leaving the app the filter was meant for, so the
-     * filter comes back off, which makes that app current again, which puts the filter back.
-     *
-     * DetoxDroid's activities are told apart by their class name living inside the package. An
-     * overlay reports the class of whatever view it attached, which does not.
-     */
-    private fun isOwnOverlayWindow(packageName: String, className: String) =
-        packageName == this.packageName && !className.startsWith("${this.packageName}.")
-
-    /**
      * Called when an app is opened. If some conditions are met, it forwards the event to the
      * intersection of [FeaturesProvider.activeFeatures] and [FeaturesProvider.onAppOpenedFeatures].
      */
     private fun handleAppOpenedEvent(accessibilityEvent: AccessibilityEvent) {
-        val packageName = accessibilityEvent.packageName?.toString()
-        if (packageName == null || packageName == lastPackage) {
-            // ignore events that do not contain a package name or that are triggered by the same app
-            return
-        }
+        // The timer for the end of a brake does not run while the phone sleeps, so the end is
+        // caught here. Before the monitor hears of the new window: releasing the brake re-evaluates
+        // the app that was in front, and the new one then arrives once, with its own event.
+        EmergencyBrakeFeature.settle(this)
+        val signal = WindowSignal(
+            packageName = accessibilityEvent.packageName?.toString().orEmpty(),
+            className = accessibilityEvent.className?.toString().orEmpty(),
+            isFullScreen = accessibilityEvent.isFullScreen,
+        )
+        when (val decision = foregroundAppMonitor.onWindow(signal, SystemClock.uptimeMillis())) {
+            ForegroundDecision.Unchanged -> {}
 
-        val className = accessibilityEvent.className?.toString().orEmpty()
-        if (ignoredEventClassPrefixes.any { className.startsWith(it) } ||
-            ignoredPackages.contains(packageName) ||
-            isRecentsWindow(className) ||
-            isOwnOverlayWindow(packageName, className)
-        ) {
-            // ignore events that are known to be irrelevant, without treating them as an app
-            // switch — otherwise returning from e.g. the volume dialog to the previous app would
-            // be misdetected as a new app open
-            return
-        }
-        // A window that does not cover the screen (a dialog, the volume panel, the notification
-        // shade) does not change which app the user is in, and a feature that skips such an event
-        // (see GrayscaleAppsFeature.ignoreNonFullScreenApps) must not lose the app over it: taking
-        // the partial window as the foreground package would make the app's own next event look
-        // like a repeat of it and drop it above, so the feature would never hear about that app.
-        if (accessibilityEvent.isFullScreen || !GrayscaleAppsFeature.ignoreNonFullScreenApps) {
-            lastPackage = packageName
-        }
+            ForegroundDecision.Cancelled -> mainHandler.removeCallbacks(settleForegroundApp)
 
-        dispatchAppOpened(packageName, accessibilityEvent)
+            is ForegroundDecision.Changed -> {
+                mainHandler.removeCallbacks(settleForegroundApp)
+                dispatchAppOpened(decision.packageName, accessibilityEvent)
+            }
+
+            is ForegroundDecision.Settling -> {
+                mainHandler.removeCallbacks(settleForegroundApp)
+                mainHandler.postDelayed(settleForegroundApp, decision.delayMs)
+            }
+        }
+    }
+
+    /**
+     * Hands a settled foreground app to the features. The window event it came from is long gone by
+     * then, so the features get one that carries what they read off it.
+     */
+    private fun dispatchForegroundApp(decision: ForegroundDecision.Changed) {
+        dispatchAppOpened(
+            decision.packageName,
+            AccessibilityEventUtil.createEvent(isFullScreen = decision.isFullScreen)
+        )
     }
 
     /**
@@ -416,6 +412,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * the ones a running pause suspends.
      */
     private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
+        // usage statistics are pure measurement and keep counting during a pause —
+        // a pause only suspends the interventions below
+        UsageStatsTracker.onForegroundApp(packageName)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
@@ -469,6 +468,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
         UsageStatsTracker.shutdown()
 
+        mainHandler.removeCallbacks(settleForegroundApp)
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }
@@ -489,13 +489,18 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
     private fun startForegroundService() {
         val isPausing = PauseButtonFeature.isPausing()
+        val isBraking = EmergencyBrakeFeature.isBraking()
         val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
             .setContentTitle(getString(R.string.app_displayName))
             .setContentText(
-                if (isPausing) {
+                if (isBraking) {
+                    getString(
+                        R.string.home_state_braking, EmergencyBrakeFeature.endsAtText()
+                    )
+                } else if (isPausing) {
                     // show the actual end of the pause instead of a bare "Paused"
                     getString(
-                        R.string.app_notification_pausedUntil,
+                        R.string.home_state_paused,
                         Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
                             .atZone(ZoneId.systemDefault()).toLocalTime()
                             .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
@@ -505,14 +510,24 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             .setSmallIcon(R.drawable.ic_pause)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
-        if (isPausing) {
-            // live countdown to the end of the pause in the collapsed notification
-            builder.setWhen(PauseButtonFeature.pauseUntil)
+        if (isBraking || isPausing) {
+            // live countdown to the end of the brake or the pause in the collapsed notification
+            builder.setWhen(
+                if (isBraking) EmergencyBrakeFeature.endsAtWallClock() else PauseButtonFeature.pauseUntil
+            )
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
         }
-        // Only offer the pause/resume action when the Pause feature is actually enabled.
-        if (PauseButtonFeature.isActivated) {
+        if (EmergencyBrakeFeature.canUndo()) {
+            builder.addAction(
+                R.drawable.ic_brake,
+                getString(R.string.feature_brake_undo),
+                EmergencyBrakeReceiver.undoIntent(this)
+            )
+        }
+        // Only offer the pause/resume action when the Pause feature is actually enabled, and not
+        // under a brake, which refuses a pause.
+        if (PauseButtonFeature.isActivated && !isBraking) {
             val pauseIntent = Intent(this, PauseInteractionService::class.java).apply {
                 action = "com.flx_apps.digitaldetox.ACTION_PAUSE"
             }
@@ -550,8 +565,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     fun updateForegroundNotification() {
         // Run as a foreground service only when the user opted into the keepalive, or while a pause
-        // is active (the pause notification needs it). Otherwise stay a plain bound service.
-        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated) {
+        // is active (the pause notification needs it), or a brake. Otherwise stay a plain bound
+        // service.
+        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
+            EmergencyBrakeFeature.isBraking()
+        ) {
             startForegroundService()
         } else {
             runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
