@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox
 
 import android.Manifest
+import android.app.Application
 import android.provider.Settings
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER
@@ -26,7 +27,9 @@ import org.robolectric.annotation.Config
  * setting is the user's again.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// A plain Application: DetoxDroid's own hands the display filters back on a thread of its own when
+// the service is off, which it is here, and that thread would race the test for the same settings.
+@Config(application = Application::class, sdk = [34])
 class GrayscaleSystemFilterTest {
 
     private val context get() = RuntimeEnvironment.getApplication()
