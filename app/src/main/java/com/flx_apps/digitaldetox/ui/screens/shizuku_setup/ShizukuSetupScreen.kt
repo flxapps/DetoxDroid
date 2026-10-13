@@ -264,19 +264,15 @@ private fun WizardStep(
 }
 
 private fun openShizukuPlayStorePage(context: Context) {
-    val playIntent = Intent(
-        Intent.ACTION_VIEW, Uri.parse("market://details?id=${ShizukuUtils.SHIZUKU_PACKAGE_NAME}")
-    ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-    runCatching { context.startActivity(playIntent) }.onFailure {
-        // no Play Store — fall back to the browser (which may be missing too on exotic setups)
-        runCatching {
-            context.startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://play.google.com/store/apps/details?id=${ShizukuUtils.SHIZUKU_PACKAGE_NAME}")
-                ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
-        }
-    }
+    // no store app: the browser, which may be missing too on exotic setups
+    NavigationUtil.startFirstAvailable(
+        context,
+        Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${ShizukuUtils.SHIZUKU_PACKAGE_NAME}")),
+        Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("https://play.google.com/store/apps/details?id=${ShizukuUtils.SHIZUKU_PACKAGE_NAME}")
+        )
+    )
 }
 
 private fun openShizukuApp(context: Context) {

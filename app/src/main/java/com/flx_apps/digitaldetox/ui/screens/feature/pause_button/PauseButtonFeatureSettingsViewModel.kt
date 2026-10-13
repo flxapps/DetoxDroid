@@ -1,9 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.pause_button
 
 import android.app.Application
-import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -16,6 +14,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.util.offerQuickSettingsTile
 import com.flx_apps.digitaldetox.util.NotificationHelper
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -153,9 +152,7 @@ class PauseButtonFeatureSettingsViewModel @Inject constructor(application: Appli
      * Opens the Android settings for setting the assistant app.
      */
     fun callAndroidAssistantSettings() {
-        getApplication<Application>().startActivity(Intent(Settings.ACTION_VOICE_INPUT_SETTINGS).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        })
+        NavigationUtil.openVoiceInputSettings(getApplication())
     }
 
     /**

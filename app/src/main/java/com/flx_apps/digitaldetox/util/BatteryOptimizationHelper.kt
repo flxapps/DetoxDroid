@@ -27,19 +27,11 @@ object BatteryOptimizationHelper {
      * Falls back to the app's details screen if the list activity is unavailable on this device.
      */
     fun openBatteryOptimizationSettings(context: Context) {
-        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        runCatching { context.startActivity(intent) }.onFailure {
-            Timber.w(it, "Battery optimization settings unavailable, opening app details")
-            runCatching {
-                context.startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", context.packageName, null)
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
-        }
+        NavigationUtil.startFirstAvailable(
+            context,
+            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
+            NavigationUtil.appInfoSettingsIntent(context)
+        )
     }
 
     /**

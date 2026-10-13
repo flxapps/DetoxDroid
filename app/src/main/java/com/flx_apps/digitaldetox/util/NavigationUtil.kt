@@ -14,7 +14,7 @@ object NavigationUtil {
      * that works everywhere else. The last intent should be one every device has.
      * @return whether any of them started
      */
-    private fun startFirstAvailable(context: Context, vararg intents: Intent): Boolean {
+    fun startFirstAvailable(context: Context, vararg intents: Intent): Boolean {
         intents.forEach { intent ->
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             runCatching { context.startActivity(intent) }
@@ -99,7 +99,7 @@ object NavigationUtil {
         startFirstAvailable(context, appInfoSettingsIntent(context), Intent(Settings.ACTION_SETTINGS))
     }
 
-    private fun appInfoSettingsIntent(context: Context): Intent =
+    fun appInfoSettingsIntent(context: Context): Intent =
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", context.packageName, null)
         }
@@ -143,12 +143,42 @@ object NavigationUtil {
      */
     @JvmStatic
     fun openAppNotificationSettings(context: Context) {
+        startFirstAvailable(context, appNotificationSettingsIntent(context), appInfoSettingsIntent(context))
+    }
+
+    /**
+     * Opens the settings of one of the app's notification channels, or the app's notification
+     * settings where the device has no page for a single channel.
+     */
+    @JvmStatic
+    fun openNotificationChannelSettings(context: Context, channelId: String) {
         startFirstAvailable(
             context,
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
             },
+            appNotificationSettingsIntent(context),
             appInfoSettingsIntent(context)
+        )
+    }
+
+    private fun appNotificationSettingsIntent(context: Context): Intent =
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+
+    /**
+     * Opens the page where the assistant app is chosen, or the default apps, which holds it on
+     * devices without a page of its own.
+     */
+    @JvmStatic
+    fun openVoiceInputSettings(context: Context) {
+        startFirstAvailable(
+            context,
+            Intent(Settings.ACTION_VOICE_INPUT_SETTINGS),
+            Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
         )
     }
 }
