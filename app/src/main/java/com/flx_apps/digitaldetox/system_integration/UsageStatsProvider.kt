@@ -6,7 +6,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
 import com.flx_apps.digitaldetox.DetoxDroidApplication
-import com.flx_apps.digitaldetox.TenSecondsInMs
+import com.flx_apps.digitaldetox.util.startOfDayMillis
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
@@ -42,28 +42,9 @@ object UsageStatsProvider {
             Context.USAGE_STATS_SERVICE
         ) as UsageStatsManager
 
-    private var usageStatsTodayLastRefresh = 0L
-
-    var usageStatsToday: Map<String, UsageStats> = mapOf()
-        get() {
-            val now = System.currentTimeMillis()
-            if (now - usageStatsTodayLastRefresh > TenSecondsInMs) {
-                val dayBeginningMs =
-                    LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                field = queryForPeriod(dayBeginningMs, now)
-                usageStatsTodayLastRefresh = now
-            }
-            return field
-        }
-
-    fun getUpdatedUsageStatsToday(): Map<String, UsageStats> {
-        usageStatsTodayLastRefresh = 0L
-        return usageStatsToday
-    }
-
-    fun getScreenTimeForApps(apps: List<String>): Long {
-        return apps.sumOf { usageStatsToday[it]?.screenTimeMs ?: 0L }
-    }
+    /** Today's usage so far, one [UsageStats] per app with foreground time. */
+    fun usageStatsToday(): Map<String, UsageStats> =
+        queryForPeriod(LocalDate.now().startOfDayMillis(), System.currentTimeMillis())
 
     /**
      * Queries the OS daily usage buckets for [startMs]..[endMs] and merges them into one
@@ -208,8 +189,8 @@ object UsageStatsProvider {
         val today = LocalDate.now()
         return (0 until days).map { dayOffset ->
             val date = today.minusDays(dayOffset.toLong())
-            val startMs = date.atStartOfDay(zone).toInstant().toEpochMilli()
-            val endMs = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            val startMs = date.startOfDayMillis(zone)
+            val endMs = date.plusDays(1).startOfDayMillis(zone)
             date to queryForPeriod(startMs, endMs)
         }
     }

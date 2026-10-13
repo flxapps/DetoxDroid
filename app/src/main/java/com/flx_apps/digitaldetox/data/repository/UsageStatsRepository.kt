@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.DailyAppCounter
 import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
+import com.flx_apps.digitaldetox.util.startOfDayMillis
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
@@ -53,7 +54,7 @@ class UsageStatsRepository @Inject constructor(
     suspend fun snapshotToday() = snapshotMutex.withLock {
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
-        val startMs = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        val startMs = today.startOfDayMillis(zone)
         val endMs = System.currentTimeMillis()
 
         val osStats = UsageStatsProvider.queryForPeriod(startMs, endMs)
