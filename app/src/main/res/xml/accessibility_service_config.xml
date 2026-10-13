@@ -4,5 +4,6 @@
     android:accessibilityFlags="flagDefault|flagRequestFilterKeyEvents|flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:canRequestFilterKeyEvents="true"
+    android:description="@string/app_accessibilityService_description"
     android:notificationTimeout="100"
     android:settingsActivity="com.flx_apps.digitaldetox.MainActivity" />
