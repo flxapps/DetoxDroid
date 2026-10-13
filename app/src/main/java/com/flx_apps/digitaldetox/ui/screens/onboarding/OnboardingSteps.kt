@@ -65,6 +65,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
+import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.NotificationHelper
 import com.flx_apps.digitaldetox.util.observeAsState
@@ -254,6 +255,7 @@ internal fun PermissionsStep(
     val writeSecureSettingsGranted by viewModel.writeSecureSettingsGranted.collectAsState()
     val accessibilityEnabled by viewModel.accessibilityEnabled.collectAsState()
     val canOneTapGrant by viewModel.canOneTapGrant.collectAsState()
+    val accessibilityConsent = rememberAccessibilityConsent()
 
     val activity = LocalActivity.current
     val notificationLauncher = rememberLauncherForActivityResult(
@@ -318,10 +320,12 @@ internal fun PermissionsStep(
             },
             granted = accessibilityEnabled,
             onClick = {
-                if (writeSecureSettingsGranted) {
-                    viewModel.enableAccessibilityService()
-                } else {
-                    NavigationUtil.openAccessibilitySettings(context)
+                accessibilityConsent.ask {
+                    if (writeSecureSettingsGranted) {
+                        viewModel.enableAccessibilityService()
+                    } else {
+                        NavigationUtil.openAccessibilitySettings(context)
+                    }
                 }
             })
     }

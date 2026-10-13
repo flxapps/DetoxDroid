@@ -73,8 +73,10 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.TodayScreenTime
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.widgets.AccessibilityDisclosureSupport
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
+import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
@@ -236,6 +238,7 @@ private fun StartStopActionButton(
     val cpLocked = remember(commitmentPasswordStateToken) {
         CommitmentPasswordFeature.isActivated && !CommitmentPasswordFeature.isSessionUnlocked()
     }
+    val accessibilityConsent = rememberAccessibilityConsent()
 
     ExtendedFloatingActionButton(
         text = {
@@ -262,7 +265,14 @@ private fun StartStopActionButton(
                 )
             }
         },
-        onClick = { homeViewModel.toggleDetoxDroidIsRunning() }
+        onClick = {
+            if (detoxDroidState == DetoxDroidState.Inactive) {
+                val justAgreed = !AccessibilityDisclosureSupport.isAccepted
+                accessibilityConsent.ask { homeViewModel.toggleDetoxDroidIsRunning(justAgreed) }
+            } else {
+                homeViewModel.toggleDetoxDroidIsRunning()
+            }
+        }
     )
 }
 

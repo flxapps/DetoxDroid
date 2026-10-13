@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.AccessibilityDisclosureSupport
 import com.flx_apps.digitaldetox.ui.widgets.InfoCard
 import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -355,7 +356,10 @@ private fun DoneStep(viewModel: OnboardingViewModel) {
                 )
             }
         }
-        if (!accessibilityEnabled && !writeSecureSettingsGranted) {
+        // DetoxDroid starts the service itself only with the permission and the user's go-ahead
+        if (!accessibilityEnabled &&
+            (!writeSecureSettingsGranted || !AccessibilityDisclosureSupport.isAccepted)
+        ) {
             SummaryRow(
                 icon = Icons.Default.Info,
                 text = stringResource(id = R.string.onboarding_done_summary_accessibilityPending)

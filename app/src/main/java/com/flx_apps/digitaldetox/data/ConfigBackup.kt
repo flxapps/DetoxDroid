@@ -62,7 +62,12 @@ object ConfigBackup {
     private const val TYPE_STRING_SET = "stringSet"
 
     /** Exact preference keys that are neither written nor read back. */
-    private val EXCLUDED_KEYS = setOf("premium_unlocked", "onboarding_pendingFeatureActivations")
+    private val EXCLUDED_KEYS = setOf(
+        "premium_unlocked",
+        "onboarding_pendingFeatureActivations",
+        // agreed to by whoever uses this phone, not by whoever made the file
+        "accessibilityService_disclosureAccepted",
+    )
 
     /** Key prefixes of state that belongs to this phone, see the class docs. */
     private val EXCLUDED_PREFIXES = listOf(

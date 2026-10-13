@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.ui.widgets.AccessibilityDisclosureSupport
 
 /**
  * Programmatically enables/disables the [DetoxDroidAccessibilityService].
@@ -44,9 +45,16 @@ object AccessibilityServiceController {
      * Activates the accessibility service. This is done by adding the service to the list of
      * enabled accessibility services and starting the service. The service is then triggered
      * manually once to make sure it is running.
+     *
+     * Holding WRITE_SECURE_SETTINGS, DetoxDroid switches the service on without the system's own
+     * warning, so it waits for [AccessibilityDisclosureSupport.isAccepted] in a build that asks
+     * first. A service the user has on already is not held back: putting it back up is a repair,
+     * not a first start.
+     * @return whether the service was started, so false too while the disclosure is unanswered
      * @see DetoxDroidAccessibilityService
      */
     fun activate(context: Context): Boolean {
+        if (!AccessibilityDisclosureSupport.isAccepted && !isEnabledInSettings(context)) return false
         val services = enabledAccessibilityServices(context)
         Settings.Secure.putString(
             context.contentResolver,

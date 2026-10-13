@@ -11,6 +11,7 @@ import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.util.NavigationUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,11 +42,14 @@ class HomeViewModel @Inject constructor(
     /**
      * Toggles the state of the accessibility service.
      * Returns null when blocked by the Commitment Password.
+     * @param justAgreed whether the user agreed to the accessibility disclosure a moment ago. A
+     * service DetoxDroid cannot switch on by itself then opens the accessibility settings directly,
+     * rather than asking once more in a snackbar.
      * @return the new state of the accessibility service or null if the (de-)activation failed
      * @see DetoxDroidAccessibilityService
      * @see DetoxDroidState
      */
-    fun toggleDetoxDroidIsRunning(): DetoxDroidState? {
+    fun toggleDetoxDroidIsRunning(justAgreed: Boolean = false): DetoxDroidState? {
         Timber.d("state = ${detoxDroidState.value}")
 
         // Block stopping DetoxDroid while Commitment Password is active and locked
@@ -72,6 +76,10 @@ class HomeViewModel @Inject constructor(
             }
         }
 
+        if (shouldBeRunning && justAgreed) {
+            NavigationUtil.openAccessibilitySettings(application)
+            return null
+        }
         setSnackbarState(HomeScreenSnackbarState.ShowStartAcccessibilityServiceManually)
         return null
     }

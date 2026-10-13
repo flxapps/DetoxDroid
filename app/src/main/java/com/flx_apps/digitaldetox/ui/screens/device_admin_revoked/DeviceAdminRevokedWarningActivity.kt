@@ -50,6 +50,7 @@ import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
+import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import timber.log.Timber
 
@@ -191,6 +192,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DetoxDroidTheme {
+                val accessibilityConsent = rememberAccessibilityConsent()
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -210,11 +212,16 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
                                             )
                                         )
                                     }.onFailure { Timber.e(it, "Failed to open Device Admin request intent") }
+                                    finish()
                                 }
-                                WarningReason.ACCESSIBILITY_DISABLED ->
+                                // declining leaves the service off and lets the user go all the same
+                                WarningReason.ACCESSIBILITY_DISABLED -> accessibilityConsent.ask(
+                                    onDeclined = { finish() }
+                                ) {
                                     NavigationUtil.openAccessibilitySettings(this)
+                                    finish()
+                                }
                             }
-                            finish()
                         }
                     )
                 }

@@ -61,6 +61,7 @@ class ConfigBackupTest {
             "GrayscaleAppsFeature_extraDimApplied",
             "DisableAppsFeature_usedUpScreenTime",
             "minimal_launcher_widget_selected_apps_42",
+            "accessibilityService_disclosureAccepted",
         ).forEach { assertFalse(it, ConfigBackup.isBackedUp(it)) }
         listOf(
             "GrayscaleAppsFeature_exceptions",
