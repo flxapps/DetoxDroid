@@ -22,6 +22,7 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.pause_button.PauseButtonFeatureSettingsSection
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
@@ -112,6 +113,7 @@ object PauseButtonFeature : Feature(), LockableFeature {
      */
     private val autoResumeRunnable = Runnable {
         kotlin.runCatching { if (!isPausing()) resume() }
+            .onFailure { Timber.e(it, "Could not end the pause") }
     }
 
     /**

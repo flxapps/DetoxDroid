@@ -31,7 +31,6 @@ import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.eventuallyIncreaseUsedUpScreenTime
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.onAppOpened
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
-import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterSpec
 import com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps.GrayscaleAppsFeatureSettingsSection
@@ -276,27 +275,13 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     private val recentReassertions = RecentEvents()
 
-    /**
-     * Fires when the color-screen-time allowance is expected to run out mid-session. Without it,
-     * the filter would only engage on the next window change, so a user could stay inside a single
-     * color app indefinitely. [ScreenTimeTrackingFeature.trackingSinceTimestamp] doubles as the
-     * "still in a color app" signal: leaving the app or turning the screen off resets it.
-     */
-    private val allowanceExhaustedChecker = Runnable {
-        kotlin.runCatching {
-            if (!isActive() || trackingSinceTimestamp == 0L) return@Runnable
-            if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return@Runnable
-            if (allowedDailyColorScreenTime > 0 && currentUsedUpScreenTime() > allowedDailyColorScreenTime) {
-                setEffectsActive(DetoxDroidApplication.appContext, true)
-            }
+    /** Turns the color app the user stays in gray once the color allowance runs out in it. */
+    private val allowanceTimer = BudgetTimer(this) {
+        if (isActive() && allowedDailyColorScreenTime > 0 &&
+            currentUsedUpScreenTime() > allowedDailyColorScreenTime
+        ) {
+            setEffectsActive(DetoxDroidApplication.appContext, true)
         }
-    }
-
-    private fun scheduleAllowanceExhaustedCheck() {
-        mainHandler.removeCallbacks(allowanceExhaustedChecker)
-        val remainingMs = allowedDailyColorScreenTime - currentUsedUpScreenTime()
-        if (remainingMs <= 0) return
-        mainHandler.postDelayed(allowanceExhaustedChecker, remainingMs + 250)
     }
 
     /**
@@ -337,7 +322,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * On a pause, turn the grayscale filter off.
      */
     override fun onPause(context: Context) {
-        mainHandler.removeCallbacks(allowanceExhaustedChecker)
+        allowanceTimer.cancel()
         context.applicationContext.contentResolver.unregisterContentObserver(systemFilterObserver)
         recentReassertions.clear()
         setEffectsActive(context, false)
@@ -376,7 +361,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // allowance was never meant for, and an hour of gray maps would otherwise use up
             // the minutes of color the listed apps have left for the day.
             eventuallyIncreaseUsedUpScreenTime()
-            mainHandler.removeCallbacks(allowanceExhaustedChecker)
+            allowanceTimer.cancel()
         } else {
             eventuallyStartTracking()
             // currentUsedUpScreenTime() includes the running tracking session, so the allowance
@@ -387,7 +372,7 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
                 if (areEffectsActive) setEffectsActive(context, false)
                 // re-check when the allowance is expected to be used up, because no further
                 // window events arrive while the user stays in this app
-                scheduleAllowanceExhaustedCheck()
+                allowanceTimer.schedule(allowedDailyColorScreenTime)
                 return
             }
         }

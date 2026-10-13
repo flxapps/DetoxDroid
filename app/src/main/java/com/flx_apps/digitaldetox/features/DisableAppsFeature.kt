@@ -6,8 +6,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
-import android.os.Handler
-import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -32,7 +30,6 @@ import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.system_integration.AppSuspender
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
-import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.OverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
@@ -163,34 +160,17 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * The disableable app that most recently started a tracking session. Used by
-     * [budgetExhaustedChecker] to know which app to block when the budget runs out mid-session.
+     * [budgetTimer] to know which app to block when the budget runs out mid-session.
      */
     @Volatile
     private var lastTrackedPackage: String? = null
 
-    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
-
-    /**
-     * Fires when the daily screen-time budget is expected to run out mid-session. Without it, the
-     * block would only engage on the next window change, so a user could stay inside a single
-     * tracked app past their budget. A still-running tracking session
-     * ([ScreenTimeTrackingFeature.trackingSinceTimestamp]) signals the user is still in the app.
-     */
-    private val budgetExhaustedChecker = Runnable {
-        kotlin.runCatching {
-            val packageName = lastTrackedPackage ?: return@Runnable
-            if (!isActive() || trackingSinceTimestamp == 0L) return@Runnable
-            if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return@Runnable
-            if (!hasScreenTimeLeft()) enforceOn(DetoxDroidApplication.appContext, packageName)
+    /** Blocks the app the user stays in once the daily budget runs out in the middle of it. */
+    private val budgetTimer = BudgetTimer(this) {
+        val packageName = lastTrackedPackage ?: return@BudgetTimer
+        if (isActive() && !hasScreenTimeLeft()) {
+            enforceOn(DetoxDroidApplication.appContext, packageName)
         }
-    }
-
-    private fun scheduleBudgetExhaustedCheck() {
-        mainHandler.removeCallbacks(budgetExhaustedChecker)
-        if (allowedDailyScreenTime == NO_DAILY_LIMIT) return
-        val remainingMs = allowedDailyScreenTime - currentUsedUpScreenTime()
-        if (remainingMs <= 0) return
-        mainHandler.postDelayed(budgetExhaustedChecker, remainingMs + 250)
     }
 
     /**
@@ -254,7 +234,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         // a paused feature sees no more app switches, so the time in a listed app that is still
         // open stops counting here and not when the next app shows up, maybe the next morning
         eventuallyIncreaseUsedUpScreenTime()
-        mainHandler.removeCallbacks(budgetExhaustedChecker)
+        budgetTimer.cancel()
         waitedForApps.clear()
         if (operationMode == DisableAppsMode.DEACTIVATE) {
             // if the apps are deactivated, we need to reactivate them when DetoxDroid is paused
@@ -312,7 +292,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             // the user has not used up their daily screen time yet; re-check when the budget is
             // expected to be exhausted, because no further window events arrive while the user
             // stays in this app
-            scheduleBudgetExhaustedCheck()
+            budgetTimer.schedule(allowedDailyScreenTime)
             return
         }
         enforceOn(context, packageName)
