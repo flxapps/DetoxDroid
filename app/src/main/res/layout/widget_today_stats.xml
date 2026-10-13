@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screen time, unlocks and scroll distance side by side, and where there is no line below for
+     it, the comparison with a usual day. RemoteViews can't inflate a plain View, so the dividers
+     are empty FrameLayouts. The numbers in here are made up: they are what the
+     widget picker shows (widget_today_preview), and every update of the widget replaces them. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.4"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_today_screen_time"
+            style="@style/WidgetToday.Value"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:gravity="center"
+            android:paddingHorizontal="4dp"
+            android:text="@string/widget_today_preview_screenTime" />
+
+        <TextView
+            android:id="@+id/widget_today_caption"
+            style="@style/WidgetToday.Label.Stat"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:gravity="center"
+            android:text="@string/widget_today_screenTime" />
+
+        <TextView
+            android:id="@+id/widget_today_off"
+            style="@style/WidgetToday.Label.Off"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:gravity="center"
+            android:text="@string/widget_today_off"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_today_vs_usual_group"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <FrameLayout style="@style/WidgetToday.Divider" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_vs_usual_value"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:gravity="center"
+                android:paddingHorizontal="4dp" />
+
+            <TextView
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="center"
+                android:text="@string/widget_today_vsUsual_label" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_today_unlocks_group"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout style="@style/WidgetToday.Divider" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_unlocks"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:gravity="center"
+                android:paddingHorizontal="4dp"
+                android:text="@string/widget_today_preview_unlocks" />
+
+            <TextView
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="center"
+                android:text="@string/usageStats_unlocks_short" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_today_scrolled_group"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout style="@style/WidgetToday.Divider" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_scrolled"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:gravity="center"
+                android:paddingHorizontal="4dp"
+                android:text="@string/widget_today_preview_scrolled" />
+
+            <TextView
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="center"
+                android:text="@string/widget_today_scrolled" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

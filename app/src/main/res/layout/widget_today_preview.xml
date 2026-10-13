@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the widget picker shows: the row the widget is placed as, with the made-up numbers of
+     widget_today_stats, in the theme it starts with -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetToday.Root"
+    android:background="@drawable/widget_background"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:theme="@style/WidgetTheme.System">
+
+    <include layout="@layout/widget_today_stats" />
+</LinearLayout>

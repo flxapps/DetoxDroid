@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -43,7 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
-import com.flx_apps.digitaldetox.util.DistancePerspective
+import com.flx_apps.digitaldetox.util.formatDistance
+import com.flx_apps.digitaldetox.util.scrollComparisonText
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -99,7 +99,7 @@ fun PerspectiveCardContent(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                comparisonText(context, scrollDistanceMeters)?.let { comparison ->
+                scrollComparisonText(context, scrollDistanceMeters)?.let { comparison ->
                     Text(
                         text = comparison,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
@@ -215,35 +215,6 @@ fun hasPerspectiveContent(state: UsageStatsUiState): Boolean =
 
 private const val MIN_ODOMETER_METERS = 1.0
 private const val MS_PER_HOUR = 3_600_000.0
-
-private fun comparisonText(context: Context, meters: Double): String? {
-    return when (val comparison = DistancePerspective.comparisonFor(meters)) {
-        is DistancePerspective.Comparison.Landmark -> context.getString(
-            R.string.usageStats_odometer_comparison,
-            formatMultiplier(comparison.multiplier),
-            context.getString(comparison.nameRes)
-        )
-        is DistancePerspective.Comparison.Floors ->
-            context.getString(R.string.usageStats_odometer_floors, comparison.floors)
-        null -> null
-    }
-}
-
-fun formatDistance(context: Context, meters: Double): String {
-    return if (meters >= 1000) {
-        context.getString(R.string.distance_kilometers, meters / 1000)
-    } else {
-        context.getString(R.string.distance_meters, meters.toInt())
-    }
-}
-
-private fun formatMultiplier(multiplier: Double): String {
-    return if (multiplier >= 10) {
-        String.format(Locale.getDefault(), "%.0f", multiplier)
-    } else {
-        String.format(Locale.getDefault(), "%.1f", multiplier)
-    }
-}
 
 private fun formatMoney(amount: Double): String {
     return NumberFormat.getCurrencyInstance(Locale.getDefault())

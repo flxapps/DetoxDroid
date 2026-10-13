@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
+import com.flx_apps.digitaldetox.widgets.WidgetSettingsStore
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -36,8 +37,9 @@ import kotlin.system.exitProcess
  * import the old state back over a lock that is in force. A running brake stays out for the same
  * reason, the premium flag because it is bought, and the rest because it describes this phone
  * rather than a choice: what is suspended through Shizuku right now, the clock anchors, the system
- * color settings the grayscale feature owes the user back, today's used-up budgets, the apps picked
- * for a widget id that exists on no other phone. Carried over, each of them is wrong on arrival.
+ * color settings the grayscale feature owes the user back, today's used-up budgets, the apps and
+ * the look picked for a widget id that exists on no other phone. Carried over, each of them is
+ * wrong on arrival.
  */
 object ConfigBackup {
     const val MIME_TYPE = "application/json"
@@ -75,6 +77,7 @@ object ConfigBackup {
         "AppSuspender_",
         "trustedClock_",
         "minimal_launcher_widget_",
+        WidgetSettingsStore.KEY_PREFIX,
         "premium_nudge_",
         "review_request_",
         "${GrayscaleAppsFeatureId}_daltonizerApplied",

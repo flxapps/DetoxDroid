@@ -5,10 +5,13 @@
     android:layout_height="match_parent"
     android:padding="8dp">
 
+    <!-- the lines share the height; code can leave some of it over, which then goes above and
+         below them -->
     <LinearLayout
         android:id="@+id/widget_minimal_launcher_items_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_vertical"
         android:orientation="vertical" />
 
     <TextView
@@ -17,7 +20,7 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:text="@string/widget_minimalLauncher_empty"
-        android:textColor="@android:color/white"
+        android:textColor="?attr/widgetOnSurface"
         android:textSize="20sp" />
 
 </FrameLayout>

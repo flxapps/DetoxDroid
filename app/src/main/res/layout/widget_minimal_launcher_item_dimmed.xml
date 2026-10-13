@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A line for an app that is blocked right now. Faded as a whole, which is the one way to dim it
+     that RemoteViews can do in a layout on every Android version. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:alpha="0.38"
+    android:orientation="vertical">
+
+    <include layout="@layout/widget_minimal_launcher_item" />
+</LinearLayout>

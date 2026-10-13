@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,9 @@ class ScheduleBoundaryWorker @AssistedInject constructor(
             // transitions on its own
             val released = withContext(Dispatchers.Main) { EmergencyBrakeFeature.settle(appContext) }
             if (!released) FeaturesProvider.applyScheduleTransitions()
+            // a schedule opening or closing blocks apps or hands them back, which the launcher
+            // widget shows
+            withContext(Dispatchers.Main) { ScreenTimeSurfaces.invalidate(appContext) }
         }.onFailure {
             Timber.w(it, "ScheduleBoundaryWorker: could not apply schedule transitions")
         }

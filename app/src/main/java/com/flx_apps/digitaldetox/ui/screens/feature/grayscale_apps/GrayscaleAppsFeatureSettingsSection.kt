@@ -1,9 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,7 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -32,11 +28,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -56,11 +51,13 @@ import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
+import com.flx_apps.digitaldetox.ui.widgets.SheetSetting
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -120,9 +117,7 @@ fun GrayscaleAppsFeatureSettingsSection(
 private fun hasWriteSecureSettingsPermission(): Boolean {
     val context = LocalContext.current
     val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
-    return remember(lifecycleState) {
-        context.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
-    }
+    return remember(lifecycleState) { context.hasWriteSecureSettings() }
 }
 
 /**
@@ -248,29 +243,6 @@ private fun ScreenFilterSheet(
                 )
             }
         }
-    }
-}
-
-/** One setting in [ScreenFilterSheet]: a title with an optional value, a line on it, a control. */
-@Composable
-private fun SheetSetting(
-    title: String,
-    description: String,
-    value: String? = null,
-    control: @Composable () -> Unit
-) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            value?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
-        }
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-        )
-        control()
     }
 }
 

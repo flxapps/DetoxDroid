@@ -41,7 +41,12 @@ sealed class NavigationRoutes : Parcelable {
     ) : NavigationRoutes()
 
     @Parcelize
-    data object UsageStats : NavigationRoutes()
+    data class UsageStats(
+        /** Opens with the sheet of apps left out of the numbers already up. */
+        val showExclusions: Boolean = false,
+        /** Opens with the details of this app up, once its numbers are in. */
+        val openApp: String? = null,
+    ) : NavigationRoutes()
 
     @Parcelize
     data object About : NavigationRoutes()

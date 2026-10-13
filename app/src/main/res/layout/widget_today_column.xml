@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/WidgetToday.Root"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            style="@style/WidgetToday.IconBadge">
+
+            <ImageView
+                style="@style/WidgetToday.IconBadge.Icon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_schedule" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_screen_time"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="start" />
+
+            <TextView
+                android:id="@+id/widget_today_caption"
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="start"
+                android:text="@string/widget_today_screenTime" />
+
+            <TextView
+                android:id="@+id/widget_today_off"
+                style="@style/WidgetToday.Label.Off"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="start"
+                android:text="@string/widget_today_off"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_today_unlocks_group"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            style="@style/WidgetToday.IconBadge">
+
+            <ImageView
+                style="@style/WidgetToday.IconBadge.Icon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_lock_open" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_unlocks"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="start" />
+
+            <TextView
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="start"
+                android:text="@string/usageStats_unlocks_short" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_today_scrolled_group"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            style="@style/WidgetToday.IconBadge">
+
+            <ImageView
+                style="@style/WidgetToday.IconBadge.Icon"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_scroll" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_today_scrolled"
+                style="@style/WidgetToday.Value"
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="start" />
+
+            <TextView
+                style="@style/WidgetToday.Label.Stat"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:gravity="start"
+                android:text="@string/widget_today_scrolled" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_today_comparison"
+        style="@style/WidgetToday.Comparison"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+</LinearLayout>

@@ -1,7 +1,9 @@
 package com.flx_apps.digitaldetox.ui.screens.home
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,7 +25,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +34,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -42,7 +44,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,11 +59,12 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
@@ -70,7 +75,8 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
-import com.flx_apps.digitaldetox.system_integration.TodayScreenTime
+import com.flx_apps.digitaldetox.system_integration.TodaySummary
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.AccessibilityDisclosureSupport
@@ -82,12 +88,16 @@ import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.appLabel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.math.atan2
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
  * The start screen of the app. It lists all features and their current state, offers a button to
@@ -454,25 +464,41 @@ fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
 }
 
 /**
- * A [DonutPieChart] that displays the screen time of the current day and the apps that were used
- * today.
+ * Today's screen time on the home screen: a [ScreenTimeDonut] of the most used apps, or a
+ * [ScreenTimeHint] where there is nothing to draw. The numbers are those of the usage screen and
+ * the widget, apps left out there included.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     // observed so the chart re-renders when the user returns to the screen
     val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
 
     val context = LocalContext.current
-    // keyed on the lifecycle state: refresh when the user returns to the screen, but never
-    // re-query the (blocking) UsageStatsManager on ordinary recompositions such as slice taps
-    val stats = remember(lifecycleState) {
-        TodayScreenTime.byPackage(context).entries.sortedByDescending { it.value }
+    // Starts from what the widget and the notification read last, so the screen below does not
+    // jump once the numbers are in, then reads afresh off the main thread: whenever the user
+    // returns to the screen, never on ordinary recompositions such as slice taps.
+    val cached = remember { ScreenTimeSurfaces.today?.let { TodayDonut.of(context, it) } }
+    val today by produceState(cached, lifecycleState) {
+        value = withContext(Dispatchers.IO) { TodayDonut.read(context) } ?: value
     }
+    // nothing read yet: better nothing than a hint that may turn out wrong a moment later
+    val current = today ?: return
+    if (current.apps.isEmpty()) {
+        ScreenTimeHint(current, lifecycleState, navViewModel)
+    } else {
+        ScreenTimeDonut(current, navViewModel)
+    }
+}
+
+/** The ring of today's most used apps, with the total in its middle. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ScreenTimeDonut(today: TodayDonut, navViewModel: NavViewModel) {
+    val context = LocalContext.current
     val selectedIndex = remember { mutableStateOf(-1) }
 
-    val chartStats = stats.take(5)
-    val screenTime = stats.sumOf { it.value }
+    val chartStats = today.apps
+    val screenTime = today.screenTimeMs
     val colors = listOf(
         colorResource(id = R.color.pink),
         colorResource(id = R.color.orange),
@@ -481,18 +507,11 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
         colorResource(id = R.color.blue),
         colorResource(id = R.color.purple),
     )
-    val packageManager = LocalContext.current.packageManager
     val otherLabel = stringResource(id = R.string.appCategories_other)
     val otherTime =
-        (screenTime - chartStats.sumOf { it.value }).toFloat().coerceAtLeast(1f)
-
-    // apps can disappear from PackageManager while still being present in today's usage stats
-    val slices = chartStats.map { (packageName, timeMs) ->
-        val label = runCatching {
-            packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
-        }.getOrDefault(packageName)
-        label to timeMs.toFloat()
-    }.plus(otherLabel to otherTime)
+        (screenTime - chartStats.sumOf { it.second }).toFloat().coerceAtLeast(1f)
+    val slices = chartStats.map { (label, timeMs) -> label to timeMs.toFloat() }
+        .plus(otherLabel to otherTime)
 
     val totalValue = slices.fold(0f) { acc, pair -> acc + pair.second }.coerceAtLeast(1f)
 
@@ -505,67 +524,65 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            if (stats.isNotEmpty()) {
-                Canvas(
-                    modifier = Modifier
-                        .size(200.dp)
-                        // keyed on the slice angles: tap detection must not keep using a stale
-                        // capture after the stats refresh
-                        .pointerInput(sweepAngles) {
-                            detectTapGestures { offset ->
-                                val canvasSize = this.size
-                                val centerX = canvasSize.width / 2f
-                                val centerY = canvasSize.height / 2f
-                                val dx = offset.x - centerX
-                                val dy = offset.y - centerY
-                                val dist = kotlin.math.sqrt(dx * dx + dy * dy)
-                                val strokePx = 32.dp.toPx()
-                                val minDim = if (canvasSize.width < canvasSize.height) canvasSize.width else canvasSize.height
-                                val outerRadius = (minDim - strokePx) / 2f
-                                val innerRadius = outerRadius - strokePx
-                                if (dist >= innerRadius && dist <= outerRadius) {
-                                    var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
-                                    if (angle < 0f) angle += 360f
-                                    var cumAngle = 0f
-                                    var found = -1
-                                    for (i in sweepAngles.indices) {
-                                        cumAngle += sweepAngles[i]
-                                        if (angle < cumAngle) {
-                                            found = i
-                                            break
-                                        }
+            Canvas(
+                modifier = Modifier
+                    .size(200.dp)
+                    // keyed on the slice angles: tap detection must not keep using a stale
+                    // capture after the stats refresh
+                    .pointerInput(sweepAngles) {
+                        detectTapGestures { offset ->
+                            val canvasSize = this.size
+                            val centerX = canvasSize.width / 2f
+                            val centerY = canvasSize.height / 2f
+                            val dx = offset.x - centerX
+                            val dy = offset.y - centerY
+                            val dist = kotlin.math.sqrt(dx * dx + dy * dy)
+                            val strokePx = 32.dp.toPx()
+                            val minDim = if (canvasSize.width < canvasSize.height) canvasSize.width else canvasSize.height
+                            val outerRadius = (minDim - strokePx) / 2f
+                            val innerRadius = outerRadius - strokePx
+                            if (dist >= innerRadius && dist <= outerRadius) {
+                                var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat() + 90f
+                                if (angle < 0f) angle += 360f
+                                var cumAngle = 0f
+                                var found = -1
+                                for (i in sweepAngles.indices) {
+                                    cumAngle += sweepAngles[i]
+                                    if (angle < cumAngle) {
+                                        found = i
+                                        break
                                     }
-                                    selectedIndex.value = if (found == selectedIndex.value) -1 else found
-                                } else {
-                                    selectedIndex.value = -1
                                 }
+                                selectedIndex.value = if (found == selectedIndex.value) -1 else found
+                            } else {
+                                selectedIndex.value = -1
                             }
                         }
-                ) {
-                    val strokeWidth = 32.dp.toPx()
-                    val radius = (size.minDimension - strokeWidth) / 2
-                    val topLeft = Offset(
-                        (size.width - radius * 2) / 2,
-                        (size.height - radius * 2) / 2
-                    )
-                    // the slices are set apart by a gap a few dp wide, as an angle on the ring
-                    val gapAngle = Math.toDegrees(3.dp.toPx() / radius.toDouble()).toFloat()
-                    var startAngle = -90f
-                    slices.forEachIndexed { index, _ ->
-                        val sweepAngle = sweepAngles[index]
-                        drawArc(
-                            color = colors[index % colors.size].let { color ->
-                                if (selectedIndex.value == index) color.copy(alpha = 0.6f) else color
-                            },
-                            startAngle = startAngle + gapAngle / 2,
-                            sweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0.5f),
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = Size(radius * 2, radius * 2),
-                            style = Stroke(width = strokeWidth)
-                        )
-                        startAngle = startAngle + sweepAngle
                     }
+            ) {
+                val strokeWidth = 32.dp.toPx()
+                val radius = (size.minDimension - strokeWidth) / 2
+                val topLeft = Offset(
+                    (size.width - radius * 2) / 2,
+                    (size.height - radius * 2) / 2
+                )
+                // the slices are set apart by a gap a few dp wide, as an angle on the ring
+                val gapAngle = Math.toDegrees(3.dp.toPx() / radius.toDouble()).toFloat()
+                var startAngle = -90f
+                slices.forEachIndexed { index, _ ->
+                    val sweepAngle = sweepAngles[index]
+                    drawArc(
+                        color = colors[index % colors.size].let { color ->
+                            if (selectedIndex.value == index) color.copy(alpha = 0.6f) else color
+                        },
+                        startAngle = startAngle + gapAngle / 2,
+                        sweepAngle = (sweepAngle - gapAngle).coerceAtLeast(0.5f),
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = Size(radius * 2, radius * 2),
+                        style = Stroke(width = strokeWidth)
+                    )
+                    startAngle = startAngle + sweepAngle
                 }
             }
             // no wider than the hole in the ring, so a long time or app name wraps inside it
@@ -573,121 +590,188 @@ fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.widthIn(max = 128.dp)
             ) {
-                if (stats.isNotEmpty()) {
-                    val idx = selectedIndex.value
-                    if (idx >= 0 && idx < chartStats.count()) {
-                        Text(
-                            text = chartStats[idx].value.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = slices[idx].first,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center
-                        )
-                    } else if (idx == chartStats.count()) {
-                        Text(
-                            text = otherTime.toLong().milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = otherLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center
-                        )
-                    } else {
-                        Text(
-                            text = screenTime.milliseconds.toHrMinString(context),
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = stringResource(id = R.string.home_screenTime_today),
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
-                    // No data is not the same thing as no permission. Offering "Grant Permission"
-                    // to somebody who granted it long ago sends them to a settings page that
-                    // already says yes, and leaves them with nothing to try.
-                    val hasUsageAccess = remember(lifecycleState) {
-                        UsageAccessUtil.hasUsageAccess(context)
-                    }
+                val idx = selectedIndex.value
+                if (idx >= 0 && idx < chartStats.count()) {
                     Text(
-                        text = stringResource(
-                            id = if (hasUsageAccess) R.string.home_screenTime_unavailable
-                            else R.string.usageStats_usageAccessRequired
-                        ), modifier = Modifier.padding(vertical = 8.dp)
+                        text = chartStats[idx].second.milliseconds.toHrMinString(context),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
                     )
-                    if (!hasUsageAccess) {
-                        OutlinedButton(onClick = { NavigationUtil.openUsageAccessSettings(context) }) {
-                            Text(text = stringResource(id = R.string.action_grantPermission))
-                        }
-                        if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
-                            Text(
-                                text = stringResource(id = R.string.usageStats_usageAccess_restrictedSettingsHint),
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 8.dp)
+                    Text(
+                        text = slices[idx].first,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center
+                    )
+                } else if (idx == chartStats.count()) {
+                    Text(
+                        text = otherTime.toLong().milliseconds.toHrMinString(context),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = otherLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        text = screenTime.milliseconds.toHrMinString(context),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(id = R.string.home_screenTime_today),
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            slices.forEachIndexed { index, slice ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { selectedIndex.value = if (selectedIndex.value == index) -1 else index }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .then(
+                                Modifier.drawBehind {
+                                    drawCircle(color = colors[index % colors.size])
+                                }
                             )
-                            OutlinedButton(onClick = { NavigationUtil.openAppInfoSettings(context) }) {
-                                Text(text = stringResource(id = R.string.action_openAppInfo))
-                            }
+                    )
+                    Text(
+                        text = slice.first,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(onClick = {
+                navViewModel.openRoute(NavigationRoutes.UsageStats())
+            }) {
+                Text(stringResource(id = R.string.usageStats_more))
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Stands in for the donut when it has nothing to draw: one quiet line on why, and the one thing
+ * that can be done about it, where there is one. The home screen is about the features below it,
+ * and an empty chart is no reason to push them down.
+ */
+@Composable
+private fun ScreenTimeHint(today: TodayDonut, refreshKey: Any?, navViewModel: NavViewModel) {
+    val context = LocalContext.current
+    // No data is not the same thing as no permission. Offering "Grant Permission" to somebody who
+    // granted it long ago sends them to a settings page that already says yes, and leaves them
+    // with nothing to try.
+    val hasUsageAccess = remember(refreshKey) { UsageAccessUtil.hasUsageAccess(context) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.QueryStats,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .size(20.dp)
+        )
+        Column(modifier = Modifier.padding(start = 12.dp)) {
+            when {
+                // Everything used today is left out. The usage screen is where that is undone,
+                // so the way there must not go with the numbers.
+                today.leftOutMs > 0L -> {
+                    HintText(R.string.home_screenTime_allLeftOut)
+                    HintAction(R.string.home_screenTime_allLeftOut_action) {
+                        navViewModel.openRoute(NavigationRoutes.UsageStats(showExclusions = true))
+                    }
+                }
+
+                hasUsageAccess -> HintText(R.string.home_screenTime_unavailable)
+
+                else -> {
+                    HintText(R.string.usageStats_usageAccessRequired)
+                    HintAction(R.string.action_grantPermission) {
+                        NavigationUtil.openUsageAccessSettings(context)
+                    }
+                    if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
+                        HintText(
+                            R.string.usageStats_usageAccess_restrictedSettingsHint,
+                            MaterialTheme.typography.bodySmall
+                        )
+                        HintAction(R.string.action_openAppInfo) {
+                            NavigationUtil.openAppInfoSettings(context)
                         }
                     }
                 }
             }
         }
-        if (slices.isNotEmpty()) {
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                slices.forEachIndexed { index, slice ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { selectedIndex.value = if (selectedIndex.value == index) -1 else index }
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .then(
-                                    Modifier.drawBehind {
-                                        drawCircle(color = colors[index % colors.size])
-                                    }
-                                )
-                        )
-                        Text(
-                            text = slice.first,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(start = 2.dp)
-                        )
-                    }
-                }
-            }
-        }
-        if (stats.isNotEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = {
-                    navViewModel.openRoute(NavigationRoutes.UsageStats)
-                }) {
-                    Text(stringResource(id = R.string.usageStats_more))
-                    Icon(
-                        Icons.Default.KeyboardArrowRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
+    }
+}
+
+@Composable
+private fun HintText(
+    @StringRes textRes: Int,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+) {
+    Text(
+        text = stringResource(id = textRes),
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+/** A text button that lines up with the [HintText] above it instead of sitting indented. */
+@Composable
+private fun HintAction(@StringRes labelRes: Int, onClick: () -> Unit) {
+    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp)) {
+        Text(text = stringResource(id = labelRes))
+    }
+}
+
+/** Today's total and its most used apps by name, as the donut shows them. */
+private class TodayDonut(
+    val screenTimeMs: Long,
+    val apps: List<Pair<String, Long>>,
+    /** Time of the apps left out on the usage screen. */
+    val leftOutMs: Long,
+) {
+    companion object {
+        /** Blocking: reads the usage records and the app names. Null where they can't be read. */
+        fun read(context: Context): TodayDonut? = runCatching {
+            TodaySummary.read(context, detailed = false)
+        }.onFailure {
+            Timber.w(it, "Could not read today's screen time")
+        }.getOrNull()?.let { of(context, it) }
+
+        /** Looks up the app names: a package manager call per app. */
+        fun of(context: Context, summary: TodaySummary) = TodayDonut(
+            screenTimeMs = summary.screenTimeMs,
+            apps = summary.topApps.map { context.appLabel(it.packageName) to it.screenTimeMs },
+            leftOutMs = summary.leftOutMs,
+        )
     }
 }

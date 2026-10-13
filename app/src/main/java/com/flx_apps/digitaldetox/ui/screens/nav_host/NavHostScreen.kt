@@ -88,7 +88,10 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
                 grantPermissionsCommand = route.grantPermissionsCommand
             )
 
-            is NavigationRoutes.UsageStats -> UsageStatsScreen()
+            is NavigationRoutes.UsageStats -> UsageStatsScreen(
+                showExclusions = route.showExclusions,
+                openApp = route.openApp
+            )
 
             is NavigationRoutes.About -> AboutScreen()
 

@@ -16,4 +16,24 @@
     <color name="green">#00af64</color>
     <color name="blue">#0b85ff</color>
     <color name="purple">#6642ad</color>
+
+    <!-- The widgets' two palettes, see WidgetTheme. Android 12 and later take them from the
+         wallpaper (values-v31). -->
+    <color name="widget_light_surface">#F3EDF7</color>
+    <color name="widget_light_on_surface">#1D1B20</color>
+    <color name="widget_light_on_surface_variant">#49454F</color>
+    <color name="widget_light_accent">#6650A4</color>
+    <color name="widget_light_accent_container">#EADDFF</color>
+    <color name="widget_light_on_accent_container">#21005D</color>
+    <color name="widget_light_outline">#CAC4D0</color>
+    <color name="widget_light_error">#B3261E</color>
+
+    <color name="widget_dark_surface">#211F26</color>
+    <color name="widget_dark_on_surface">#E6E0E9</color>
+    <color name="widget_dark_on_surface_variant">#CAC4D0</color>
+    <color name="widget_dark_accent">#D0BCFF</color>
+    <color name="widget_dark_accent_container">#4F378B</color>
+    <color name="widget_dark_on_accent_container">#EADDFF</color>
+    <color name="widget_dark_outline">#49454F</color>
+    <color name="widget_dark_error">#F2B8B5</color>
 </resources>

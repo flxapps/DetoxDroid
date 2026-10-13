@@ -214,7 +214,7 @@ class StoreScreenshotTest {
         icon = { rememberVectorPainter(Icons.Outlined.QueryStats) },
         // The top-apps list carries on past the crop, which is the point of the screen.
         shape = CardShape.Bleed,
-        navigate = { navVm -> navVm.openRoute(NavigationRoutes.UsageStats) },
+        navigate = { navVm -> navVm.openRoute(NavigationRoutes.UsageStats()) },
         interact = {
             // Switch to the 7-day timeframe (premium is unlocked in the seed) so the weekly history
             // backed by the seeded Room data is shown instead of today's summary.

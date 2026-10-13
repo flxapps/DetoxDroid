@@ -124,6 +124,8 @@ object FeaturesProvider {
                 DetoxDroidApplication.appContext
             )
         }
+        // the Pause feature decides whether the notification shows and whether it offers a pause
+        DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
     }
 
     /**

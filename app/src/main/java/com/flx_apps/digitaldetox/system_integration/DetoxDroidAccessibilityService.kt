@@ -16,6 +16,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
@@ -29,6 +30,8 @@ import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.util.appLabel
+import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
@@ -41,6 +44,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlin.time.Duration.Companion.milliseconds
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -72,6 +76,9 @@ enum class DetoxDroidState {
  */
 open class DetoxDroidAccessibilityService : AccessibilityService() {
     companion object {
+        /** How many of the most used apps the expanded notification names. */
+        private const val NOTIFICATION_APP_COUNT = 3
+
         /**
          * The current instance of the [DetoxDroidAccessibilityService]. This is set in
          * [onCreate] and unset in [onDestroy]. It is guaranteed by Android that only one instance
@@ -415,6 +422,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // usage statistics are pure measurement and keep counting during a pause —
         // a pause only suspends the interventions below
         UsageStatsTracker.onForegroundApp(packageName)
+        // the app that was left has its time booked now, and going home is when the widget is seen
+        ScreenTimeSurfaces.requestRefresh(this)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnAppOpenedSubscriptionFeature).onAppOpened(
@@ -487,36 +496,65 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         updateState()
     }
 
+    private var isInForeground = false
+
     private fun startForegroundService() {
         val isPausing = PauseButtonFeature.isPausing()
         val isBraking = EmergencyBrakeFeature.isBraking()
-        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_displayName))
-            .setContentText(
-                if (isBraking) {
-                    getString(
-                        R.string.home_state_braking, EmergencyBrakeFeature.endsAtText()
-                    )
-                } else if (isPausing) {
-                    // show the actual end of the pause instead of a bare "Paused"
-                    getString(
-                        R.string.home_state_paused,
-                        Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                            .atZone(ZoneId.systemDefault()).toLocalTime()
-                            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                    )
-                } else getString(R.string.app_notification_active)
+        val stateText = if (isBraking) {
+            getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText())
+        } else if (isPausing) {
+            // show the actual end of the pause instead of a bare "Paused"
+            getString(
+                R.string.home_state_paused,
+                Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
+                    .atZone(ZoneId.systemDefault()).toLocalTime()
+                    .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
             )
-            .setSmallIcon(R.drawable.ic_pause)
+        } else getString(R.string.app_notification_active)
+        // Reading the usage records blocks, so they are read off the main thread and the refresh
+        // comes back through updateForegroundNotification(). Until then the title is the app name.
+        val today = ScreenTimeSurfaces.today
+        if (today == null) ScreenTimeSurfaces.refreshIfStale(this)
+        val title = today?.let {
+            getString(
+                R.string.app_notification_screenTime,
+                it.screenTimeMs.milliseconds.toHrMinString(this)
+            )
+        } ?: getString(R.string.app_displayName)
+
+        fun NotificationCompat.Builder.withStatus() = apply {
+            setContentTitle(title)
+            setContentText(stateText)
+            setSmallIcon(R.drawable.ic_pause)
+            // the timestamp of the last refresh says nothing, a countdown does
+            setShowWhen(isBraking || isPausing)
+            if (isBraking || isPausing) {
+                // live countdown to the end of the brake or the pause in the collapsed notification
+                setWhen(
+                    if (isBraking) EmergencyBrakeFeature.endsAtWallClock()
+                    else PauseButtonFeature.pauseUntil
+                )
+                setUsesChronometer(true)
+                setChronometerCountDown(true)
+            }
+        }
+
+        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+            .withStatus()
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
-        if (isBraking || isPausing) {
-            // live countdown to the end of the brake or the pause in the collapsed notification
-            builder.setWhen(
-                if (isBraking) EmergencyBrakeFeature.endsAtWallClock() else PauseButtonFeature.pauseUntil
+            // the title changes with every refresh, which must not make a sound each time
+            .setOnlyAlertOnce(true)
+            .setContentIntent(MainActivity.openUsageStatsIntent(this))
+            // a lock screen that hides notification content still gets the total and the state,
+            // just not which apps the time went to
+            .setPublicVersion(
+                NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+                    .withStatus().build()
             )
-            builder.setUsesChronometer(true)
-            builder.setChronometerCountDown(true)
+        today?.let { notificationDetails(it) }?.let { details ->
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText("$stateText\n$details"))
         }
         if (EmergencyBrakeFeature.canUndo()) {
             builder.addAction(
@@ -554,25 +592,68 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             ServiceCompat.startForeground(
                 this, 101, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
-            Timber.i("Service moved to foreground")
+            // the screen time refreshes repost the notification every minute or so
+            if (!isInForeground) Timber.i("Service moved to foreground")
+            isInForeground = true
         } catch (e: Exception) {
             Timber.e(e, "Failed to start foreground service")
         }
     }
 
     /**
+     * What the expanded notification adds below the state: what is left of the budgets, and where
+     * the time went. Null when there is nothing to add.
+     */
+    private fun notificationDetails(today: TodaySummary): String? {
+        val lines = buildList {
+            today.timeBudget?.let {
+                add(
+                    getString(
+                        R.string.app_notification_budget,
+                        getString(R.string.feature_disableApps_allowedDailyTime),
+                        it.leftText(this@DetoxDroidAccessibilityService)
+                    )
+                )
+            }
+            today.colorBudget?.let {
+                add(
+                    getString(
+                        R.string.app_notification_budget,
+                        getString(R.string.feature_grayscale_allowedColorScreenTime),
+                        it.leftText(this@DetoxDroidAccessibilityService)
+                    )
+                )
+            }
+            val apps = today.topApps.take(NOTIFICATION_APP_COUNT)
+            if (apps.isNotEmpty()) {
+                add(getString(R.string.app_notification_mostUsed, apps.joinToString(" · ") {
+                    appLabel(it.packageName) + " " + it.screenTimeMs.milliseconds.toHrMinString(
+                        this@DetoxDroidAccessibilityService
+                    )
+                }))
+            }
+        }
+        return lines.takeIf { it.isNotEmpty() }?.joinToString("\n")
+    }
+
+    /**
+     * Whether the service runs in the foreground with its notification: when the user opted into
+     * the keepalive, while the Pause feature is on (its notification carries the pause action), or
+     * under a brake. Otherwise it stays a plain bound service.
+     */
+    val showsNotification: Boolean
+        get() = ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
+                EmergencyBrakeFeature.isBraking()
+
+    /**
      * Updates the foreground notification (e.g., when pause state changes)
      */
     fun updateForegroundNotification() {
-        // Run as a foreground service only when the user opted into the keepalive, or while a pause
-        // is active (the pause notification needs it), or a brake. Otherwise stay a plain bound
-        // service.
-        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
-            EmergencyBrakeFeature.isBraking()
-        ) {
+        if (showsNotification) {
             startForegroundService()
         } else {
             runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
+            isInForeground = false
         }
     }
 }

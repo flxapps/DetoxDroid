@@ -16,10 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AlternateEmail
-import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Lock
@@ -35,9 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -74,6 +68,7 @@ import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
+import com.flx_apps.digitaldetox.ui.widgets.ThemeModeSelector
 import com.flx_apps.digitaldetox.util.DebugLog
 import java.text.NumberFormat
 
@@ -376,46 +371,21 @@ private fun SwitchTile(
 }
 
 /**
- * Light, dark, or whatever the system says, as three segments in one row. The choice applies on
- * the spot, every open screen included, see [AppearanceSettings].
+ * The app's theme. The choice applies on the spot, every open screen included, see
+ * [AppearanceSettings].
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ThemeTile() {
     val mode by AppearanceSettings.themeMode.collectAsState()
-    val options = listOf(
-        Triple(AppearanceSettings.ThemeMode.SYSTEM, R.string.about_theme_system, Icons.Default.BrightnessAuto),
-        Triple(AppearanceSettings.ThemeMode.LIGHT, R.string.about_theme_light, Icons.Default.LightMode),
-        Triple(AppearanceSettings.ThemeMode.DARK, R.string.about_theme_dark, Icons.Default.DarkMode),
-    )
     ListItem(
         headlineContent = { Text(stringResource(id = R.string.about_theme)) },
         leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
         supportingContent = {
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                options.forEachIndexed { index, (option, labelRes, icon) ->
-                    SegmentedButton(
-                        selected = option == mode,
-                        onClick = { AppearanceSettings.setThemeMode(option) },
-                        shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                        icon = {
-                            SegmentedButtonDefaults.Icon(active = option == mode) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                )
-                            }
-                        }
-                    ) {
-                        Text(stringResource(id = labelRes), maxLines = 1)
-                    }
-                }
-            }
+            ThemeModeSelector(
+                mode = mode,
+                onModeSelected = AppearanceSettings::setThemeMode,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     )
 }

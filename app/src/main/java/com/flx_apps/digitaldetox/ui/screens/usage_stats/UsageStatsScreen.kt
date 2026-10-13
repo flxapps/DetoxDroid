@@ -71,6 +71,8 @@ private enum class TopAppsSort(val labelRes: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageStatsScreen(
+    showExclusions: Boolean = false,
+    openApp: String? = null,
     navViewModel: NavViewModel = NavViewModel.navViewModel(),
     viewModel: UsageStatsViewModel = hiltViewModel()
 ) {
@@ -78,7 +80,8 @@ fun UsageStatsScreen(
     val isPremiumUnlocked by PremiumManager.isPremiumUnlocked.collectAsState()
     val selectedApp = remember { mutableStateOf<AppUsageStat?>(null) }
     val showCustomPicker = remember { mutableStateOf(false) }
-    val showExclusions = remember { mutableStateOf(false) }
+    val exclusionsShown = remember { mutableStateOf(showExclusions) }
+    var appToOpen by remember { mutableStateOf(openApp) }
     var sortMode by remember { mutableStateOf(TopAppsSort.SCREEN_TIME) }
     var sortExpanded by remember { mutableStateOf(false) }
     val sortedApps = remember(state.topApps, sortMode) {
@@ -90,6 +93,14 @@ fun UsageStatsScreen(
     }
 
     LaunchedEffect(Unit) { viewModel.refresh(force = true) }
+    // a link from the widget names an app, whose details open once the numbers have it
+    LaunchedEffect(state.topApps) {
+        val packageName = appToOpen ?: return@LaunchedEffect
+        state.topApps.find { it.packageName == packageName }?.let {
+            selectedApp.value = it
+            appToOpen = null
+        }
+    }
 
     // Looking at a week+ of usage stats is the moment the app's value is most visible — a good,
     // frequency-capped time to ask for a store review (no-op in the FOSS build).
@@ -101,7 +112,6 @@ fun UsageStatsScreen(
     }
 
     val context = LocalContext.current
-    val pm = context.packageManager
 
     if (showCustomPicker.value) {
         UsageStatsDateRangePicker(
@@ -127,7 +137,7 @@ fun UsageStatsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showExclusions.value = true }) {
+                    IconButton(onClick = { exclusionsShown.value = true }) {
                         Icon(
                             Icons.Default.VisibilityOff,
                             contentDescription = stringResource(R.string.usageStats_exclusions_title)
@@ -276,7 +286,6 @@ fun UsageStatsScreen(
                             displayedApps.forEachIndexed { index, app ->
                                 AppUsageRow(
                                     app = app,
-                                    pm = pm,
                                     onClick = { selectedApp.value = app },
                                     showScrollInfo = sortMode == TopAppsSort.SCROLL_INTENSITY
                                 )
@@ -359,10 +368,10 @@ fun UsageStatsScreen(
             }
         }
 
-        if (showExclusions.value) {
+        if (exclusionsShown.value) {
             val exclusionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ModalBottomSheet(
-                onDismissRequest = { showExclusions.value = false },
+                onDismissRequest = { exclusionsShown.value = false },
                 sheetState = exclusionsSheetState
             ) {
                 UsageStatsExclusionsSheet(

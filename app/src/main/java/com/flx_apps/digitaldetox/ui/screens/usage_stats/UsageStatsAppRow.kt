@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -22,21 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.platform.LocalContext
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.formatDistance
+import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AppUsageRow(
     app: AppUsageStat,
-    pm: android.content.pm.PackageManager,
     onClick: () -> Unit,
     showScrollInfo: Boolean = false
 ) {
@@ -48,14 +46,7 @@ fun AppUsageRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val icon = runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
-        if (icon != null) {
-            Image(
-                bitmap = icon.toBitmap().asImageBitmap(),
-                contentDescription = app.label,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+        AppIcon(packageName = app.packageName, size = 36.dp, contentDescription = app.label)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(app.label, style = MaterialTheme.typography.bodyMedium)

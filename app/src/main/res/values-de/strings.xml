@@ -16,10 +16,13 @@
     <string name="app_notification_channelDescription">Hält DetoxDroid im Hintergrund aktiv</string>
     <string name="app_notification_alertChannelName">DetoxDroid-Hinweise</string>
     <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
+    <string name="app_notification_screenTime">%s Bildschirmzeit heute</string>
+    <string name="app_notification_budget">%1$s: %2$s</string>
+    <string name="app_notification_mostUsed">Am meisten genutzt: %s</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
     <string name="reliability_serviceDown_message">Dein Handy hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>
-    <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
+    <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung mit deiner Bildschirmzeit von heute, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
     <string name="reliability_keepAlive_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt. Ohne die Benachrichtigung ließe sich DetoxDroid einfach wegwischen.</string>
     <string name="reliability_battery_title">Uneingeschränkten Akku erlauben</string>
     <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Handy Hintergrund-Apps aggressiv schließt.</string>
@@ -75,6 +78,8 @@
     <string name="home_state_inactive">Gestoppt</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
+    <string name="home_screenTime_allLeftOut">Alles, was du heute benutzt hast, zählt gerade nicht mit.</string>
+    <string name="home_screenTime_allLeftOut_action">Ändern, was zählt</string>
     <string name="home_uninstall">DetoxDroid deinstallieren</string>
     <string name="home_uninstall_hint">Weil DetoxDroid erweiterte Berechtigungen hat, schlägt das Deinstallieren oft fehl. Tippe hier, um sie vorher zu entziehen.</string>
     <string name="home_uninstall_blocked_hint">Deaktiviert, solange das Commitment-Passwort aktiv ist.</string>
@@ -423,7 +428,37 @@
     <string name="widget_minimalLauncher_label_original">Original: %1$s</string>
     <string name="widget_minimalLauncher_label_edit">Namen bearbeiten</string>
     <string name="widget_minimalLauncher_reorder_drag">Zum Umsortieren ziehen</string>
-    <string name="widget_minimalLauncher_app_unavailable">Diese App ist nicht mehr verfügbar.</string>
+    <string name="widget_style_title">Widget anpassen</string>
+    <string name="widget_style_theme_description">Bei „System“ wird es zusammen mit deinem Handy dunkel.</string>
+    <string name="widget_style_background">Hintergrund</string>
+    <string name="widget_style_background_description">Ganz runtergedreht bleibt nur der Text auf deinem Hintergrundbild.</string>
+    <string name="widget_style_background_percent">%d %%</string>
+    <string name="widget_style_summary">%1$s, Hintergrund %2$s</string>
+    <string name="widget_today_name">Bildschirmzeit</string>
+    <string name="widget_today_description">Bildschirmzeit, Entsperrungen und Scroll-Strecke von heute. Zieh es größer, dann zeigt es auch deine meistgenutzten Apps und was von deinen Budgets noch übrig ist.</string>
+    <string name="widget_today_screenTime">Bildschirmzeit</string>
+    <string name="widget_today_scrolled">gescrollt</string>
+    <string name="widget_today_noApps">Heute noch keine App benutzt</string>
+    <string name="widget_today_allLeftOut">Die Apps von heute zählen alle nicht mit</string>
+    <string name="widget_parts_title">Anzeigen</string>
+    <string name="widget_today_parts_description">Neben deiner Bildschirmzeit, sobald das Widget groß genug dafür ist.</string>
+    <string name="widget_today_part_unlocks">Entsperrungen</string>
+    <string name="widget_today_part_scrolled">Scroll-Strecke</string>
+    <string name="widget_today_part_vsUsual">Vergleich mit sonst</string>
+    <string name="widget_today_part_apps">Meistgenutzte Apps</string>
+    <string name="widget_today_part_budgets">Zeitbudgets</string>
+    <string name="widget_today_part_scrollComparison">Strecke im Vergleich</string>
+    <string name="widget_today_vsUsual_less">%s weniger als sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_more">%s mehr als sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_same">Etwa so viel wie sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_label">vs. sonst</string>
+    <string name="widget_today_off">DetoxDroid ist aus</string>
+    <string name="widget_minimalLauncher_parts_description">Wie lange du jede App heute schon benutzt hast, und welche Apps „Apps deaktivieren“ gerade sperrt.</string>
+    <string name="widget_minimalLauncher_part_timeToday">Zeit heute</string>
+    <string name="widget_minimalLauncher_part_dimBlocked">Gesperrte ausgrauen</string>
+    <string name="widget_today_preview_screenTime">2 Std. 6 Min.</string>
+    <string name="today_budget_left">noch %s</string>
+    <string name="today_budget_usedUp">aufgebraucht</string>
     <!-- endregion -->
 
     <!-- region Usage Stats -->

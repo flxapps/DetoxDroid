@@ -2,7 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetConfigureActivity"
     android:description="@string/widget_minimalLauncher_description"
-    android:initialLayout="@layout/widget_minimal_launcher"
+    android:initialLayout="@layout/widget_frame_system"
     android:minHeight="110dp"
     android:minResizeHeight="70dp"
     android:minResizeWidth="110dp"

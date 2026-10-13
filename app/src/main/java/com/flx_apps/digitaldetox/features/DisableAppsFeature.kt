@@ -36,6 +36,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeat
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeningActivity
 import com.flx_apps.digitaldetox.util.DailyAppCounter
 import timber.log.Timber
+import java.time.LocalDate
 
 /**
  * How a listed app is kept out of reach once its daily time is up.
@@ -185,6 +186,22 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         // includes the running tracking session, so the budget also runs out while the user stays
         // inside a single tracked app
         else -> currentUsedUpScreenTime() < allowedDailyScreenTime
+    }
+
+    /**
+     * The listed apps that are blocked right now: opening one ends on the block screen, or finds
+     * it deactivated or suspended. None while DetoxDroid is not running, the feature is paused or
+     * outside its schedule, or there is screen time left.
+     */
+    fun blockedApps(): Set<String> {
+        val enforcing = DetoxDroidAccessibilityService.instance != null && isActive() &&
+                !PauseButtonFeature.isFeaturePaused(this)
+        // Until the first app switch after midnight the tracker holds yesterday's total, which
+        // says nothing about today. A limit of 0 and a brake block whatever it holds.
+        val totalFromYesterday = today != LocalDate.now() && allowedDailyScreenTime > 0L &&
+                !EmergencyBrakeFeature.covers(this)
+        return if (enforcing && !totalFromYesterday && !hasScreenTimeLeft()) disableableApps
+        else emptySet()
     }
 
     /**

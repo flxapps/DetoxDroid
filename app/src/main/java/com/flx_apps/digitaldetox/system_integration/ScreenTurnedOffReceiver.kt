@@ -18,6 +18,8 @@ class ScreenTurnedOffReceiver : BroadcastReceiver() {
         // Forgetting the package turns that first event back into an app switch.
         DetoxDroidAccessibilityService.instance?.forgetForegroundPackage()
         UsageStatsTracker.onScreenTurnedOff()
+        // the widget on the lock screen should show the stretch of use that just ended
+        context?.let { ScreenTimeSurfaces.refreshAfterScreenOff(it) }
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScreenTurnedOffFeatures)
             .forEach {
                 (it as OnScreenTurnedOffSubscriptionFeature).onScreenTurnedOff(context)

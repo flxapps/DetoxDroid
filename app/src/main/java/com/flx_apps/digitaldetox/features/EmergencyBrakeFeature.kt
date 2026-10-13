@@ -23,6 +23,7 @@ import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake.EmergencyBrakeFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.RecentEvents
@@ -355,6 +356,8 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         _stateToken.update { it + 1 }
         scheduleEnd(context)
         DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+        // the launcher widget dims the apps a brake blocks
+        ScreenTimeSurfaces.invalidate(context)
         // a tile that is on screen right now is only redrawn when asked
         kotlin.runCatching {
             TileService.requestListeningState(

@@ -2,9 +2,11 @@ package com.flx_apps.digitaldetox.features
 
 import android.os.Handler
 import android.os.Looper
+import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import timber.log.Timber
 
 /**
@@ -28,6 +30,8 @@ class BudgetTimer(
                 return@Runnable
             }
             onExhausted()
+            // the widgets show the budget, and the launcher widget dims what it now blocks
+            ScreenTimeSurfaces.invalidate(DetoxDroidApplication.appContext)
         }.onFailure { Timber.e(it, "Could not enforce a budget that ran out") }
     }
 

@@ -2,7 +2,10 @@ package com.flx_apps.digitaldetox.util
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.graphics.Bitmap
+import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Extension function for [ApplicationInfo] to get the app category title. It first tries to get the
@@ -56,3 +59,25 @@ fun ApplicationInfo.isSystemApp(): Boolean {
 fun Context.appLabel(packageName: String): String = runCatching {
     packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
 }.getOrDefault(packageName)
+
+/**
+ * The launcher icon of [packageName] as a [sizePx] square, or null for an app that is gone.
+ * Blocking, and not cheap for adaptive icons: not on the main thread.
+ */
+fun Context.appIconBitmap(packageName: String, sizePx: Int): Bitmap? = runCatching {
+    packageManager.getApplicationIcon(packageName).toBitmap(sizePx, sizePx)
+}.getOrNull()
+
+/** [ApplicationInfo.category] per package, see [appCategory]. */
+private val appCategories = ConcurrentHashMap<String, Int>()
+
+/**
+ * The [ApplicationInfo.category] the system gives [packageName], or
+ * [ApplicationInfo.CATEGORY_UNDEFINED] for an app it doesn't know. Kept for the life of the
+ * process: a package manager lookup per app per refresh adds up, and the category only changes
+ * with an update of the app.
+ */
+fun Context.appCategory(packageName: String): Int = appCategories.getOrPut(packageName) {
+    runCatching { packageManager.getApplicationInfo(packageName, 0).category }
+        .getOrDefault(ApplicationInfo.CATEGORY_UNDEFINED)
+}

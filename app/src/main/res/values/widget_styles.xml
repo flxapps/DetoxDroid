@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The colors a widget layout asks for. The theme on the widget's frame answers them, so one
+         layout serves every theme. -->
+    <attr name="widgetSurface" format="color" />
+    <attr name="widgetOnSurface" format="color" />
+    <attr name="widgetOnSurfaceVariant" format="color" />
+    <attr name="widgetAccent" format="color" />
+    <attr name="widgetAccentContainer" format="color" />
+    <attr name="widgetOnAccentContainer" format="color" />
+    <attr name="widgetOutline" format="color" />
+    <attr name="widgetError" format="color" />
+
+    <style name="WidgetTheme" />
+
+    <style name="WidgetTheme.Light">
+        <item name="widgetSurface">@color/widget_light_surface</item>
+        <item name="widgetOnSurface">@color/widget_light_on_surface</item>
+        <item name="widgetOnSurfaceVariant">@color/widget_light_on_surface_variant</item>
+        <item name="widgetAccent">@color/widget_light_accent</item>
+        <item name="widgetAccentContainer">@color/widget_light_accent_container</item>
+        <item name="widgetOnAccentContainer">@color/widget_light_on_accent_container</item>
+        <item name="widgetOutline">@color/widget_light_outline</item>
+        <item name="widgetError">@color/widget_light_error</item>
+    </style>
+
+    <style name="WidgetTheme.Dark">
+        <item name="widgetSurface">@color/widget_dark_surface</item>
+        <item name="widgetOnSurface">@color/widget_dark_on_surface</item>
+        <item name="widgetOnSurfaceVariant">@color/widget_dark_on_surface_variant</item>
+        <item name="widgetAccent">@color/widget_dark_accent</item>
+        <item name="widgetAccentContainer">@color/widget_dark_accent_container</item>
+        <item name="widgetOnAccentContainer">@color/widget_dark_on_accent_container</item>
+        <item name="widgetOutline">@color/widget_dark_outline</item>
+        <item name="widgetError">@color/widget_dark_error</item>
+    </style>
+
+    <!-- the launcher inflates the widget in its own configuration, so this follows the phone's
+         dark mode (values-night) -->
+    <style name="WidgetTheme.System" parent="WidgetTheme.Light" />
+
+    <style name="WidgetToday" />
+
+    <style name="WidgetToday.Root">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <!-- numbers shrink to fit instead of getting cut off: "2 Std. 6 Min." needs half again the
+         width of "2 h 6 min" -->
+    <style name="WidgetToday.Value">
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">9sp</item>
+        <item name="android:autoSizeMaxTextSize">20sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">?attr/widgetOnSurface</item>
+    </style>
+
+    <style name="WidgetToday.Label">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">?attr/widgetOnSurfaceVariant</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- under a number, where a cut-off label would be worse than a smaller one -->
+    <style name="WidgetToday.Label.Stat">
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">9sp</item>
+        <item name="android:autoSizeMaxTextSize">12sp</item>
+    </style>
+
+    <!-- in place of the label under the screen time while DetoxDroid is not running -->
+    <style name="WidgetToday.Label.Off" parent="WidgetToday.Label.Stat">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?attr/widgetError</item>
+    </style>
+
+    <style name="WidgetToday.Comparison">
+        <item name="android:ellipsize">end</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:textColor">?attr/widgetAccent</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="WidgetToday.Divider">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:background">?attr/widgetOutline</item>
+    </style>
+
+    <style name="WidgetToday.Separator">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginBottom">2dp</item>
+        <item name="android:background">?attr/widgetOutline</item>
+    </style>
+
+    <style name="WidgetToday.IconBadge">
+        <item name="android:layout_width">30dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:background">@drawable/widget_today_icon_background</item>
+    </style>
+
+    <style name="WidgetToday.IconBadge.Icon">
+        <item name="android:layout_width">18dp</item>
+        <item name="android:layout_height">18dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:tint">?attr/widgetOnAccentContainer</item>
+    </style>
+
+    <style name="WidgetToday.Bar" parent="android:Widget.Material.ProgressBar.Horizontal">
+        <item name="android:layout_height">3dp</item>
+        <item name="android:minHeight">3dp</item>
+        <item name="android:maxHeight">3dp</item>
+        <item name="android:indeterminate">false</item>
+        <item name="android:max">100</item>
+        <item name="android:progressDrawable">@drawable/widget_today_bar</item>
+    </style>
+</resources>

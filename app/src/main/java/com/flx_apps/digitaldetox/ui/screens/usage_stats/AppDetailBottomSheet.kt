@@ -1,7 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,13 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
@@ -48,6 +45,8 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.toShortDurationString
+import com.flx_apps.digitaldetox.util.formatDistance
+import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,23 +59,15 @@ fun AppDetailContent(
     onFeatureChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val pm = context.packageManager
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        val icon = runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (icon != null) {
-                Image(
-                    bitmap = icon.toBitmap().asImageBitmap(),
-                    contentDescription = app.label,
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
+            AppIcon(packageName = app.packageName, size = 48.dp, contentDescription = app.label)
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = app.label,

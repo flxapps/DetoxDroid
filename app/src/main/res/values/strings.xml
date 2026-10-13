@@ -20,10 +20,13 @@
     <string name="app_notification_channelDescription">Keeps DetoxDroid active in the background</string>
     <string name="app_notification_alertChannelName">DetoxDroid alerts</string>
     <string name="app_notification_alertChannelDescription">Tells you when your phone has stopped DetoxDroid</string>
+    <string name="app_notification_screenTime">%s screen time today</string>
+    <string name="app_notification_budget">%1$s: %2$s</string>
+    <string name="app_notification_mostUsed">Most used: %s</string>
     <string name="reliability_serviceDown_title">DetoxDroid stopped</string>
     <string name="reliability_serviceDown_message">Your phone stopped DetoxDroid in the background. Tap to start it again.</string>
     <string name="reliability_keepAlive_title">Keep DetoxDroid running</string>
-    <string name="reliability_keepAlive_subtitle">Show an ongoing notification so the system is less likely to stop DetoxDroid in the background.</string>
+    <string name="reliability_keepAlive_subtitle">Show an ongoing notification with today\'s screen time, so the system is less likely to stop DetoxDroid in the background.</string>
     <string name="reliability_keepAlive_locked_subtitle">Locked while your commitment password is in force. Without the notification, DetoxDroid could simply be swiped away.</string>
     <string name="reliability_battery_title">Allow unrestricted battery</string>
     <string name="reliability_battery_subtitle">Stops the system from putting DetoxDroid to sleep. Recommended if your phone aggressively closes background apps.</string>
@@ -79,6 +82,8 @@
     <string name="home_state_inactive">Stopped</string>
     <string name="home_screenTime_today">Screen time today</string>
     <string name="home_screenTime_unavailable">Screen time unavailable</string>
+    <string name="home_screenTime_allLeftOut">Everything you used today is left out of the numbers.</string>
+    <string name="home_screenTime_allLeftOut_action">Change what counts</string>
     <string name="home_uninstall">Uninstall DetoxDroid</string>
     <string name="home_uninstall_hint">Uninstalling may fail because DetoxDroid has elevated permissions. Tap here to revoke them first.</string>
     <string name="home_uninstall_blocked_hint">Disabled while Commitment Password is active.</string>
@@ -430,7 +435,43 @@
     <string name="widget_minimalLauncher_label_original">Original: %1$s</string>
     <string name="widget_minimalLauncher_label_edit">Edit label</string>
     <string name="widget_minimalLauncher_reorder_drag">Drag to reorder</string>
-    <string name="widget_minimalLauncher_app_unavailable">This app is no longer available.</string>
+    <string name="widget_style_title">Customize widget</string>
+    <string name="widget_style_theme_description">With System, it turns dark when your phone does.</string>
+    <string name="widget_style_background">Background</string>
+    <string name="widget_style_background_description">All the way down, only the text is left on your wallpaper.</string>
+    <string name="widget_style_background_percent">%d%%</string>
+    <string name="widget_style_summary">%1$s, background %2$s</string>
+    <string name="widget_today_name">Screen time</string>
+    <string name="widget_today_description">Today\'s screen time, unlocks and scroll distance. Pull it bigger and it adds your most used apps and what\'s left of your budgets.</string>
+    <string name="widget_today_screenTime">screen time</string>
+    <string name="widget_today_scrolled">scrolled</string>
+    <string name="widget_today_noApps">No app used yet today</string>
+    <string name="widget_today_allLeftOut">Today\'s apps are all left out</string>
+    <string name="widget_parts_title">Show</string>
+    <string name="widget_today_parts_description">Next to your screen time, wherever the widget\'s size has room for it.</string>
+    <string name="widget_today_part_unlocks">Unlocks</string>
+    <string name="widget_today_part_scrolled">Scroll distance</string>
+    <string name="widget_today_part_vsUsual">Compared with a usual day</string>
+    <string name="widget_today_part_apps">Most used apps</string>
+    <string name="widget_today_part_budgets">Budgets</string>
+    <string name="widget_today_part_scrollComparison">Distance in perspective</string>
+    <string name="widget_today_vsUsual_less">%s less than usual by now</string>
+    <string name="widget_today_vsUsual_more">%s more than usual by now</string>
+    <string name="widget_today_vsUsual_same">About as much as usual by now</string>
+    <string name="widget_today_vsUsual_label">vs. usual</string>
+    <!-- the difference to a usual day as a number, where a sentence has no room -->
+    <string name="widget_today_vsUsual_less_short" translatable="false">−%s</string>
+    <string name="widget_today_vsUsual_more_short" translatable="false">+%s</string>
+    <string name="widget_today_vsUsual_same_short" translatable="false">±0</string>
+    <string name="widget_today_off">DetoxDroid is off</string>
+    <string name="widget_minimalLauncher_parts_description">How long you have used each app today, and which apps Disable Apps blocks right now.</string>
+    <string name="widget_minimalLauncher_part_timeToday">Time today</string>
+    <string name="widget_minimalLauncher_part_dimBlocked">Dim blocked apps</string>
+    <string name="widget_today_preview_screenTime">2 h 6 min</string>
+    <string name="widget_today_preview_unlocks" translatable="false">47</string>
+    <string name="widget_today_preview_scrolled" translatable="false">361 m</string>
+    <string name="today_budget_left">%s left</string>
+    <string name="today_budget_usedUp">used up</string>
     <!-- endregion -->
 
     <!-- region Usage Stats -->

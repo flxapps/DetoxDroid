@@ -1,10 +1,12 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
+import com.flx_apps.digitaldetox.util.appCategory
 
 /** User preferences of the usage stats screen (not tied to any detox feature). */
 object UsageStatsSettings {
@@ -36,4 +38,19 @@ object UsageStatsSettings {
         DataStorePropertyTransformer.SetStorePropertyTransformer(
             { it.toString() }, { it.toIntOrNull() })
     )
+}
+
+/**
+ * What [UsageStatsSettings] leaves out, read once, so that everything built from one reading
+ * counts the same apps. The usage screen, the screen time widget and the notification all go
+ * through this, which is what keeps their totals in agreement.
+ */
+class UsageExclusions(private val context: Context) {
+    val apps: Set<String> = UsageStatsSettings.excludedApps
+    val categories: Set<Int> = UsageStatsSettings.excludedCategories
+
+    val isEmpty: Boolean get() = apps.isEmpty() && categories.isEmpty()
+
+    fun excludes(packageName: String): Boolean = packageName in apps ||
+            (categories.isNotEmpty() && context.appCategory(packageName) in categories)
 }
