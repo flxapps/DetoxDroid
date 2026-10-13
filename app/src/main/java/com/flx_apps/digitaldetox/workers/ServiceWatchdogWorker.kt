@@ -1,11 +1,9 @@
 package com.flx_apps.digitaldetox.workers
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
@@ -20,6 +18,7 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.util.NotificationHelper
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import timber.log.Timber
@@ -72,7 +71,7 @@ class ServiceWatchdogWorker @AssistedInject constructor(
 
         // Try a silent repair if we can write secure settings (adb / Shizuku granted the app
         // WRITE_SECURE_SETTINGS). activate() is idempotent and harmless when already enabled.
-        if (hasWriteSecureSettings()) {
+        if (appContext.hasWriteSecureSettings()) {
             runCatching { AccessibilityServiceController.activate(appContext) }
                 .onFailure { Timber.w(it, "ServiceWatchdogWorker: silent repair failed") }
         }
@@ -91,10 +90,6 @@ class ServiceWatchdogWorker @AssistedInject constructor(
         }
         return Result.success()
     }
-
-    private fun hasWriteSecureSettings(): Boolean =
-        appContext.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) ==
-            PackageManager.PERMISSION_GRANTED
 
     @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled() and runCatching
     private fun notifyServiceDown() {

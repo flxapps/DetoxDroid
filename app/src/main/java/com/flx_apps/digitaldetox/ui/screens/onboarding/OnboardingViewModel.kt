@@ -1,8 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.onboarding
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +28,8 @@ import com.flx_apps.digitaldetox.util.NotificationHelper
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.knownCategoryOf
-import com.topjohnwu.superuser.Shell
+import com.flx_apps.digitaldetox.util.PrivilegedShell
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -242,7 +241,7 @@ class OnboardingViewModel @Inject constructor(
         MutableStateFlow(NotificationHelper.hasNotificationPermission(application))
     val notificationsGranted: StateFlow<Boolean> = _notificationsGranted
 
-    private val _writeSecureSettingsGranted = MutableStateFlow(hasWriteSecureSettings())
+    private val _writeSecureSettingsGranted = MutableStateFlow(application.hasWriteSecureSettings())
     val writeSecureSettingsGranted: StateFlow<Boolean> = _writeSecureSettingsGranted
 
     /**
@@ -260,34 +259,24 @@ class OnboardingViewModel @Inject constructor(
     private val _canOneTapGrant = MutableStateFlow(false)
     val canOneTapGrant: StateFlow<Boolean> = _canOneTapGrant
 
-    private var isRootAvailable = false
-    private var rootChecked = false
-
-    private fun hasWriteSecureSettings(): Boolean =
-        application.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
-
     /**
      * Re-checks all permission states, e.g. when the user returns from the system settings.
      * Shizuku availability is cheap and can change while the user hops to the wizard and back, so
-     * it is probed every time; the root probe spawns an `su` process and can stall, so it runs
-     * only once.
+     * it is probed every time; the root probe spawns an `su` process and can stall, so only the
+     * first one asks (see [PrivilegedShell.isRootAvailable]).
      */
     fun refreshPermissionStates() {
         refreshUsageAccess()
         _overlayGranted.value = Settings.canDrawOverlays(application)
         _notificationsGranted.value = NotificationHelper.hasNotificationPermission(application)
-        _writeSecureSettingsGranted.value = hasWriteSecureSettings()
+        _writeSecureSettingsGranted.value = application.hasWriteSecureSettings()
         _batteryOptimizationIgnored.value =
             BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application)
         viewModelScope.launch(Dispatchers.IO) {
             val isShizukuAvailable = ShizukuUtils.isShizukuAvailable()
             // publish the fast probe first so a stalling root check cannot delay the one-tap offer
             if (isShizukuAvailable) _canOneTapGrant.value = true
-            if (!rootChecked) {
-                rootChecked = true
-                isRootAvailable = runCatching { Shell.getShell().isRoot }.getOrDefault(false)
-            }
-            _canOneTapGrant.value = isRootAvailable || isShizukuAvailable
+            _canOneTapGrant.value = PrivilegedShell.isRootAvailable() || isShizukuAvailable
         }
     }
 
@@ -296,15 +285,8 @@ class OnboardingViewModel @Inject constructor(
      * first pop its own permission dialog; [ShizukuUtils.executeCommand] retries after the grant.
      */
     fun grantWriteSecureSettings() {
-        val command =
-            application.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
         viewModelScope.launch(Dispatchers.IO) {
-            if (isRootAvailable) {
-                Shell.cmd(command).exec()
-                refreshPermissionStates()
-            } else {
-                ShizukuUtils.executeCommand(command) { _, _ -> refreshPermissionStates() }
-            }
+            PrivilegedShell.grantWriteSecureSettings(application) { refreshPermissionStates() }
         }
     }
 

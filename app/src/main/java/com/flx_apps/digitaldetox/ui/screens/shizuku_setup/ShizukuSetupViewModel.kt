@@ -1,8 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.shizuku_setup
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.R
@@ -11,7 +9,8 @@ import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityServi
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.util.ShizukuUtils
-import com.topjohnwu.superuser.Shell
+import com.flx_apps.digitaldetox.util.PrivilegedShell
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -46,7 +45,7 @@ class ShizukuSetupViewModel @Inject constructor(
     private val _setupState = MutableStateFlow(
         // the full derivation talks to binders — seed only with the cheap local permission check
         // and let the first poll tick fill in the exact step
-        if (hasWriteSecureSettings()) ShizukuSetupState.COMPLETED
+        if (application.hasWriteSecureSettings()) ShizukuSetupState.COMPLETED
         else ShizukuSetupState.NOT_INSTALLED
     )
     val setupState: StateFlow<ShizukuSetupState> = _setupState
@@ -61,8 +60,8 @@ class ShizukuSetupViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) { onPermissionGranted() }
         }
         viewModelScope.launch(Dispatchers.IO) {
-            // the root check spawns an `su` process and can block — run it once, off the UI
-            _isRootAvailable.value = runCatching { Shell.getShell().isRoot }.getOrDefault(false)
+            // the root check spawns an `su` process and can block — run it off the UI
+            _isRootAvailable.value = PrivilegedShell.isRootAvailable()
         }
         viewModelScope.launch(Dispatchers.IO) {
             while (isActive && _setupState.value != ShizukuSetupState.COMPLETED) {
@@ -88,7 +87,7 @@ class ShizukuSetupViewModel @Inject constructor(
     }
 
     private fun deriveState(): ShizukuSetupState = when {
-        hasWriteSecureSettings() -> ShizukuSetupState.COMPLETED
+        application.hasWriteSecureSettings() -> ShizukuSetupState.COMPLETED
         ShizukuUtils.isShizukuAvailable() -> if (ShizukuUtils.hasShizukuPermission()) {
             ShizukuSetupState.READY
         } else {
@@ -98,9 +97,6 @@ class ShizukuSetupViewModel @Inject constructor(
         ShizukuUtils.isShizukuInstalled() -> ShizukuSetupState.INSTALLED_NOT_RUNNING
         else -> ShizukuSetupState.NOT_INSTALLED
     }
-
-    private fun hasWriteSecureSettings(): Boolean =
-        application.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
 
     /**
      * Asks Shizuku to let DetoxDroid use it (Shizuku shows its own confirmation dialog); the
@@ -116,7 +112,7 @@ class ShizukuSetupViewModel @Inject constructor(
     fun grantViaShizuku() {
         val command =
             application.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
-        ShizukuUtils.executeCommand(command) { _, _ -> refreshState() }
+        PrivilegedShell.runViaShizuku(command) { refreshState() }
     }
 
     /**
@@ -125,10 +121,7 @@ class ShizukuSetupViewModel @Inject constructor(
     fun grantViaRoot() {
         val command =
             application.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching { Shell.cmd(command).exec() }
-            refreshStateNow()
-        }
+        PrivilegedShell.runAsRoot(command) { refreshState() }
     }
 
     /**

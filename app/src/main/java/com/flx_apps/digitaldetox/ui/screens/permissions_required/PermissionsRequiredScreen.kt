@@ -39,11 +39,10 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
 import com.flx_apps.digitaldetox.util.ShizukuUtils
-import com.topjohnwu.superuser.Shell
+import com.flx_apps.digitaldetox.util.PrivilegedShell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.parcelize.Parcelize
-import timber.log.Timber
 
 @Parcelize
 data class GrantPermissionsCommand(val command: String, val supportsShizuku: Boolean) : Parcelable
@@ -107,9 +106,7 @@ fun PermissionsRequiredScreenContent(
     // timeout) — run it once per screen on a background thread; the card simply appears when
     // the check comes back positive
     val isRootAvailable by produceState(initialValue = false) {
-        value = withContext(Dispatchers.IO) {
-            runCatching { Shell.getShell().isRoot }.getOrDefault(false)
-        }
+        value = withContext(Dispatchers.IO) { PrivilegedShell.isRootAvailable() }
     }
     val isShizukuAvailable = remember { ShizukuUtils.isShizukuAvailable() }
 
@@ -158,14 +155,9 @@ fun PermissionsRequiredScreenContent(
                 description = stringResource(id = R.string.noPermissions_rooted),
                 buttonText = stringResource(id = R.string.noPermissions_rooted_go),
                 onGrantPermissions = {
-                    // try to grant permissions using a root shell (libsu runs the callback on the main thread)
-                    runCatching {
-                        Shell.cmd(grantPermissionsCommand.command).submit { result ->
-                            if (result.code == 0) {
-                                navViewModel.onBackPress()
-                            }
-                        }
-                    }.onFailure { Timber.e(it, "Failed to run root command") }
+                    PrivilegedShell.runAsRoot(grantPermissionsCommand.command) { success ->
+                        if (success) navViewModel.onBackPress()
+                    }
                 })
         }
 
@@ -174,11 +166,8 @@ fun PermissionsRequiredScreenContent(
                 description = stringResource(id = R.string.noPermissions_shizuku),
                 buttonText = stringResource(id = R.string.noPermissions_shizuku_go),
                 onGrantPermissions = {
-                    // try grant permissions using Shizuku
-                    ShizukuUtils.executeCommand(grantPermissionsCommand.command) { success, _ ->
-                        if (success) {
-                            navViewModel.onBackPress()
-                        }
+                    PrivilegedShell.runViaShizuku(grantPermissionsCommand.command) { success ->
+                        if (success) navViewModel.onBackPress()
                     }
                 })
         }

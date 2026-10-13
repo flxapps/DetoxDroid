@@ -2,9 +2,7 @@ package com.flx_apps.digitaldetox.ui.screens.device_admin_revoked
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -47,11 +45,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
-import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
+import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.theme.DetoxDroidTheme
 import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import timber.log.Timber
 
 /**
@@ -121,43 +120,14 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
                 WarningReason.DEVICE_ADMIN_REVOKED ->
                     !DetoxDroidDeviceAdminReceiver.hasDeviceAdminPermission(context)
                 WarningReason.ACCESSIBILITY_DISABLED ->
-                    !isAccessibilityServiceEnabled(context)
+                    !AccessibilityServiceController.isEnabledInSettings(context)
             }
         }
 
-        private fun accessibilityServiceComponent(context: Context): String =
-            "${context.packageName}/${DetoxDroidAccessibilityService::class.java.name}"
-
-        private fun hasWriteSecureSettingsPermission(context: Context): Boolean =
-            context.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") ==
-                    PackageManager.PERMISSION_GRANTED
-
-        private fun isAccessibilityServiceEnabled(context: Context): Boolean {
-            val enabled = Settings.Secure.getString(
-                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            ).orEmpty()
-            return enabled.split(':').any { it == accessibilityServiceComponent(context) }
-        }
-
+        /** Switches the service back on, and says whether it is listed as enabled now. */
         private fun tryEnableAccessibilityService(context: Context): Boolean {
-            val current = Settings.Secure.getString(
-                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            ).orEmpty()
-            val updated = current.split(':')
-                .filter { it.isNotBlank() }
-                .toMutableSet()
-                .apply { add(accessibilityServiceComponent(context)) }
-                .joinToString(":")
-
-            val wrote = Settings.Secure.putString(
-                context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, updated
-            )
-            val enabledWrote = Settings.Secure.putString(
-                context.contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, "1"
-            )
-            if (!wrote || !enabledWrote) return false
-            context.startService(Intent(context, DetoxDroidAccessibilityService::class.java))
-            return isAccessibilityServiceEnabled(context)
+            AccessibilityServiceController.activate(context)
+            return AccessibilityServiceController.isEnabledInSettings(context)
         }
     }
 
@@ -169,7 +139,7 @@ class DeviceAdminRevokedWarningActivity : ComponentActivity() {
         warningReason = WarningReason.from(intent.getStringExtra(EXTRA_WARNING_REASON))
 
         // For accessibility, try to auto re-enable if we have WRITE_SECURE_SETTINGS
-        if (warningReason == WarningReason.ACCESSIBILITY_DISABLED && hasWriteSecureSettingsPermission(this)) {
+        if (warningReason == WarningReason.ACCESSIBILITY_DISABLED && hasWriteSecureSettings()) {
             val reEnabled = runCatching { tryEnableAccessibilityService(this) }.getOrDefault(false)
             if (reEnabled) {
                 setWarningRequired(this, false, warningReason)

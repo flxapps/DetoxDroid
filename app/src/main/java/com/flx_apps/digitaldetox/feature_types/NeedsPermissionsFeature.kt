@@ -1,13 +1,13 @@
 package com.flx_apps.digitaldetox.feature_types
 
 import android.content.Context
-import android.content.pm.PackageManager
 import android.provider.Settings
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 
 /**
  * A feature that needs specific permissions in order to work.
@@ -68,7 +68,7 @@ class NeedsWriteSecureSettingsPermission : NeedsPermissionsFeature {
      * Checks whether the app has the [android.Manifest.permission.WRITE_SECURE_SETTINGS] permission.
      */
     override fun hasPermissions(context: Context): Boolean {
-        return context.checkCallingOrSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == PackageManager.PERMISSION_GRANTED
+        return context.hasWriteSecureSettings()
     }
 
     /**
