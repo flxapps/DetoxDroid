@@ -3,7 +3,7 @@ package com.flx_apps.digitaldetox.ui.screens.feature
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
@@ -49,7 +49,7 @@ fun OpenAppExceptionsTile(
         subtitleText = stringResource(id = subtitle, rememberSelectedAppCount(feature)),
         trailing = {
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Manage App Scope",
                 modifier = Modifier.size(24.dp)
             )

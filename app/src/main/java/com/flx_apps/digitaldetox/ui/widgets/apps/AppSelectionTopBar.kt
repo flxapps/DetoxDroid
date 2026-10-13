@@ -11,6 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -37,19 +38,25 @@ fun AppSelectionTopBar(
             AnimatedContent(targetState = showSearchBar, label = "ToggleSelectionSearchBar") {
                 AnimatedVisibility(visible = it) {
                     SearchBar(
-                        query = searchQuery,
-                        onQueryChange = onSearchQueryChange,
-                        onSearch = {},
-                        active = false,
-                        onActiveChange = {},
-                        trailingIcon = {
-                            IconButton(onClick = onToggleSearch) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = closeSearchContentDescription
-                                )
-                            }
-                        }
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchQuery,
+                                onQueryChange = onSearchQueryChange,
+                                onSearch = {},
+                                expanded = false,
+                                onExpandedChange = {},
+                                trailingIcon = {
+                                    IconButton(onClick = onToggleSearch) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = closeSearchContentDescription
+                                        )
+                                    }
+                                }
+                            )
+                        },
+                        expanded = false,
+                        onExpandedChange = {},
                     ) {}
                 }
                 AnimatedVisibility(visible = !it) {
