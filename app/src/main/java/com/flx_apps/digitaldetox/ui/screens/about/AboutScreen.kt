@@ -108,12 +108,15 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val supportSection = stringResource(id = R.string.about_section_support)
     val projectSection = stringResource(id = R.string.about_section_project)
     var keepAlive by remember { mutableStateOf(ReliabilitySettings.keepServiceAliveEnabled) }
-    // observed so the tile opens up the moment the passphrase is entered on a feature screen
+    // observed so the tiles open up the moment the passphrase is entered on a feature screen or
+    // the brake ends, and close again when either comes back
     val commitmentPasswordToken by CommitmentPasswordFeature.stateToken.collectAsState()
-    val onboardingLocked = remember(commitmentPasswordToken) { OnboardingState.isOnboardingLocked }
+    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
+    val onboardingLocked = remember(commitmentPasswordToken, brakeToken) {
+        OnboardingState.isOnboardingLocked
+    }
     // switching the keep-alive off and swiping DetoxDroid away is a way to stop it, which the
     // password and the brake both refuse on the home screen, so the switch follows their lock
-    val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
     val keepAliveLocked = remember(commitmentPasswordToken, braking) {
         braking || CommitmentPasswordFeature.isFeatureLocked(CommitmentPasswordFeature.id)
