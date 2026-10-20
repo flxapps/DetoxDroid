@@ -40,10 +40,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import kotlin.time.Duration.Companion.milliseconds
 
 @EntryPoint
@@ -507,12 +503,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText())
         } else if (isPausing) {
             // show the actual end of the pause instead of a bare "Paused"
-            getString(
-                R.string.home_state_paused,
-                Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                    .atZone(ZoneId.systemDefault()).toLocalTime()
-                    .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-            )
+            getString(R.string.home_state_paused, PauseButtonFeature.endsAtText())
         } else getString(R.string.app_notification_active)
         // Reading the usage records blocks, so they are read off the main thread and the refresh
         // comes back through updateForegroundNotification(). Until then the title is the app name.

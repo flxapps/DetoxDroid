@@ -89,10 +89,6 @@ import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.appLabel
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import kotlin.math.atan2
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
@@ -214,10 +210,7 @@ private fun AppBar(
                                 brakeEndsAt
                             } else if (detoxDroidState == DetoxDroidState.Paused) {
                                 // show the actual end of the running pause, not "now + duration"
-                                Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                                    .atZone(ZoneId.systemDefault()).toLocalTime().format(
-                                        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
-                                    )
+                                PauseButtonFeature.endsAtText()
                             } else ""
                         ), style = MaterialTheme.typography.labelSmall
                     )

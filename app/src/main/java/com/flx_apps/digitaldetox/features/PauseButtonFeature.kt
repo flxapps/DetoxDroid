@@ -23,6 +23,10 @@ import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.pause_button.PauseButtonFeatureSettingsSection
 import timber.log.Timber
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.concurrent.TimeUnit
 
 /**
@@ -98,11 +102,15 @@ object PauseButtonFeature : Feature(), LockableFeature {
         isPausing() && feature is PausableFeature && feature.id !in pauseExemptFeatureIds
 
     /**
-     * Holds the time until the pause is over. Also read by the UI to display the actual end time
-     * of a running pause.
+     * Holds the time until the pause is over. See [endsAtText] for how the UI shows it.
      */
     var pauseUntil = 0L
         private set
+
+    /** The end of the running pause as a time of day, e.g. "21:30". */
+    fun endsAtText(): String =
+        Instant.ofEpochMilli(pauseUntil).atZone(ZoneId.systemDefault()).toLocalTime()
+            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
