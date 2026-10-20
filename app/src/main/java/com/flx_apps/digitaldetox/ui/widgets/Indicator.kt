@@ -24,7 +24,7 @@ fun StatusIndicator(
     modifier: Modifier = Modifier, indicatorColor: Color = colorResource(id = R.color.green)
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(end = 4.dp)
             .size(8.dp)
             .clip(CircleShape)
