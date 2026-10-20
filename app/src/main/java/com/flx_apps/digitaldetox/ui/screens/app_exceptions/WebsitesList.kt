@@ -1,6 +1,8 @@
 package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 
 import android.icu.text.ListFormatter
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -14,14 +16,18 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.NoAdultContent
 import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -32,8 +38,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -55,8 +63,9 @@ import java.text.NumberFormat
  * the same way.
  *
  * @param query The search from the top bar, which narrows the sites and the collections here as it
- *   narrows the apps on the other half.
+ *   narrows the apps on the other half. It finds the collections folded under "Advanced" as well.
  * @param collectionTitle The name of a collection, for the search.
+ * @param advancedExpanded Whether the [WebsiteCollection.advanced] collections are unfolded.
  * @param copyButton The "Copy from…" button, which copies apps and websites alike.
  */
 fun LazyListScope.websiteSections(
@@ -66,6 +75,8 @@ fun LazyListScope.websiteSections(
     query: String,
     collectionTitle: (WebsiteCollection) -> String,
     settingsLocked: Boolean,
+    advancedExpanded: Boolean,
+    onToggleAdvanced: () -> Unit,
     onAddWebsite: (String) -> Boolean,
     onToggleWebsite: (String) -> Unit,
     copyButton: @Composable () -> Unit,
@@ -115,19 +126,33 @@ fun LazyListScope.websiteSections(
     item(key = "collectionsHeader") {
         AppListSectionHeader(stringResource(id = R.string.websites_section_collections))
     }
-    items(
-        collections.filter { query.isBlank() || it.matches(query, collectionTitle(it.collection)) },
-        key = { it.collection.id }
-    ) { item ->
+    fun collectionItems(shown: List<CollectionItem>) = items(shown, key = { it.collection.id }) {
         WebsiteListItem(
-            entry = Websites.collectionEntry(item.collection),
-            title = stringResource(id = item.collection.title),
-            supportingText = item.description(),
-            icon = item.collection.icon,
-            checked = item.checked,
+            entry = Websites.collectionEntry(it.collection),
+            title = stringResource(id = it.collection.title),
+            supportingText = it.description(),
+            icon = it.collection.icon,
+            checked = it.checked,
             enabled = !settingsLocked,
             onToggle = onToggleWebsite,
+            modifier = Modifier.animateItem()
         )
+    }
+    if (query.isNotBlank()) {
+        collectionItems(collections.filter { it.matches(query, collectionTitle(it.collection)) })
+    } else {
+        val (everyday, advanced) = collections.partition { !it.collection.advanced }
+        collectionItems(everyday)
+        if (advanced.isNotEmpty()) {
+            item(key = "advancedCollections") {
+                AdvancedCollectionsRow(
+                    summary = advanced.joinToString { collectionTitle(it.collection) },
+                    expanded = advancedExpanded,
+                    onToggle = onToggleAdvanced
+                )
+            }
+            if (advancedExpanded) collectionItems(advanced)
+        }
     }
     if (browsers != null && !noReadableBrowser) {
         item(key = "browsers") { BrowsersNote(browsers) }
@@ -222,6 +247,50 @@ private fun WebsiteListItem(
             }
         },
         onCheckedChange = { onToggle(entry) }
+    )
+}
+
+/**
+ * Folds the [WebsiteCollection.advanced] collections away, worded like the "Advanced" row of the
+ * settings screens and lined up with the collection rows around it. Opening it only shows them, so
+ * it works while the settings are locked.
+ */
+@Composable
+private fun AdvancedCollectionsRow(summary: String, expanded: Boolean, onToggle: () -> Unit) {
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f, label = "advancedCollectionsChevron"
+    )
+    ListItem(
+        headlineContent = { Text(text = stringResource(id = R.string.feature_settings_advanced)) },
+        supportingContent = {
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        leadingContent = {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.MoreHoriz,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        // as wide as the checkboxes above, so the chevron sits in their column
+        trailingContent = {
+            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.rotate(chevronRotation)
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = Modifier.clickable(onClick = onToggle)
     )
 }
 

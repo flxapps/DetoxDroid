@@ -20,18 +20,32 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @param curated Whether we wrote the list ourselves. A curated list is short enough to name its
  *   sites on screen, a large one is shown by its size and source.
+ * @param advanced Whether the screen folds the list away under "Advanced". The porn and gambling
+ *   lists are for the few who come looking for them, and everyone else should not have to read
+ *   past them.
  */
 enum class WebsiteCollection(
     val id: String,
     @StringRes val title: Int,
     val asset: String,
     val curated: Boolean,
+    val advanced: Boolean,
 ) {
-    SOCIAL("social", R.string.websites_collection_social, "websites/social.txt", curated = true),
-    VIDEO("video", R.string.websites_collection_video, "websites/video.txt", curated = true),
-    ADULT("adult", R.string.websites_collection_adult, "websites/adult.txt", curated = false),
+    SOCIAL(
+        "social", R.string.websites_collection_social, "websites/social.txt",
+        curated = true, advanced = false
+    ),
+    VIDEO(
+        "video", R.string.websites_collection_video, "websites/video.txt",
+        curated = true, advanced = false
+    ),
+    ADULT(
+        "adult", R.string.websites_collection_adult, "websites/adult.txt",
+        curated = false, advanced = true
+    ),
     GAMBLING(
-        "gambling", R.string.websites_collection_gambling, "websites/gambling.txt", curated = false
+        "gambling", R.string.websites_collection_gambling, "websites/gambling.txt",
+        curated = false, advanced = true
     );
 
     companion object {

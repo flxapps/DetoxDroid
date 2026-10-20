@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -159,6 +160,10 @@ fun InstalledAppsList(
     val collections = appExceptionsViewModel.collections.collectAsState().value
     val browsers = appExceptionsViewModel.browsers.collectAsState().value
     val context = LocalContext.current
+    val advancedListed = collections.any { it.collection.advanced && it.checked }
+    var advancedExpanded by rememberSaveable { mutableStateOf(advancedListed) }
+    // a collection in the list is never out of sight, also when "Copy from…" brought it in
+    LaunchedEffect(advancedListed) { if (advancedListed) advancedExpanded = true }
     LazyColumn {
         item(key = "listType") {
             AppExceptionsListTypeSection(settingsLocked = settingsLocked)
@@ -175,6 +180,8 @@ fun InstalledAppsList(
                 query = appExceptionsViewModel.query.value,
                 collectionTitle = { context.getString(it.title) },
                 settingsLocked = settingsLocked,
+                advancedExpanded = advancedExpanded,
+                onToggleAdvanced = { advancedExpanded = !advancedExpanded },
                 onAddWebsite = appExceptionsViewModel::addWebsite,
                 onToggleWebsite = appExceptionsViewModel::toggleWebsite,
                 copyButton = { CopyExceptionsFromButton(settingsLocked = settingsLocked) },
