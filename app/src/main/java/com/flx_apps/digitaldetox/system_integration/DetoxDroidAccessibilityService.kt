@@ -152,7 +152,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     private val websiteMonitor by lazy {
         WebsiteMonitor(
-            addressBars = BrowserAddressBars.load(this),
+            addressBarIds = { BrowserAddressBars.idsFor(this, it) },
             readRoot = { rootInActiveWindow },
             onPageChanged = ::dispatchWebsiteChange
         )

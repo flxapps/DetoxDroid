@@ -16,11 +16,13 @@ import android.view.accessibility.AccessibilityNodeInfo
  * once is kept and only refreshed after that: finding it again means searching the window, and for
  * a bar made with Compose that is a walk through hundreds of nodes, one call each.
  *
+ * @param addressBarIds The ids the address bar of an app may have, null for an app that is no
+ *   browser DetoxDroid can read, see [BrowserAddressBars.idsFor].
  * @param readRoot The active window, or null. Recycled here after use.
  * @param onPageChanged Called when the page changed, or when [recheck] asked for a report anyway.
  */
 class WebsiteMonitor(
-    private val addressBars: Map<String, List<String>>,
+    private val addressBarIds: (String) -> List<String>?,
     private val readRoot: () -> AccessibilityNodeInfo?,
     private val onPageChanged: () -> Unit,
 ) {
@@ -48,9 +50,6 @@ class WebsiteMonitor(
     var page: WebPage? = null
         private set
 
-    /** The browsers DetoxDroid can read the address bar of. */
-    val browsers: Set<String> get() = addressBars.keys
-
     /**
      * The app in front changed to [packageName]. The page of a browser is read right away, so the
      * features hear about the browser and the site it shows at once instead of one after the other.
@@ -59,8 +58,8 @@ class WebsiteMonitor(
     fun onForegroundApp(packageName: String, watch: Boolean) {
         cancelRead()
         forgetAddressBar()
-        val ids = addressBars[packageName]
-        if (!watch || ids == null) {
+        val ids = if (watch) addressBarIds(packageName) else null
+        if (ids == null) {
             browserPackage = null
             page = null
             return
@@ -105,7 +104,7 @@ class WebsiteMonitor(
 
     private fun readAgain() {
         val browser = browserPackage ?: return
-        val ids = addressBars[browser] ?: return
+        val ids = addressBarIds(browser) ?: return
         val newPage = when (val reading = read(browser, ids)) {
             is AddressBarReading.Shown -> reading.page
             // still the page it was: a bar that is hidden or being typed in says nothing new

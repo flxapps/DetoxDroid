@@ -13,16 +13,16 @@ data class InstalledBrowsers(val readable: List<String>, val unreadable: List<St
     companion object {
         /**
          * Every app that opens web links counts as a browser, minus DetoxDroid itself. Blocking: it
-         * asks the package manager.
+         * asks the package manager, and looks into the browsers [BrowserAddressBars] does not know.
          */
         fun find(context: Context): InstalledBrowsers {
-            val readablePackages = BrowserAddressBars.load(context).keys
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"))
             val browsers = runCatching {
                 context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
                     .map { it.activityInfo.packageName }
             }.getOrDefault(emptyList()).toSet() - context.packageName
-            val (readable, unreadable) = browsers.partition { it in readablePackages }
+            val (readable, unreadable) =
+                browsers.partition { BrowserAddressBars.idsFor(context, it) != null }
             return InstalledBrowsers(
                 readable = readable.map { context.appLabel(it) }.sorted(),
                 unreadable = unreadable.map { context.appLabel(it) }.sorted(),

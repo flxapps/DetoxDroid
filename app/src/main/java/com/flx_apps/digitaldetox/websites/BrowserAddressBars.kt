@@ -1,10 +1,15 @@
 package com.flx_apps.digitaldetox.websites
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.view.accessibility.AccessibilityNodeInfo
 import com.flx_apps.digitaldetox.R
 import org.xmlpull.v1.XmlPullParser
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * What a browser's address bar says right now.
@@ -24,8 +29,8 @@ sealed interface AddressBarReading {
 }
 
 /**
- * The browsers whose websites DetoxDroid tells apart, from `res/xml/browser_address_bars.xml`, and
- * reading their address bar.
+ * The browsers whose websites DetoxDroid tells apart, from `res/xml/browser_address_bars.xml` or
+ * from what they are built on, and reading their address bar.
  */
 object BrowserAddressBars {
     /**
@@ -35,8 +40,56 @@ object BrowserAddressBars {
      */
     private const val MAX_WALKED_NODES = 400
 
+    @Volatile
+    private var table: Map<String, List<String>>? = null
+
+    /** What [probe] made of the apps the table does not name, empty for no readable browser. */
+    private val probed = ConcurrentHashMap<String, List<String>>()
+
+    /**
+     * The ids the address bar of [packageName] may have, in the order they are tried, or null when
+     * it is no browser DetoxDroid can read. Blocking the first time it is asked about an app the
+     * table does not name, which is [probe]d then.
+     */
+    fun idsFor(context: Context, packageName: String): List<String>? {
+        val table = table ?: load(context).also { table = it }
+        table[packageName]?.let { return it }
+        return probed.getOrPut(packageName) { probe(context, packageName).orEmpty() }
+            .ifEmpty { null }
+    }
+
+    /**
+     * Where a browser the table does not name keeps its address bar, going by what it is built on.
+     * Most browsers are Chromium or Firefox underneath and keep the address bar they came with, and
+     * an app carries the names of its view ids, so one that has the id of Chromium's or Firefox's
+     * address bar most likely shows the address there. Only an app that opens any web link counts
+     * as a browser, so an app with a browser built in stays an app.
+     */
+    @SuppressLint("DiscouragedApi") // the ids of another app are only known by name
+    private fun probe(context: Context, packageName: String): List<String>? {
+        if (packageName == context.packageName) return null
+        val packageManager = context.packageManager
+        val anyLink = Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com"))
+            .setPackage(packageName)
+        val opensLinks = runCatching {
+            packageManager.queryIntentActivities(anyLink, PackageManager.MATCH_ALL).isNotEmpty()
+        }.getOrDefault(false)
+        if (!opensLinks) return null
+        val resources = runCatching { packageManager.getResourcesForApplication(packageName) }
+            .getOrNull() ?: return null
+        fun declares(id: String) = resources.getIdentifier(id, "id", packageName) != 0
+        return when {
+            declares("url_bar") -> listOf("$packageName:id/url_bar")
+            declares("mozac_browser_toolbar_url_view") -> listOf(
+                "$packageName:id/mozac_browser_toolbar_url_view", "ADDRESSBAR_URL_BOX"
+            )
+
+            else -> null
+        }
+    }
+
     /** Browser package → the ids its address bar may have, in the order they are tried. */
-    fun load(context: Context): Map<String, List<String>> = runCatching {
+    private fun load(context: Context): Map<String, List<String>> = runCatching {
         val browsers = LinkedHashMap<String, MutableList<String>>()
         val parser = context.resources.getXml(R.xml.browser_address_bars)
         var browser: String? = null
