@@ -7,7 +7,9 @@ import org.junit.Test
 /**
  * What browsers put in their address bar, and what DetoxDroid makes of it. The texts are the
  * shapes the bars show between and on pages: with and without scheme and "www.", a host alone,
- * their own placeholder, a search being typed, internal pages.
+ * their own placeholder, a search being typed, internal pages. Firefox puts the address into the
+ * description of its bar instead: after the page title in a custom tab, before the bar's hint
+ * always, and on a search results page the search in its place.
  */
 class WebPageParseTest {
 
@@ -38,5 +40,18 @@ class WebPageParseTest {
             "file:///sdcard/Download/page.html",
             "content://media/external/file/12",
         ).forEach { assertEquals(it, null, WebPage.parse(it)) }
+    }
+
+    @Test
+    fun `firefox describes its bar`() {
+        mapOf(
+            " youtube.com/shorts/Xy12AbC. Search or enter address" to
+                    WebPage("youtube.com", "/shorts/Xy12AbC"),
+            "Dr. Who - Wikipedia en.m.wikipedia.org. Suche oder Adresse eingeben" to
+                    WebPage("en.m.wikipedia.org", ""),
+            " cute cats. Search or enter address" to null,
+            " . Search or enter address" to null,
+            "Search or enter address" to null,
+        ).forEach { (text, page) -> assertEquals(text, page, WebPage.parseDescription(text)) }
     }
 }

@@ -48,6 +48,20 @@ data class WebPage(val host: String, val path: String) {
         }
 
         /**
+         * Reads a page from an address bar's description, for the bars that leave their text empty
+         * and describe themselves instead: the page title where they show one, the address, a full
+         * stop and their hint ("Doomscrolling - Wikipedia en.wikipedia.org. Search or enter
+         * address"). The address is the last word before the last full stop that ends one. The
+         * hint is in the phone's language, so it is cut off by that full stop and never read.
+         */
+        fun parseDescription(description: CharSequence?): WebPage? {
+            val text = description?.toString() ?: return null
+            val address = text.substringBeforeLast(". ", text).trim()
+                .takeLastWhile { !it.isWhitespace() }.trimEnd('.')
+            return parse(address)
+        }
+
+        /**
          * Whether [host] is a name with at least two labels, made of what a host name may contain.
          * A single word is what a search term or a browser's own page looks like.
          */

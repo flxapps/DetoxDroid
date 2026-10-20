@@ -72,8 +72,13 @@ object BrowserAddressBars {
             try {
                 if (node.isFocused) return AddressBarReading.Editing
                 if (node.isShowingHintText) return AddressBarReading.Shown(null)
-                val text = node.text?.takeIf { it.isNotBlank() } ?: node.contentDescription
-                return AddressBarReading.Shown(WebPage.parse(text))
+                // Firefox and the browsers built on it leave the text of their bar empty and put
+                // the address into its description
+                val text = node.text
+                return AddressBarReading.Shown(
+                    if (!text.isNullOrBlank()) WebPage.parse(text)
+                    else WebPage.parseDescription(node.contentDescription)
+                )
             } finally {
                 node.recycle()
             }
