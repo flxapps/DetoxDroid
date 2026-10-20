@@ -1,0 +1,14 @@
+# Video and streaming: sites that play the next video on their own, each with its subdomains.
+# The first few are named on screen, so the best known come first.
+youtube.com
+netflix.com
+twitch.tv
+primevideo.com
+disneyplus.com
+max.com
+hulu.com
+crunchyroll.com
+kick.com
+dailymotion.com
+vimeo.com
+rumble.com
