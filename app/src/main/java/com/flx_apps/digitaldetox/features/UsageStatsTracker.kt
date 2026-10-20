@@ -48,6 +48,13 @@ object UsageStatsTracker {
      */
     val foregroundTimeRecorder = ForegroundTimeRecorder()
 
+    /**
+     * Time on each website, keyed by site ("youtube.com", see
+     * [com.flx_apps.digitaldetox.websites.Websites.siteOf]), while the user has it counted. A visit
+     * is a stretch on one site: following links within it is the same visit.
+     */
+    val websiteTimeRecorder = ForegroundTimeRecorder()
+
     /** Weights scroll events by their in-app relative scroll distance (see the class docs). */
     private val scrollCalibrator = ScrollDeltaCalibrator()
 
@@ -95,6 +102,7 @@ object UsageStatsTracker {
      */
     fun shutdown() {
         foregroundTimeRecorder.closeSession()
+        websiteTimeRecorder.closeSession()
         scope.launch {
             runCatching { entryPoint?.repository()?.snapshotTodayCountersOnly() }
                 .onFailure { Timber.w(it, "Final scroll snapshot on shutdown failed") }
@@ -111,12 +119,22 @@ object UsageStatsTracker {
     }
 
     /**
+     * Registers that the browser in front shows [site], or no site (null): a new tab, a page that
+     * names none, or another app altogether.
+     */
+    fun onWebsite(site: String?) {
+        if (site == null) websiteTimeRecorder.closeSession()
+        else websiteTimeRecorder.onForegroundApp(site)
+    }
+
+    /**
      * The screen going off ends the session; nothing is in front of a screen that is off. It is
      * also the moment the process is most likely to be killed, so the counters are persisted now
      * rather than when the debounce next allows it.
      */
     fun onScreenTurnedOff() {
         foregroundTimeRecorder.closeSession()
+        websiteTimeRecorder.closeSession()
         snapshotCounters()
     }
 

@@ -46,7 +46,6 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.toShortDurationString
 import com.flx_apps.digitaldetox.util.formatDistance
-import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,7 +65,7 @@ fun AppDetailContent(
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AppIcon(packageName = app.packageName, size = 48.dp, contentDescription = app.label)
+            UsageItemIcon(item = app, size = 48.dp)
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
@@ -99,13 +98,17 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usageStats_opens_short),
+                        text = stringResource(
+                            if (app.isWebsite) R.string.usageStats_visits_short
+                            else R.string.usageStats_opens_short
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            if (app.sessionCount > 0) {
+            // a website's visits are its sessions, already counted next to this
+            if (app.sessionCount > 0 && !app.isWebsite) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = app.sessionCount.toString(),
@@ -126,7 +129,10 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usageStats_avgSession),
+                        text = stringResource(
+                            if (app.isWebsite) R.string.usageStats_avgVisit
+                            else R.string.usageStats_avgSession
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -263,10 +269,16 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
             }
 
             if (disableAppsActive) {
-                val isDisabled = DisableAppsFeature.disableableApps.contains(app.packageName)
+                val isDisabled = DisableAppsFeature.appliesTo(app.packageName)
                 FeatureActionChip(
-                    label = if (isDisabled) stringResource(R.string.usageStats_enableApp)
-                    else stringResource(R.string.usageStats_disableApp),
+                    label = stringResource(
+                        when {
+                            app.isWebsite && isDisabled -> R.string.usageStats_unblockSite
+                            app.isWebsite -> R.string.usageStats_blockSite
+                            isDisabled -> R.string.usageStats_enableApp
+                            else -> R.string.usageStats_disableApp
+                        }
+                    ),
                     color = colorResource(id = R.color.pink),
                     isActive = isDisabled,
                     onClick = {

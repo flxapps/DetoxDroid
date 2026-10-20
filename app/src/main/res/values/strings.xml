@@ -559,7 +559,6 @@
     <string name="usageStats_dailyAverage_short">daily avg</string>
     <string name="usageStats_vsYesterday">vs yesterday</string>
     <string name="usageStats_vsPreviousPeriod">vs previous period</string>
-    <string name="usageStats_topApps">Top apps</string>
     <string name="usageStats_timeOfDay">App opens by hour</string>
     <string name="usageStats_byDay">By day</string>
     <string name="usageStats_weekdayAverages">Weekday averages</string>
@@ -608,6 +607,23 @@
     <string name="usageStats_sort_screenTime">By screen time</string>
     <string name="usageStats_sort_opens">By opens</string>
     <string name="usageStats_sort_scrollIntensity">By scroll intensity</string>
+    <string name="usageStats_websites_title">Time on websites</string>
+    <string name="usageStats_websites_optIn">DetoxDroid can count how long you spend on each website in %s. It keeps only the site, never the page, and nothing leaves your phone.</string>
+    <string name="usageStats_websites_optIn_action">Count time on websites</string>
+    <string name="usageStats_websites_empty">Nothing counted yet. Time on websites counts from the moment you switched this on.</string>
+    <string name="usageStats_websites_partOf">Already in your browsers\' screen time.</string>
+    <string name="usageStats_websites_turnOff">Turn off</string>
+    <string name="usageStats_websites_turnOff_title">Stop counting websites?</string>
+    <string name="usageStats_websites_turnOff_message">What was counted so far is deleted as well.</string>
+    <plurals name="usageStats_visits">
+        <item quantity="one">%d visit</item>
+        <item quantity="other">%d visits</item>
+    </plurals>
+    <string name="usageStats_visits_short">visits</string>
+    <string name="usageStats_avgVisit">avg visit</string>
+    <string name="usageStats_sort_visits">By visits</string>
+    <string name="usageStats_blockSite">Block site</string>
+    <string name="usageStats_unblockSite">Unblock site</string>
     <string name="usageStats_perspective">In perspective</string>
     <string name="usageStats_perspective_subtitle">The same numbers, made tangible</string>
     <string name="usageStats_perspective_footer">No judgement. Time is just easier to feel this way.</string>

@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStoreProperty
@@ -37,6 +38,16 @@ object UsageStatsSettings {
         emptySet(),
         DataStorePropertyTransformer.SetStorePropertyTransformer(
             { it.toString() }, { it.toIntOrNull() })
+    )
+
+    /**
+     * Whether DetoxDroid counts the time on each website in the browsers it can read. Off until
+     * the user switches it on: it means reading the address bar of every browser all the time,
+     * which nothing else asks for, and a list of sites is closer to a browsing history than
+     * anything else DetoxDroid keeps.
+     */
+    var countWebsites: Boolean by DataStoreProperty(
+        booleanPreferencesKey("UsageStatsScreen_countWebsites"), false
     )
 }
 

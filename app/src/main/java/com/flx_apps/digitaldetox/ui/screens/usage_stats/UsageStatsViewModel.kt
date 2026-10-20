@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DailyAppUsage
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsage
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository.Companion.HISTORY_RETENTION_MONTHS
 import com.flx_apps.digitaldetox.data.repository.UsageSource
@@ -22,6 +23,9 @@ import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.appCategory
 import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.startOfDayMillis
+import com.flx_apps.digitaldetox.websites.InstalledBrowsers
+import com.flx_apps.digitaldetox.websites.WebsiteCollections
+import com.flx_apps.digitaldetox.websites.Websites
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +65,13 @@ class UsageStatsViewModel @Inject constructor(
      * mix the two, and re-read every time because the grant can be given while the screen is open.
      */
     private var source: UsageSource = UsageSource.OS
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val browsers = InstalledBrowsers.find(getApplication()).readable.map { it.label }
+            _uiState.update { it.copy(readableBrowsers = browsers) }
+        }
+    }
 
     /** The name of [categoryId], or "Other" for one the system has no name for. */
     private fun categoryLabel(categoryId: Int): String {
@@ -121,6 +132,18 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     /**
+     * Starts or stops counting the time on websites. Stopping deletes what was counted: off means
+     * no list of sites is kept on the phone at all.
+     */
+    fun setCountWebsites(count: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            UsageStatsSettings.countWebsites = count
+            if (!count) repository.deleteWebsiteUsage()
+            refresh()
+        }
+    }
+
+    /**
      * Reloads the screen. [force] additionally snapshots today's live counters into Room even if
      * a snapshot was taken recently (used by pull-to-refresh and the initial load).
      */
@@ -165,7 +188,8 @@ class UsageStatsViewModel @Inject constructor(
                 availableHistoryDays = historyDays,
                 earliestHistoryDate = earliest,
                 hourlyRate = UsageStatsSettings.hourlyRate,
-                isSelfMeasured = source == UsageSource.SELF_MEASURED
+                isSelfMeasured = source == UsageSource.SELF_MEASURED,
+                countsWebsites = UsageStatsSettings.countWebsites
             )
         }
     }
@@ -254,7 +278,14 @@ class UsageStatsViewModel @Inject constructor(
                 effectiveDays = 1,
                 scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
                 excludedApps = buildExcludedApps(allApps),
-                categories = buildCategoryFilters(allApps)
+                categories = buildCategoryFilters(allApps),
+                topWebsites = if (UsageStatsSettings.countWebsites) {
+                    buildTopWebsites(
+                        UsageStatsTracker.websiteTimeRecorder.snapshot().mapValues { (_, time) ->
+                            time.foregroundMs to time.launchCount
+                        }
+                    )
+                } else emptyList()
             )
         }
     }
@@ -362,8 +393,68 @@ class UsageStatsViewModel @Inject constructor(
                 effectiveDays = days,
                 scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
                 excludedApps = buildExcludedApps(allPerApp),
-                categories = buildCategoryFilters(allPerApp)
+                categories = buildCategoryFilters(allPerApp),
+                topWebsites = if (UsageStatsSettings.countWebsites) {
+                    buildTopWebsites(
+                        repository.getWebsiteUsage(focusStart, focusEnd).groupBy { it.site }
+                            .mapValues { (_, days) ->
+                                days.sumOf(DailyWebsiteUsage::timeMs) to
+                                        days.sumOf(DailyWebsiteUsage::visitCount)
+                            }
+                    )
+                } else emptyList()
             )
+        }
+    }
+
+    /**
+     * The sites worth a row, from their time and visits ([perSite]), the way [buildTopApps] picks
+     * the apps.
+     */
+    private fun buildTopWebsites(perSite: Map<String, Pair<Long, Int>>): List<AppUsageStat> {
+        loadListedCollections()
+        return perSite.filterValues { (timeMs, _) -> timeMs >= MIN_APP_FOREGROUND_TIME_MS }
+            .map { (site, numbers) ->
+                val (timeMs, visits) = numbers
+                AppUsageStat(
+                    packageName = Websites.entryOfSite(site),
+                    label = site,
+                    totalTimeMs = timeMs,
+                    launchCount = visits,
+                    sessionCount = visits,
+                    scrollEventCount = 0,
+                    scrollIntensityScore = 0f,
+                    scrollsPerMinute = 0f,
+                    scrollDistanceMeters = 0.0,
+                    detoxBadges = websiteBadgesFor(site)
+                )
+            }
+            .sortedByDescending { it.totalTimeMs }
+    }
+
+    /**
+     * Reads the collections the features list, so a site one of them holds gets its badge on the
+     * first load. Blocking, but each file only once per process.
+     */
+    private fun loadListedCollections() {
+        listOf(GrayscaleAppsFeature, DisableAppsFeature, BreakDoomScrollingFeature)
+            .flatMap { feature -> feature.appExceptions.mapNotNull(Websites::collectionOf) }
+            .toSet()
+            .forEach { WebsiteCollections.load(getApplication(), it) }
+    }
+
+    /** What each feature does on [site] as a website, like [detoxBadgesFor] for an app. */
+    private fun websiteBadgesFor(site: String): List<DetoxBadge> = buildList {
+        if (GrayscaleAppsFeature.isActivated && Websites.covers(GrayscaleAppsFeature, site)) {
+            add(DetoxBadge.GRAYSCALE)
+        }
+        if (DisableAppsFeature.isActivated && Websites.covers(DisableAppsFeature, site)) {
+            add(DetoxBadge.DISABLED)
+        }
+        if (BreakDoomScrollingFeature.isActivated &&
+            Websites.covers(BreakDoomScrollingFeature, site)
+        ) {
+            add(DetoxBadge.DOOM_SCROLL)
         }
     }
 
@@ -615,15 +706,22 @@ class UsageStatsViewModel @Inject constructor(
             .associate { it.key to it.value }
     }
 
+    /** Loads the sparkline of [packageName], an app's package or a website's entry. */
     fun loadAppTrend(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val end = LocalDate.now()
             val start = end.minusDays(APP_TREND_DAYS - 1L)
-            val byDate = repository.getAppHistorical(packageName, start, end, source)
-                .associateBy { it.date }
+            val byDate = if (Websites.isWebsite(packageName)) {
+                val site = Websites.displayName(getApplication(), packageName)
+                repository.getSiteHistorical(site, start, end)
+                    .associate { it.date to it.timeMs }
+            } else {
+                repository.getAppHistorical(packageName, start, end, source)
+                    .associate { it.date to it.totalTimeMs }
+            }
             _appTrend.value = (0 until APP_TREND_DAYS).map { offset ->
                 val date = start.plusDays(offset.toLong())
-                date to (byDate[date]?.totalTimeMs ?: 0L)
+                date to (byDate[date] ?: 0L)
             }
         }
     }

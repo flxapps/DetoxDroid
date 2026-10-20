@@ -6,6 +6,8 @@ import com.flx_apps.digitaldetox.data.DailyDeviceStats
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsage
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsageDao
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsage
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
@@ -39,7 +41,8 @@ class UsageStatsRepository @Inject constructor(
     private val dao: DailyAppUsageDao,
     private val grayscaleDao: DailyGrayscaleStatsDao,
     private val deviceStatsDao: DailyDeviceStatsDao,
-    private val selfMeasuredDao: SelfMeasuredAppUsageDao
+    private val selfMeasuredDao: SelfMeasuredAppUsageDao,
+    private val websiteDao: DailyWebsiteUsageDao
 ) {
     private val snapshotMutex = Mutex()
     private var counterBaselineDate: LocalDate? = null
@@ -134,7 +137,7 @@ class UsageStatsRepository @Inject constructor(
         )
 
         snapshotGrayscaleToday()
-    }.also { snapshotSelfMeasuredToday() }
+    }.also { snapshotSelfMeasuredToday() }.also { snapshotWebsitesToday() }
 
     private suspend fun snapshotGrayscaleToday() {
         val today = LocalDate.now()
@@ -214,7 +217,7 @@ class UsageStatsRepository @Inject constructor(
             )
         }
         dao.upsertAll(rows)
-    }.also { snapshotSelfMeasuredToday() }
+    }.also { snapshotSelfMeasuredToday() }.also { snapshotWebsitesToday() }
 
     private fun resetCounterBaselinesIfNeeded(today: LocalDate) {
         if (counterBaselineDate == today) return
@@ -297,7 +300,9 @@ class UsageStatsRepository @Inject constructor(
         val prunedGrayscale = grayscaleDao.deleteOlderThan(cutoff)
         val prunedDeviceStats = deviceStatsDao.deleteOlderThan(cutoff)
         val prunedSelfMeasured = selfMeasuredDao.deleteOlderThan(cutoff)
-        return prunedApps + prunedGrayscale + prunedDeviceStats + prunedSelfMeasured
+        val prunedWebsites = websiteDao.deleteOlderThan(cutoff)
+        return prunedApps + prunedGrayscale + prunedDeviceStats + prunedSelfMeasured +
+                prunedWebsites
     }
 
     /**
@@ -351,6 +356,46 @@ class UsageStatsRepository @Inject constructor(
         })
     }
 
+    /**
+     * Writes today's time on websites to its own table, the way [snapshotSelfMeasuredToday] does
+     * for apps: a plain overwrite once the persisted values are folded in, nothing before.
+     */
+    suspend fun snapshotWebsitesToday() = snapshotMutex.withLock {
+        val today = LocalDate.now()
+        val recorder = UsageStatsTracker.websiteTimeRecorder
+        if (!recorder.isComplete(today)) return@withLock
+        val live = recorder.snapshot(today)
+        if (live.isEmpty()) return@withLock
+        websiteDao.upsertAll(live.map { (site, time) ->
+            DailyWebsiteUsage(
+                rowId = DailyWebsiteUsage.createRowId(today, site),
+                date = today,
+                site = site,
+                timeMs = time.foregroundMs,
+                visitCount = time.launchCount
+            )
+        })
+    }
+
+    /** The time on websites for [start]..[end], as persisted by [snapshotWebsitesToday]. */
+    suspend fun getWebsiteUsage(start: LocalDate, end: LocalDate): List<DailyWebsiteUsage> =
+        websiteDao.getRange(start, end)
+
+    /** One site's days in [start]..[end], for its trend. */
+    suspend fun getSiteHistorical(
+        site: String, start: LocalDate, end: LocalDate
+    ): List<DailyWebsiteUsage> = websiteDao.getForSiteInRange(site, start, end)
+
+    /**
+     * Deletes everything counted about websites, live and persisted, for when the user stops the
+     * counting. Under the snapshot mutex, so a snapshot running at that moment cannot write the
+     * live values back after they were cleared.
+     */
+    suspend fun deleteWebsiteUsage() = snapshotMutex.withLock {
+        UsageStatsTracker.websiteTimeRecorder.clear()
+        websiteDao.deleteAll()
+    }
+
     /** Returns the persisted device stats (unlocks, hour histograms) for [start]..[end]. */
     suspend fun getDeviceStats(start: LocalDate, end: LocalDate): List<DailyDeviceStats> {
         return deviceStatsDao.getRange(start, end)
@@ -383,6 +428,12 @@ class UsageStatsRepository @Inject constructor(
         UsageStatsTracker.foregroundTimeRecorder.restore(
             selfMeasuredDao.getForDate(today).associate {
                 it.packageName to ForegroundTimeRecorder.AppTime(it.foregroundTimeMs, it.launchCount)
+            },
+            today = today
+        )
+        UsageStatsTracker.websiteTimeRecorder.restore(
+            websiteDao.getForDate(today).associate {
+                it.site to ForegroundTimeRecorder.AppTime(it.timeMs, it.visitCount)
             },
             today = today
         )

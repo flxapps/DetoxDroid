@@ -22,6 +22,9 @@ object Websites {
     private const val SITE_PREFIX = "web:"
     private const val COLLECTION_PREFIX = "weblist:"
 
+    /** Host prefixes that only pick a version of the same site, see [siteOf]. */
+    private val VERSION_PREFIXES = listOf("www.", "m.", "mobile.")
+
     fun isWebsite(entry: String): Boolean =
         entry.startsWith(SITE_PREFIX) || entry.startsWith(COLLECTION_PREFIX)
 
@@ -46,6 +49,29 @@ object Websites {
     fun collectionEntry(collection: WebsiteCollection): String = COLLECTION_PREFIX + collection.id
 
     /**
+     * The site [page] belongs to: its host without a prefix that only picks a version of the same
+     * site, so time on youtube.com and m.youtube.com adds up to one site, and both are one site to
+     * a feature that covers every website but the listed ones.
+     */
+    fun siteOf(page: WebPage): String {
+        val host = page.host
+        val prefix = VERSION_PREFIXES.firstOrNull { host.startsWith(it) } ?: return host
+        val rest = host.removePrefix(prefix)
+        // "m.de" stays itself: what is left must still be a host name with a dot
+        return if (rest.contains('.')) rest else host
+    }
+
+    /** The list entry that stands for the whole of [site] (see [siteOf]). */
+    fun entryOfSite(site: String): String = SITE_PREFIX + site
+
+    /**
+     * Whether [feature] covers [site] as a website, through an entry of its own, a collection, or
+     * "every website but the listed ones". The browser the site is shown in is not asked.
+     */
+    fun covers(feature: SupportsAppExceptionsFeature, site: String): Boolean =
+        foregroundEntry(feature, WebPage(site, ""))?.let(feature::appliesTo) ?: false
+
+    /**
      * Whether [feature] cares which website a browser shows: it lists websites, or covers every
      * website but the listed ones. Otherwise a browser is an app to it like any other.
      */
@@ -62,7 +88,7 @@ object Websites {
     fun foregroundEntry(feature: SupportsAppExceptionsFeature, page: WebPage): String? =
         bestMatch(feature.appExceptions, page)
             ?: if (feature.websiteListType == AppExceptionListType.NOT_LIST) {
-                SITE_PREFIX + page.host.removePrefix("www.")
+                entryOfSite(siteOf(page))
             } else null
 
     /** The collection [entry] stands for, or null for a site or an app. */

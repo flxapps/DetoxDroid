@@ -33,6 +33,7 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
+import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -545,6 +546,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         strandedPages.onAppSwitch(packageName, SystemClock.elapsedRealtime())
         watchWebsites(packageName)
         websiteMonitor.browserPackage?.let { strandedPages.onPageShown(it, websiteMonitor.page) }
+        UsageStatsTracker.onWebsite(countedSite(packageName))
         dispatchedForeground.clear()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             val feature = it as Feature
@@ -563,6 +565,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         val app = foregroundAppMonitor.currentPackage
         if (app != websiteMonitor.browserPackage) return
         strandedPages.onPageShown(app, websiteMonitor.page)
+        UsageStatsTracker.onWebsite(countedSite(app))
         val event = AccessibilityEventUtil.createEvent(isFullScreen = true)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             val feature = it as Feature
@@ -575,9 +578,18 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * The site the browser [app] shows, for the time on websites in the usage stats, or null when
+     * [app] shows none or the user does not have websites counted.
+     */
+    private fun countedSite(app: String): String? {
+        if (!UsageStatsSettings.countWebsites || app != websiteMonitor.browserPackage) return null
+        return websiteMonitor.page?.let(Websites::siteOf)
+    }
+
+    /**
      * Follows the websites of [app] when it is a browser and websites matter to some active
-     * feature (see [Websites.matterTo]). Without such a feature the address bar is never read and
-     * no content change is asked for.
+     * feature (see [Websites.matterTo]), or the user has the time on them counted. Otherwise the
+     * address bar is never read and no content change is asked for.
      */
     private fun watchWebsites(app: String) {
         val features = FeaturesProvider.activeFeatures
@@ -593,7 +605,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
                 mainHandler.post { websiteMonitor.recheck(0L) }
             }
         }
-        websiteMonitor.onForegroundApp(app, watch = features.isNotEmpty())
+        websiteMonitor.onForegroundApp(
+            app, watch = features.isNotEmpty() || UsageStatsSettings.countWebsites
+        )
         updateWebsiteEvents(websiteMonitor.browserPackage != null)
     }
 

@@ -6,6 +6,8 @@ import com.flx_apps.digitaldetox.data.DailyDeviceStats
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsage
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsageDao
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsage
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
@@ -82,9 +84,21 @@ class CountersOnlySnapshotTest {
         override suspend fun deleteOlderThan(cutoff: LocalDate) = 0
     }
 
+    private class FakeWebsiteDao : DailyWebsiteUsageDao {
+        override suspend fun getRange(start: LocalDate, end: LocalDate) = emptyList<DailyWebsiteUsage>()
+        override suspend fun getForDate(date: LocalDate) = emptyList<DailyWebsiteUsage>()
+        override suspend fun getForSiteInRange(site: String, start: LocalDate, end: LocalDate) =
+            emptyList<DailyWebsiteUsage>()
+        override suspend fun upsertAll(usages: List<DailyWebsiteUsage>) = Unit
+        override suspend fun deleteOlderThan(cutoff: LocalDate) = 0
+        override suspend fun deleteAll() = Unit
+    }
+
     private val dao = FakeAppUsageDao()
     private val repository =
-        UsageStatsRepository(dao, FakeGrayscaleDao(), FakeDeviceStatsDao(), FakeSelfMeasuredDao())
+        UsageStatsRepository(
+            dao, FakeGrayscaleDao(), FakeDeviceStatsDao(), FakeSelfMeasuredDao(), FakeWebsiteDao()
+        )
     private val today: LocalDate = LocalDate.now()
 
     private fun row(

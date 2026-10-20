@@ -544,7 +544,6 @@
     <string name="usageStats_dailyAverage_short">Ø pro Tag</string>
     <string name="usageStats_vsYesterday">vs. gestern</string>
     <string name="usageStats_vsPreviousPeriod">vs. Vorzeitraum</string>
-    <string name="usageStats_topApps">Top-Apps</string>
     <string name="usageStats_timeOfDay">Öffnungen nach Uhrzeit</string>
     <string name="usageStats_byDay">Nach Tag</string>
     <string name="usageStats_weekdayAverages">Schnitt pro Wochentag</string>
@@ -593,6 +592,23 @@
     <string name="usageStats_sort_screenTime">Nach Bildschirmzeit</string>
     <string name="usageStats_sort_opens">Nach Öffnungen</string>
     <string name="usageStats_sort_scrollIntensity">Nach Scroll-Intensität</string>
+    <string name="usageStats_websites_title">Zeit auf Websites</string>
+    <string name="usageStats_websites_optIn">DetoxDroid kann zählen, wie lange du in %s auf welcher Website bist. Es merkt sich nur die Website, nie die einzelne Seite, und nichts davon verlässt dein Handy.</string>
+    <string name="usageStats_websites_optIn_action">Zeit auf Websites zählen</string>
+    <string name="usageStats_websites_empty">Noch nichts gezählt. Die Zeit auf Websites zählt ab dem Moment, in dem du das eingeschaltet hast.</string>
+    <string name="usageStats_websites_partOf">Steckt schon in der Bildschirmzeit deiner Browser.</string>
+    <string name="usageStats_websites_turnOff">Ausschalten</string>
+    <string name="usageStats_websites_turnOff_title">Websites nicht mehr zählen?</string>
+    <string name="usageStats_websites_turnOff_message">Was bisher gezählt wurde, wird dabei auch gelöscht.</string>
+    <plurals name="usageStats_visits">
+        <item quantity="one">%d Besuch</item>
+        <item quantity="other">%d Besuche</item>
+    </plurals>
+    <string name="usageStats_visits_short">Besuche</string>
+    <string name="usageStats_avgVisit">Ø Besuch</string>
+    <string name="usageStats_sort_visits">Nach Besuchen</string>
+    <string name="usageStats_blockSite">Website sperren</string>
+    <string name="usageStats_unblockSite">Website freigeben</string>
     <string name="usageStats_perspective">Zum Vergleich</string>
     <string name="usageStats_perspective_subtitle">Dieselben Zahlen, greifbar gemacht</string>
     <string name="usageStats_perspective_footer">Ohne Wertung. So lässt sich Zeit halt leichter greifen.</string>

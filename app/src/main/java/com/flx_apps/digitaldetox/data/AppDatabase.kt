@@ -11,9 +11,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DailyAppUsage::class,
         DailyGrayscaleStats::class,
         DailyDeviceStats::class,
-        SelfMeasuredAppUsage::class
+        SelfMeasuredAppUsage::class,
+        DailyWebsiteUsage::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(LocalDbTypeConverters::class)
@@ -22,6 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dailyGrayscaleStatsDao(): DailyGrayscaleStatsDao
     abstract fun dailyDeviceStatsDao(): DailyDeviceStatsDao
     abstract fun selfMeasuredAppUsageDao(): SelfMeasuredAppUsageDao
+    abstract fun dailyWebsiteUsageDao(): DailyWebsiteUsageDao
 
     companion object {
         /** v2 adds the [DailyDeviceStats] table (persisted unlock counts and hour histograms). */
@@ -63,6 +65,25 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_self_measured_app_usage_date` " +
                         "ON `self_measured_app_usage` (`date`)"
+                )
+            }
+        }
+
+        /** v5 adds the [DailyWebsiteUsage] table (time on websites, while it is counted). */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `daily_website_usage` (" +
+                        "`row_id` TEXT NOT NULL, " +
+                        "`date` TEXT NOT NULL, " +
+                        "`site` TEXT NOT NULL, " +
+                        "`timeMs` INTEGER NOT NULL, " +
+                        "`visitCount` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`row_id`))"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_daily_website_usage_date` " +
+                        "ON `daily_website_usage` (`date`)"
                 )
             }
         }
