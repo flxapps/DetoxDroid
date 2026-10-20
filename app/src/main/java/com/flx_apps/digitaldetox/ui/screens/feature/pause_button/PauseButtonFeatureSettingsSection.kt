@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,8 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
@@ -49,6 +46,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.AddQuickSettingsTile
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.KeyEventUtil
 import com.flx_apps.digitaldetox.util.NotificationHelper
+import com.flx_apps.digitaldetox.util.observeAsState
 
 /**
  * The settings section for the pause button feature.
@@ -349,47 +347,19 @@ fun PickHardwareKeyDialog(
 @Composable
 private fun PauseFromNotificationTile(viewModel: PauseButtonFeatureSettingsViewModel = viewModel()) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     var notificationsEnabled by remember { mutableStateOf(false) }
-
-    // Function to check notification state
-    fun updateNotificationState() {
+    fun readNotificationsEnabled() {
         notificationsEnabled = NotificationHelper.areNotificationsEnabled(context)
     }
+    // read again whenever the screen comes back, e.g. from the notification settings
+    val lifecycleEvent = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    LaunchedEffect(lifecycleEvent) { readNotificationsEnabled() }
 
-    // Update state when composable is first created
-    LaunchedEffect(Unit) {
-        updateNotificationState()
-    }
-
-    // Update state when lifecycle resumes (e.g., returning from settings)
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                updateNotificationState()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    // Check if notification permission is granted for the click handler
-    val hasNotificationPermission = NotificationHelper.hasNotificationPermission(context)
-
-    // Permission launcher for Android 13+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            // Permission granted, update state and open notification channel settings
-            updateNotificationState()
-            viewModel.openNotificationSettings()
-        } else {
-            // Permission denied, update state to reflect this
-            updateNotificationState()
-        }
+        readNotificationsEnabled()
+        if (isGranted) viewModel.openNotificationSettings()
     }
 
     SimpleListTile(
@@ -403,15 +373,11 @@ private fun PauseFromNotificationTile(viewModel: PauseButtonFeatureSettingsViewM
             }
         ),
         onClick = {
-            if (hasNotificationPermission) {
-                // Permission already granted, open notification settings
+            // below Android 13 there is no permission to ask for, it always counts as granted
+            if (NotificationHelper.hasNotificationPermission(context)) {
                 viewModel.openNotificationSettings()
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // Need to request permission first
-                permissionLauncher.launch(NotificationHelper.getNotificationPermission())
             } else {
-                // No permission needed on older versions, open settings
-                viewModel.openNotificationSettings()
+                permissionLauncher.launch(NotificationHelper.getNotificationPermission())
             }
         })
 }
