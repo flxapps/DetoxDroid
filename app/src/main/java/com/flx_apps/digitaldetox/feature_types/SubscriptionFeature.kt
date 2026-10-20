@@ -49,11 +49,14 @@ interface OnScrollEventSubscriptionFeature {
          * constant — so this is the behavior the detection has always had.)
          *
          * @param accessibilityEvent The accessibility event that triggered the scroll event.
+         * @param viewIdResourceName The view-id resource name of the event's source, if it has one.
          */
-        fun calculateScrollViewId(accessibilityEvent: AccessibilityEvent): Int {
+        fun calculateScrollViewId(
+            accessibilityEvent: AccessibilityEvent, viewIdResourceName: String?
+        ): Int {
             return accessibilityEvent.className.hashCode() +
                     accessibilityEvent.packageName.hashCode() +
-                    (accessibilityEvent.source?.viewIdResourceName?.hashCode() ?: 0)
+                    (viewIdResourceName?.hashCode() ?: 0)
         }
     }
 
@@ -62,12 +65,15 @@ interface OnScrollEventSubscriptionFeature {
      * @param scrollViewId The (calculated) ID of the scroll view.
      * @param scrollViewSize The size of the scroll view, either in pixels or items count
      * (depending on which information is available).
+     * @param viewIdResourceName The view-id resource name of the scrolled view, if it has one. Read
+     * from the event's source by the caller, so the node is not fetched once per feature.
      * @param accessibilityEvent The accessibility event that triggered the scroll event.
      */
     fun onScrollEvent(
         context: Context,
         scrollViewId: Int,
         scrollViewSize: Int,
+        viewIdResourceName: String?,
         accessibilityEvent: AccessibilityEvent
     )
 }

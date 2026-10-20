@@ -294,14 +294,21 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            if (AccessibilityEventUtil.isTextFieldScrollEvent(accessibilityEvent)) return
+            // every read of the source hands out a fresh copy of the node, and scrolling sends up
+            // to ten events a second, so it is read once here and recycled (which still frees
+            // native memory below API 33). Without a source the event says too little to count.
+            val source = accessibilityEvent.source ?: return
+            val isTextField = AccessibilityEventUtil.isTextFieldScrollEvent(source)
+            val viewIdResourceName = source.viewIdResourceName
+            source.recycle()
+            if (isTextField) return
             // usage statistics are pure measurement and keep counting during a pause —
             // a pause only suspends the interventions below
-            if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {
+            if (accessibilityEvent.packageName != null) {
                 UsageStatsTracker.onScrollEvent(accessibilityEvent)
             }
             // per-feature pause gating happens inside handleScrollEvent
-            handleScrollEvent(accessibilityEvent)
+            handleScrollEvent(accessibilityEvent, viewIdResourceName)
             return
         }
 
@@ -434,21 +441,25 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * is relevant and does some preprocessing before forwarding it to the intersection of
      * [FeaturesProvider.activeFeatures] and [FeaturesProvider.onScrollEventFeatures].
      */
-    private fun handleScrollEvent(accessibilityEvent: AccessibilityEvent) {
+    private fun handleScrollEvent(
+        accessibilityEvent: AccessibilityEvent, viewIdResourceName: String?
+    ) {
         val scrollViewSize = when {
             accessibilityEvent.itemCount > 0 -> accessibilityEvent.itemCount
             else -> accessibilityEvent.maxScrollY
         }
 
         // dispose scroll events that contain too less information
-        if (accessibilityEvent.source == null || scrollViewSize == -1 ||
+        if (scrollViewSize == -1 ||
             accessibilityEvent.className == null || accessibilityEvent.packageName == null
         ) {
             return
         }
 
         val scrollViewId =
-            OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
+            OnScrollEventSubscriptionFeature.calculateScrollViewId(
+                accessibilityEvent, viewIdResourceName
+            )
 
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
@@ -456,6 +467,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
                 this,
                 scrollViewId,
                 scrollViewSize = scrollViewSize,
+                viewIdResourceName = viewIdResourceName,
                 accessibilityEvent = accessibilityEvent
             )
         }

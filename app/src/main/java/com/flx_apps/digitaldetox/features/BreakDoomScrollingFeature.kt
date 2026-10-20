@@ -217,10 +217,11 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         context: Context,
         scrollViewId: Int,
         scrollViewSize: Int,
+        viewIdResourceName: String?,
         accessibilityEvent: AccessibilityEvent
     ) {
         val pkg = accessibilityEvent.packageName.toString()
-        val surfaceId = accessibilityEvent.source?.viewIdResourceName
+        val surfaceId = viewIdResourceName
 
         if (finishGrace.isInGrace(pkg)) {
             onGraceScrollEvent(context, pkg, surfaceId, accessibilityEvent)

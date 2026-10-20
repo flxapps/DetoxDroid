@@ -29,14 +29,14 @@ class ScrollEventFilterTest {
 
     @Test
     fun `a text field scrolling to its cursor is left out`() {
-        assertTrue(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(48, 0, true)))
-        assertTrue(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 60, true)))
+        assertTrue(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(48, 0, true).source!!))
+        assertTrue(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 60, true).source!!))
     }
 
     @Test
     fun `lists, card decks and scrolls without any delta are not`() {
-        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 120)))
-        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(48, 0)))
-        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 0)))
+        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 120).source!!))
+        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(48, 0).source!!))
+        assertFalse(AccessibilityEventUtil.isTextFieldScrollEvent(scrollEvent(0, 0).source!!))
     }
 }
