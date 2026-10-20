@@ -12,6 +12,10 @@ import android.view.accessibility.AccessibilityNodeInfo
  * Content changes come by the dozen while a page loads, renders or plays, so a change only asks for
  * a read a moment later, and the changes until then ride along with it.
  *
+ * Every read is a call into the browser, which its main thread answers. So the address bar found
+ * once is kept and only refreshed after that: finding it again means searching the window, and for
+ * a bar made with Compose that is a walk through hundreds of nodes, one call each.
+ *
  * @param readRoot The active window, or null. Recycled here after use.
  * @param onPageChanged Called when the page changed, or when [recheck] asked for a report anyway.
  */
@@ -33,6 +37,9 @@ class WebsiteMonitor(
         readAgain()
     }
 
+    /** The address bar of [browserPackage] as found last, see [currentAddressBar]. */
+    private var addressBar: AccessibilityNodeInfo? = null
+
     /** The browser in front, or null when the app in front is none DetoxDroid can read. */
     var browserPackage: String? = null
         private set
@@ -51,6 +58,7 @@ class WebsiteMonitor(
      */
     fun onForegroundApp(packageName: String, watch: Boolean) {
         cancelRead()
+        forgetAddressBar()
         val ids = addressBars[packageName]
         if (!watch || ids == null) {
             browserPackage = null
@@ -84,6 +92,7 @@ class WebsiteMonitor(
     /** Forgets the browser and its page, e.g. when the screen goes off. */
     fun reset() {
         cancelRead()
+        forgetAddressBar()
         browserPackage = null
         page = null
     }
@@ -108,15 +117,31 @@ class WebsiteMonitor(
         onPageChanged()
     }
 
-    private fun read(browser: String, ids: List<String>): AddressBarReading {
-        val root = runCatching { readRoot() }.getOrNull() ?: return AddressBarReading.Missing
+    private fun read(browser: String, ids: List<String>): AddressBarReading = try {
+        currentAddressBar(browser, ids)?.let(BrowserAddressBars::read) ?: AddressBarReading.Missing
+    } catch (e: RuntimeException) {
+        // a window can go away while it is read
+        forgetAddressBar()
+        AddressBarReading.Missing
+    }
+
+    /**
+     * The address bar of [browser]: the one kept from the last read while it is still on screen,
+     * otherwise found anew in the active window. Null while the browser shows none.
+     */
+    private fun currentAddressBar(browser: String, ids: List<String>): AccessibilityNodeInfo? {
+        addressBar?.let { if (it.refresh()) return it }
+        forgetAddressBar()
+        val root = readRoot() ?: return null
         return try {
-            BrowserAddressBars.read(root, browser, ids)
-        } catch (e: RuntimeException) {
-            // a window can go away while it is read
-            AddressBarReading.Missing
+            BrowserAddressBars.find(root, browser, ids)
         } finally {
             root.recycle()
-        }
+        }.also { addressBar = it }
+    }
+
+    private fun forgetAddressBar() {
+        addressBar?.recycle()
+        addressBar = null
     }
 }

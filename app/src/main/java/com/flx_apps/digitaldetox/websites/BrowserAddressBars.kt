@@ -60,30 +60,28 @@ object BrowserAddressBars {
     }
 
     /**
-     * Reads the address bar of [browser] from [root], the active window, trying [ids] in turn.
-     * Neither [root] nor anything it hands out stays in use afterwards; the nodes found here are
-     * recycled, [root] is the caller's.
+     * Finds the address bar of [browser] in [root], the active window, trying [ids] in turn. Null
+     * when the window shows none. The node found is the caller's to recycle, as [root] is.
      */
-    fun read(root: AccessibilityNodeInfo, browser: String, ids: List<String>): AddressBarReading {
+    fun find(
+        root: AccessibilityNodeInfo, browser: String, ids: List<String>
+    ): AccessibilityNodeInfo? {
         // a dialog of another app, or the split-screen partner, can be the active window
-        if (root.packageName?.toString() != browser) return AddressBarReading.Missing
-        for (id in ids) {
-            val node = find(root, id) ?: continue
-            try {
-                if (node.isFocused) return AddressBarReading.Editing
-                if (node.isShowingHintText) return AddressBarReading.Shown(null)
-                // Firefox and the browsers built on it leave the text of their bar empty and put
-                // the address into its description
-                val text = node.text
-                return AddressBarReading.Shown(
-                    if (!text.isNullOrBlank()) WebPage.parse(text)
-                    else WebPage.parseDescription(node.contentDescription)
-                )
-            } finally {
-                node.recycle()
-            }
-        }
-        return AddressBarReading.Missing
+        if (root.packageName?.toString() != browser) return null
+        return ids.firstNotNullOfOrNull { find(root, it) }
+    }
+
+    /** What [bar], an address bar from [find], says right now. */
+    fun read(bar: AccessibilityNodeInfo): AddressBarReading {
+        if (bar.isFocused) return AddressBarReading.Editing
+        if (bar.isShowingHintText) return AddressBarReading.Shown(null)
+        // Firefox and the browsers built on it leave the text of their bar empty and put the
+        // address into its description
+        val text = bar.text
+        return AddressBarReading.Shown(
+            if (!text.isNullOrBlank()) WebPage.parse(text)
+            else WebPage.parseDescription(bar.contentDescription)
+        )
     }
 
     private fun find(root: AccessibilityNodeInfo, id: String): AccessibilityNodeInfo? {
