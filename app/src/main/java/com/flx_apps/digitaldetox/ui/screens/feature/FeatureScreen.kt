@@ -33,6 +33,7 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -63,9 +64,7 @@ fun FeatureScreen(
     val lockStateToken by CommitmentPasswordFeature.stateToken.collectAsState()
     val brakeStateToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val isFeatureSettingsLocked = remember(lockStateToken, brakeStateToken, featureId) {
-        featureId != CommitmentPasswordFeatureId &&
-                (CommitmentPasswordFeature.isFeatureLocked(featureId) ||
-                        EmergencyBrakeFeature.locksSettings(featureId))
+        featureId != CommitmentPasswordFeatureId && FeaturesProvider.areSettingsLocked(featureId)
     }
     LaunchedEffect(lockStateToken, featureId) {
         // Commitment Password can change its activation state from dialogs outside the switch toggle.

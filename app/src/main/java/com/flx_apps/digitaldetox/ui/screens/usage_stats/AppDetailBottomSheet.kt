@@ -213,10 +213,7 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
     val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
     val manageable = remember(brakeToken, passwordToken) {
         listOf(GrayscaleAppsFeature, BreakDoomScrollingFeature, DisableAppsFeature)
-            .filter {
-                it.isActivated && !EmergencyBrakeFeature.locksSettings(it.id) &&
-                        !CommitmentPasswordFeature.isFeatureLocked(it.id)
-            }
+            .filter { it.isActivated && !FeaturesProvider.areSettingsLocked(it.id) }
     }
     val grayscaleActive = GrayscaleAppsFeature in manageable
     val doomScrollingActive = BreakDoomScrollingFeature in manageable

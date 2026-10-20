@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.features
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.OneMinuteInMs
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
@@ -152,5 +153,12 @@ object FeaturesProvider {
     fun getFeatureById(id: String): Feature? {
         return featureMap[id]
     }
+
+    /**
+     * Whether the settings of the feature with [id] can't be changed right now, because the
+     * commitment password protects them or a running brake does.
+     */
+    fun areSettingsLocked(id: FeatureId): Boolean =
+        CommitmentPasswordFeature.isFeatureLocked(id) || EmergencyBrakeFeature.locksSettings(id)
 }
 

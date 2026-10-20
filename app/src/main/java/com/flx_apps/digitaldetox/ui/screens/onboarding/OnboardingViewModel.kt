@@ -10,8 +10,6 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
-import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
-import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
@@ -346,14 +344,16 @@ class OnboardingViewModel @Inject constructor(
         // features that were configured but could not be activated yet because a required
         // permission is still missing — the home screen finishes these once the permission arrives.
         // Locked features keep the entry they already had, since nothing below rewrites them.
-        val pending = OnboardingState.pendingFeatureActivations.filterTo(mutableSetOf(), ::isLocked)
+        val pending = OnboardingState.pendingFeatureActivations.filterTo(mutableSetOf(), FeaturesProvider::areSettingsLocked)
         if (selectedApps.isNotEmpty()) {
-            if (!isLocked(BreakDoomScrollingFeature.id)) {
+            if (!FeaturesProvider.areSettingsLocked(BreakDoomScrollingFeature.id)) {
                 BreakDoomScrollingFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
                 BreakDoomScrollingFeature.appExceptions = selectedApps
                 activateOrDefer(BreakDoomScrollingFeature, pending)
             }
-            if (_preset.value != OnboardingPreset.GENTLE && !isLocked(GrayscaleAppsFeature.id)) {
+            if (_preset.value != OnboardingPreset.GENTLE &&
+                !FeaturesProvider.areSettingsLocked(GrayscaleAppsFeature.id)
+            ) {
                 GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
                 GrayscaleAppsFeature.appExceptions = selectedApps
                 // in the Strict preset grayscale warns before the block kicks in — with identical
@@ -366,7 +366,9 @@ class OnboardingViewModel @Inject constructor(
                     }
                 activateOrDefer(GrayscaleAppsFeature, pending)
             }
-            if (_preset.value == OnboardingPreset.STRICT && !isLocked(DisableAppsFeature.id)) {
+            if (_preset.value == OnboardingPreset.STRICT &&
+                !FeaturesProvider.areSettingsLocked(DisableAppsFeature.id)
+            ) {
                 DisableAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
                 DisableAppsFeature.appExceptions = selectedApps
                 DisableAppsFeature.allowedDailyScreenTime = budgetMs
@@ -381,11 +383,6 @@ class OnboardingViewModel @Inject constructor(
         OnboardingState.isOnboardingCompleted = true
         return true
     }
-
-    /** Whether the commitment password protects the given feature and is not unlocked right now. */
-    private fun isLocked(featureId: String) =
-        CommitmentPasswordFeature.isFeatureLocked(featureId) ||
-                EmergencyBrakeFeature.locksSettings(featureId)
 
     /**
      * Activates [feature] when its required permissions are present, otherwise leaves it configured
