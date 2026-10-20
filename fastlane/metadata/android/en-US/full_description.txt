@@ -11,6 +11,7 @@ True grayscale it is not. An overlay can only ever paint on top of the screen, s
 * Automatic Do Not Disturb. On for as long as DetoxDroid runs. Notifications wait for you.
 * Pause Button. From Quick Settings, from your assistant, or by holding a hardware button for two seconds. DetoxDroid resumes by itself afterwards, and a minimum gap between pauses keeps "just one more" in check.
 * Commitment Password. Locks the settings behind a password. Keep it yourself, or hand it to someone who won't give it back the second you ask.
+* Widgets. One shows how long you've been on your phone today, and whether that's more or less than usual by now. Where there's room, your most used apps and what's left of your budgets join in. The other is a launcher that lists the apps you pick as plain text, without the icons your thumb goes for on autopilot.
 
 SETUP (optional, and worth it)
 
