@@ -1,7 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.ui.screens.app_exceptions.ManageAppExceptionsScreen
@@ -12,8 +11,5 @@ import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
  */
 @Composable
 fun ManageDisabledAppsListTile() {
-    OpenAppExceptionsTile(
-        titleText = stringResource(id = R.string.feature_disableApps_manage),
-        subtitleRes = R.string.feature_disableApps_manage_defined,
-    )
+    OpenAppExceptionsTile(subtitleRes = R.string.feature_disableApps_manage_defined)
 }

@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.NoAdultContent
 import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -50,6 +52,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppListSectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
@@ -67,6 +71,7 @@ import java.text.NumberFormat
  * @param query The search from the top bar, which narrows the sites and the collections here as it
  *   narrows the apps on the other half. It finds the collections folded under "Advanced" as well.
  * @param collectionTitle The name of a collection, for the search.
+ * @param listType Whether the websites here are the only ones covered or the ones spared.
  * @param advancedExpanded Whether the [WebsiteCollection.advanced] collections are unfolded.
  * @param uncoveredBrowsers Browsers DetoxDroid cannot read that the feature should warn about,
  *   by name, empty for none. They lead the half and leave the note at its end.
@@ -82,6 +87,7 @@ fun LazyListScope.websiteSections(
     query: String,
     collectionTitle: (WebsiteCollection) -> String,
     settingsLocked: Boolean,
+    listType: AppExceptionListType,
     advancedExpanded: Boolean,
     onToggleAdvanced: () -> Unit,
     onAddWebsite: (String) -> Boolean,
@@ -120,6 +126,10 @@ fun LazyListScope.websiteSections(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
+        // sites to spare are the user's own business, the usual time sinks are not
+        if (listType == AppExceptionListType.ONLY_LIST && !settingsLocked) {
+            item(key = "siteSuggestions") { SiteSuggestions(onAdd = onAddWebsite) }
+        }
     } else {
         items(shownSites, key = { it.entry }) { site ->
             WebsiteListItem(
@@ -154,7 +164,11 @@ fun LazyListScope.websiteSections(
     } else {
         val (everyday, advanced) = collections.partition { !it.collection.advanced }
         collectionItems(everyday)
-        if (advanced.isNotEmpty()) {
+        // the porn and gambling lists make no sense as the only websites a feature spares, unless
+        // one is listed already
+        val offerAdvanced =
+            listType == AppExceptionListType.ONLY_LIST || advanced.any { it.checked }
+        if (advanced.isNotEmpty() && offerAdvanced) {
             item(key = "advancedCollections") {
                 AdvancedCollectionsRow(
                     summary = advanced.joinToString { collectionTitle(it.collection) },
@@ -167,6 +181,31 @@ fun LazyListScope.websiteSections(
     }
     if (browsers != null && !noReadableBrowser) {
         item(key = "browsers") { BrowsersNote(browsers, nameUnreadable = !warnAboutUncovered) }
+    }
+}
+
+/**
+ * Sites that eat the most time, to add with one tap while the user has none of their own. The
+ * first one has a path, which shows that a part of a site can be listed on its own.
+ */
+private val SUGGESTED_SITES = listOf("youtube.com/shorts", "reddit.com", "x.com", "tiktok.com")
+
+@Composable
+private fun SiteSuggestions(onAdd: (String) -> Boolean) {
+    ChipFlowRow(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        SUGGESTED_SITES.forEach { site ->
+            AssistChip(
+                onClick = { onAdd(site) },
+                label = { Text(text = site) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(AssistChipDefaults.IconSize)
+                    )
+                }
+            )
+        }
     }
 }
 

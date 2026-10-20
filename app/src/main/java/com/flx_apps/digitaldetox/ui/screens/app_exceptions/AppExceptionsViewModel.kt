@@ -186,6 +186,10 @@ class AppExceptionsViewModel @Inject constructor(
     private val _selectedWebsiteCount = MutableStateFlow(0)
     val selectedWebsiteCount = _selectedWebsiteCount.asStateFlow()
 
+    /** How many of the [selectedWebsiteCount] entries are collections. */
+    private val _selectedCollectionCount = MutableStateFlow(0)
+    val selectedCollectionCount = _selectedCollectionCount.asStateFlow()
+
     /**
      * The readable browsers the feature covers as apps, by name. While only the listed websites
      * count, every website in these counts anyway, through the browser.
@@ -374,7 +378,9 @@ class AppExceptionsViewModel @Inject constructor(
      * the apps cover, which both change with.
      */
     private fun updateSelectionCounts() {
-        _selectedWebsiteCount.value = Websites.websitesOf(appExceptionsFeature.appExceptions).size
+        val websites = Websites.websitesOf(appExceptionsFeature.appExceptions)
+        _selectedWebsiteCount.value = websites.size
+        _selectedCollectionCount.value = websites.count { Websites.collectionOf(it) != null }
         _selectedAppCount.value =
             if (this::_appExceptionItems.isInitialized) _appExceptionItems.count { it.isException }
             else 0

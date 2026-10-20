@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -57,7 +58,6 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.SettingsLockBannerIfNeeded
@@ -83,17 +83,11 @@ fun ManageAppExceptionsScreen(
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
     var listTab by rememberSaveable { mutableStateOf(AppListTab.APPS) }
-    // Disable Apps uses a dedicated title to match the feature wording in settings.
-    val titleRes = if (featureId == DisableAppsFeature.id) {
-        R.string.feature_disableApps_deactivatedApps
-    } else {
-        R.string.feature_settings_exceptions
-    }
     PasswordLockGate(featureId = featureId, showBanner = false) {
         val settingsLocked = LocalSettingsLocked.current
         Scaffold(topBar = {
             AppSelectionTopBar(
-                title = stringResource(id = titleRes),
+                title = stringResource(id = R.string.feature_settings_exceptions),
                 showSearchBar = showSearchBar,
                 searchQuery = appExceptionsViewModel.query.value,
                 onSearchQueryChange = { query ->
@@ -177,7 +171,15 @@ fun InstalledAppsList(
     LaunchedEffect(advancedListed) { if (advancedListed) advancedExpanded = true }
     LazyColumn {
         stickyHeader(key = "listTab") {
-            AppListTabSelector(selected = listTab, onSelected = onListTabSelected)
+            AppListTabSelector(
+                selected = listTab,
+                onSelected = onListTabSelected,
+                counts = mapOf(
+                    AppListTab.APPS to
+                            appExceptionsViewModel.selectedAppCount.collectAsState().value,
+                    AppListTab.WEBSITES to websitesInBrowsers.websiteCount,
+                )
+            )
         }
         when (listTab) {
             AppListTab.APPS -> {
@@ -205,6 +207,7 @@ fun InstalledAppsList(
                     query = appExceptionsViewModel.query.value,
                     collectionTitle = { context.getString(it.title) },
                     settingsLocked = settingsLocked,
+                    listType = websitesInBrowsers.websiteListType,
                     advancedExpanded = advancedExpanded,
                     onToggleAdvanced = { advancedExpanded = !advancedExpanded },
                     onAddWebsite = appExceptionsViewModel::addWebsite,
@@ -217,12 +220,15 @@ fun InstalledAppsList(
 }
 
 /**
- * Apps or websites, as two segments. The segments sit on the screen's background, so the list
- * scrolling under the stuck header does not show through.
+ * Apps or websites, as two segments, each with how many entries are selected on it: whoever looks
+ * at one half sees that the other has some too. The segments sit on the screen's background, so
+ * the list scrolling under the stuck header does not show through.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppListTabSelector(selected: AppListTab, onSelected: (AppListTab) -> Unit) {
+private fun AppListTabSelector(
+    selected: AppListTab, onSelected: (AppListTab) -> Unit, counts: Map<AppListTab, Int>
+) {
     Surface(color = MaterialTheme.colorScheme.background) {
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
@@ -244,7 +250,16 @@ private fun AppListTabSelector(selected: AppListTab, onSelected: (AppListTab) ->
                         }
                     }
                 ) {
-                    Text(stringResource(id = tab.label), maxLines = 1)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(id = tab.label), maxLines = 1)
+                        val count = counts[tab] ?: 0
+                        if (count > 0) {
+                            Badge(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(start = 6.dp)
+                            ) { Text(text = count.toString()) }
+                        }
+                    }
                 }
             }
         }
@@ -426,6 +441,7 @@ private fun AppsListTypeCard(
         ).filterValues { it in allowed },
         selected = listType,
         selectedCount = count,
+        switchArg = count,
         summary = appsSummary(listType, count),
         switchTexts = SwitchListTypeTexts(
             title = R.string.feature_settings_exceptions_switchListType_title,
@@ -450,6 +466,7 @@ private fun WebsitesListTypeCard(
 ) {
     val listType = viewModel.websiteListType.collectAsState().value
     val count = viewModel.selectedWebsiteCount.collectAsState().value
+    val collections = viewModel.selectedCollectionCount.collectAsState().value
     val coveredBrowsers = viewModel.browsersCoveredAsApps.collectAsState().value
     ListTypeCard(
         options = mapOf(
@@ -460,7 +477,8 @@ private fun WebsitesListTypeCard(
         ).filterValues { it in viewModel.allowedWebsiteListTypes },
         selected = listType,
         selectedCount = count,
-        summary = websitesSummary(listType, count),
+        switchArg = websiteCountPhrase(sites = count - collections, collections = collections),
+        summary = websitesSummary(listType, sites = count - collections, collections = collections),
         switchTexts = SwitchListTypeTexts(
             title = R.string.feature_settings_exceptions_switchListType_title_websites,
             toNotList = R.string.feature_settings_exceptions_switchListType_toNotList_websites,
@@ -499,12 +517,16 @@ private data class SwitchListTypeTexts(
 /**
  * The scope card of one half of the list: a title, the choice of list type where [options] holds
  * more than one, the [summary] of what is covered, and [extra] content below it.
+ *
+ * @param selectedCount How many entries are selected; switching the type asks first unless none.
+ * @param switchArg How [SwitchListTypeDialog] names the selection, the format argument of its text.
  */
 @Composable
 private fun ListTypeCard(
     options: Map<Int, AppExceptionListType>,
     selected: AppExceptionListType,
     selectedCount: Int,
+    switchArg: Any,
     summary: String,
     switchTexts: SwitchListTypeTexts,
     settingsLocked: Boolean,
@@ -540,7 +562,7 @@ private fun ListTypeCard(
     pendingListType?.let { newType ->
         SwitchListTypeDialog(
             newType = newType,
-            selectedCount = selectedCount,
+            selection = switchArg,
             texts = switchTexts,
             onKeep = {
                 onSelect(newType, false)
@@ -561,7 +583,7 @@ private fun ListTypeCard(
 @Composable
 private fun SwitchListTypeDialog(
     newType: AppExceptionListType,
-    selectedCount: Int,
+    selection: Any,
     texts: SwitchListTypeTexts,
     onKeep: () -> Unit,
     onClear: () -> Unit,
@@ -576,7 +598,7 @@ private fun SwitchListTypeDialog(
                     text = stringResource(
                         id = if (newType == AppExceptionListType.NOT_LIST) texts.toNotList
                         else texts.toOnlyList,
-                        selectedCount
+                        selection
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -633,16 +655,13 @@ private fun WebsitesInBrowsers.lineFor(item: AppExceptionItem): String? {
     }
     if (packageName !in readable) return null
     val coveredAsApp = (appListType == AppExceptionListType.ONLY_LIST) == item.isException
-    return when {
-        sparesWebsites && websiteCount > 0 -> pluralStringResource(
-            id = R.plurals.appList_browser_websites_allExcept, count = websiteCount, websiteCount
-        )
-
-        sparesWebsites || coveredAsApp -> stringResource(id = R.string.appList_browser_websites_all)
-        else -> pluralStringResource(
-            id = R.plurals.appList_browser_websites_only, count = websiteCount, websiteCount
-        )
-    }
+    return stringResource(
+        id = when {
+            sparesWebsites && websiteCount > 0 -> R.string.appList_browser_websites_allExcept
+            sparesWebsites || coveredAsApp -> R.string.appList_browser_websites_all
+            else -> R.string.appList_browser_websites_only
+        }
+    )
 }
 
 /**
@@ -708,17 +727,40 @@ fun appsSummary(listType: AppExceptionListType, count: Int): String = when {
 }
 
 /**
- * The line that says which websites a list covers, out of [count] listed: "Active only on 2
- * selected websites." A collection counts as one, as it does in the list.
+ * The line that says which websites a list covers: "Active only on selected websites (2 websites,
+ * 1 list)." A list counts apart from the sites, since one can hold thousands of them.
  */
 @Composable
-fun websitesSummary(listType: AppExceptionListType, count: Int): String = when {
-    listType == AppExceptionListType.ONLY_LIST -> pluralStringResource(
-        id = R.plurals.feature_settings_exceptions_onlyListed_websites, count = count, count
-    )
+fun websitesSummary(listType: AppExceptionListType, sites: Int, collections: Int): String {
+    val none = sites + collections == 0
+    return when {
+        listType == AppExceptionListType.ONLY_LIST && none ->
+            stringResource(id = R.string.feature_settings_exceptions_noWebsites)
 
-    count == 0 -> stringResource(id = R.string.feature_settings_exceptions_allWebsites)
-    else -> pluralStringResource(
-        id = R.plurals.feature_settings_exceptions_notListed_websites, count = count, count
-    )
+        listType == AppExceptionListType.ONLY_LIST -> stringResource(
+            id = R.string.feature_settings_exceptions_onlyListed_websites,
+            websiteCountPhrase(sites, collections)
+        )
+
+        none -> stringResource(id = R.string.feature_settings_exceptions_allWebsites)
+        else -> stringResource(
+            id = R.string.feature_settings_exceptions_notListed_websites,
+            websiteCountPhrase(sites, collections)
+        )
+    }
 }
+
+/** "2 websites, 1 list": what the website half holds, each kind counted where there is one. */
+@Composable
+fun websiteCountPhrase(sites: Int, collections: Int): String = buildList {
+    if (sites > 0) {
+        add(pluralStringResource(id = R.plurals.websites_count_sites, count = sites, sites))
+    }
+    if (collections > 0) {
+        add(
+            pluralStringResource(
+                id = R.plurals.websites_count_collections, count = collections, collections
+            )
+        )
+    }
+}.joinToString(", ")

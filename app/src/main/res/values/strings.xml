@@ -124,14 +124,8 @@
     <string name="appList_tab_apps">Apps</string>
     <string name="appList_tab_websites">Websites</string>
     <string name="appList_browser_websites_all">Active on every website in it</string>
-    <plurals name="appList_browser_websites_only">
-        <item quantity="one">Active only on %d selected website in it</item>
-        <item quantity="other">Active only on %d selected websites in it</item>
-    </plurals>
-    <plurals name="appList_browser_websites_allExcept">
-        <item quantity="one">Active on every website in it except %d selected</item>
-        <item quantity="other">Active on every website in it except %d selected</item>
-    </plurals>
+    <string name="appList_browser_websites_only">Active only on the selected websites in it</string>
+    <string name="appList_browser_websites_allExcept">Active on every website in it except the selected ones</string>
     <string name="appList_browser_websites_unreadable">DetoxDroid can\'t read the websites in it</string>
     <plurals name="websites_coveredBrowsers">
         <item quantity="one">Active on every website in %s anyway, because the browser itself is covered on the Apps side.</item>
@@ -177,7 +171,7 @@
     <!-- endregion -->
 
     <!-- region Shared Feature Settings -->
-    <string name="feature_settings_exceptions">App exceptions</string>
+    <string name="feature_settings_exceptions">Apps and websites</string>
     <plurals name="feature_settings_exceptions_notListed">
         <item quantity="one">Active in all apps except %d selected.</item>
         <item quantity="other">Active in all apps except %d selected.</item>
@@ -202,21 +196,24 @@
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Right now your %d selected apps are the ones it skips. After the switch, they would be the only apps it applies to.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Keep them selected</string>
     <string name="feature_settings_exceptions_switchListType_clear">Clear the list first</string>
-    <plurals name="feature_settings_exceptions_notListed_websites">
-        <item quantity="one">Active on all websites except %d selected.</item>
-        <item quantity="other">Active on all websites except %d selected.</item>
+    <string name="feature_settings_exceptions_notListed_websites">Active on all websites except selected ones (%s).</string>
+    <string name="feature_settings_exceptions_onlyListed_websites">Active only on selected websites (%s).</string>
+    <string name="feature_settings_exceptions_noWebsites">No websites selected.</string>
+    <plurals name="websites_count_sites">
+        <item quantity="one">%d website</item>
+        <item quantity="other">%d websites</item>
     </plurals>
-    <plurals name="feature_settings_exceptions_onlyListed_websites">
-        <item quantity="one">Active only on %d selected website.</item>
-        <item quantity="other">Active only on %d selected websites.</item>
+    <plurals name="websites_count_collections">
+        <item quantity="one">%d list</item>
+        <item quantity="other">%d lists</item>
     </plurals>
     <string name="feature_settings_exceptions_allWebsites">Active on all websites.</string>
     <string name="feature_settings_exceptions_listType_notList_websites">All websites except selected</string>
     <string name="feature_settings_exceptions_listType_onlyList_websites">Only selected websites</string>
     <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d apps, %2$d websites</string>
     <string name="feature_settings_exceptions_switchListType_title_websites">Keep the selected websites?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Right now this only applies to your %d selected websites. After the switch, they would be the only websites it skips.</string>
-    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Right now your %d selected websites are the ones it skips. After the switch, they would be the only websites it applies to.</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Right now this only applies to the websites you selected (%s). After the switch, they would be the only websites it skips.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Right now the websites you selected (%s) are the ones it skips. After the switch, they would be the only websites it applies to.</string>
     <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Schedule</string>
@@ -247,7 +244,7 @@
     <!-- region Feature: Grayscale -->
     <string name="feature_grayscale">Make Apps Boring</string>
     <string name="feature_grayscale_subtitle">Grayscale, dimmed, blurred</string>
-    <string name="feature_grayscale_description">Takes the color out of distracting apps. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead.</string>
+    <string name="feature_grayscale_description">Takes the color out of distracting apps and websites. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Daily color budget</string>
     <string name="feature_grayscale_allowedColorScreenTime_description">How long these apps stay in color each day. After that, they turn gray until tomorrow. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_grayscale_extraDim">Extra dim</string>
@@ -381,16 +378,14 @@
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Disable Apps</string>
     <string name="feature_disableApps_subtitle">Make them wait, or lock them away</string>
-    <string name="feature_disableApps_description">Makes selected apps wait before they open, and blocks or deactivates them once their daily time is up, launcher access and notifications included.</string>
-    <string name="feature_disableApps_deactivatedApps">Deactivated apps</string>
-    <string name="feature_disableApps_manage">Manage deactivated apps</string>
+    <string name="feature_disableApps_description">Makes selected apps and websites wait before they open, and blocks them once their daily time is up. Apps can also be deactivated outright, launcher icon and notifications included.</string>
     <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
     <string name="feature_disableApps_allowedDailyTime">Daily time budget</string>
-    <string name="feature_disableApps_allowedDailyTime_description">How long you get these apps each day. After that, they are deactivated until the next day. (DetoxDroid must be running to track screen time.)</string>
+    <string name="feature_disableApps_allowedDailyTime_description">How long you get these apps and websites each day. After that, they are locked until the next day. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_disableApps_allowedDailyTime_noLimit">No limit</string>
     <string name="feature_disableApps_waitBeforeOpening">Wait before opening</string>
-    <string name="feature_disableApps_waitBeforeOpening_description">These apps make you wait before they open. Once you\'ve waited, an app opens right away until the screen turns off.</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time the apps are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">These apps and websites make you wait before they open. Once you\'ve waited, each one opens right away until the screen turns off.</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time they are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
     <string name="feature_disableApps_operationMode">Operation mode</string>
     <string name="feature_disableApps_operationMode_description">Block shows a warning screen over the app. Suspend greys it out in the launcher so it cannot start, and needs Shizuku. Deactivate hides it completely, and needs device owner, which most phones cannot give.</string>
     <string name="feature_disableApps_operationMode_block">Block</string>

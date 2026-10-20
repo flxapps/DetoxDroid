@@ -46,7 +46,9 @@ fun OpenAppExceptionsTile(
     val apps = subtitleRes?.let { stringResource(id = it, appCount) }
         ?: appsSummary(feature.appExceptionListType, appCount)
     val websites = if (Websites.matterTo(feature)) {
-        websitesSummary(feature.websiteListType, Websites.websitesOf(feature.appExceptions).size)
+        val entries = Websites.websitesOf(feature.appExceptions)
+        val collections = entries.count { Websites.collectionOf(it) != null }
+        websitesSummary(feature.websiteListType, entries.size - collections, collections)
     } else null
     SimpleListTile(
         titleText = titleText,

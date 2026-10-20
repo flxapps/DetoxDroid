@@ -117,14 +117,8 @@
     <string name="appList_tab_apps">Apps</string>
     <string name="appList_tab_websites">Websites</string>
     <string name="appList_browser_websites_all">Auf jeder Website darin aktiv</string>
-    <plurals name="appList_browser_websites_only">
-        <item quantity="one">Darin nur auf %d ausgewählten Website aktiv</item>
-        <item quantity="other">Darin nur auf %d ausgewählten Websites aktiv</item>
-    </plurals>
-    <plurals name="appList_browser_websites_allExcept">
-        <item quantity="one">Auf jeder Website darin aktiv, außer der %d ausgewählten</item>
-        <item quantity="other">Auf jeder Website darin aktiv, außer den %d ausgewählten</item>
-    </plurals>
+    <string name="appList_browser_websites_only">Darin nur auf den ausgewählten Websites aktiv</string>
+    <string name="appList_browser_websites_allExcept">Auf jeder Website darin aktiv, außer den ausgewählten</string>
     <string name="appList_browser_websites_unreadable">Die Websites darin kann DetoxDroid nicht lesen</string>
     <plurals name="websites_coveredBrowsers">
         <item quantity="one">In %s sowieso auf jeder Website aktiv, weil der Browser selbst bei den Apps mit drin ist.</item>
@@ -168,7 +162,7 @@
     <!-- endregion -->
 
     <!-- region Shared Feature Settings -->
-    <string name="feature_settings_exceptions">App-Ausnahmen</string>
+    <string name="feature_settings_exceptions">Apps und Websites</string>
     <plurals name="feature_settings_exceptions_notListed">
         <item quantity="one">Aktiv in allen Apps außer der %d ausgewählten.</item>
         <item quantity="other">Aktiv in allen Apps außer den %d ausgewählten.</item>
@@ -193,21 +187,24 @@
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Bisher sind deine %d ausgewählten Apps ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
     <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
-    <plurals name="feature_settings_exceptions_notListed_websites">
-        <item quantity="one">Aktiv auf allen Websites außer der %d ausgewählten.</item>
-        <item quantity="other">Aktiv auf allen Websites außer den %d ausgewählten.</item>
+    <string name="feature_settings_exceptions_notListed_websites">Aktiv auf allen Websites außer den ausgewählten (%s).</string>
+    <string name="feature_settings_exceptions_onlyListed_websites">Nur auf ausgewählten Websites aktiv (%s).</string>
+    <string name="feature_settings_exceptions_noWebsites">Keine Websites ausgewählt.</string>
+    <plurals name="websites_count_sites">
+        <item quantity="one">%d Website</item>
+        <item quantity="other">%d Websites</item>
     </plurals>
-    <plurals name="feature_settings_exceptions_onlyListed_websites">
-        <item quantity="one">Nur auf %d ausgewählten Website aktiv.</item>
-        <item quantity="other">Nur auf %d ausgewählten Websites aktiv.</item>
+    <plurals name="websites_count_collections">
+        <item quantity="one">%d Liste</item>
+        <item quantity="other">%d Listen</item>
     </plurals>
     <string name="feature_settings_exceptions_allWebsites">Aktiv auf allen Websites.</string>
     <string name="feature_settings_exceptions_listType_notList_websites">Alle Websites außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList_websites">Nur ausgewählte Websites</string>
     <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d Apps, %2$d Websites</string>
     <string name="feature_settings_exceptions_switchListType_title_websites">Ausgewählte Websites behalten?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt die Funktion nur für deine %d ausgewählten Websites. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
-    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Bisher sind deine %d ausgewählten Websites ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt die Funktion nur für die Websites, die du ausgewählt hast (%s). Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Bisher sind die Websites, die du ausgewählt hast (%s), ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
@@ -238,7 +235,7 @@
     <!-- region Feature: Grayscale -->
     <string name="feature_grayscale">Apps langweilig machen</string>
     <string name="feature_grayscale_subtitle">Grau, gedimmt, verschwommen</string>
-    <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
+    <string name="feature_grayscale_description">Nimmt ablenkenden Apps und Websites die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
     <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
@@ -372,16 +369,14 @@
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Apps deaktivieren</string>
     <string name="feature_disableApps_subtitle">Warten lassen oder wegsperren</string>
-    <string name="feature_disableApps_description">Lässt ausgewählte Apps erst mal warten und sperrt oder deaktiviert sie, sobald ihre Zeit für heute um ist, samt Launcher-Symbol und Benachrichtigungen.</string>
-    <string name="feature_disableApps_deactivatedApps">Deaktivierte Apps</string>
-    <string name="feature_disableApps_manage">Deaktivierte Apps verwalten</string>
+    <string name="feature_disableApps_description">Lässt ausgewählte Apps und Websites erst mal warten und sperrt sie, sobald ihre Zeit für heute um ist. Apps lassen sich auch ganz deaktivieren, samt Launcher-Symbol und Benachrichtigungen.</string>
     <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
     <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
-    <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
+    <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps und Websites. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
     <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
-    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht die App sofort auf, bis der Bildschirm wieder ausgeht.</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget sind die Apps sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
+    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps und Websites lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht jede sofort auf, bis der Bildschirm wieder ausgeht.</string>
+    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget ist alles sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Betriebsmodus</string>
     <string name="feature_disableApps_operationMode_description">Sperren legt einen Warnbildschirm über die App. Einfrieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
