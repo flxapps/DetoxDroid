@@ -47,8 +47,8 @@ import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
 import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
-import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
+import com.flx_apps.digitaldetox.ui.widgets.BudgetTrailing
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SheetSetting
@@ -59,7 +59,6 @@ import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -330,9 +329,6 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
     val context = LocalContext.current
     val showAllowedDailyColorScreenTimeDialog =
         viewModel.showAllowedDailyColorScreenTimeDialog.collectAsState().value
-    // includes the still-running tracking session, so the display doesn't lag behind
-    val usedUpScreenTime =
-        GrayscaleAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
     val allowedDailyColorScreenTime =
         viewModel.allowedDailyColorScreenTime.collectAsState().value.toInt()
     if (showAllowedDailyColorScreenTimeDialog) {
@@ -348,19 +344,12 @@ fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewM
         titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
         subtitleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime_description),
         trailing = {
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                Text(stringResource(id = R.string.duration_minutes, allowedDailyColorScreenTime))
-                Text(
-                    modifier = Modifier.padding(top = 8.dp),
-                    text = stringResource(
-                        id = R.string.duration_minutes, usedUpScreenTime
-                    ) + "\n" + stringResource(
-                        id = R.string.duration_minutes_used
-                    ),
-                    style = androidx.compose.material3.MaterialTheme.typography.labelVerySmall,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-            }
+            BudgetTrailing(
+                budgetText = stringResource(
+                    id = R.string.duration_minutes, allowedDailyColorScreenTime
+                ),
+                usedMs = GrayscaleAppsFeature.currentUsedUpScreenTime()
+            )
         },
         onClick = { viewModel.setShowAllowedDailyColorScreenTimeDialog(true) },
         leadingIcon = Icons.Default.ColorLens

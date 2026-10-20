@@ -1,23 +1,18 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.disable_apps
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Timelapse
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
@@ -27,15 +22,14 @@ import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
-import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
+import com.flx_apps.digitaldetox.ui.widgets.BudgetTrailing
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.toHrMinString
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -119,9 +113,6 @@ fun AllowedDailyTimeTile(
     val context = LocalContext.current
     val allowedDailyScreenTimeInMinutes = viewModel.allowedDailyTime.collectAsState().value.toInt()
     val hasDailyLimit = allowedDailyScreenTimeInMinutes != DisableAppsFeature.NO_DAILY_LIMIT.toInt()
-    // includes the still-running tracking session, so the display doesn't lag behind
-    val usedUpScreenTime =
-        DisableAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
     if (viewModel.dailyScreenTimePickerDialogVisible.collectAsState().value) {
         NumberPickerDialog(
             titleText = stringResource(id = R.string.feature_disableApps_allowedDailyTime),
@@ -150,22 +141,14 @@ fun AllowedDailyTimeTile(
             id = R.string.feature_disableApps_allowedDailyTime_description
         ),
         trailing = {
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                Text(
-                    if (hasDailyLimit) {
-                        stringResource(id = R.string.duration_minutes, allowedDailyScreenTimeInMinutes)
-                    } else {
-                        stringResource(id = R.string.feature_disableApps_allowedDailyTime_noLimit)
-                    }
-                )
-                Text(
-                    modifier = Modifier.padding(top = 8.dp), text = stringResource(
-                        id = R.string.duration_minutes, usedUpScreenTime
-                    ) + "\n" + stringResource(
-                        id = R.string.duration_minutes_used
-                    ), style = MaterialTheme.typography.labelVerySmall, textAlign = TextAlign.Center
-                )
-            }
+            BudgetTrailing(
+                budgetText = if (hasDailyLimit) {
+                    stringResource(id = R.string.duration_minutes, allowedDailyScreenTimeInMinutes)
+                } else {
+                    stringResource(id = R.string.feature_disableApps_allowedDailyTime_noLimit)
+                },
+                usedMs = DisableAppsFeature.currentUsedUpScreenTime()
+            )
         },
         onClick = {
             viewModel.setShowDailyScreenTimePickerDialog(true)
