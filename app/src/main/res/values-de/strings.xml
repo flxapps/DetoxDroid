@@ -114,6 +114,8 @@
     <string name="appList_badge_system">System</string>
     <string name="appList_filter_userApps">Nutzer-Apps</string>
     <string name="appList_filter_systemApps">System-Apps</string>
+    <string name="appList_tab_apps">Apps</string>
+    <string name="appList_tab_websites">Websites</string>
     <string name="appCategories_video">Video</string>
     <string name="appCategories_music">Musik</string>
     <string name="appCategories_audio">Audio</string>
@@ -128,6 +130,26 @@
     <string name="appCategories_games">Spiele</string>
     <string name="appCategories_image">Bilder</string>
     <string name="appCategories_other">Sonstige</string>
+    <!-- endregion -->
+
+    <!-- region Websites in app lists -->
+    <string name="websites_add_label">Website hinzufügen</string>
+    <string name="websites_add_placeholder">youtube.com oder youtube.com/shorts</string>
+    <string name="websites_add_action">Hinzufügen</string>
+    <string name="websites_add_invalid">Das sieht nicht nach einer Webadresse aus.</string>
+    <string name="websites_section_yours">Deine Websites</string>
+    <string name="websites_section_yours_empty">Noch keine. Eine Seite zählt mit allem, was dazugehört, auch mit ihren Subdomains. Mit Pfad, etwa youtube.com/shorts, zählt nur dieser Teil.</string>
+    <string name="websites_section_collections">Fertige Listen</string>
+    <string name="websites_collection_social">Soziale Medien</string>
+    <string name="websites_collection_video">Video und Streaming</string>
+    <string name="websites_collection_adult">Pornoseiten</string>
+    <string name="websites_collection_gambling">Glücksspiel</string>
+    <string name="websites_collection_sample">%1$s und %2$d weitere</string>
+    <string name="websites_collection_size">%s Seiten aus den StevenBlack-Hosts-Listen</string>
+    <string name="websites_browsers_readable">Klappt in %s.</string>
+    <string name="websites_browsers_unreadable">%s kann DetoxDroid nicht lesen, Websites bleiben dort also unbemerkt. Nimm stattdessen den Browser selbst als App in die Liste.</string>
+    <string name="websites_browsers_none">Keinen deiner Browser kann DetoxDroid lesen. Chrome, Firefox, Samsung Internet, Brave, Edge und die meisten ihrer Verwandten gehen.</string>
+    <string name="websites_inAppBrowsers">Links, die sich in einer anderen App öffnen, etwa im eingebauten Browser von Instagram, sind nicht abgedeckt.</string>
     <!-- endregion -->
 
     <!-- region Shared Feature Settings -->
@@ -149,6 +171,12 @@
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Bisher sind deine %d ausgewählten Apps ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
     <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
+    <string name="feature_settings_exceptions_notListed_websites">Aktiv in allen Apps und Websites außer den %d ausgewählten.</string>
+    <string name="feature_settings_exceptions_onlyListed_websites">Nur in %d ausgewählten Apps und Websites aktiv.</string>
+    <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d Apps, %2$d Websites</string>
+    <string name="feature_settings_exceptions_switchListType_title_websites">Ausgewählte Apps und Websites behalten?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt die Funktion nur für deine %d ausgewählten Apps und Websites. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Bisher sind deine %d ausgewählten Apps und Websites ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
@@ -332,6 +360,8 @@
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
     <string name="feature_disableApps_overlay_message2">Mach eine Pause und komm morgen wieder.</string>
+    <string name="feature_disableApps_overlay_message_website">Deine tägliche Bildschirmzeit für diese Website ist aufgebraucht.</string>
+    <string name="feature_disableApps_overlay_goBack">Zurück</string>
 
     <!-- screen that holds an app back before it opens -->
     <string name="feature_disableApps_wait_title">Moment mal</string>
@@ -722,6 +752,10 @@
     <plurals name="about_backup_preview_apps">
         <item quantity="one">%d App</item>
         <item quantity="other">%d Apps</item>
+    </plurals>
+    <plurals name="about_backup_preview_websites">
+        <item quantity="one">%d Website</item>
+        <item quantity="other">%d Websites</item>
     </plurals>
     <plurals name="about_backup_preview_otherSettings">
         <item quantity="one">%d weitere Einstellung</item>

@@ -302,6 +302,9 @@ private fun FeatureRow(feature: ConfigBackup.FeatureSummary) {
         },
         feature.appCount?.let {
             pluralStringResource(id = R.plurals.about_backup_preview_apps, count = it, it)
+        },
+        feature.websiteCount.takeIf { it > 0 }?.let {
+            pluralStringResource(id = R.plurals.about_backup_preview_websites, count = it, it)
         }
     ).joinToString(" · ")
     Row(

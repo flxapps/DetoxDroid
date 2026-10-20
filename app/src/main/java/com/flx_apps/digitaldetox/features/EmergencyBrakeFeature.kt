@@ -295,7 +295,7 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     fun reapply(context: Context) {
         if (!isBraking()) return
         val service = DetoxDroidAccessibilityService.instance ?: return
-        carryToFeatures(context, service.currentForegroundPackage)
+        carryToFeatures(context, service)
     }
 
     private fun release(context: Context) {
@@ -336,16 +336,18 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         } else {
             FeaturesProvider.applyScheduleTransitions()
         }
-        carryToFeatures(context, service.currentForegroundPackage)
+        carryToFeatures(context, service)
     }
 
-    private fun carryToFeatures(context: Context, foregroundPackage: String) {
+    private fun carryToFeatures(context: Context, service: DetoxDroidAccessibilityService) {
         if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return
         FeaturesProvider.activeFeatures.filter { it is PausableFeature }.forEach {
             kotlin.runCatching {
                 (it as? BrakeAwareFeature)?.onBrakeChanged(context)
-                if (foregroundPackage.isNotEmpty() && it is OnAppOpenedSubscriptionFeature) {
-                    it.onAppOpened(context, foregroundPackage, AccessibilityEventUtil.createEvent())
+                // in a browser, each feature gets the website it lists, as on an app switch
+                val foreground = service.foregroundFor(it)
+                if (foreground.isNotEmpty() && it is OnAppOpenedSubscriptionFeature) {
+                    it.onAppOpened(context, foreground, AccessibilityEventUtil.createEvent())
                 }
             }.onFailure { e -> Timber.w(e, "Could not carry the brake to ${it.id}") }
         }

@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.DailyAppCounter
 import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import com.flx_apps.digitaldetox.util.startOfDayMillis
+import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
@@ -69,12 +70,14 @@ class UsageStatsRepository @Inject constructor(
 
         resetCounterBaselinesIfNeeded(today)
         val existing = dao.getForDate(today).associateBy { it.packageName }
+        // blocks and breaks on a website are counted under its entry ("web:youtube.com"), which is
+        // no app and has no place in the per-app rows
         val packageNames = buildSet {
             addAll(osStats.keys)
             addAll(existing.keys)
             addAll(scrollCounts.keys)
-            addAll(breakCounts.keys)
-            addAll(blockCounts.keys)
+            addAll(Websites.appsOf(breakCounts.keys))
+            addAll(Websites.appsOf(blockCounts.keys))
         }
 
         val rows = packageNames.map { pkg ->
@@ -169,8 +172,8 @@ class UsageStatsRepository @Inject constructor(
         val packageNames = buildSet {
             addAll(scrollCounts.keys)
             addAll(scrollDistances.keys)
-            addAll(breakCounts.keys)
-            addAll(blockCounts.keys)
+            addAll(Websites.appsOf(breakCounts.keys))
+            addAll(Websites.appsOf(blockCounts.keys))
         }
         if (packageNames.isEmpty()) return@withLock
 

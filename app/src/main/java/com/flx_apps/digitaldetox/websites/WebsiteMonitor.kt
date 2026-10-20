@@ -1,0 +1,122 @@
+package com.flx_apps.digitaldetox.websites
+
+import android.os.Handler
+import android.os.Looper
+import android.view.accessibility.AccessibilityNodeInfo
+
+/**
+ * Keeps track of the page the browser in front shows, for the accessibility service. Everything
+ * here runs on the main thread.
+ *
+ * The page is read when a browser comes to the front and again after its window content changed.
+ * Content changes come by the dozen while a page loads, renders or plays, so a change only asks for
+ * a read a moment later, and the changes until then ride along with it.
+ *
+ * @param readRoot The active window, or null. Recycled here after use.
+ * @param onPageChanged Called when the page changed, or when [recheck] asked for a report anyway.
+ */
+class WebsiteMonitor(
+    private val addressBars: Map<String, List<String>>,
+    private val readRoot: () -> AccessibilityNodeInfo?,
+    private val onPageChanged: () -> Unit,
+) {
+    companion object {
+        /** How long after a content change the address bar is read. */
+        private const val READ_DELAY_MS = 300L
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var readPending = false
+    private var reportUnchanged = false
+    private val readRunnable = Runnable {
+        readPending = false
+        readAgain()
+    }
+
+    /** The browser in front, or null when the app in front is none DetoxDroid can read. */
+    var browserPackage: String? = null
+        private set
+
+    /** The page [browserPackage] shows, or null when it shows none (a new tab, its settings). */
+    var page: WebPage? = null
+        private set
+
+    /** The browsers DetoxDroid can read the address bar of. */
+    val browsers: Set<String> get() = addressBars.keys
+
+    /**
+     * The app in front changed to [packageName]. The page of a browser is read right away, so the
+     * features hear about the browser and the site it shows at once instead of one after the other.
+     * Without [watch] (no feature has a website listed) nothing is read at all.
+     */
+    fun onForegroundApp(packageName: String, watch: Boolean) {
+        cancelRead()
+        val ids = addressBars[packageName]
+        if (!watch || ids == null) {
+            browserPackage = null
+            page = null
+            return
+        }
+        browserPackage = packageName
+        page = (read(packageName, ids) as? AddressBarReading.Shown)?.page
+    }
+
+    /** The content of a window of [packageName] changed. */
+    fun onContentChanged(packageName: CharSequence?) {
+        val browser = browserPackage ?: return
+        if (packageName?.toString() != browser || readPending) return
+        readPending = true
+        handler.postDelayed(readRunnable, READ_DELAY_MS)
+    }
+
+    /**
+     * Reads the page again after [delayMs] and reports it even if it did not change. For going
+     * back from a website: the page before can belong to the same site, which has to be judged
+     * again.
+     */
+    fun recheck(delayMs: Long) {
+        cancelRead()
+        reportUnchanged = true
+        readPending = true
+        handler.postDelayed(readRunnable, delayMs)
+    }
+
+    /** Forgets the browser and its page, e.g. when the screen goes off. */
+    fun reset() {
+        cancelRead()
+        browserPackage = null
+        page = null
+    }
+
+    private fun cancelRead() {
+        handler.removeCallbacks(readRunnable)
+        readPending = false
+        reportUnchanged = false
+    }
+
+    private fun readAgain() {
+        val browser = browserPackage ?: return
+        val ids = addressBars[browser] ?: return
+        val newPage = when (val reading = read(browser, ids)) {
+            is AddressBarReading.Shown -> reading.page
+            // still the page it was: a bar that is hidden or being typed in says nothing new
+            AddressBarReading.Missing, AddressBarReading.Editing -> page
+        }
+        if (newPage == page && !reportUnchanged) return
+        reportUnchanged = false
+        page = newPage
+        onPageChanged()
+    }
+
+    private fun read(browser: String, ids: List<String>): AddressBarReading {
+        val root = runCatching { readRoot() }.getOrNull() ?: return AddressBarReading.Missing
+        return try {
+            BrowserAddressBars.read(root, browser, ids)
+        } catch (e: RuntimeException) {
+            // a window can go away while it is read
+            AddressBarReading.Missing
+        } finally {
+            root.recycle()
+        }
+    }
+}

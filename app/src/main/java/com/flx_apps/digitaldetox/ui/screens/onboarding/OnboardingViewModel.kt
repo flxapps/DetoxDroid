@@ -9,6 +9,7 @@ import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -26,6 +27,7 @@ import com.flx_apps.digitaldetox.util.NotificationHelper
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.knownCategoryOf
+import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.util.PrivilegedShell
 import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -347,15 +349,15 @@ class OnboardingViewModel @Inject constructor(
         val pending = OnboardingState.pendingFeatureActivations.filterTo(mutableSetOf(), FeaturesProvider::areSettingsLocked)
         if (selectedApps.isNotEmpty()) {
             if (!FeaturesProvider.areSettingsLocked(BreakDoomScrollingFeature.id)) {
+                BreakDoomScrollingFeature.appExceptions = withListedWebsites(BreakDoomScrollingFeature, selectedApps)
                 BreakDoomScrollingFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                BreakDoomScrollingFeature.appExceptions = selectedApps
                 activateOrDefer(BreakDoomScrollingFeature, pending)
             }
             if (_preset.value != OnboardingPreset.GENTLE &&
                 !FeaturesProvider.areSettingsLocked(GrayscaleAppsFeature.id)
             ) {
+                GrayscaleAppsFeature.appExceptions = withListedWebsites(GrayscaleAppsFeature, selectedApps)
                 GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                GrayscaleAppsFeature.appExceptions = selectedApps
                 // in the Strict preset grayscale warns before the block kicks in — with identical
                 // thresholds the block would always win and the grayscale phase would never show
                 GrayscaleAppsFeature.allowedDailyColorScreenTime =
@@ -369,8 +371,8 @@ class OnboardingViewModel @Inject constructor(
             if (_preset.value == OnboardingPreset.STRICT &&
                 !FeaturesProvider.areSettingsLocked(DisableAppsFeature.id)
             ) {
+                DisableAppsFeature.appExceptions = withListedWebsites(DisableAppsFeature, selectedApps)
                 DisableAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                DisableAppsFeature.appExceptions = selectedApps
                 DisableAppsFeature.allowedDailyScreenTime = budgetMs
                 activateOrDefer(DisableAppsFeature, pending)
             }
@@ -383,6 +385,19 @@ class OnboardingViewModel @Inject constructor(
         OnboardingState.isOnboardingCompleted = true
         return true
     }
+
+    /**
+     * [apps] plus the websites [feature] already lists. Onboarding only picks apps and must not
+     * throw away websites set up on the feature's own screen. They stay only where the feature
+     * already applied to just the listed entries: under the other list type they were exceptions,
+     * and the type onboarding sets would turn them into the opposite.
+     */
+    private fun withListedWebsites(
+        feature: SupportsAppExceptionsFeature, apps: Set<String>
+    ): Set<String> =
+        if (feature.appExceptionListType == AppExceptionListType.ONLY_LIST) {
+            apps + Websites.websitesOf(feature.appExceptions)
+        } else apps
 
     /**
      * Activates [feature] when its required permissions are present, otherwise leaves it configured

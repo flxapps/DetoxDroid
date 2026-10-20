@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.websites.Websites
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -54,11 +55,15 @@ fun ApplicationInfo.isSystemApp(): Boolean {
 
 /**
  * The name the app with [packageName] goes by in the launcher, or the package name itself if the
- * app cannot be found (e.g. it was uninstalled in the meantime).
+ * app cannot be found (e.g. it was uninstalled in the meantime). A website entry of an app list
+ * goes by the site or the collection it names, see [Websites.displayName].
  */
-fun Context.appLabel(packageName: String): String = runCatching {
-    packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
-}.getOrDefault(packageName)
+fun Context.appLabel(packageName: String): String {
+    if (Websites.isWebsite(packageName)) return Websites.displayName(this, packageName)
+    return runCatching {
+        packageManager.getApplicationInfo(packageName, 0).loadLabel(packageManager).toString()
+    }.getOrDefault(packageName)
+}
 
 /**
  * The launcher icon of [packageName] as a [sizePx] square, or null for an app that is gone.

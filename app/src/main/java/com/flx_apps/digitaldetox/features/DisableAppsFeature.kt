@@ -35,6 +35,7 @@ import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOver
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.DisableAppsFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeningActivity
 import com.flx_apps.digitaldetox.util.DailyAppCounter
+import com.flx_apps.digitaldetox.websites.Websites
 import timber.log.Timber
 import java.time.LocalDate
 
@@ -130,6 +131,18 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     }
 
     /**
+     * A website the user chose not to wait for. Leaving the wait screen returns to the browser, and
+     * when the browser shows that website again right then, it goes back from it instead of
+     * starting the wait over.
+     */
+    private var leavingWebsite: String? = null
+
+    /** Called when the user leaves the wait for the website [entry], see [leavingWebsite]. */
+    fun leaveWebsiteOnReturn(entry: String) {
+        leavingWebsite = entry
+    }
+
+    /**
      * The operation mode of the feature. By default, it is set to [DisableAppsMode.BLOCK], because
      * [DisableAppsMode.DEACTIVATE] requires the DEVICE_ADMIN permission, which has to be granted by
      * the user from the computer using adb.
@@ -148,11 +161,18 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     val blockCounter = DailyAppCounter()
 
     /**
-     * The apps that are to be disabled are implemented using the [appExceptions].
+     * The apps and websites that are to be disabled are implemented using the [appExceptions].
      * @see SupportsAppExceptionsFeature
      */
     val disableableApps: Set<String>
         get() = appExceptions
+
+    /**
+     * The [disableableApps] that are apps. Only these can be deactivated or suspended; a website is
+     * always held back by the block screen.
+     */
+    private val disableableInstalledApps: Set<String>
+        get() = Websites.appsOf(appExceptions)
 
     /**
      * Whether the apps are currently deactivated.
@@ -200,7 +220,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         // says nothing about today. A limit of 0 and a brake block whatever it holds.
         val totalFromYesterday = today != LocalDate.now() && allowedDailyScreenTime > 0L &&
                 !EmergencyBrakeFeature.covers(this)
-        return if (enforcing && !totalFromYesterday && !hasScreenTimeLeft()) disableableApps
+        return if (enforcing && !totalFromYesterday && !hasScreenTimeLeft()) disableableInstalledApps
         else emptySet()
     }
 
@@ -220,7 +240,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         when (operationMode) {
             DisableAppsMode.BLOCK -> {}
             DisableAppsMode.DEACTIVATE -> setAppsDeactivated(context, true)
-            DisableAppsMode.SUSPEND -> AppSuspender.suspend(disableableApps)
+            DisableAppsMode.SUSPEND -> AppSuspender.suspend(disableableInstalledApps)
         }
     }
 
@@ -285,6 +305,12 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onAppOpened(
         context: Context, packageName: String, accessibilityEvent: AccessibilityEvent
     ) {
+        val leaving = leavingWebsite
+        leavingWebsite = null
+        if (packageName == leaving) {
+            DetoxDroidAccessibilityService.instance?.leaveWebsite()
+            return
+        }
         if (!disableableApps.contains(packageName)) {
             // the app is not in the list of apps that should be disabled, so increase the used up
             // screen time and return
@@ -300,7 +326,11 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         ) {
             // no tracking here: the wait is not screen time, and the wait screen stops the app
             // (its window event also ends any session a previous listed app left running)
-            WaitBeforeOpeningActivity.start(context, packageName, waitBeforeOpening)
+            WaitBeforeOpeningActivity.start(
+                context, packageName, waitBeforeOpening,
+                label = DetoxDroidAccessibilityService.instance?.currentWebsiteName()
+                    ?.takeIf { Websites.isWebsite(packageName) }
+            )
             return
         }
         eventuallyStartTracking() // start tracking the screen time
@@ -317,11 +347,13 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
 
     /**
      * Applies the configured [operationMode] to [packageName]: shows the blocking overlay or
-     * deactivates the configured apps via device admin.
+     * deactivates the configured apps via device admin. A website cannot be deactivated or
+     * suspended, so it gets the block screen in every mode.
      */
     private fun enforceOn(context: Context, packageName: String) {
         blockCounter.increment(packageName)
-        when (operationMode) {
+        val mode = if (Websites.isWebsite(packageName)) DisableAppsMode.BLOCK else operationMode
+        when (mode) {
             DisableAppsMode.BLOCK -> {
                 context.startService(Intent(context, AppDisabledOverlayService::class.java).apply {
                     putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
@@ -333,7 +365,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             }
 
             DisableAppsMode.SUSPEND -> {
-                AppSuspender.suspend(disableableApps)
+                AppSuspender.suspend(disableableInstalledApps)
             }
         }
     }
@@ -347,6 +379,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override fun onScreenTurnedOff(context: Context?) {
         eventuallyIncreaseUsedUpScreenTime()
         waitedForApps.clear()
+        leavingWebsite = null
         releaseSuspendedAppsIfEntitled()
     }
 
@@ -368,7 +401,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         }
         val devicePolicyManager =
             (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager)
-        disableableApps.forEach {
+        disableableInstalledApps.forEach {
             val appDeactivated = devicePolicyManager.setApplicationHidden(
                 ComponentName(context, DetoxDroidDeviceAdminReceiver::class.java), it, deactivated
             )

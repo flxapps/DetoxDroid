@@ -20,8 +20,10 @@ import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -32,6 +34,10 @@ import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevo
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.websites.BrowserAddressBars
+import com.flx_apps.digitaldetox.websites.WebsiteCollections
+import com.flx_apps.digitaldetox.websites.WebsiteMonitor
+import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
@@ -74,6 +80,13 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     companion object {
         /** How many of the most used apps the expanded notification names. */
         private const val NOTIFICATION_APP_COUNT = 3
+
+        /**
+         * How long after going back from a website its page is judged again. Long enough for the
+         * browser to have shown the page before, short enough that a site that is held back as
+         * well does not get to show much of itself.
+         */
+        private const val LEAVE_WEBSITE_RECHECK_MS = 600L
 
         /**
          * The current instance of the [DetoxDroidAccessibilityService]. This is set in
@@ -128,12 +141,70 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * The package that is currently in front ("" before the first window event). Features can
-     * re-evaluate against it when they (re)start without a fresh window event, e.g. resuming from
-     * a pause while the user is still inside an affected app, where no new window event will
-     * arrive until the next app switch.
+     * The package that is currently in front ("" before the first window event). Features that
+     * re-evaluate when they (re)start without a fresh window event read [foregroundFor] instead,
+     * which knows about websites.
      */
     val currentForegroundPackage: String get() = foregroundAppMonitor.currentPackage
+
+    /**
+     * The page of the browser in front, for the features that have websites in their lists.
+     */
+    private val websiteMonitor by lazy {
+        WebsiteMonitor(
+            addressBars = BrowserAddressBars.load(this),
+            readRoot = { rootInActiveWindow },
+            onPageChanged = ::dispatchWebsiteChange
+        )
+    }
+
+    /**
+     * What each app-opened feature was last told is in front: an app, or the entry of its list a
+     * website falls under. A new page only reaches the features it changes this for.
+     */
+    private val dispatchedForeground = HashMap<FeatureId, String>()
+
+    /**
+     * What [feature] is told is in front when [app] is: the entry of its own list that the website
+     * [app] shows falls under, or [app] itself. Each feature gets its own answer, so one that lists
+     * `youtube.com` and one that lists the browser both see what they listed, and a site excepted
+     * from a feature that applies to all apps stays excepted inside the browser.
+     */
+    private fun foregroundFor(feature: Feature, app: String): String {
+        val page = websiteMonitor.page ?: return app
+        if (app != websiteMonitor.browserPackage || feature !is SupportsAppExceptionsFeature) return app
+        return Websites.bestMatch(feature.appExceptions, page) ?: app
+    }
+
+    /**
+     * What [feature] is told is in front right now, for a feature that re-evaluates without a fresh
+     * window event (resuming from a pause, a brake starting): see [foregroundFor].
+     */
+    fun foregroundFor(feature: Feature): String =
+        foregroundFor(feature, foregroundAppMonitor.currentPackage)
+
+    /**
+     * The site the browser in front shows, the way it would be typed ("youtube.com"), or null when
+     * no browser DetoxDroid can read is in front. For naming a website that one of DetoxDroid's
+     * screens holds back where the list only says "Porn sites".
+     */
+    fun currentWebsiteName(): String? {
+        if (foregroundAppMonitor.currentPackage != websiteMonitor.browserPackage) return null
+        return websiteMonitor.page?.host?.removePrefix("www.")
+    }
+
+    /**
+     * Goes back in the browser in front, the way out of a website one of DetoxDroid's screens held
+     * back. Going home would leave the browser on that page, and opening the browser again would
+     * end on the same screen. It goes back once per call and never on its own: if the page before
+     * is held back as well, it gets its screen again, and the user decides again.
+     */
+    fun leaveWebsite() {
+        dispatchedForeground.entries.removeAll { Websites.isWebsite(it.value) }
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        // the page before can be on the same site and leave the address bar as it was
+        websiteMonitor.recheck(LEAVE_WEBSITE_RECHECK_MS)
+    }
 
     /**
      * Drops the remembered foreground package, so the next window event counts as an app switch
@@ -143,6 +214,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     fun forgetForegroundPackage() {
         mainHandler.removeCallbacks(settleForegroundApp)
         foregroundAppMonitor.forget()
+        websiteMonitor.reset()
+        dispatchedForeground.clear()
+        updateWebsiteEvents(false)
     }
 
     /**
@@ -293,6 +367,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * occurs. It forwards the event to the [FeaturesProvider.activeFeatures] for processing.
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
+        if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            // only asked for while a browser is in front, see updateWebsiteEvents
+            websiteMonitor.onContentChanged(accessibilityEvent.packageName)
+            return
+        }
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             // every read of the source hands out a fresh copy of the node, and scrolling sends up
             // to ten events a second, so it is read once here and recycled (which still frees
@@ -420,20 +499,79 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
     /**
      * Hands an app that came to the front to the active [OnAppOpenedSubscriptionFeature]s, minus
-     * the ones a running pause suspends.
+     * the ones a running pause suspends. For a browser, each feature hears about the website it
+     * shows where that is in its list, see [foregroundFor].
      */
     private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
         // usage statistics are pure measurement and keep counting during a pause —
-        // a pause only suspends the interventions below
+        // a pause only suspends the interventions below. They count apps, never websites.
         UsageStatsTracker.onForegroundApp(packageName)
         // the app that was left has its time booked now, and going home is when the widget is seen
         ScreenTimeSurfaces.requestRefresh(this)
+        watchWebsites(packageName)
+        dispatchedForeground.clear()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
-            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
-            (it as OnAppOpenedSubscriptionFeature).onAppOpened(
-                this, packageName, accessibilityEvent
-            )
+            val feature = it as Feature
+            val foreground = foregroundFor(feature, packageName)
+            dispatchedForeground[feature.id] = foreground
+            if (PauseButtonFeature.isFeaturePaused(feature)) return@forEach
+            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, foreground, accessibilityEvent)
         }
+    }
+
+    /**
+     * The browser in front shows another page. Tells the features whose answer to "what is in
+     * front" this changes, and only them: the rest are still in the same browser.
+     */
+    private fun dispatchWebsiteChange() {
+        val app = foregroundAppMonitor.currentPackage
+        if (app != websiteMonitor.browserPackage) return
+        val event = AccessibilityEventUtil.createEvent(isFullScreen = true)
+        FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
+            val feature = it as Feature
+            val foreground = foregroundFor(feature, app)
+            if (dispatchedForeground[feature.id] == foreground) return@forEach
+            dispatchedForeground[feature.id] = foreground
+            if (PauseButtonFeature.isFeaturePaused(feature)) return@forEach
+            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, foreground, event)
+        }
+    }
+
+    /**
+     * Follows the websites of [app] when it is a browser and some active feature lists websites.
+     * Without such a feature the address bar is never read and no content change is asked for.
+     */
+    private fun watchWebsites(app: String) {
+        val websites = FeaturesProvider.activeFeatures
+            .filterIsInstance<SupportsAppExceptionsFeature>()
+            .flatMap { Websites.websitesOf(it.appExceptions) }
+        if (websites.isNotEmpty()) {
+            // a collection that is still loading cannot match yet, so the page is judged again
+            // once it is in
+            WebsiteCollections.prefetch(websites.mapNotNull(Websites::collectionOf).toSet()) {
+                mainHandler.post { websiteMonitor.recheck(0L) }
+            }
+        }
+        websiteMonitor.onForegroundApp(app, watch = websites.isNotEmpty())
+        updateWebsiteEvents(websiteMonitor.browserPackage != null)
+    }
+
+    /**
+     * Asks for window content changes only while a browser whose websites matter is in front. They
+     * are by far the busiest event type, and nothing else here needs them. Not declared in the
+     * service XML for that reason: if this fails, websites go unrecognised and nothing else changes.
+     */
+    private fun updateWebsiteEvents(needed: Boolean) {
+        val info = serviceInfo ?: return
+        val contentChanged = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+        if ((info.eventTypes and contentChanged != 0) == needed) return
+        info.eventTypes = if (needed) {
+            info.eventTypes or contentChanged
+        } else {
+            info.eventTypes and contentChanged.inv()
+        }
+        kotlin.runCatching { serviceInfo = info }
+            .onFailure { Timber.w(it, "Could not update the content change events") }
     }
 
     /**
@@ -461,10 +599,12 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
                 accessibilityEvent, viewIdResourceName
             )
 
+        val app = accessibilityEvent.packageName.toString()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
+                foregroundFor(it, app),
                 scrollViewId,
                 scrollViewSize = scrollViewSize,
                 viewIdResourceName = viewIdResourceName,

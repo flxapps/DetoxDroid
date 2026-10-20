@@ -14,22 +14,30 @@ import com.flx_apps.digitaldetox.ui.widgets.InterventionScreen
 class AppDisabledOverlayService : OverlayService(OverlayContent { AppDisabledOverlay() })
 
 /**
- * The overlay that is displayed when the user tries to open a disabled app.
- * When closed, the user will be redirected to the home screen.
+ * The overlay that is displayed when the user tries to open a disabled app or website. Closing it
+ * leads home from an app and back in the browser from a website, see [OverlayService.leave].
  */
 @Preview
 @Composable
 fun AppDisabledOverlay() {
-    val context = LocalContext.current
+    val service = LocalContext.current as? OverlayService
+    val overWebsite = service?.isOverWebsite == true
     InterventionScreen(
         icon = painterResource(id = R.drawable.ic_disable_app),
         title = stringResource(id = R.string.feature_disableApps_overlay_title),
-        message = stringResource(id = R.string.feature_disableApps_overlay_message) + " " +
-                stringResource(id = R.string.feature_disableApps_overlay_message2),
+        message = stringResource(
+            id = if (overWebsite) {
+                R.string.feature_disableApps_overlay_message_website
+            } else {
+                R.string.feature_disableApps_overlay_message
+            }
+        ) + " " + stringResource(id = R.string.feature_disableApps_overlay_message2),
     ) {
         InterventionPrimaryButton(
-            text = stringResource(id = R.string.action_close),
-            onClick = { (context as OverlayService).closeOverlay() }
+            text = stringResource(
+                id = if (overWebsite) R.string.feature_disableApps_overlay_goBack else R.string.action_close
+            ),
+            onClick = { service?.leave() }
         )
     }
 }

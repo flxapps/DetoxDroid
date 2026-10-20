@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
 import com.flx_apps.digitaldetox.widgets.WidgetSettingsStore
+import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -113,6 +114,7 @@ object ConfigBackup {
         @StringRes val titleRes: Int?,
         val isActivated: Boolean?,
         val appCount: Int?,
+        val websiteCount: Int = 0,
     )
 
     /**
@@ -152,11 +154,13 @@ object ConfigBackup {
         val knownFeatureIds = FeaturesProvider.featureList.map { it.id }.toSet()
         val byFeature = values.keys.groupBy { featureIdOf(it) }
         val features = FeaturesProvider.featureList.filter { it.id in byFeature }.map { feature ->
+            val entries = (values["${feature.id}_exceptions"] as? Set<*>)?.filterIsInstance<String>()
             FeatureSummary(
                 featureId = feature.id,
                 titleRes = feature.texts.title,
                 isActivated = values["${feature.id}_isActivated"] as? Boolean,
-                appCount = (values["${feature.id}_exceptions"] as? Set<*>)?.size
+                appCount = entries?.let { Websites.appsOf(it).size },
+                websiteCount = entries?.let { Websites.websitesOf(it).size } ?: 0
             )
         }
         return Preview(

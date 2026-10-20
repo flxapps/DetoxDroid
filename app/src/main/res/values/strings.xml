@@ -121,6 +121,8 @@
     <string name="appList_badge_system">System</string>
     <string name="appList_filter_userApps">User apps</string>
     <string name="appList_filter_systemApps">System apps</string>
+    <string name="appList_tab_apps">Apps</string>
+    <string name="appList_tab_websites">Websites</string>
     <string name="appCategories_video">Video</string>
     <string name="appCategories_music">Music</string>
     <string name="appCategories_audio">Audio</string>
@@ -135,6 +137,28 @@
     <string name="appCategories_games">Games</string>
     <string name="appCategories_image">Image</string>
     <string name="appCategories_other">Other</string>
+    <!-- endregion -->
+
+    <!-- region Websites in app lists -->
+    <string name="websites_add_label">Add a website</string>
+    <string name="websites_add_placeholder">youtube.com or youtube.com/shorts</string>
+    <string name="websites_add_action">Add</string>
+    <string name="websites_add_invalid">That doesn\'t look like a web address.</string>
+    <string name="websites_section_yours">Your websites</string>
+    <string name="websites_section_yours_empty">None yet. A site counts with everything on it, subdomains included. Add a path, like youtube.com/shorts, and only that part counts.</string>
+    <string name="websites_section_collections">Ready-made lists</string>
+    <string name="websites_collection_social">Social media</string>
+    <string name="websites_collection_video">Video and streaming</string>
+    <string name="websites_collection_adult">Porn sites</string>
+    <string name="websites_collection_gambling">Gambling</string>
+    <!-- the first few sites of a list, then how many it has on top -->
+    <string name="websites_collection_sample">%1$s and %2$d more</string>
+    <string name="websites_collection_size">%s sites, from the StevenBlack hosts lists</string>
+    <!-- %s is one browser or several, like "Chrome and Firefox" -->
+    <string name="websites_browsers_readable">Works in %s.</string>
+    <string name="websites_browsers_unreadable">DetoxDroid can\'t read %s, so websites go unnoticed there. Add the browser itself as an app instead.</string>
+    <string name="websites_browsers_none">DetoxDroid can\'t read any of your browsers. Chrome, Firefox, Samsung Internet, Brave, Edge and most of their relatives work.</string>
+    <string name="websites_inAppBrowsers">Links that open inside another app, in Instagram\'s own browser for example, aren\'t covered.</string>
     <!-- endregion -->
 
     <!-- region Shared Feature Settings -->
@@ -156,6 +180,12 @@
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Right now your %d selected apps are the ones it skips. After the switch, they would be the only apps it applies to.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Keep them selected</string>
     <string name="feature_settings_exceptions_switchListType_clear">Clear the list first</string>
+    <string name="feature_settings_exceptions_notListed_websites">Active in all apps and websites except %d selected.</string>
+    <string name="feature_settings_exceptions_onlyListed_websites">Active only in %d selected apps and websites.</string>
+    <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d apps, %2$d websites</string>
+    <string name="feature_settings_exceptions_switchListType_title_websites">Keep the selected apps and websites?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Right now this only applies to your %d selected apps and websites. After the switch, they would be the only ones it skips.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Right now your %d selected apps and websites are the ones it skips. After the switch, they would be the only ones it applies to.</string>
     <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Schedule</string>
@@ -339,6 +369,8 @@
     <string name="feature_disableApps_overlay_title">Time\'s up!</string>
     <string name="feature_disableApps_overlay_message">You have used up your daily screen time for this app.</string>
     <string name="feature_disableApps_overlay_message2">Take a break and come back tomorrow.</string>
+    <string name="feature_disableApps_overlay_message_website">You have used up your daily screen time for this website.</string>
+    <string name="feature_disableApps_overlay_goBack">Go back</string>
 
     <!-- screen that holds an app back before it opens -->
     <string name="feature_disableApps_wait_title">Hold on a second</string>
@@ -738,6 +770,10 @@
     <plurals name="about_backup_preview_apps">
         <item quantity="one">%d app</item>
         <item quantity="other">%d apps</item>
+    </plurals>
+    <plurals name="about_backup_preview_websites">
+        <item quantity="one">%d website</item>
+        <item quantity="other">%d websites</item>
     </plurals>
     <plurals name="about_backup_preview_otherSettings">
         <item quantity="one">%d more setting</item>

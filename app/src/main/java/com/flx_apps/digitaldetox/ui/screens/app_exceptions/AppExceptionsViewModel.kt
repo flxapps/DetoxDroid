@@ -13,6 +13,10 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
+import com.flx_apps.digitaldetox.websites.InstalledBrowsers
+import com.flx_apps.digitaldetox.websites.WebsiteCollection
+import com.flx_apps.digitaldetox.websites.WebsiteCollections
+import com.flx_apps.digitaldetox.websites.Websites
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +44,26 @@ data class AppExceptionItem(
  * A feature whose app selection can be copied into the current one ("Copy from…").
  */
 data class ExceptionsCopySource(
-    val featureId: String, @StringRes val titleRes: Int, val appCount: Int
+    val featureId: String, @StringRes val titleRes: Int, val appCount: Int, val websiteCount: Int
+)
+
+/**
+ * A site the user added to the list, see [Websites.siteEntry].
+ * @param checked Whether it is in the list. One unchecked during this visit stays on screen, so a
+ * slip of the finger can be taken back without typing the site again.
+ */
+data class SiteItem(val entry: String, val name: String, val checked: Boolean)
+
+/**
+ * One of the [WebsiteCollection]s that come with the app.
+ * @param sample The first few sites of a curated collection, empty for a large one.
+ * @param size How many sites it has, 0 until it is loaded.
+ */
+data class CollectionItem(
+    val collection: WebsiteCollection,
+    val checked: Boolean,
+    val sample: List<String>,
+    val size: Int,
 )
 
 /**
@@ -134,12 +157,29 @@ class AppExceptionsViewModel @Inject constructor(
     val showListSettingsSheet = _showListSettingsSheet.asStateFlow()
 
     /**
-     * Holds the number of currently toggled items (i.e. items that are selected in the list). Only
-     * apps that are really there are counted: the stored selection outlives the apps it names, and
-     * an app that is gone is one this feature no longer acts on.
+     * Holds the number of currently toggled items (i.e. items that are selected in the list): the
+     * websites and collections, and of the apps only those that are really there. The stored
+     * selection outlives the apps it names, and an app that is gone is one this feature no longer
+     * acts on.
      */
     private val _toggledItemsSize = MutableStateFlow<Int>(0)
     val toggledItemsSize = _toggledItemsSize.asStateFlow()
+
+    /** The sites under "Your websites", see [SiteItem]. */
+    private val _sites = MutableStateFlow<List<SiteItem>>(emptyList())
+    val sites = _sites.asStateFlow()
+
+    /** The collections under "Ready-made lists", see [CollectionItem]. */
+    private val _collections = MutableStateFlow<List<CollectionItem>>(emptyList())
+    val collections = _collections.asStateFlow()
+
+    /** The browsers on this phone and whether DetoxDroid can read them, null until known. */
+    private val _browsers = MutableStateFlow<InstalledBrowsers?>(null)
+    val browsers = _browsers.asStateFlow()
+
+    /** How many websites and collections are in the list. */
+    private val _selectedWebsiteCount = MutableStateFlow(0)
+    val selectedWebsiteCount = _selectedWebsiteCount.asStateFlow()
 
     /**
      * The other features this feature's selection can be copied from, filled once the app list is
@@ -152,8 +192,17 @@ class AppExceptionsViewModel @Inject constructor(
      * Loads all installed apps when the view model is created in a coroutine.
      */
     init {
+        refreshWebsites(initial = true)
         viewModelScope.launch(Dispatchers.IO) {
             loadInstalledApps()
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            _browsers.value = InstalledBrowsers.find(getApplication())
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            // also warms the service's copy: both run in the same process
+            WebsiteCollection.entries.forEach { WebsiteCollections.load(getApplication(), it) }
+            refreshWebsites()
         }
     }
 
@@ -177,8 +226,8 @@ class AppExceptionsViewModel @Inject constructor(
                 AppExceptionItem(it, isException)
             }
             .sortedBy { it.appInfo.appName.lowercase(Locale.getDefault()) }
-        _toggledItemsSize.value = apps.count { it.isException }
         _appExceptionItems = apps
+        updateSelectionCounts()
         _selectedAppCategories.value = appCategories.associateWith {
             false
         }
@@ -226,7 +275,7 @@ class AppExceptionsViewModel @Inject constructor(
         if (toggled.isException) appExceptionsFeature.appExceptions += packageName
         else appExceptionsFeature.appExceptions -= packageName
         _appExceptionItems = _appExceptionItems.toMutableList().also { it[index] = toggled }
-        _toggledItemsSize.value = _appExceptionItems.count { it.isException }
+        updateSelectionCounts()
         if (toggled.isException &&
             appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
         ) {
@@ -237,17 +286,82 @@ class AppExceptionsViewModel @Inject constructor(
 
     /**
      * The other features this feature's selection can be copied from: every feature with app
-     * exceptions that has at least one app selected.
+     * exceptions that has at least one app or website selected.
      */
     private fun loadCopySources(): List<ExceptionsCopySource> {
         return FeaturesProvider.featureList
             .filter { it.id != feature.id && it is SupportsAppExceptionsFeature }
             .mapNotNull { source ->
                 val exceptions = (source as SupportsAppExceptionsFeature).appExceptions
-                val appCount = ApplicationInfoRepository.countInstalled(exceptions)
-                if (appCount == 0) null
-                else ExceptionsCopySource(source.id, source.texts.title, appCount)
+                val appCount = ApplicationInfoRepository.countInstalled(Websites.appsOf(exceptions))
+                val websiteCount = Websites.websitesOf(exceptions).size
+                if (appCount + websiteCount == 0) null
+                else ExceptionsCopySource(source.id, source.texts.title, appCount, websiteCount)
             }
+    }
+
+    /**
+     * Adds the site the user typed, in whatever form it was typed or pasted. Returns false when it
+     * names no site, so the field can say so.
+     */
+    fun addWebsite(input: String): Boolean {
+        val entry = Websites.siteEntry(input) ?: return false
+        if (entry !in appExceptionsFeature.appExceptions) {
+            appExceptionsFeature.appExceptions += entry
+        }
+        // a site typed again moves to the top, where the user looks for it
+        _sites.value = listOf(SiteItem(entry, Websites.displayName(getApplication(), entry), true)) +
+                _sites.value.filter { it.entry != entry }
+        refreshWebsites()
+        return true
+    }
+
+    /** Puts the site or collection [entry] into the list or takes it out. */
+    fun toggleWebsite(entry: String) {
+        if (entry in appExceptionsFeature.appExceptions) {
+            appExceptionsFeature.appExceptions -= entry
+        } else {
+            appExceptionsFeature.appExceptions += entry
+        }
+        refreshWebsites()
+    }
+
+    /**
+     * Rebuilds the website part of the screen from the stored list. The sites keep the order they
+     * are shown in, and one taken out during this visit keeps its row, unchecked.
+     */
+    private fun refreshWebsites(initial: Boolean = false) {
+        val entries = appExceptionsFeature.appExceptions
+        val listedSites = Websites.websitesOf(entries).filter { Websites.collectionOf(it) == null }
+        val shown = if (initial) {
+            listedSites.sortedBy { it.lowercase(Locale.ROOT) }
+        } else {
+            _sites.value.map { it.entry } + listedSites.filter { site -> _sites.value.none { it.entry == site } }
+        }
+        _sites.value = shown.map { SiteItem(it, Websites.displayName(getApplication(), it), it in entries) }
+        _collections.value = WebsiteCollection.entries.map { collection ->
+            val domains = WebsiteCollections.loadedOrNull(collection)
+            CollectionItem(
+                collection = collection,
+                checked = Websites.collectionEntry(collection) in entries,
+                sample = if (collection.curated) domains?.sample.orEmpty() else emptyList(),
+                size = domains?.size ?: 0,
+            )
+        }
+        updateSelectionCounts()
+    }
+
+    /**
+     * Counts the selection the way the screen shows it: the apps that are really there (the stored
+     * selection outlives the apps it names) and every website entry.
+     */
+    private fun updateSelectionCounts() {
+        val websiteCount = Websites.websitesOf(appExceptionsFeature.appExceptions).size
+        _selectedWebsiteCount.value = websiteCount
+        val appCount =
+            if (this::_appExceptionItems.isInitialized) _appExceptionItems.count { it.isException }
+            else 0
+        _toggledItemsSize.value = appCount + websiteCount
     }
 
     /**
@@ -272,9 +386,9 @@ class AppExceptionsViewModel @Inject constructor(
             _appExceptionItems = _appExceptionItems.map {
                 it.copy(isException = newExceptions.contains(it.appInfo.packageName))
             }
-            _toggledItemsSize.value = _appExceptionItems.count { it.isException }
             filterApps()
         }
+        refreshWebsites()
     }
 
     /**
@@ -319,7 +433,9 @@ class AppExceptionsViewModel @Inject constructor(
             // user was asked about, and under the other type they would come back meaning the
             // opposite of what they were picked for once reinstalled.
             val installed = _appExceptionItems.mapTo(mutableSetOf()) { it.appInfo.packageName }
-            val kept = appExceptionsFeature.appExceptions.filterTo(mutableSetOf()) { it in installed }
+            val kept = appExceptionsFeature.appExceptions.filterTo(mutableSetOf()) {
+                it in installed || Websites.isWebsite(it)
+            }
             if (kept.size != appExceptionsFeature.appExceptions.size) replaceExceptions(kept)
         }
         appExceptionsFeature.appExceptionListType = type

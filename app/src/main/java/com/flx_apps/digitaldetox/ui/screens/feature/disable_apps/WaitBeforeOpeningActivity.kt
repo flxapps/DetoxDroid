@@ -36,6 +36,7 @@ import com.flx_apps.digitaldetox.ui.widgets.InterventionScreen
 import com.flx_apps.digitaldetox.ui.widgets.InterventionSecondaryButton
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.appLabel
+import com.flx_apps.digitaldetox.websites.Websites
 
 /**
  * Holds a listed app back for [DisableAppsFeature.waitBeforeOpening] before it can be opened.
@@ -52,14 +53,20 @@ import com.flx_apps.digitaldetox.util.appLabel
 class WaitBeforeOpeningActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_PACKAGE_NAME = "packageName"
+        private const val EXTRA_LABEL = "label"
         private const val EXTRA_WAIT_MS = "waitMs"
         private const val EXTRA_OPENS_AT = "opensAt"
 
-        /** Holds back [packageName], which just came to the front, for [waitMs] milliseconds. */
-        fun start(context: Context, packageName: String, waitMs: Long) {
+        /**
+         * Holds back [packageName], which just came to the front, for [waitMs] milliseconds. A
+         * website can be held back by a whole collection of them, and then [label] names the one
+         * the browser actually shows.
+         */
+        fun start(context: Context, packageName: String, waitMs: Long, label: String? = null) {
             context.startActivity(Intent(context, WaitBeforeOpeningActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 putExtra(EXTRA_PACKAGE_NAME, packageName)
+                putExtra(EXTRA_LABEL, label)
                 putExtra(EXTRA_WAIT_MS, waitMs)
                 // a point in time rather than a duration, so a recreated activity carries on with
                 // the countdown instead of starting it over
@@ -135,8 +142,18 @@ class WaitBeforeOpeningActivity : ComponentActivity() {
         finish()
     }
 
+    /**
+     * The user does not want the app after all. From a website, the way out is back in the browser
+     * rather than home, which would leave the browser on that website: finishing returns to the
+     * browser, which then goes back from it.
+     */
     private fun leave() {
-        startActivity(NavigationUtil.homeScreenIntent())
+        val packageName = heldBackApp?.packageName.orEmpty()
+        if (Websites.isWebsite(packageName)) {
+            DisableAppsFeature.leaveWebsiteOnReturn(packageName)
+        } else {
+            startActivity(NavigationUtil.homeScreenIntent())
+        }
         finish()
     }
 
@@ -144,7 +161,7 @@ class WaitBeforeOpeningActivity : ComponentActivity() {
         val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME).orEmpty()
         return HeldBackApp(
             packageName = packageName,
-            label = appLabel(packageName),
+            label = intent.getStringExtra(EXTRA_LABEL) ?: appLabel(packageName),
             waitMs = intent.getLongExtra(EXTRA_WAIT_MS, 0L),
             opensAtMs = intent.getLongExtra(EXTRA_OPENS_AT, 0L)
         )

@@ -311,9 +311,9 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         // Evaluate against the actual foreground app when the service knows it: after a resume
         // (or feature toggle) no new window event arrives while the user stays inside the current
         // app, so dispatching the synthetic event's own package would leave the filter off until
-        // the next app switch.
+        // the next app switch. In a browser that is the website, if it is listed.
         val foregroundPackage =
-            DetoxDroidAccessibilityService.instance?.currentForegroundPackage?.takeIf { it.isNotEmpty() }
+            DetoxDroidAccessibilityService.instance?.foregroundFor(this)?.takeIf { it.isNotEmpty() }
                 ?: accessibilityEvent.packageName.toString()
         onAppOpened(context, foregroundPackage, accessibilityEvent)
     }
