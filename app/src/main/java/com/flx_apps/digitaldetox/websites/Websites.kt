@@ -1,6 +1,7 @@
 package com.flx_apps.digitaldetox.websites
 
 import android.content.Context
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import java.util.Locale
 
@@ -13,7 +14,9 @@ import java.util.Locale
  * - `weblist:adult`, one of the [WebsiteCollection]s that come with the app
  *
  * Storing, copying and backing up a list needs nothing new for them. Anything that treats an entry
- * as an installed app has to leave them out, see [isWebsite] and [appsOf].
+ * as an installed app has to leave them out, see [isWebsite] and [appsOf]. Whether the listed
+ * websites are the only ones a feature covers or the ones it spares is set apart from the apps,
+ * see [SupportsAppExceptionsFeature.websiteListType].
  */
 object Websites {
     private const val SITE_PREFIX = "web:"
@@ -41,6 +44,26 @@ object Websites {
     }
 
     fun collectionEntry(collection: WebsiteCollection): String = COLLECTION_PREFIX + collection.id
+
+    /**
+     * Whether [feature] cares which website a browser shows: it lists websites, or covers every
+     * website but the listed ones. Otherwise a browser is an app to it like any other.
+     */
+    fun matterTo(feature: SupportsAppExceptionsFeature): Boolean =
+        feature.websiteListType == AppExceptionListType.NOT_LIST ||
+                feature.appExceptions.any(::isWebsite)
+
+    /**
+     * What [feature] is told is in front while a browser shows [page]: the entry of its list the
+     * page falls under, or under "every website except the listed ones" the page's own site, as an
+     * entry the list does not hold. Null leaves the page to the browser, for a feature that only
+     * covers the websites it lists and lists none that [page] falls under.
+     */
+    fun foregroundEntry(feature: SupportsAppExceptionsFeature, page: WebPage): String? =
+        bestMatch(feature.appExceptions, page)
+            ?: if (feature.websiteListType == AppExceptionListType.NOT_LIST) {
+                SITE_PREFIX + page.host.removePrefix("www.")
+            } else null
 
     /** The collection [entry] stands for, or null for a site or an app. */
     fun collectionOf(entry: String): WebsiteCollection? =

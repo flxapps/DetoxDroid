@@ -123,6 +123,21 @@
     <string name="appList_filter_systemApps">System apps</string>
     <string name="appList_tab_apps">Apps</string>
     <string name="appList_tab_websites">Websites</string>
+    <string name="appList_browser_websites_all">Active on every website in it</string>
+    <plurals name="appList_browser_websites_only">
+        <item quantity="one">Active only on %d selected website in it</item>
+        <item quantity="other">Active only on %d selected websites in it</item>
+    </plurals>
+    <plurals name="appList_browser_websites_allExcept">
+        <item quantity="one">Active on every website in it except %d selected</item>
+        <item quantity="other">Active on every website in it except %d selected</item>
+    </plurals>
+    <string name="appList_browser_websites_unreadable">DetoxDroid can\'t read the websites in it</string>
+    <plurals name="websites_coveredBrowsers">
+        <item quantity="one">Active on every website in %s anyway, because the browser itself is covered on the Apps side.</item>
+        <item quantity="other">Active on every website in %s anyway, because the browsers themselves are covered on the Apps side.</item>
+    </plurals>
+    <string name="websites_showApps">Show apps</string>
     <string name="appCategories_video">Video</string>
     <string name="appCategories_music">Music</string>
     <string name="appCategories_audio">Audio</string>
@@ -163,8 +178,15 @@
 
     <!-- region Shared Feature Settings -->
     <string name="feature_settings_exceptions">App exceptions</string>
-    <string name="feature_settings_exceptions_notListed">Active in all apps except %d selected.</string>
-    <string name="feature_settings_exceptions_onlyListed">Active only in %d selected apps.</string>
+    <plurals name="feature_settings_exceptions_notListed">
+        <item quantity="one">Active in all apps except %d selected.</item>
+        <item quantity="other">Active in all apps except %d selected.</item>
+    </plurals>
+    <plurals name="feature_settings_exceptions_onlyListed">
+        <item quantity="one">Active only in %d selected app.</item>
+        <item quantity="other">Active only in %d selected apps.</item>
+    </plurals>
+    <string name="feature_settings_exceptions_allApps">Active in all apps.</string>
     <string name="feature_settings_exceptions_empty">No apps found.</string>
     <string name="feature_settings_exceptions_filterByAppType">Filter by app type</string>
     <string name="feature_settings_exceptions_filterByCategory">Filter by app category</string>
@@ -180,12 +202,21 @@
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Right now your %d selected apps are the ones it skips. After the switch, they would be the only apps it applies to.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Keep them selected</string>
     <string name="feature_settings_exceptions_switchListType_clear">Clear the list first</string>
-    <string name="feature_settings_exceptions_notListed_websites">Active in all apps and websites except %d selected.</string>
-    <string name="feature_settings_exceptions_onlyListed_websites">Active only in %d selected apps and websites.</string>
+    <plurals name="feature_settings_exceptions_notListed_websites">
+        <item quantity="one">Active on all websites except %d selected.</item>
+        <item quantity="other">Active on all websites except %d selected.</item>
+    </plurals>
+    <plurals name="feature_settings_exceptions_onlyListed_websites">
+        <item quantity="one">Active only on %d selected website.</item>
+        <item quantity="other">Active only on %d selected websites.</item>
+    </plurals>
+    <string name="feature_settings_exceptions_allWebsites">Active on all websites.</string>
+    <string name="feature_settings_exceptions_listType_notList_websites">All websites except selected</string>
+    <string name="feature_settings_exceptions_listType_onlyList_websites">Only selected websites</string>
     <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d apps, %2$d websites</string>
-    <string name="feature_settings_exceptions_switchListType_title_websites">Keep the selected apps and websites?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Right now this only applies to your %d selected apps and websites. After the switch, they would be the only ones it skips.</string>
-    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Right now your %d selected apps and websites are the ones it skips. After the switch, they would be the only ones it applies to.</string>
+    <string name="feature_settings_exceptions_switchListType_title_websites">Keep the selected websites?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Right now this only applies to your %d selected websites. After the switch, they would be the only websites it skips.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Right now your %d selected websites are the ones it skips. After the switch, they would be the only websites it applies to.</string>
     <string name="feature_settings_advanced">Advanced</string>
 
     <string name="feature_settings_schedule">Schedule</string>

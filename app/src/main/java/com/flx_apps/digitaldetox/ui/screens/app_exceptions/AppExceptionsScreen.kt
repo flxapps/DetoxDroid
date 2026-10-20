@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -143,9 +145,9 @@ enum class AppListTab(@StringRes val label: Int, val icon: ImageVector) {
  * widget configurator), so the feature's effective scope is visible at a glance. Because rows
  * keep their key across sections, toggling one animates it to its new place.
  *
- * The scope section is rendered as the first [LazyColumn] item, so it visually belongs to the list
- * and scrolls away with the app items. The switch between apps and websites sticks to the top, so
- * the other half is never more than a tap away.
+ * The switch between apps and websites sticks to the top, so the other half is never more than a
+ * tap away. Under it each half has its own scope card, as apps and websites each have a list type
+ * of their own; the card scrolls away with the list.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -159,33 +161,57 @@ fun InstalledAppsList(
     val sites = appExceptionsViewModel.sites.collectAsState().value
     val collections = appExceptionsViewModel.collections.collectAsState().value
     val browsers = appExceptionsViewModel.browsers.collectAsState().value
+    val uncoveredUnreadable =
+        appExceptionsViewModel.uncoveredUnreadableBrowsers.collectAsState().value
+    val websitesInBrowsers = WebsitesInBrowsers(
+        readable = browsers?.readable.orEmpty().mapTo(mutableSetOf()) { it.packageName },
+        unreadable = browsers?.unreadable.orEmpty().mapTo(mutableSetOf()) { it.packageName },
+        appListType = appExceptionsViewModel.exceptionListType.collectAsState().value,
+        websiteListType = appExceptionsViewModel.websiteListType.collectAsState().value,
+        websiteCount = appExceptionsViewModel.selectedWebsiteCount.collectAsState().value,
+    )
     val context = LocalContext.current
     val advancedListed = collections.any { it.collection.advanced && it.checked }
     var advancedExpanded by rememberSaveable { mutableStateOf(advancedListed) }
     // a collection in the list is never out of sight, also when "Copy from…" brought it in
     LaunchedEffect(advancedListed) { if (advancedListed) advancedExpanded = true }
     LazyColumn {
-        item(key = "listType") {
-            AppExceptionsListTypeSection(settingsLocked = settingsLocked)
-        }
         stickyHeader(key = "listTab") {
             AppListTabSelector(selected = listTab, onSelected = onListTabSelected)
         }
         when (listTab) {
-            AppListTab.APPS -> appSections(appExceptions, settingsLocked)
-            AppListTab.WEBSITES -> websiteSections(
-                sites = sites,
-                collections = collections,
-                browsers = browsers,
-                query = appExceptionsViewModel.query.value,
-                collectionTitle = { context.getString(it.title) },
-                settingsLocked = settingsLocked,
-                advancedExpanded = advancedExpanded,
-                onToggleAdvanced = { advancedExpanded = !advancedExpanded },
-                onAddWebsite = appExceptionsViewModel::addWebsite,
-                onToggleWebsite = appExceptionsViewModel::toggleWebsite,
-                copyButton = { CopyExceptionsFromButton(settingsLocked = settingsLocked) },
-            )
+            AppListTab.APPS -> {
+                item(key = "appListType") { AppsListTypeCard(settingsLocked = settingsLocked) }
+                appSections(appExceptions, settingsLocked, websitesInBrowsers)
+            }
+
+            AppListTab.WEBSITES -> {
+                item(key = "websiteListType") {
+                    WebsitesListTypeCard(
+                        settingsLocked = settingsLocked,
+                        onShowApps = { onListTabSelected(AppListTab.APPS) }
+                    )
+                }
+                websiteSections(
+                    sites = sites,
+                    collections = collections,
+                    browsers = browsers,
+                    // with every website covered, a browser DetoxDroid cannot read is a way around
+                    // it, unless the browser itself is covered as an app
+                    uncoveredBrowsers = if (
+                        websitesInBrowsers.websiteListType == AppExceptionListType.NOT_LIST
+                    ) uncoveredUnreadable else emptyList(),
+                    onShowApps = { onListTabSelected(AppListTab.APPS) },
+                    query = appExceptionsViewModel.query.value,
+                    collectionTitle = { context.getString(it.title) },
+                    settingsLocked = settingsLocked,
+                    advancedExpanded = advancedExpanded,
+                    onToggleAdvanced = { advancedExpanded = !advancedExpanded },
+                    onAddWebsite = appExceptionsViewModel::addWebsite,
+                    onToggleWebsite = appExceptionsViewModel::toggleWebsite,
+                    copyButton = { CopyExceptionsFromButton(settingsLocked = settingsLocked) },
+                )
+            }
         }
     }
 }
@@ -227,7 +253,9 @@ private fun AppListTabSelector(selected: AppListTab, onSelected: (AppListTab) ->
 
 /** The app half of the list: the selected apps, then all the others. */
 private fun LazyListScope.appSections(
-    appExceptions: List<AppExceptionItem>?, settingsLocked: Boolean
+    appExceptions: List<AppExceptionItem>?,
+    settingsLocked: Boolean,
+    websitesInBrowsers: WebsitesInBrowsers,
 ) {
     if (appExceptions == null) {
         item(key = "loading") {
@@ -264,7 +292,11 @@ private fun LazyListScope.appSections(
         }
     } else {
         items(selected, key = { item -> item.appInfo.packageName }) { appException ->
-            AppExceptionListItem(appException, modifier = Modifier.animateItem())
+            AppExceptionListItem(
+                appException,
+                supportingText = websitesInBrowsers.lineFor(appException),
+                modifier = Modifier.animateItem()
+            )
         }
     }
     item(key = "availableHeader") {
@@ -281,7 +313,11 @@ private fun LazyListScope.appSections(
         }
     } else {
         items(available, key = { item -> item.appInfo.packageName }) { appException ->
-            AppExceptionListItem(appException, modifier = Modifier.animateItem())
+            AppExceptionListItem(
+                appException,
+                supportingText = websitesInBrowsers.lineFor(appException),
+                modifier = Modifier.animateItem()
+            )
         }
     }
 }
@@ -373,69 +409,145 @@ private fun CopyExceptionsFromButton(
 }
 
 /**
- * Scope configuration card shown above the app list.
- *
- * Features with both list types show interactive scope controls (settings icon). Features with a
- * fixed scope only show explanatory information (info icon).
+ * The scope card of the app half: which apps the feature covers. Features with both list types
+ * offer the choice (settings icon); Disable Apps only explains its fixed scope (info icon).
  */
 @Composable
-fun AppExceptionsListTypeSection(
+private fun AppsListTypeCard(
     settingsLocked: Boolean, viewModel: AppExceptionsViewModel = viewModel()
 ) {
-    val selectedListType = viewModel.exceptionListType.collectAsState().value
-    val toggledItemsSize = viewModel.toggledItemsSize.collectAsState().value
-    val hasWebsites = viewModel.selectedWebsiteCount.collectAsState().value > 0
-    val listTypeMap = mapOf(
-        R.string.feature_settings_exceptions_listType_notList to AppExceptionListType.NOT_LIST,
-        R.string.feature_settings_exceptions_listType_onlyList to AppExceptionListType.ONLY_LIST
-    ).filter { (viewModel.feature as SupportsAppExceptionsFeature).listTypes.contains(it.value) }
-    val supportsMultipleListTypes = listTypeMap.size > 1
-    val cardIcon: ImageVector =
-        if (supportsMultipleListTypes) Icons.Default.Settings else Icons.Default.Info
+    val listType = viewModel.exceptionListType.collectAsState().value
+    val count = viewModel.selectedAppCount.collectAsState().value
+    val allowed = (viewModel.feature as SupportsAppExceptionsFeature).listTypes
+    ListTypeCard(
+        options = mapOf(
+            R.string.feature_settings_exceptions_listType_notList to AppExceptionListType.NOT_LIST,
+            R.string.feature_settings_exceptions_listType_onlyList to AppExceptionListType.ONLY_LIST
+        ).filterValues { it in allowed },
+        selected = listType,
+        selectedCount = count,
+        summary = appsSummary(listType, count),
+        switchTexts = SwitchListTypeTexts(
+            title = R.string.feature_settings_exceptions_switchListType_title,
+            toNotList = R.string.feature_settings_exceptions_switchListType_toNotList,
+            toOnlyList = R.string.feature_settings_exceptions_switchListType_toOnlyList,
+        ),
+        settingsLocked = settingsLocked,
+        onSelect = viewModel::setExceptionListType,
+    )
+}
 
+/**
+ * The scope card of the website half: which websites the feature covers. While only the selected
+ * ones count, it also names the browsers the app half covers, where every website counts anyway,
+ * with a way over to them.
+ */
+@Composable
+private fun WebsitesListTypeCard(
+    settingsLocked: Boolean,
+    onShowApps: () -> Unit,
+    viewModel: AppExceptionsViewModel = viewModel()
+) {
+    val listType = viewModel.websiteListType.collectAsState().value
+    val count = viewModel.selectedWebsiteCount.collectAsState().value
+    val coveredBrowsers = viewModel.browsersCoveredAsApps.collectAsState().value
+    ListTypeCard(
+        options = mapOf(
+            R.string.feature_settings_exceptions_listType_notList_websites to
+                    AppExceptionListType.NOT_LIST,
+            R.string.feature_settings_exceptions_listType_onlyList_websites to
+                    AppExceptionListType.ONLY_LIST
+        ).filterValues { it in viewModel.allowedWebsiteListTypes },
+        selected = listType,
+        selectedCount = count,
+        summary = websitesSummary(listType, count),
+        switchTexts = SwitchListTypeTexts(
+            title = R.string.feature_settings_exceptions_switchListType_title_websites,
+            toNotList = R.string.feature_settings_exceptions_switchListType_toNotList_websites,
+            toOnlyList = R.string.feature_settings_exceptions_switchListType_toOnlyList_websites,
+        ),
+        settingsLocked = settingsLocked,
+        onSelect = viewModel::setWebsiteListType,
+    ) {
+        if (listType == AppExceptionListType.ONLY_LIST && coveredBrowsers.isNotEmpty()) {
+            Text(
+                text = pluralStringResource(
+                    id = R.plurals.websites_coveredBrowsers,
+                    count = coveredBrowsers.size,
+                    joinedNames(coveredBrowsers)
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            TextButton(
+                onClick = onShowApps,
+                contentPadding = PaddingValues(horizontal = 0.dp)
+            ) {
+                Text(text = stringResource(id = R.string.websites_showApps))
+            }
+        }
+    }
+}
+
+/** What [SwitchListTypeDialog] says, for the half of the list it is about. */
+private data class SwitchListTypeTexts(
+    @StringRes val title: Int,
+    @StringRes val toNotList: Int,
+    @StringRes val toOnlyList: Int,
+)
+
+/**
+ * The scope card of one half of the list: a title, the choice of list type where [options] holds
+ * more than one, the [summary] of what is covered, and [extra] content below it.
+ */
+@Composable
+private fun ListTypeCard(
+    options: Map<Int, AppExceptionListType>,
+    selected: AppExceptionListType,
+    selectedCount: Int,
+    summary: String,
+    switchTexts: SwitchListTypeTexts,
+    settingsLocked: Boolean,
+    onSelect: (AppExceptionListType, Boolean) -> Unit,
+    extra: @Composable ColumnScope.() -> Unit = {},
+) {
+    val choosable = options.size > 1
     var pendingListType by remember { mutableStateOf<AppExceptionListType?>(null) }
 
-    IconCard(
-        icon = cardIcon,
-        contentDescription = null
-    ) {
+    IconCard(icon = if (choosable) Icons.Default.Settings else Icons.Default.Info) {
         Text(
             text = stringResource(id = R.string.feature_settings_exceptions_listType),
             style = MaterialTheme.typography.titleSmall
         )
-        if (supportsMultipleListTypes) {
-            OptionsRow(
-                options = listTypeMap, selectedOption = selectedListType, onOptionSelected = {
-                    if (settingsLocked) return@OptionsRow
-                    val newType = it as AppExceptionListType
-                    if (newType == selectedListType) return@OptionsRow
-                    // a non-empty selection changes meaning with the type: the apps the feature
-                    // was limited to become the apps it spares. Ask before carrying it over.
-                    if (toggledItemsSize > 0) {
-                        pendingListType = newType
-                    } else {
-                        viewModel.setExceptionListType(newType)
-                    }
-                })
+        if (choosable) {
+            OptionsRow(options = options, selectedOption = selected, onOptionSelected = {
+                if (settingsLocked) return@OptionsRow
+                val newType = it as AppExceptionListType
+                if (newType == selected) return@OptionsRow
+                // a non-empty selection changes meaning with the type: the entries the feature
+                // was limited to become the ones it spares. Ask before carrying it over.
+                if (selectedCount > 0) {
+                    pendingListType = newType
+                } else {
+                    onSelect(newType, false)
+                }
+            })
         }
-        Text(
-            text = stringResource(
-                id = exceptionsSummary(selectedListType, hasWebsites), toggledItemsSize
-            ), modifier = Modifier.padding(top = 6.dp)
-        )
+        Text(text = summary, modifier = Modifier.padding(top = 6.dp))
+        extra()
     }
 
     pendingListType?.let { newType ->
         SwitchListTypeDialog(
             newType = newType,
-            selectedCount = toggledItemsSize,
-            hasWebsites = hasWebsites,
+            selectedCount = selectedCount,
+            texts = switchTexts,
             onKeep = {
-                viewModel.setExceptionListType(newType)
+                onSelect(newType, false)
                 pendingListType = null
             },
             onClear = {
-                viewModel.setExceptionListType(newType, clearSelection = true)
+                onSelect(newType, true)
                 pendingListType = null
             },
             onDismiss = { pendingListType = null })
@@ -443,47 +555,28 @@ fun AppExceptionsListTypeSection(
 }
 
 /**
- * Says what switching the list type does to the apps already selected, and offers to switch with
- * them or with an empty list.
+ * Says what switching the list type does to the entries already selected, and offers to switch
+ * with them or with an empty list.
  */
 @Composable
 private fun SwitchListTypeDialog(
     newType: AppExceptionListType,
     selectedCount: Int,
-    hasWebsites: Boolean,
+    texts: SwitchListTypeTexts,
     onKeep: () -> Unit,
     onClear: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(
-                    id = if (hasWebsites) {
-                        R.string.feature_settings_exceptions_switchListType_title_websites
-                    } else {
-                        R.string.feature_settings_exceptions_switchListType_title
-                    }
-                )
-            )
-        },
+        title = { Text(stringResource(id = texts.title)) },
         text = {
             Column {
                 Text(
                     text = stringResource(
-                        id = when {
-                            newType == AppExceptionListType.NOT_LIST && hasWebsites ->
-                                R.string.feature_settings_exceptions_switchListType_toNotList_websites
-
-                            newType == AppExceptionListType.NOT_LIST ->
-                                R.string.feature_settings_exceptions_switchListType_toNotList
-
-                            hasWebsites ->
-                                R.string.feature_settings_exceptions_switchListType_toOnlyList_websites
-
-                            else -> R.string.feature_settings_exceptions_switchListType_toOnlyList
-                        }, selectedCount
+                        id = if (newType == AppExceptionListType.NOT_LIST) texts.toNotList
+                        else texts.toOnlyList,
+                        selectedCount
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -513,6 +606,46 @@ private fun SwitchListTypeDialog(
 }
 
 /**
+ * What the app half says about the websites inside a browser, see [lineFor]. On this half a
+ * browser is an app; the websites it shows go by the other half, and by the browser where that
+ * only counts the websites it lists.
+ */
+private data class WebsitesInBrowsers(
+    val readable: Set<String>,
+    val unreadable: Set<String>,
+    val appListType: AppExceptionListType,
+    val websiteListType: AppExceptionListType,
+    val websiteCount: Int,
+)
+
+/**
+ * The line under a browser on the app half that says on which of its websites the feature is
+ * active, once websites matter to the feature at all. It follows the checkbox: a browser the
+ * feature covers as an app has every website covered, unless the website half spares some.
+ */
+@Composable
+private fun WebsitesInBrowsers.lineFor(item: AppExceptionItem): String? {
+    val packageName = item.appInfo.packageName
+    val sparesWebsites = websiteListType == AppExceptionListType.NOT_LIST
+    if (websiteCount == 0 && !sparesWebsites) return null
+    if (packageName in unreadable) {
+        return stringResource(id = R.string.appList_browser_websites_unreadable)
+    }
+    if (packageName !in readable) return null
+    val coveredAsApp = (appListType == AppExceptionListType.ONLY_LIST) == item.isException
+    return when {
+        sparesWebsites && websiteCount > 0 -> pluralStringResource(
+            id = R.plurals.appList_browser_websites_allExcept, count = websiteCount, websiteCount
+        )
+
+        sparesWebsites || coveredAsApp -> stringResource(id = R.string.appList_browser_websites_all)
+        else -> pluralStringResource(
+            id = R.plurals.appList_browser_websites_only, count = websiteCount, websiteCount
+        )
+    }
+}
+
+/**
  * Displays an app exception item. It contains the app icon, name and a switch to toggle the
  * exception state.
  */
@@ -520,6 +653,7 @@ private fun SwitchListTypeDialog(
 fun AppExceptionListItem(
     item: AppExceptionItem,
     modifier: Modifier = Modifier,
+    supportingText: String? = null,
     appExceptionsViewModel: AppExceptionsViewModel = viewModel()
 ) {
     val settingsLocked = LocalSettingsLocked.current
@@ -531,6 +665,7 @@ fun AppExceptionListItem(
         checked = item.isException,
         modifier = modifier,
         enabled = !settingsLocked,
+        supportingText = supportingText,
         onCheckedChange = {
             if (settingsLocked) return@AppSelectionListItem
             appExceptionsViewModel.toggleAppException(item.appInfo.packageName)
@@ -557,15 +692,33 @@ fun AppExceptionsListSettingsSheet(
 }
 
 /**
- * The line that says what a list covers: "Active only in 3 selected apps." Once websites are in
- * it, the line names them too, with one number for both, as the list counts each entry once.
+ * The line that says which apps a list covers, out of [count] selected: "Active only in 3
+ * selected apps."
  */
-@StringRes
-fun exceptionsSummary(listType: AppExceptionListType, hasWebsites: Boolean): Int = when {
-    listType == AppExceptionListType.NOT_LIST && hasWebsites ->
-        R.string.feature_settings_exceptions_notListed_websites
+@Composable
+fun appsSummary(listType: AppExceptionListType, count: Int): String = when {
+    listType == AppExceptionListType.ONLY_LIST -> pluralStringResource(
+        id = R.plurals.feature_settings_exceptions_onlyListed, count = count, count
+    )
 
-    listType == AppExceptionListType.NOT_LIST -> R.string.feature_settings_exceptions_notListed
-    hasWebsites -> R.string.feature_settings_exceptions_onlyListed_websites
-    else -> R.string.feature_settings_exceptions_onlyListed
+    count == 0 -> stringResource(id = R.string.feature_settings_exceptions_allApps)
+    else -> pluralStringResource(
+        id = R.plurals.feature_settings_exceptions_notListed, count = count, count
+    )
+}
+
+/**
+ * The line that says which websites a list covers, out of [count] listed: "Active only on 2
+ * selected websites." A collection counts as one, as it does in the list.
+ */
+@Composable
+fun websitesSummary(listType: AppExceptionListType, count: Int): String = when {
+    listType == AppExceptionListType.ONLY_LIST -> pluralStringResource(
+        id = R.plurals.feature_settings_exceptions_onlyListed_websites, count = count, count
+    )
+
+    count == 0 -> stringResource(id = R.string.feature_settings_exceptions_allWebsites)
+    else -> pluralStringResource(
+        id = R.plurals.feature_settings_exceptions_notListed_websites, count = count, count
+    )
 }

@@ -68,7 +68,13 @@ val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
  */
 object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(DisableAppsFeatureId),
+    // only the apps to be disabled can be listed: a list of apps that are *not* disabled would
+    // disable everything else, DetoxDroid's own settings and the phone app included
+    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
+        DisableAppsFeatureId,
+        defaultExceptionListType = AppExceptionListType.ONLY_LIST,
+        listTypes = listOf(AppExceptionListType.ONLY_LIST),
+    ),
     SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
     ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId),
@@ -82,15 +88,6 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     override val settingsContent: @Composable () -> Unit = {
         DisableAppsFeatureSettingsSection()
     }
-
-    /**
-     * The [DisableAppsFeature] supports only the [AppExceptionListType.ONLY_LIST] type, as it is
-     * only possible to configure apps that are to be disabled.
-     */
-    override val listTypes: List<AppExceptionListType>
-        get() = listOf(
-            AppExceptionListType.ONLY_LIST
-        )
 
     /**
      * Marks [allowedDailyScreenTime] as unlimited: the apps are never disabled, so only the
@@ -161,7 +158,8 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     val blockCounter = DailyAppCounter()
 
     /**
-     * The apps and websites that are to be disabled are implemented using the [appExceptions].
+     * The apps and websites that are to be disabled are implemented using the [appExceptions]. A
+     * website can also be held back for not being listed, see [websiteListType] and [appliesTo].
      * @see SupportsAppExceptionsFeature
      */
     val disableableApps: Set<String>
@@ -311,7 +309,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             DetoxDroidAccessibilityService.instance?.leaveWebsite()
             return
         }
-        if (!disableableApps.contains(packageName)) {
+        if (!appliesTo(packageName)) {
             // the app is not in the list of apps that should be disabled, so increase the used up
             // screen time and return
             eventuallyIncreaseUsedUpScreenTime()

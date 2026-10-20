@@ -112,6 +112,9 @@ class AppExceptionsViewModel @Inject constructor(
         appExceptionsFeature.appExceptionListType = it
     }
 
+    /** The website list types the feature offers, see [SupportsAppExceptionsFeature]. */
+    val allowedWebsiteListTypes = appExceptionsFeature.websiteListTypes
+
     /**
      * Holds the list of all installed apps.
      */
@@ -150,6 +153,10 @@ class AppExceptionsViewModel @Inject constructor(
     private val _exceptionListType = MutableStateFlow(initialExceptionListType)
     val exceptionListType = _exceptionListType.asStateFlow()
 
+    /** Whether the listed websites are the only ones covered or the ones spared. */
+    private val _websiteListType = MutableStateFlow(appExceptionsFeature.websiteListType)
+    val websiteListType = _websiteListType.asStateFlow()
+
     /**
      * Whether the bottom sheet to configure the list should be shown.
      */
@@ -157,13 +164,11 @@ class AppExceptionsViewModel @Inject constructor(
     val showListSettingsSheet = _showListSettingsSheet.asStateFlow()
 
     /**
-     * Holds the number of currently toggled items (i.e. items that are selected in the list): the
-     * websites and collections, and of the apps only those that are really there. The stored
-     * selection outlives the apps it names, and an app that is gone is one this feature no longer
-     * acts on.
+     * How many apps are selected, of those that are really there. The stored selection outlives
+     * the apps it names, and an app that is gone is one this feature no longer acts on.
      */
-    private val _toggledItemsSize = MutableStateFlow<Int>(0)
-    val toggledItemsSize = _toggledItemsSize.asStateFlow()
+    private val _selectedAppCount = MutableStateFlow(0)
+    val selectedAppCount = _selectedAppCount.asStateFlow()
 
     /** The sites under "Your websites", see [SiteItem]. */
     private val _sites = MutableStateFlow<List<SiteItem>>(emptyList())
@@ -182,6 +187,17 @@ class AppExceptionsViewModel @Inject constructor(
     val selectedWebsiteCount = _selectedWebsiteCount.asStateFlow()
 
     /**
+     * The readable browsers the feature covers as apps, by name. While only the listed websites
+     * count, every website in these counts anyway, through the browser.
+     */
+    private val _browsersCoveredAsApps = MutableStateFlow<List<String>>(emptyList())
+    val browsersCoveredAsApps = _browsersCoveredAsApps.asStateFlow()
+
+    /** The browsers DetoxDroid cannot read that the feature does not cover as apps either. */
+    private val _uncoveredUnreadableBrowsers = MutableStateFlow<List<String>>(emptyList())
+    val uncoveredUnreadableBrowsers = _uncoveredUnreadableBrowsers.asStateFlow()
+
+    /**
      * The other features this feature's selection can be copied from, filled once the app list is
      * in. Reading the package manager for every source is too slow for composition.
      */
@@ -198,6 +214,7 @@ class AppExceptionsViewModel @Inject constructor(
         }
         viewModelScope.launch(Dispatchers.IO) {
             _browsers.value = InstalledBrowsers.find(getApplication())
+            updateSelectionCounts()
         }
         viewModelScope.launch(Dispatchers.IO) {
             // also warms the service's copy: both run in the same process
@@ -353,15 +370,20 @@ class AppExceptionsViewModel @Inject constructor(
 
     /**
      * Counts the selection the way the screen shows it: the apps that are really there (the stored
-     * selection outlives the apps it names) and every website entry.
+     * selection outlives the apps it names) and every website entry. Also works out which browsers
+     * the apps cover, which both change with.
      */
     private fun updateSelectionCounts() {
-        val websiteCount = Websites.websitesOf(appExceptionsFeature.appExceptions).size
-        _selectedWebsiteCount.value = websiteCount
-        val appCount =
+        _selectedWebsiteCount.value = Websites.websitesOf(appExceptionsFeature.appExceptions).size
+        _selectedAppCount.value =
             if (this::_appExceptionItems.isInitialized) _appExceptionItems.count { it.isException }
             else 0
-        _toggledItemsSize.value = appCount + websiteCount
+        _browsersCoveredAsApps.value = _browsers.value?.readable.orEmpty()
+            .filter { appExceptionsFeature.appliesTo(it.packageName) }
+            .map { it.label }
+        _uncoveredUnreadableBrowsers.value = _browsers.value?.unreadable.orEmpty()
+            .filterNot { appExceptionsFeature.appliesTo(it.packageName) }
+            .map { it.label }
     }
 
     /**
@@ -421,13 +443,14 @@ class AppExceptionsViewModel @Inject constructor(
     /**
      * Sets the type of the app exception list. The selection is kept unless [clearSelection] is set:
      * switching the type turns the selected apps from the only ones affected into the only ones
-     * spared, or the other way round, which is rarely what a non-empty list was built for.
+     * spared, or the other way round, which is rarely what a non-empty list was built for. The
+     * websites have a type of their own and stay as they are.
      * @see AppExceptionListType
      */
     fun setExceptionListType(type: AppExceptionListType, clearSelection: Boolean = false) {
         if (!allowedListTypes.contains(type)) return
         if (clearSelection) {
-            replaceExceptions(emptySet())
+            replaceExceptions(Websites.websitesOf(appExceptionsFeature.appExceptions))
         } else if (this::_appExceptionItems.isInitialized) {
             // the stored selection can name apps that are gone. They were not in the count the
             // user was asked about, and under the other type they would come back meaning the
@@ -440,6 +463,18 @@ class AppExceptionsViewModel @Inject constructor(
         }
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
+        updateSelectionCounts()
+    }
+
+    /**
+     * Sets the type of the website list, the way [setExceptionListType] does for the apps. With
+     * [clearSelection] the websites are taken out and the apps stay.
+     */
+    fun setWebsiteListType(type: AppExceptionListType, clearSelection: Boolean = false) {
+        if (!allowedWebsiteListTypes.contains(type)) return
+        if (clearSelection) replaceExceptions(Websites.appsOf(appExceptionsFeature.appExceptions))
+        appExceptionsFeature.websiteListType = type
+        _websiteListType.value = type
     }
 
     /**

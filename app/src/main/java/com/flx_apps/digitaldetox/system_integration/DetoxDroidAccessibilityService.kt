@@ -171,15 +171,16 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private val dispatchedForeground = HashMap<FeatureId, String>()
 
     /**
-     * What [feature] is told is in front when [app] is: the entry of its own list that the website
-     * [app] shows falls under, or [app] itself. Each feature gets its own answer, so one that lists
-     * `youtube.com` and one that lists the browser both see what they listed, and a site excepted
-     * from a feature that applies to all apps stays excepted inside the browser.
+     * What [feature] is told is in front when [app] is: for a browser, the website it shows as the
+     * feature's own list sees it (see [Websites.foregroundEntry]), otherwise [app] itself. Each
+     * feature gets its own answer, so one that lists `youtube.com` and one that lists the browser
+     * both see what they listed, and a site excepted from a feature stays excepted inside a browser
+     * the feature covers.
      */
     private fun foregroundFor(feature: Feature, app: String): String {
         val page = websiteMonitor.page ?: return app
         if (app != websiteMonitor.browserPackage || feature !is SupportsAppExceptionsFeature) return app
-        return Websites.bestMatch(feature.appExceptions, page) ?: app
+        return Websites.foregroundEntry(feature, page) ?: app
     }
 
     /**
@@ -574,21 +575,25 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Follows the websites of [app] when it is a browser and some active feature lists websites.
-     * Without such a feature the address bar is never read and no content change is asked for.
+     * Follows the websites of [app] when it is a browser and websites matter to some active
+     * feature (see [Websites.matterTo]). Without such a feature the address bar is never read and
+     * no content change is asked for.
      */
     private fun watchWebsites(app: String) {
-        val websites = FeaturesProvider.activeFeatures
+        val features = FeaturesProvider.activeFeatures
             .filterIsInstance<SupportsAppExceptionsFeature>()
-            .flatMap { Websites.websitesOf(it.appExceptions) }
-        if (websites.isNotEmpty()) {
+            .filter(Websites::matterTo)
+        val collections = features
+            .flatMap { it.appExceptions.mapNotNull(Websites::collectionOf) }
+            .toSet()
+        if (collections.isNotEmpty()) {
             // a collection that is still loading cannot match yet, so the page is judged again
             // once it is in
-            WebsiteCollections.prefetch(websites.mapNotNull(Websites::collectionOf).toSet()) {
+            WebsiteCollections.prefetch(collections) {
                 mainHandler.post { websiteMonitor.recheck(0L) }
             }
         }
-        websiteMonitor.onForegroundApp(app, watch = websites.isNotEmpty())
+        websiteMonitor.onForegroundApp(app, watch = features.isNotEmpty())
         updateWebsiteEvents(websiteMonitor.browserPackage != null)
     }
 

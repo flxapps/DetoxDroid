@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -66,12 +68,17 @@ import java.text.NumberFormat
  *   narrows the apps on the other half. It finds the collections folded under "Advanced" as well.
  * @param collectionTitle The name of a collection, for the search.
  * @param advancedExpanded Whether the [WebsiteCollection.advanced] collections are unfolded.
+ * @param uncoveredBrowsers Browsers DetoxDroid cannot read that the feature should warn about,
+ *   by name, empty for none. They lead the half and leave the note at its end.
+ * @param onShowApps Switches to the app half, where a browser is covered as an app.
  * @param copyButton The "Copy from…" button, which copies apps and websites alike.
  */
 fun LazyListScope.websiteSections(
     sites: List<SiteItem>,
     collections: List<CollectionItem>,
     browsers: InstalledBrowsers?,
+    uncoveredBrowsers: List<String>,
+    onShowApps: () -> Unit,
     query: String,
     collectionTitle: (WebsiteCollection) -> String,
     settingsLocked: Boolean,
@@ -83,8 +90,12 @@ fun LazyListScope.websiteSections(
 ) {
     // with no browser to read, nothing else here does anything, so that comes first
     val noReadableBrowser = browsers != null && browsers.readable.isEmpty()
+    val warnAboutUncovered = !noReadableBrowser && uncoveredBrowsers.isNotEmpty()
     if (noReadableBrowser) {
         item(key = "browsers") { BrowsersNote(browsers!!) }
+    }
+    if (warnAboutUncovered) {
+        item(key = "uncoveredBrowsers") { UncoveredBrowsersWarning(uncoveredBrowsers, onShowApps) }
     }
     item(key = "addWebsite") {
         AddWebsiteField(enabled = !settingsLocked, onAdd = onAddWebsite)
@@ -155,7 +166,7 @@ fun LazyListScope.websiteSections(
         }
     }
     if (browsers != null && !noReadableBrowser) {
-        item(key = "browsers") { BrowsersNote(browsers) }
+        item(key = "browsers") { BrowsersNote(browsers, nameUnreadable = !warnAboutUncovered) }
     }
 }
 
@@ -295,21 +306,41 @@ private fun AdvancedCollectionsRow(summary: String, expanded: Boolean, onToggle:
 }
 
 /**
- * Which of the phone's browsers DetoxDroid can read, and what it cannot see anywhere. Without a
- * browser it can read this is a warning at the top, since nothing on this side would work.
+ * The browsers DetoxDroid cannot read and the feature does not cover as apps, while it covers
+ * every website: whoever wants around the feature only needs to open one of these.
  */
 @Composable
-private fun BrowsersNote(browsers: InstalledBrowsers) {
-    val locale = LocalConfiguration.current.locales[0]
-    fun joined(names: List<String>): String = ListFormatter.getInstance(locale).format(names)
+private fun UncoveredBrowsersWarning(names: List<String>, onShowApps: () -> Unit) {
+    IconCard(icon = Icons.Default.Warning) {
+        Text(
+            text = stringResource(id = R.string.websites_browsers_unreadable, joinedNames(names)),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        TextButton(onClick = onShowApps, contentPadding = PaddingValues(horizontal = 0.dp)) {
+            Text(text = stringResource(id = R.string.websites_showApps))
+        }
+    }
+}
+
+/**
+ * Which of the phone's browsers DetoxDroid can read, and what it cannot see anywhere. Without a
+ * browser it can read this is a warning at the top, since nothing on this side would work.
+ *
+ * @param nameUnreadable Whether to name the browsers it cannot read, which a warning above can
+ *   have done already.
+ */
+@Composable
+private fun BrowsersNote(browsers: InstalledBrowsers, nameUnreadable: Boolean = true) {
+    val readable = joinedNames(browsers.readable.map { it.label })
+    val unreadable = joinedNames(browsers.unreadable.map { it.label })
     val lines = buildList {
         if (browsers.readable.isEmpty()) {
             add(stringResource(id = R.string.websites_browsers_none))
         } else {
-            add(stringResource(id = R.string.websites_browsers_readable, joined(browsers.readable)))
+            add(stringResource(id = R.string.websites_browsers_readable, readable))
         }
-        if (browsers.unreadable.isNotEmpty()) {
-            add(stringResource(id = R.string.websites_browsers_unreadable, joined(browsers.unreadable)))
+        if (nameUnreadable && browsers.unreadable.isNotEmpty()) {
+            add(stringResource(id = R.string.websites_browsers_unreadable, unreadable))
         }
         add(stringResource(id = R.string.websites_inAppBrowsers))
     }
@@ -335,6 +366,11 @@ private fun BrowsersNote(browsers: InstalledBrowsers) {
         )
     }
 }
+
+/** [names] as a sentence of the app's language would list them: "Chrome, Edge and Firefox". */
+@Composable
+internal fun joinedNames(names: List<String>): String =
+    ListFormatter.getInstance(LocalConfiguration.current.locales[0]).format(names)
 
 /**
  * What a collection row says under its name: the first sites of a list we wrote, or the size and

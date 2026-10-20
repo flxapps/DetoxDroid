@@ -387,17 +387,13 @@ class OnboardingViewModel @Inject constructor(
     }
 
     /**
-     * [apps] plus the websites [feature] already lists. Onboarding only picks apps and must not
-     * throw away websites set up on the feature's own screen. They stay only where the feature
-     * already applied to just the listed entries: under the other list type they were exceptions,
-     * and the type onboarding sets would turn them into the opposite.
+     * [apps] plus the websites [feature] already lists. Onboarding only picks apps and sets the
+     * list type of the apps, and must not throw away websites set up on the feature's own screen.
+     * They keep their own list type, so they keep their meaning too.
      */
     private fun withListedWebsites(
         feature: SupportsAppExceptionsFeature, apps: Set<String>
-    ): Set<String> =
-        if (feature.appExceptionListType == AppExceptionListType.ONLY_LIST) {
-            apps + Websites.websitesOf(feature.appExceptions)
-        } else apps
+    ): Set<String> = apps + Websites.websitesOf(feature.appExceptions)
 
     /**
      * Activates [feature] when its required permissions are present, otherwise leaves it configured

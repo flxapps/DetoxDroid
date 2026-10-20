@@ -7,9 +7,12 @@ import android.net.Uri
 import com.flx_apps.digitaldetox.util.appLabel
 
 /**
- * The browsers on this phone, split by whether DetoxDroid can read their address bar, by name.
+ * The browsers on this phone, split by whether DetoxDroid can read their address bar, each sorted
+ * by name.
  */
-data class InstalledBrowsers(val readable: List<String>, val unreadable: List<String>) {
+data class InstalledBrowsers(val readable: List<Browser>, val unreadable: List<Browser>) {
+    data class Browser(val packageName: String, val label: String)
+
     companion object {
         /**
          * Every app that opens web links counts as a browser, minus DetoxDroid itself. Blocking: it
@@ -23,10 +26,9 @@ data class InstalledBrowsers(val readable: List<String>, val unreadable: List<St
             }.getOrDefault(emptyList()).toSet() - context.packageName
             val (readable, unreadable) =
                 browsers.partition { BrowserAddressBars.idsFor(context, it) != null }
-            return InstalledBrowsers(
-                readable = readable.map { context.appLabel(it) }.sorted(),
-                unreadable = unreadable.map { context.appLabel(it) }.sorted(),
-            )
+            fun named(packages: List<String>) =
+                packages.map { Browser(it, context.appLabel(it)) }.sortedBy { it.label }
+            return InstalledBrowsers(readable = named(readable), unreadable = named(unreadable))
         }
     }
 }

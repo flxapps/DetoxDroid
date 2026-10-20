@@ -18,7 +18,8 @@ import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.ui.screens.app_exceptions.exceptionsSummary
+import com.flx_apps.digitaldetox.ui.screens.app_exceptions.appsSummary
+import com.flx_apps.digitaldetox.ui.screens.app_exceptions.websitesSummary
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
@@ -30,8 +31,8 @@ import kotlinx.coroutines.withContext
  * A tile that opens the app exceptions screen
  * @param titleText A custom title text for the tile (a default is provided)
  * @param subtitleRes A custom subtitle for the tile (a default is provided). It takes the number of
- *   selected apps as its single format argument. Once the list holds websites as well, the tile
- *   says so with the shared wording instead.
+ *   selected apps as its single format argument. Once websites matter to the feature, a second
+ *   line says which ones it covers.
  */
 @Composable
 fun OpenAppExceptionsTile(
@@ -41,12 +42,15 @@ fun OpenAppExceptionsTile(
     @StringRes subtitleRes: Int? = null,
 ) {
     val feature = featureViewModel.feature as SupportsAppExceptionsFeature
-    val hasWebsites = Websites.websitesOf(feature.appExceptions).isNotEmpty()
-    val subtitle = subtitleRes?.takeUnless { hasWebsites }
-        ?: exceptionsSummary(feature.appExceptionListType, hasWebsites)
+    val appCount = rememberSelectedAppCount(feature)
+    val apps = subtitleRes?.let { stringResource(id = it, appCount) }
+        ?: appsSummary(feature.appExceptionListType, appCount)
+    val websites = if (Websites.matterTo(feature)) {
+        websitesSummary(feature.websiteListType, Websites.websitesOf(feature.appExceptions).size)
+    } else null
     SimpleListTile(
         titleText = titleText,
-        subtitleText = stringResource(id = subtitle, rememberSelectedAppCount(feature)),
+        subtitleText = listOfNotNull(apps, websites).joinToString("\n"),
         trailing = {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -61,17 +65,14 @@ fun OpenAppExceptionsTile(
 }
 
 /**
- * How many entries of [feature]'s selection count, which is what the selection screen counts as
- * well: every website, and the apps that are really there. Querying the package manager takes a
- * moment, so the stored selection's raw size stands in until the real number arrives.
+ * How many apps of [feature]'s selection count, which is what the selection screen counts as
+ * well: the apps that are really there. Querying the package manager takes a moment, so the
+ * stored apps stand in until the real number arrives.
  */
 @Composable
 fun rememberSelectedAppCount(feature: SupportsAppExceptionsFeature): Int {
-    val exceptions = feature.appExceptions
-    return produceState(initialValue = exceptions.size, exceptions) {
-        value = withContext(Dispatchers.IO) {
-            ApplicationInfoRepository.countInstalled(Websites.appsOf(exceptions)) +
-                    Websites.websitesOf(exceptions).size
-        }
+    val apps = Websites.appsOf(feature.appExceptions)
+    return produceState(initialValue = apps.size, apps) {
+        value = withContext(Dispatchers.IO) { ApplicationInfoRepository.countInstalled(apps) }
     }.value
 }
