@@ -7,9 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Browser
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
@@ -35,6 +37,7 @@ import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.BrowserAddressBars
+import com.flx_apps.digitaldetox.websites.StrandedPages
 import com.flx_apps.digitaldetox.websites.WebsiteCollections
 import com.flx_apps.digitaldetox.websites.WebsiteMonitor
 import com.flx_apps.digitaldetox.websites.Websites
@@ -158,6 +161,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         )
     }
 
+    /** The websites going back could not leave, see [leaveWebsite]. */
+    private val strandedPages = StrandedPages()
+
     /**
      * What each app-opened feature was last told is in front: an app, or the entry of its list a
      * website falls under. A new page only reaches the features it changes this for.
@@ -198,13 +204,40 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * back. Going home would leave the browser on that page, and opening the browser again would
      * end on the same screen. It goes back once per call and never on its own: if the page before
      * is held back as well, it gets its screen again, and the user decides again.
+     *
+     * A page that going back could not leave last time, because its tab had nothing to go back to
+     * (see [StrandedPages]), gets an empty page put in front of it instead.
      */
     fun leaveWebsite() {
         dispatchedForeground.entries.removeAll { Websites.isWebsite(it.value) }
-        performGlobalAction(GLOBAL_ACTION_BACK)
+        val browser = websiteMonitor.browserPackage
+        val page = websiteMonitor.page
+        if (browser != null && page != null) {
+            if (!strandedPages.isStranded(browser, page) || !openEmptyPage(browser)) {
+                strandedPages.onWentBack(browser, page, SystemClock.elapsedRealtime())
+                performGlobalAction(GLOBAL_ACTION_BACK)
+            }
+        } else {
+            performGlobalAction(GLOBAL_ACTION_BACK)
+        }
         // the page before can be on the same site and leave the address bar as it was
         websiteMonitor.recheck(LEAVE_WEBSITE_RECHECK_MS)
     }
+
+    /**
+     * Opens an empty page in [browser], in front of the page it shows. Chrome opens it in a tab of
+     * its own, marked as DetoxDroid's, and reuses that tab the next time instead of adding another.
+     * The tab the user was in stays as it was: no app can navigate it from outside. False when the
+     * browser does not open the page.
+     */
+    private fun openEmptyPage(browser: String): Boolean = runCatching {
+        startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("about:blank"))
+                .setPackage(browser)
+                .putExtra(Browser.EXTRA_APPLICATION_ID, packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }.onFailure { Timber.w(it, "%s did not open an empty page", browser) }.isSuccess
 
     /**
      * Drops the remembered foreground package, so the next window event counts as an app switch
@@ -508,7 +541,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         UsageStatsTracker.onForegroundApp(packageName)
         // the app that was left has its time booked now, and going home is when the widget is seen
         ScreenTimeSurfaces.requestRefresh(this)
+        strandedPages.onAppSwitch(packageName, SystemClock.elapsedRealtime())
         watchWebsites(packageName)
+        websiteMonitor.browserPackage?.let { strandedPages.onPageShown(it, websiteMonitor.page) }
         dispatchedForeground.clear()
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             val feature = it as Feature
@@ -526,6 +561,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private fun dispatchWebsiteChange() {
         val app = foregroundAppMonitor.currentPackage
         if (app != websiteMonitor.browserPackage) return
+        strandedPages.onPageShown(app, websiteMonitor.page)
         val event = AccessibilityEventUtil.createEvent(isFullScreen = true)
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             val feature = it as Feature
