@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
+import com.flx_apps.digitaldetox.system_integration.ForceStopRecovery
 import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.util.DebugLog
 import com.flx_apps.digitaldetox.util.DebugLogTree
@@ -94,6 +95,8 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         if (!isMainProcess()) return
 
         scheduleUsageStatsSnapshot()
+        // before anything reads the secure setting as "DetoxDroid is off"
+        ForceStopRecovery.onAppStart(this)
         ServiceReliabilityScheduler.schedule(this)
         restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)

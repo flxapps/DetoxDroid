@@ -288,6 +288,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // place every way of switching DetoxDroid on passes through, including the system settings.
         ServiceReliabilityScheduler.schedule(this)
         ServiceReliabilityScheduler.scheduleNextScheduleBoundary(this)
+        ForceStopRecovery.recordRunning(this, true)
         DetoxDroidDeviceAdminReceiver.allowSystemBackups(this)
     }
 
@@ -476,6 +477,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onDestroy()
 
         UsageStatsTracker.shutdown()
+        ForceStopRecovery.recordRunning(this, false)
 
         mainHandler.removeCallbacks(settleForegroundApp)
         PauseButtonFeature.pauseFeatures(this, stop = true)

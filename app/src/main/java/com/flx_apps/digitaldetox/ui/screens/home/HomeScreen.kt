@@ -299,6 +299,7 @@ private fun HomeScreenContent(it: PaddingValues, droidState: SleepyDroidState) {
             ScreenTimeChart()
         }
         item {
+            ForceStoppedCard()
             FinishSetupCard()
             BatteryOptimizationCard()
         }

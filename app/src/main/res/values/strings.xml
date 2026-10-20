@@ -32,6 +32,10 @@
     <string name="reliability_battery_subtitle">Stops the system from putting DetoxDroid to sleep. Recommended if your phone aggressively closes background apps.</string>
     <string name="reliability_onboarding_title">Stay reliable</string>
     <string name="reliability_onboarding_message">Some phones stop background apps to save battery, which can silently switch DetoxDroid off. These optional settings help it keep running.</string>
+    <string name="reliability_forceStopped_title">Your phone switched DetoxDroid off</string>
+    <string name="reliability_forceStopped_message">Android switches off an app\'s accessibility service whenever the app is force-stopped, and clearing your recent apps or your phone\'s battery manager can do exactly that. Lock DetoxDroid in your recent apps, let it run in the background, then start it again.</string>
+    <string name="reliability_forceStopped_howTo">Show me how</string>
+    <string name="reliability_forceStopped_dismiss">Leave it off</string>
     <!-- endregion -->
 
     <!-- region Common Actions & States -->

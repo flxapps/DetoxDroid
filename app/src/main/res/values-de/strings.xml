@@ -28,6 +28,10 @@
     <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Handy Hintergrund-Apps aggressiv schließt.</string>
     <string name="reliability_onboarding_title">Zuverlässig bleiben</string>
     <string name="reliability_onboarding_message">Manche Handys stoppen Hintergrund-Apps, um Akku zu sparen. Dabei geht DetoxDroid schon mal unbemerkt mit aus. Diese optionalen Einstellungen helfen, dass es weiterläuft.</string>
+    <string name="reliability_forceStopped_title">Dein Handy hat DetoxDroid ausgeschaltet</string>
+    <string name="reliability_forceStopped_message">Android schaltet die Bedienungshilfe einer App ab, sobald sie zwangsweise beendet wird, und das passiert schon mal beim Schließen aller Apps oder durch den Akku-Manager. Sperr DetoxDroid in der App-Übersicht, lass es im Hintergrund laufen und starte es dann wieder.</string>
+    <string name="reliability_forceStopped_howTo">Zeig mir, wie</string>
+    <string name="reliability_forceStopped_dismiss">Aus lassen</string>
     <!-- endregion -->
 
     <!-- region Common Actions & States -->

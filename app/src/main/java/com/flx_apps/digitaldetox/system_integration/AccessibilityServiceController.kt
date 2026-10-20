@@ -35,8 +35,9 @@ object AccessibilityServiceController {
     /**
      * Whether the accessibility service is currently listed as enabled in the system's secure
      * settings. This doubles as the persisted "the user wants DetoxDroid running" signal: it is set
-     * by [activate], cleared by [deactivate], survives process death and reboot, and an OEM killing
-     * the process does not clear it. Reading it needs no permission.
+     * by [activate], cleared by [deactivate], and survives process death and reboot. A force stop is
+     * the exception, the system clears it then, see [ForceStopRecovery]. Reading it needs no
+     * permission.
      */
     fun isEnabledInSettings(context: Context): Boolean =
         enabledAccessibilityServices(context).contains(AccessibilityServiceComponent)
