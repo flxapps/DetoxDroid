@@ -216,7 +216,7 @@ private fun SiteSuggestions(onAdd: (String) -> Boolean) {
  * "https://www." and a path. A path narrows the entry to that part of the site.
  */
 @Composable
-private fun AddWebsiteField(enabled: Boolean, onAdd: (String) -> Boolean) {
+internal fun AddWebsiteField(enabled: Boolean, onAdd: (String) -> Boolean) {
     var text by rememberSaveable { mutableStateOf("") }
     var invalid by rememberSaveable { mutableStateOf(false) }
     fun submit() {

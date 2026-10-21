@@ -122,27 +122,64 @@ object WebsiteCollections {
         }
     }
 
-    /** The domains of [collection] if they are loaded already, without loading them. */
-    fun loadedOrNull(collection: WebsiteCollection): Domains? = loaded[collection]
+    /** What a collection's row says about it: how many sites, and the first few by name. */
+    class Description(val size: Int, val sample: List<String>)
+
+    private val described = ConcurrentHashMap<WebsiteCollection, Description>()
+
+    /**
+     * The description of [collection] if it has been read already, without reading anything. A
+     * loaded collection describes itself from its domains.
+     */
+    fun describedOrNull(collection: WebsiteCollection): Description? =
+        loaded[collection]?.let { Description(it.size, it.sample) } ?: described[collection]
+
+    /**
+     * How many sites [collection] holds and the first few of them, for its row on the website
+     * screen. Counting the lines of the file costs a fraction of hashing them and keeps nothing
+     * but the count, where the hashes of every collection would sit in memory for the life of the
+     * process. Blocking the first time.
+     */
+    fun describe(context: Context, collection: WebsiteCollection): Description =
+        describedOrNull(collection) ?: described.getOrPut(collection) {
+            var size = 0
+            val sample = ArrayList<String>()
+            runCatching {
+                context.assets.open(collection.asset).bufferedReader().useLines { lines ->
+                    lines.forEach { line ->
+                        val domain = domainOf(line) ?: return@forEach
+                        size++
+                        if (sample.size < SAMPLE_SIZE) sample += domain
+                    }
+                }
+            }.onFailure { Timber.e(it, "Could not read the website collection %s", collection.id) }
+            Description(size, sample)
+        }
 
     /** The domains of [collection], read from its file the first time. Blocking. */
     fun load(context: Context, collection: WebsiteCollection): Domains = loaded.getOrPut(collection) {
-        val hashes = ArrayList<Long>()
+        // straight into a primitive array: boxing sixty thousand longs on the way is churn
+        var hashes = LongArray(4096)
+        var count = 0
         val sample = ArrayList<String>()
         runCatching {
             context.assets.open(collection.asset).bufferedReader().useLines { lines ->
                 lines.forEach { line ->
-                    val domain = line.substringBefore('#').trim().substringAfterLast(' ')
-                        .lowercase(Locale.ROOT).removePrefix("www.")
-                    if (domain.isEmpty()) return@forEach
-                    hashes += hash(domain, 0)
+                    val domain = domainOf(line) ?: return@forEach
+                    if (count == hashes.size) hashes = hashes.copyOf(count * 2)
+                    hashes[count++] = hash(domain, 0)
                     if (sample.size < SAMPLE_SIZE) sample += domain
                 }
             }
         }.onFailure { Timber.e(it, "Could not read the website collection %s", collection.id) }
-        val sorted = hashes.toLongArray().also { it.sort() }
-        Domains(sorted, sorted.size, sample)
+        val sorted = hashes.copyOf(count).also { it.sort() }
+        Domains(sorted, count, sample)
     }
+
+    /** The domain a line of a list file names, or null for a comment or an empty line. */
+    private fun domainOf(line: String): String? =
+        line.substringBefore('#').trim().substringAfterLast(' ').lowercase(Locale.ROOT)
+            .removePrefix("www.").takeIf { it.isNotEmpty() }
 
     /** FNV-1a over the characters of [text] from [start] on, so a parent domain needs no copy. */
     private fun hash(text: String, start: Int): Long {

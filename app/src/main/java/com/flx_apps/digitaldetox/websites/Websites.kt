@@ -38,12 +38,12 @@ object Websites {
 
     /**
      * The entry for a site the user typed, in whatever shape it was pasted or typed:
-     * "https://www.youtube.com/shorts/" becomes `web:youtube.com/shorts`. Null for anything that
-     * names no site.
+     * "https://m.youtube.com/shorts/" becomes `web:youtube.com/shorts`, the site as [siteOf] sees
+     * it. Null for anything that names no site.
      */
     fun siteEntry(input: String): String? {
         val page = WebPage.parse(input) ?: return null
-        return SITE_PREFIX + page.host.removePrefix("www.") + page.path.lowercase(Locale.ROOT)
+        return SITE_PREFIX + siteOf(page) + page.path.lowercase(Locale.ROOT)
     }
 
     fun collectionEntry(collection: WebsiteCollection): String = COLLECTION_PREFIX + collection.id

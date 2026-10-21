@@ -23,6 +23,7 @@ class WebPageParseTest {
             "http://192.168.178.1:8080/login#top" to WebPage("192.168.178.1", "/login"),
             "münchen.de/rathaus" to WebPage("xn--mnchen-3ya.de", "/rathaus"),
             "EN.Wikipedia.org/wiki/Doomscrolling" to WebPage("en.wikipedia.org", "/wiki/Doomscrolling"),
+            "l.facebook.com/l.php?u=https://example.com" to WebPage("l.facebook.com", "/l.php"),
         ).forEach { (text, page) -> assertEquals(text, page, WebPage.parse(text)) }
     }
 

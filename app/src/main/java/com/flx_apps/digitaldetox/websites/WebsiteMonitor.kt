@@ -51,21 +51,28 @@ class WebsiteMonitor(
         private set
 
     /**
-     * The app in front changed to [packageName]. The page of a browser is read right away, so the
-     * features hear about the browser and the site it shows at once instead of one after the other.
-     * Without [watch] (no feature has a website listed) nothing is read at all.
+     * The app in front changed to [packageName], or is judged again. The page of a browser is read
+     * right away, so the features hear about the browser and the site it shows at once instead of
+     * one after the other. The same browser keeps its bar and, where the bar is hidden or being
+     * typed in at that moment (a video in full screen), its page: judging it again must not lose
+     * the page. Without [watch] (no feature has a website listed) nothing is read at all.
      */
     fun onForegroundApp(packageName: String, watch: Boolean) {
         cancelRead()
-        forgetAddressBar()
         val ids = if (watch) addressBarIds(packageName) else null
         if (ids == null) {
+            forgetAddressBar()
             browserPackage = null
             page = null
             return
         }
+        val sameBrowser = packageName == browserPackage
+        if (!sameBrowser) forgetAddressBar()
         browserPackage = packageName
-        page = (read(packageName, ids) as? AddressBarReading.Shown)?.page
+        page = when (val reading = read(packageName, ids)) {
+            is AddressBarReading.Shown -> reading.page
+            AddressBarReading.Missing, AddressBarReading.Editing -> if (sameBrowser) page else null
+        }
     }
 
     /** The content of a window of [packageName] changed. */

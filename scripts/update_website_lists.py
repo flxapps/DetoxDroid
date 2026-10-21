@@ -11,7 +11,8 @@ The sources:
 
 Each file starts with its sources and their licenses, which is the attribution those licenses ask
 for. The shopping and dating files open with a few best-known sites so the screen can name them;
-everything after that is sorted. The social and video lists are written by hand and not touched.
+everything after that is sorted, and a domain whose parent is listed too is left out, since the
+app matches parents anyway. The social and video lists are written by hand and not touched.
 """
 import json
 import pathlib
@@ -44,8 +45,22 @@ def fetch(url):
 
 
 def clean(domain):
-    domain = domain.strip().lower().removeprefix("www.")
+    domain = domain.strip().lower()
+    while domain.startswith("www."):
+        domain = domain[4:]
     return domain if DOMAIN.match(domain) else None
+
+
+def prune(domains):
+    """Drops a domain whose parent is in the set as well. The app's lookup walks up the labels of
+    a host down to the last two, so a listed parent already covers it."""
+    kept = set()
+    for domain in domains:
+        parts = domain.split(".")
+        if any(".".join(parts[i:]) in domains for i in range(1, len(parts) - 1)):
+            continue
+        kept.add(domain)
+    return kept
 
 
 def steven_black(extension):
@@ -81,7 +96,7 @@ def write(file, title, head, parts):
     header = [f"# {title}: one domain per line, without \"www.\", the first few by hand, the rest sorted."
               if head else f"# {title}: one domain per line, without \"www.\", sorted.",
               "# Sources:"] + [f"#   {credit}" for credit in credits]
-    body = head + sorted(domains - set(head))
+    body = head + sorted(prune(domains | set(head)) - set(head))
     (OUT / file).write_text("\n".join(header + body) + "\n", encoding="utf-8")
     print(f"{file}: {len(body)} domains")
 

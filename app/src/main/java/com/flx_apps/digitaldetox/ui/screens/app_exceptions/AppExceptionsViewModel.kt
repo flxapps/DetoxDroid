@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
@@ -13,6 +14,7 @@ import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.rules.RuleOwners
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
 import com.flx_apps.digitaldetox.websites.InstalledBrowsers
 import com.flx_apps.digitaldetox.websites.WebsiteCollection
 import com.flx_apps.digitaldetox.websites.WebsiteCollections
@@ -224,8 +226,9 @@ class AppExceptionsViewModel @Inject constructor(
             updateSelectionCounts()
         }
         viewModelScope.launch(Dispatchers.IO) {
-            // also warms the service's copy: both run in the same process
-            WebsiteCollection.entries.forEach { WebsiteCollections.load(getApplication(), it) }
+            // the rows only need a count and a few names; the service loads the domains of the
+            // collections a group lists when it needs them
+            WebsiteCollection.entries.forEach { WebsiteCollections.describe(getApplication(), it) }
             refreshWebsites()
         }
     }
@@ -324,7 +327,9 @@ class AppExceptionsViewModel @Inject constructor(
                 val appCount = ApplicationInfoRepository.countInstalled(Websites.appsOf(exceptions))
                 val websiteCount = Websites.websitesOf(exceptions).size
                 if (appCount + websiteCount == 0) null
-                else ExceptionsCopySource(source.id, source.name, appCount, websiteCount)
+                else ExceptionsCopySource(
+                    source.id, GroupTexts.name(DetoxDroidApplication.appContext, source), appCount, websiteCount
+                )
             }
     }
 
@@ -370,12 +375,12 @@ class AppExceptionsViewModel @Inject constructor(
         }
         _sites.value = shown.map { SiteItem(it, Websites.displayName(getApplication(), it), it in entries) }
         _collections.value = WebsiteCollection.entries.map { collection ->
-            val domains = WebsiteCollections.loadedOrNull(collection)
+            val description = WebsiteCollections.describedOrNull(collection)
             CollectionItem(
                 collection = collection,
                 checked = Websites.collectionEntry(collection) in entries,
-                sample = if (collection.named) domains?.sample.orEmpty() else emptyList(),
-                size = domains?.size ?: 0,
+                sample = if (collection.named) description?.sample.orEmpty() else emptyList(),
+                size = description?.size ?: 0,
             )
         }
         updateSelectionCounts()

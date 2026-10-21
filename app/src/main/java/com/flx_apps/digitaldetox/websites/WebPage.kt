@@ -20,8 +20,11 @@ data class WebPage(val host: String, val path: String) {
         fun parse(text: CharSequence?): WebPage? {
             var rest = text?.toString()?.trim().orEmpty()
             if (rest.isEmpty() || rest.any { it.isWhitespace() }) return null
+            // a scheme stands in front of the authority; a "://" further in belongs to a link
+            // carried in the path or query, as a redirect page shows it
             val schemeEnd = rest.indexOf("://")
-            if (schemeEnd >= 0) {
+            val firstDelimiter = rest.indexOfFirst { it == '/' || it == '?' || it == '#' }
+            if (schemeEnd >= 0 && firstDelimiter == schemeEnd + 1) {
                 val scheme = rest.substring(0, schemeEnd).lowercase(Locale.ROOT)
                 if (scheme != "http" && scheme != "https") return null
                 rest = rest.substring(schemeEnd + 3)
