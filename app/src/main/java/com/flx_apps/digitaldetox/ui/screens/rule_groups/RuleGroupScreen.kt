@@ -49,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -99,6 +100,7 @@ import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import kotlin.math.abs
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
@@ -126,6 +128,9 @@ fun RuleGroupScreen(
     val version by viewModel.version.collectAsState()
     val groupsChanged by RuleGroups.changes.collectAsState()
     val group = remember(version, groupsChanged) { viewModel.group }
+    // the group is one instance whose fields change in place, so nothing below would be told of
+    // an edit by itself: every card is keyed on this and redrawn after each
+    val revision = version.toLong() * 1_000_003L + groupsChanged
     if (group == null) {
         // deleted, from here or from a restored settings file
         LaunchedEffect(Unit) { navViewModel.onBackPress() }
@@ -194,9 +199,9 @@ fun RuleGroupScreen(
                 modifier = Modifier.padding(padding)
             ) {
                 item { SettingsLockBannerIfNeeded(featureId = groupId) }
-                item { PermissionBanners(group = group, navViewModel = navViewModel) }
+                item { key(revision) { PermissionBanners(group = group, navViewModel = navViewModel) } }
                 item {
-                    SentenceCard(group = group, onPart = { part ->
+                    key(revision) { SentenceCard(group = group, onPart = { part ->
                         when (part) {
                             SentencePart.SCOPE ->
                                 navViewModel.openRoute(NavigationRoutes.AppExceptions(groupId))
@@ -210,12 +215,12 @@ fun RuleGroupScreen(
                             SentencePart.STEPS ->
                                 scope.launch { listState.animateScrollToItem(STEPS_ITEM_INDEX) }
                         }
-                    })
+                    }) }
                 }
-                item { OverlapNote(group = group) }
-                item { TodayCard(group = group) }
+                item { key(revision) { OverlapNote(group = group) } }
+                item { key(revision) { TodayCard(group = group) } }
                 item {
-                    StepsCard(
+                    key(revision) { StepsCard(
                         group = group,
                         onToggle = { step, on ->
                             val missing = viewModel.setStep(step, on)
@@ -240,16 +245,16 @@ fun RuleGroupScreen(
                         onTune = { step ->
                             navViewModel.openRoute(NavigationRoutes.ManageFeature(step.feature.id))
                         }
-                    )
+                    ) }
                 }
                 item {
-                    ScheduleCard(
+                    key(revision) { ScheduleCard(
                         group = group,
                         onClick = { navViewModel.openRoute(NavigationRoutes.FeatureSchedule(groupId)) }
-                    )
+                    ) }
                 }
                 item {
-                    Text(
+                    key(revision) { Text(
                         text = if (group.hasBudget && group.scheduleRules.isNotEmpty()) {
                             stringResource(
                                 id = R.string.ruleGroups_hint_countsFromWindow,
@@ -261,7 +266,7 @@ fun RuleGroupScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 28.dp)
-                    )
+                    ) }
                 }
             }
         }
@@ -596,14 +601,20 @@ private fun StepsCard(
         Step.entries.forEach { step ->
             val available = step != Step.LOCK && step != Step.WAIT || group.canHoldBackApps
             val on = group.hasStep(step)
+            // the lock has no value of its own, and gray only has one inside a budget
+            val hasValue = on && when (step) {
+                Step.WAIT, Step.SCROLL_BREAK -> true
+                Step.GRAY -> group.hasBudget
+                Step.LOCK -> false
+            }
             StepRow(
                 step = step,
                 on = on,
                 enabled = available && !locked,
                 subtitle = stepSubtitle(group, step, available),
-                hasValue = on && step != Step.LOCK,
+                hasValue = hasValue,
                 onToggle = { onToggle(step, it) },
-                onClick = { if (on && step != Step.LOCK) picking = step },
+                onClick = { if (hasValue) picking = step },
                 onTune = { onTune(step) }
             )
         }
@@ -618,12 +629,16 @@ private fun StepsCard(
             onDismissRequest = { picking = null }
         )
 
-        Step.GRAY -> if (group.hasBudget) {
+        Step.GRAY -> {
             val budgetMinutes = (group.budgetMs / 60_000L).toInt()
+            val choices = (0..budgetMinutes step 5).toList()
+            val current = (group.grayAfterMs / 60_000L).toInt()
             NumberPickerDialog(
                 titleText = stringResource(id = R.string.ruleGroups_step_gray_from),
-                initialValue = (group.grayAfterMs / 60_000L).toInt().coerceIn(0, budgetMinutes),
-                range = 0..budgetMinutes step 5,
+                // a threshold off the grid (a migrated budget can be any minute) starts out on
+                // the nearest choice
+                initialValue = choices.minBy { abs(it - current) },
+                range = choices,
                 label = {
                     if (it == 0) context.getString(R.string.ruleGroups_step_gray_fromStart)
                     else context.getString(R.string.ruleGroups_step_gray_fromMinutes, it)
@@ -631,8 +646,6 @@ private fun StepsCard(
                 onValueSelected = { onGrayAfter(it * 60_000L) },
                 onDismissRequest = { picking = null }
             )
-        } else {
-            picking = null
         }
 
         Step.SCROLL_BREAK -> NumberPickerDialog(

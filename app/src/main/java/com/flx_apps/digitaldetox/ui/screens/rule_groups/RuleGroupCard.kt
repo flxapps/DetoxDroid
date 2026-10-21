@@ -29,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,10 +94,14 @@ fun RuleGroupsSection(navViewModel: NavViewModel = NavViewModel.navViewModel()) 
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 groups.forEach { group ->
-                    RuleGroupCard(
-                        group = group,
-                        onClick = { navViewModel.openRoute(NavigationRoutes.RuleGroup(group.id)) }
-                    )
+                    // a group is one instance edited in place, so the card is keyed on the
+                    // change count as well, or an edit would leave it as it was
+                    key(group.id, groupsChanged) {
+                        RuleGroupCard(
+                            group = group,
+                            onClick = { navViewModel.openRoute(NavigationRoutes.RuleGroup(group.id)) }
+                        )
+                    }
                 }
             }
         }

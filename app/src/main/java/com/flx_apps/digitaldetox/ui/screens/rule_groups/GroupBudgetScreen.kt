@@ -210,7 +210,7 @@ fun GroupBudgetScreen(
 @Composable
 private fun LastDaysCard(days: List<DayUsage>?, budgetMinutes: Int, period: BudgetPeriod) {
     val context = LocalContext.current
-    if (days == null) return
+    if (days.isNullOrEmpty()) return
     val locale = Locale.getDefault()
     val colors = MaterialTheme.colorScheme
     val averageMs = if (days.isNotEmpty()) days.sumOf { it.ms } / days.size else 0L

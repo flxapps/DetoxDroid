@@ -50,6 +50,7 @@
     <string name="action_grantPermission">Grant permission</string>
     <string name="action_openAppInfo">Open app info</string>
     <string name="action_requestPermissions">This feature needs additional permissions.</string>
+    <string name="action_requestOverlayPermission">This needs the \"display over other apps\" permission.</string>
     <string name="action_search">Search</string>
     <string name="action_search_close">Close search</string>
     <string name="action_filter">Filter</string>

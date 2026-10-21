@@ -46,6 +46,7 @@
     <string name="action_grantPermission">Berechtigung erteilen</string>
     <string name="action_openAppInfo">App-Info öffnen</string>
     <string name="action_requestPermissions">Für diese Funktion fehlen noch Berechtigungen.</string>
+    <string name="action_requestOverlayPermission">Dafür fehlt die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="action_search">Suchen</string>
     <string name="action_search_close">Suche schließen</string>
     <string name="action_filter">Filtern</string>

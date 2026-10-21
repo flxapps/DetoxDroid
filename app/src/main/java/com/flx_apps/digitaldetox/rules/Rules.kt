@@ -1,6 +1,8 @@
 package com.flx_apps.digitaldetox.rules
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
@@ -230,6 +232,11 @@ object Rules {
      * stop, the app in front is judged again, and everything that shows the groups is told.
      */
     fun onGroupsChanged() {
+        // the service and the surfaces expect the main thread; the usage screen edits off it
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Handler(Looper.getMainLooper()).post { onGroupsChanged() }
+            return
+        }
         val context = DetoxDroidApplication.appContext
         runCatching {
             val activeBefore = FeaturesProvider.activeFeatures

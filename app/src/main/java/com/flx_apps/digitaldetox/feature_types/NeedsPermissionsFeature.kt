@@ -57,6 +57,9 @@ class NeedsDrawOverlayPermissionFeature : NeedsPermissionsFeature {
     override fun requestPermissions(context: Context, navViewModel: NavViewModel) {
         NavigationUtil.openOverlayPermissionsSettings(context)
     }
+
+    override fun activationBlockedMessage(context: Context): Int =
+        R.string.action_requestOverlayPermission
 }
 
 /**

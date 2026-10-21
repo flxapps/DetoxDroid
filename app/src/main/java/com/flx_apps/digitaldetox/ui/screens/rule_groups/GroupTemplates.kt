@@ -96,11 +96,14 @@ data class GroupDraft(
 )
 
 object GroupTemplates {
-    /** The short-video apps, which no category tells apart from the rest of social media. */
+    /**
+     * The short-video apps, which no category tells apart from the rest of social media. YouTube
+     * is not among them: its Shorts cannot be told from the rest of the app, only in the browser.
+     */
     private val shortVideoApps = setOf(
         "com.zhiliaoapp.musically", "com.zhiliaoapp.musically.go", "com.ss.android.ugc.trill",
         "com.ss.android.ugc.trill.go", "com.kwai.video", "video.like", "video.like.lite",
-        "com.ss.android.ugc.boom", "com.ss.android.ugc.boomlite", "com.google.android.youtube"
+        "com.ss.android.ugc.boom", "com.ss.android.ugc.boomlite"
     )
 
     /** Messengers worth keeping in color while everything else is gray. */
