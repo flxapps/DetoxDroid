@@ -32,7 +32,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -44,6 +47,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -70,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
@@ -251,8 +257,8 @@ fun RuleGroupScreen(
                         onWait = viewModel::setWaitMs,
                         onGrayAfter = viewModel::setGrayAfterMs,
                         onScrollBreakAfter = viewModel::setScrollBreakAfterMs,
-                        onTune = { step ->
-                            navViewModel.openRoute(NavigationRoutes.ManageFeature(step.feature.id))
+                        onOpenFeature = { feature ->
+                            navViewModel.openRoute(NavigationRoutes.ManageFeature(feature.id))
                         }
                     ) }
                 }
@@ -620,7 +626,8 @@ private fun ThresholdBar(fraction: Float, marker: Float?) {
 
 /**
  * The steps, in the order they take hold and only ever stricter: a timeline of the budget on
- * top, then a row per step with its switch and its value.
+ * top, then a row per step with its switch and its value, and at the bottom the way to the
+ * screens that say how the steps work on this phone, which is the same for every group.
  */
 @Composable
 private fun StepsCard(
@@ -629,11 +636,12 @@ private fun StepsCard(
     onWait: (Long) -> Unit,
     onGrayAfter: (Long) -> Unit,
     onScrollBreakAfter: (Long) -> Unit,
-    onTune: (Step) -> Unit,
+    onOpenFeature: (Feature) -> Unit,
 ) {
     val context = LocalContext.current
     val locked = LocalSettingsLocked.current
     var picking by remember { mutableStateOf<Step?>(null) }
+    var showingHowItWorks by remember { mutableStateOf(false) }
     GroupCard(contentPadding = PaddingValues(vertical = 16.dp)) {
         Text(
             text = stringResource(id = R.string.ruleGroups_steps_title),
@@ -658,9 +666,15 @@ private fun StepsCard(
                 hasValue = hasValue,
                 onToggle = { onToggle(step, it) },
                 onClick = { if (hasValue) picking = step },
-                onTune = { onTune(step) }
             )
         }
+        HowItWorksRow(onClick = { showingHowItWorks = true })
+    }
+    if (showingHowItWorks) {
+        StepFeaturesSheet(
+            onOpen = { showingHowItWorks = false; onOpenFeature(it) },
+            onDismiss = { showingHowItWorks = false }
+        )
     }
     when (picking) {
         Step.WAIT -> NumberPickerDialog(
@@ -744,7 +758,6 @@ private fun StepRow(
     hasValue: Boolean,
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit,
-    onTune: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     Row(
@@ -753,7 +766,7 @@ private fun StepRow(
             .fillMaxWidth()
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(enabled = enabled && hasValue, onClick = onClick)
-            .padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 10.dp)
+            .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -784,12 +797,84 @@ private fun StepRow(
             )
         }
         Switch(checked = on, onCheckedChange = onToggle, enabled = enabled)
-        IconButton(onClick = onTune) {
-            Icon(
-                imageVector = Icons.Default.Tune,
-                contentDescription = stringResource(id = R.string.ruleGroups_step_tune),
-                tint = colors.onSurfaceVariant
+    }
+}
+
+/** The footer of the steps card: one line that leads to how the steps work on this phone. */
+@Composable
+private fun HowItWorksRow(onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Tune,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = stringResource(id = R.string.ruleGroups_steps_howTheyWork),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 14.dp)
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * The three features behind the four steps, each leading to its settings: how gray looks, how
+ * a lock keeps apps away, how scrolling is judged. Those are about the phone and shared by every
+ * group, which is why they are not on the rows above.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StepFeaturesSheet(onOpen: (Feature) -> Unit, onDismiss: () -> Unit) {
+    val features = remember { Step.entries.map { it.feature }.distinct() }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
+        Column(modifier = Modifier.padding(bottom = 24.dp)) {
+            Text(
+                text = stringResource(id = R.string.ruleGroups_steps_howTheyWork),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
+            Text(
+                text = stringResource(id = R.string.ruleGroups_steps_howTheyWork_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 8.dp)
+            )
+            features.forEach { feature ->
+                ListItem(
+                    headlineContent = { Text(stringResource(id = feature.texts.title)) },
+                    supportingContent = { Text(stringResource(id = feature.texts.subtitle)) },
+                    leadingContent = {
+                        Icon(painter = painterResource(id = feature.iconRes), contentDescription = null)
+                    },
+                    trailingContent = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier.clickable { onOpen(feature) }
+                )
+            }
         }
     }
 }
