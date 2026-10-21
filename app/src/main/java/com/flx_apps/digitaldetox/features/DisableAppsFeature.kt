@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
@@ -123,8 +124,16 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     val blockCounter = DailyAppCounter()
 
-    /** The apps this feature has hidden through device admin and not shown again. */
-    private var hiddenApps = setOf<String>()
+    /**
+     * The apps this feature has hidden through device admin and not shown again. Persisted: a
+     * hidden app stays hidden across a restart and has to be found again to be shown.
+     */
+    private var hiddenApps: Set<String> by DataStoreProperty(
+        stringSetPreferencesKey("${id}_hiddenApps"), emptySet()
+    )
+
+    /** The subject the block screen was last put over, while it may still be up. */
+    private var blockScreenOver: String? = null
 
     /**
      * The apps that are locked right now: named by a group whose lock has taken hold. Opening one
@@ -200,6 +209,17 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     }
 
     /**
+     * What the groups lock changed without an app being opened: a window opened or closed, a new
+     * budget window began, a group was edited, switched off or deleted. The modes that keep apps
+     * away without a block screen are brought in line; the block screen needs nothing, it goes up
+     * when a locked app is opened.
+     */
+    fun onLocksChanged(context: Context) {
+        if (!isActive() || PauseButtonFeature.isFeaturePaused(this)) return
+        syncHeldBackApps(context)
+    }
+
+    /**
      * Brings the suspended and hidden apps in line with what the groups lock right now, for the
      * modes that keep apps away without a block screen.
      */
@@ -223,7 +243,8 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     /**
      * When an app or website comes to the front, the groups say whether it waits, opens or is
      * locked. The wait comes first, unless the app has been waited for since the screen last came
-     * on; a lock that has taken hold wins over the wait.
+     * on; a lock that has taken hold wins over the wait. A block screen that is still up over
+     * something no longer locked comes down: the page under it changed, or the budget reset.
      */
     override fun onAppOpened(
         context: Context, packageName: String, accessibilityEvent: AccessibilityEvent
@@ -234,7 +255,12 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             DetoxDroidAccessibilityService.instance?.leaveWebsite()
             return
         }
-        when (val decision = Rules.lockDecision(packageName)) {
+        val decision = Rules.lockDecision(packageName)
+        if (decision !is Rules.LockDecision.Locked && blockScreenOver != null) {
+            blockScreenOver = null
+            context.stopService(Intent(context, AppDisabledOverlayService::class.java))
+        }
+        when (decision) {
             Rules.LockDecision.NotCovered -> {
                 // a suspended app cannot report its own window events, so a budget that reset
                 // or a window that closed reaches the locked apps on the next other app
@@ -242,7 +268,9 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             }
 
             is Rules.LockDecision.Wait -> {
-                if (packageName !in waitedForApps && mayHoldBack(context)) {
+                // not on a re-evaluation: the app is in front already, and the wait is for an open
+                val opening = !DetoxDroidAccessibilityService.isRedispatching
+                if (opening && packageName !in waitedForApps && mayHoldBack(context)) {
                     WaitBeforeOpeningActivity.start(
                         context, packageName, decision.waitMs,
                         label = DetoxDroidAccessibilityService.instance?.currentWebsiteName()
@@ -270,6 +298,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         val mode = if (Websites.isWebsite(packageName)) DisableAppsMode.BLOCK else operationMode
         when (mode) {
             DisableAppsMode.BLOCK -> {
+                blockScreenOver = packageName
                 context.startService(Intent(context, AppDisabledOverlayService::class.java).apply {
                     putExtra(OverlayService.EXTRA_RUNNING_APP_PACKAGE_NAME, packageName)
                 })

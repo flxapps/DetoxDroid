@@ -13,6 +13,7 @@ import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.websites.Websites
 import java.time.LocalDateTime
 
 /** The id of a [RuleGroup], see [RuleGroups.isGroupId]. It prefixes every key the group stores. */
@@ -67,6 +68,17 @@ class RuleGroup internal constructor(val id: GroupId) :
 
         /** [grayAfterMs] or [scrollBreakAfterMs] for a step that is off. */
         const val STEP_OFF = -1L
+
+        /**
+         * Where gray starts when the step is switched on: two thirds into the budget, on a grid of
+         * five minutes, so the gray stretch shows before a lock at the end; from the start without
+         * a budget.
+         */
+        fun defaultGrayAfterMs(budgetMs: Long): Long {
+            if (budgetMs <= 0L) return 0L
+            val fiveMinutes = 5 * 60_000L
+            return (budgetMs * 2 / 3 / fiveMinutes * fiveMinutes).coerceIn(0L, budgetMs)
+        }
     }
 
     var name: String by DataStoreProperty(stringPreferencesKey("${id}_name"), "")
@@ -124,6 +136,11 @@ class RuleGroup internal constructor(val id: GroupId) :
      */
     val canHoldBackApps: Boolean get() = appExceptionListType == AppExceptionListType.ONLY_LIST
 
+    /** Whether the group has websites a lock or a wait can reach: listed ones, or all but a few. */
+    val reachesWebsites: Boolean
+        get() = websiteListType == AppExceptionListType.NOT_LIST ||
+                appExceptions.any(Websites::isWebsite)
+
     fun hasStep(step: Step): Boolean = when (step) {
         Step.WAIT -> waits
         Step.GRAY -> grays
@@ -165,7 +182,9 @@ class RuleGroup internal constructor(val id: GroupId) :
     fun normalize() {
         if (budgetMs <= 0L && budgetMs != NO_BUDGET) budgetMs = NO_BUDGET
         if (grayAfterMs > 0L) {
-            grayAfterMs = if (hasBudget) grayAfterMs.coerceAtMost(budgetMs) else 0L
+            val grayAfter = if (hasBudget) grayAfterMs.coerceAtMost(budgetMs) else 0L
+            // a write only where something changes: every assignment reaches the store
+            if (grayAfter != grayAfterMs) grayAfterMs = grayAfter
         }
         if (waitBeforeOpeningMs < 0L) waitBeforeOpeningMs = 0L
     }

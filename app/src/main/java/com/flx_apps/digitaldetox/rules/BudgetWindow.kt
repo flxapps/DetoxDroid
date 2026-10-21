@@ -16,16 +16,24 @@ object BudgetWindow {
      * When the window that [now] falls in began.
      *
      * [BudgetPeriod.HOUR] begins at the full hour. [BudgetPeriod.DAY] begins when the group's
-     * schedule opened: the earliest start among the rules active at [now], where a rule that spans
-     * midnight and is in its early-morning half started yesterday. Without rules, or outside
-     * every rule (a brake has the group running anyway), it is midnight.
+     * schedule opened: when the rules were last all off before [now]. A rule that opens while
+     * another is still on continues the same stretch, and a rule that spans midnight and is in its
+     * early-morning half started yesterday. Without rules, or outside every rule (a brake has the
+     * group running anyway), it is midnight; so is a stretch that never ends, which is counted per
+     * calendar day.
      */
     fun startOf(
         rules: Collection<FeatureScheduleRule>, period: BudgetPeriod, now: LocalDateTime
     ): LocalDateTime {
         if (period == BudgetPeriod.HOUR) return now.truncatedTo(ChronoUnit.HOURS)
-        return rules.mapNotNull { it.startOfActiveStretch(now) }.minOrNull()
-            ?: now.toLocalDate().atStartOfDay()
+        val midnight = now.toLocalDate().atStartOfDay()
+        var start = rules.mapNotNull { it.startOfActiveStretch(now) }.minOrNull() ?: return midnight
+        while (true) {
+            val earlier = rules.mapNotNull { it.startOfActiveStretch(start.minusSeconds(1)) }.minOrNull()
+            if (earlier == null || !earlier.isBefore(start)) return start
+            start = earlier
+            if (!start.isAfter(now.minusDays(1))) return midnight
+        }
     }
 
     /**

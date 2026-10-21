@@ -23,20 +23,41 @@ object ScrollSurfaces {
      */
     private const val MAX_CLIMB = 4
 
+    /** How many scrolled views the climb's answer is remembered for, see [surfaceOf]. */
+    private const val REMEMBERED_CLIMBS = 32
+
     @Volatile
     private var table: Map<String, Set<String>>? = null
 
     /**
+     * What the climb found above a scrolled view, by package and node. A list sends events by the
+     * dozen while it scrolls, and its node keeps its id between them.
+     */
+    private val climbed = object : LinkedHashMap<String, String?>(REMEMBERED_CLIMBS, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String?>?) =
+            size > REMEMBERED_CLIMBS
+    }
+
+    /**
      * The surface a scroll event in [packageName] happened on: the known pager the [source] scrolls
      * inside of, or else the source's own view id. Only a source without an id of its own is
-     * climbed from; a list with an id is a surface of its own, even inside a pager. Blocking the
-     * first time, when the table is read. The caller owns [source]; what is looked at above it is
-     * recycled here.
+     * climbed from, and only when [climb] asks for it; a list with an id is a surface of its own,
+     * even inside a pager. Blocking the first time, when the table is read. The caller owns
+     * [source]; what is looked at above it is recycled here.
      */
-    fun surfaceOf(context: Context, packageName: String?, source: AccessibilityNodeInfo): String? {
+    fun surfaceOf(
+        context: Context, packageName: String?, source: AccessibilityNodeInfo, climb: Boolean
+    ): String? {
         val own = source.viewIdResourceName
-        val known = packageName?.let { tableOf(context)[it] } ?: return own
-        if (own != null) return own
+        if (own != null || !climb) return own
+        val known = packageName?.let { tableOf(context)[it] } ?: return null
+        val key = "$packageName|${source.hashCode()}"
+        if (climbed.containsKey(key)) return climbed[key]
+        return climbFrom(source, known).also { climbed[key] = it }
+    }
+
+    /** The first id of [known] among the nearest ancestors of [source], or null. */
+    private fun climbFrom(source: AccessibilityNodeInfo, known: Set<String>): String? {
         var node = runCatching { source.parent }.getOrNull()
         var climbed = 0
         while (climbed < MAX_CLIMB) {

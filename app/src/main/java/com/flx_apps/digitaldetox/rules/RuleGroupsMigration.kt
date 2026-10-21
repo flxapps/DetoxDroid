@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit
  *
  * The old keys are left where they are. A version before this one reads them as before, and a
  * settings file from before carries them in, which is how a restore of such a file ends up with
- * groups as well: the version mark is not in the file, so this runs again after the restart.
+ * groups as well: the restore drops the groups there are and puts the version mark back to 0, so
+ * this runs again after the restart (see the import in `ConfigBackup`).
  */
 object RuleGroupsMigration {
     /** The shape of the store this build writes. */

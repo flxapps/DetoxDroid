@@ -24,6 +24,7 @@ import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -83,6 +84,9 @@ enum class DetoxDroidState {
  */
 open class DetoxDroidAccessibilityService : AccessibilityService() {
     companion object {
+        /** Whether the service is handing the app in front to the features again right now. */
+        val isRedispatching: Boolean get() = instance?.redispatching == true
+
         /** How many of the most used apps the expanded notification names. */
         private const val NOTIFICATION_APP_COUNT = 3
 
@@ -192,7 +196,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     fun currentWebsiteName(): String? {
         if (foregroundAppMonitor.currentPackage != websiteMonitor.browserPackage) return null
-        return websiteMonitor.page?.host?.removePrefix("www.")
+        return websiteMonitor.page?.let(Websites::siteOf)
     }
 
     /**
@@ -406,14 +410,18 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             // to ten events a second, so it is read once here and recycled (which still frees
             // native memory below API 33). Without a source the event says too little to count.
             val source = accessibilityEvent.source ?: return
-            val isTextField = AccessibilityEventUtil.isTextFieldScrollEvent(source)
+            if (AccessibilityEventUtil.isTextFieldScrollEvent(source)) {
+                source.recycle()
+                return
+            }
             // the short-video pager a known app scrolls inside of counts as the surface, where
-            // there is one, so a break on it is scoped to it (see ScrollSurfaces)
+            // there is one, so a break on it is scoped to it (see ScrollSurfaces). Only looked
+            // for while a group breaks up scrolling at all: the look costs calls into the app.
             val viewIdResourceName = ScrollSurfaces.surfaceOf(
-                this, accessibilityEvent.packageName?.toString(), source
+                this, accessibilityEvent.packageName?.toString(), source,
+                climb = BreakDoomScrollingFeature in FeaturesProvider.activeFeatures
             )
             source.recycle()
-            if (isTextField) return
             // usage statistics are pure measurement and keep counting during a pause —
             // a pause only suspends the interventions below
             if (accessibilityEvent.packageName != null) {
@@ -569,8 +577,17 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         watchWebsites(app)
         val foreground = Rules.onForeground(app, pageInFront(app))
         dispatchedSubject = foreground.subject
-        dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
+        redispatching = true
+        try {
+            dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
+        } finally {
+            redispatching = false
+        }
     }
+
+    /** True while [redispatchForegroundApp] hands the app in front to the features once more. */
+    @Volatile
+    private var redispatching = false
 
     /**
      * The browser in front shows another page. The budgets hear of it either way; the features
@@ -698,8 +715,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         ForceStopRecovery.recordRunning(this, false)
 
         mainHandler.removeCallbacks(settleForegroundApp)
-        // nothing is in front of a service that is gone, so the budgets stop counting
-        Rules.onNothingInFront()
+        // pausing stops the budgets as well: nothing is in front of a service that is gone
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }

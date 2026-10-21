@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStore
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.removeKeysWithPrefix
+import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,26 +83,16 @@ object RuleGroups {
         return group
     }
 
-    /** Removes the group and every key it stored. */
+    /** Removes the group, every key it stored, and what else still names it. */
     @Synchronized
     fun delete(id: GroupId) {
         if (groups.none { it.id == id }) return
         groups = groups.filterNot { it.id == id }
         order = groups.joinToString(ORDER_SEPARATOR) { it.id }
         GroupBudgets.forget(id)
+        CommitmentPasswordFeature.forgetLockable(id)
         DataStore.removeKeysWithPrefix("${id}_")
         onChanged()
-    }
-
-    /** Moves the group with [id] to [index] in the display order. */
-    @Synchronized
-    fun move(id: GroupId, index: Int) {
-        val group = get(id) ?: return
-        val rest = groups.filterNot { it.id == id }.toMutableList()
-        rest.add(index.coerceIn(0, rest.size), group)
-        groups = rest
-        order = groups.joinToString(ORDER_SEPARATOR) { it.id }
-        _changes.update { it + 1 }
     }
 
     /**

@@ -6,8 +6,10 @@ import android.os.Looper
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
@@ -95,9 +97,7 @@ object Rules {
         }
         val subject = if (page != null) {
             // the most specific website entry anyone listed wins over the browser itself
-            Websites.bestMatch(covering.map { it.entry }, page)
-                ?: covering.map { it.entry }.firstOrNull { Websites.isWebsite(it) }
-                ?: app
+            Websites.bestMatch(covering.map { it.entry }, page) ?: app
         } else {
             app
         }
@@ -111,7 +111,9 @@ object Rules {
     fun onForeground(app: String, page: WebPage?): Foreground {
         val foreground = resolve(app, page)
         current = foreground
-        GroupBudgets.onForeground(foreground.groups())
+        // a pause suspends the steps, and the time under one is not counted against a budget
+        // either, as it was not when the features counted for themselves
+        GroupBudgets.onForeground(if (PauseButtonFeature.isPausing()) emptyList() else foreground.groups())
         return foreground
     }
 
@@ -131,12 +133,14 @@ object Rules {
 
     /**
      * What the lock and the wait make of [subject]. A website is held back by every group that
-     * covers it; an app only by groups that name it, see [RuleGroup.canHoldBackApps]. Under a
-     * brake every lock takes hold, whatever is left of its budget.
+     * lists it; an app, and a website a group only covers through its browser, by groups that name
+     * their apps, see [RuleGroup.canHoldBackApps]. Under a brake every lock takes hold, whatever is
+     * left of its budget.
      */
     fun lockDecision(subject: String): LockDecision {
-        val isWebsite = Websites.isWebsite(subject)
-        val holding = coverage(subject).map { it.group }.filter { isWebsite || it.canHoldBackApps }
+        val holding = coverage(subject)
+            .filter { Websites.isWebsite(it.entry) || it.group.canHoldBackApps }
+            .map { it.group }
         val locking = holding.filter { it.locks }
         if (locking.isNotEmpty()) {
             val braking = EmergencyBrakeFeature.isBraking()
@@ -178,10 +182,6 @@ object Rules {
             .flatMapTo(mutableSetOf()) { Websites.appsOf(it.appExceptions) }
     }
 
-    /** Whether any active group needs to know which website a browser shows. */
-    fun websitesMatter(now: LocalDateTime = LocalDateTime.now()): Boolean =
-        RuleGroups.active(now).any(Websites::matterTo)
-
     /**
      * Whether [feature] has anything to do right now: a switched-on group uses one of its steps.
      */
@@ -202,9 +202,10 @@ object Rules {
 
     /**
      * Judges the app in front again without a window event: a budget ran out, a group's window
-     * opened or closed, a group was edited.
+     * opened or closed, a group was edited. On the main thread, where the service and the
+     * features keep their state; the workers call from theirs.
      */
-    fun reevaluateForeground() {
+    fun reevaluateForeground() = onMain {
         DetoxDroidAccessibilityService.instance?.redispatchForegroundApp()
     }
 
@@ -212,19 +213,39 @@ object Rules {
     @Volatile
     private var lastActiveGroupIds: Set<GroupId> = emptySet()
 
+    /** The budget windows of the groups that have one, as of the same look. */
+    @Volatile
+    private var lastBudgetWindows: Map<GroupId, LocalDateTime> = emptyMap()
+
+    private fun budgetWindows(now: LocalDateTime = LocalDateTime.now()): Map<GroupId, LocalDateTime> =
+        RuleGroups.enabled().filter { it.hasBudget }
+            .associate { it.id to BudgetWindow.startOf(it.scheduleRules, it.budgetPeriod, now) }
+
     /**
-     * A schedule boundary passed: if it opened or closed a group, the app in front is judged
-     * again. Called from the features' periodic reload, so an idle phone picks it up as well.
-     * @return whether the set of active groups changed
+     * A schedule boundary passed: if it opened or closed a group, or began a new budget window
+     * that hands the locked apps back, the app in front is judged again and the locks are brought
+     * in line. Called from the features' periodic reload and the schedule worker, so an idle phone
+     * picks it up as well.
+     * @return whether anything changed
      */
     fun applyScheduleTransitions(): Boolean {
-        val active = RuleGroups.active().mapTo(mutableSetOf()) { it.id }
-        if (active == lastActiveGroupIds) return false
+        val now = LocalDateTime.now()
+        val active = RuleGroups.active(now).mapTo(mutableSetOf()) { it.id }
+        val windows = budgetWindows(now)
+        if (active == lastActiveGroupIds && windows == lastBudgetWindows) return false
         lastActiveGroupIds = active
+        lastBudgetWindows = windows
         if (DetoxDroidAccessibilityService.updateState() == DetoxDroidState.Active) {
             reevaluateForeground()
+            onMain { DisableAppsFeature.onLocksChanged(DetoxDroidApplication.appContext) }
         }
         return true
+    }
+
+    /** Runs [block] on the main thread: now when already there, else posted. */
+    private fun onMain(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) block()
+        else Handler(Looper.getMainLooper()).post(block)
     }
 
     /**
@@ -247,7 +268,10 @@ object Rules {
                 activeAfter.filter { it !in activeBefore }.forEach { it.onStart(context) }
             }
             lastActiveGroupIds = RuleGroups.active().mapTo(mutableSetOf()) { it.id }
+            lastBudgetWindows = budgetWindows()
             reevaluateForeground()
+            // a group that was edited away or switched off hands its suspended or hidden apps back
+            DisableAppsFeature.onLocksChanged(context)
             DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
         }.onFailure { Timber.w(it, "Could not apply the changed groups to the running features") }
         runCatching { ScreenTimeSurfaces.invalidate(context) }

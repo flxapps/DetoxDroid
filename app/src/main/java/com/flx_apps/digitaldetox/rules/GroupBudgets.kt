@@ -19,9 +19,10 @@ import java.time.ZoneId
  * app came to the front, which a limit that locks an app mid-session needs.
  *
  * The used time is kept per group and rolled over when the group's [BudgetWindow] changes, so
- * the next opening of a window starts from zero even if nothing happened in between. Only the
- * total and the window it belongs to are persisted; a session that was running when the process
- * died is lost, which errs in the user's favour.
+ * the next opening of a window starts from zero even if nothing happened in between. The total
+ * and the window it belongs to are persisted, and a running session is folded into the total
+ * every [CHECKPOINT_MS], so a process that dies mid-session loses at most that much, in the
+ * user's favour.
  *
  * The service hands out the app switches on the main thread; the widgets and the notification read
  * the totals from a background one, hence the locking.
@@ -29,6 +30,9 @@ import java.time.ZoneId
 object GroupBudgets {
     /** Just past a threshold, so the check finds it crossed rather than a few ms short. */
     private const val PAST_THRESHOLD_MS = 250L
+
+    /** How often a running session is written down, see the class docs. */
+    private const val CHECKPOINT_MS = 2 * 60_000L
 
     private class State(id: GroupId) {
         var usedMs: Long by DataStoreProperty(longPreferencesKey("${id}_usedUpScreenTime"), 0L)
@@ -56,6 +60,9 @@ object GroupBudgets {
             ScreenTimeSurfaces.invalidate(DetoxDroidApplication.appContext)
         }.onFailure { Timber.e(it, "Could not apply a budget that ran out") }
     }
+
+    /** Folds the running sessions into their totals and comes back while any is still running. */
+    private val checkpoint = Runnable { checkpointSessions() }
 
     private fun stateOf(group: RuleGroup): State = states.getOrPut(group.id) { State(group.id) }
 
@@ -99,17 +106,21 @@ object GroupBudgets {
      */
     @Synchronized
     fun onForeground(covering: Collection<RuleGroup>, nowMs: Long = System.currentTimeMillis()) {
-        val coveringIds = covering.mapTo(mutableSetOf()) { it.id }
-        // end what no longer runs first, so a group that is still covered keeps its session
+        val budgeted = covering.filter { it.hasBudget }
+        val budgetedIds = budgeted.mapTo(mutableSetOf()) { it.id }
+        // end what no longer runs first, so a group that is still covered keeps its session; a
+        // group that lost its budget while covered has nothing left to count either
         states.forEach { (id, state) ->
-            if (id !in coveringIds) endSession(state, nowMs)
+            if (id !in budgetedIds) endSession(id, state, nowMs)
         }
-        covering.filter { it.hasBudget }.forEach { group ->
+        budgeted.forEach { group ->
             val state = stateOf(group)
             rollWindow(group, state, nowMs)
             if (state.sessionSinceMs == 0L) state.sessionSinceMs = nowMs
         }
         armThresholdCheck(covering, nowMs)
+        mainHandler.removeCallbacks(checkpoint)
+        if (budgeted.isNotEmpty()) mainHandler.postDelayed(checkpoint, CHECKPOINT_MS)
     }
 
     /**
@@ -119,8 +130,9 @@ object GroupBudgets {
      */
     @Synchronized
     fun stopAll(nowMs: Long = System.currentTimeMillis()) {
-        states.values.forEach { endSession(it, nowMs) }
+        states.forEach { (id, state) -> endSession(id, state, nowMs) }
         mainHandler.removeCallbacks(thresholdCheck)
+        mainHandler.removeCallbacks(checkpoint)
     }
 
     /** Drops what is kept for a group that is gone. */
@@ -129,10 +141,32 @@ object GroupBudgets {
         states.remove(id)
     }
 
-    private fun endSession(state: State, nowMs: Long) {
+    private fun endSession(id: GroupId, state: State, nowMs: Long) {
         if (state.sessionSinceMs == 0L) return
-        state.usedMs += (nowMs - state.sessionSinceMs).coerceAtLeast(0L)
+        foldSession(id, state, nowMs)
         state.sessionSinceMs = 0L
+    }
+
+    /**
+     * Books the running session up to [nowMs] and lets it go on from there. The window may have
+     * changed since the session began; rolling it first keeps what came after the boundary in the
+     * new window and nothing of the old one.
+     */
+    private fun foldSession(id: GroupId, state: State, nowMs: Long) {
+        RuleGroups.get(id)?.let { rollWindow(it, state, nowMs) }
+        state.usedMs += (nowMs - state.sessionSinceMs).coerceAtLeast(0L)
+        state.sessionSinceMs = nowMs
+    }
+
+    @Synchronized
+    private fun checkpointSessions(nowMs: Long = System.currentTimeMillis()) {
+        var running = false
+        states.forEach { (id, state) ->
+            if (state.sessionSinceMs == 0L) return@forEach
+            foldSession(id, state, nowMs)
+            running = true
+        }
+        if (running) mainHandler.postDelayed(checkpoint, CHECKPOINT_MS)
     }
 
     /**

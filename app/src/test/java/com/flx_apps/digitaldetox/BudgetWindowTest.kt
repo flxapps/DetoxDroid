@@ -38,4 +38,17 @@ class BudgetWindowTest {
             BudgetWindow.startOf(weekdays, BudgetPeriod.DAY, tuesdayNoon)
         )
     }
+
+    @Test
+    fun `a window that opens while another is still on continues its stretch`() {
+        val overlapping = setOf(
+            FeatureScheduleRule(emptyList(), LocalTime.of(8, 0), LocalTime.of(12, 30)),
+            FeatureScheduleRule(emptyList(), LocalTime.of(12, 0), LocalTime.of(18, 0)),
+        )
+        val afterTheHandover = LocalDateTime.of(2026, 10, 20, 12, 31)
+        assertEquals(
+            LocalDateTime.of(2026, 10, 20, 8, 0),
+            BudgetWindow.startOf(overlapping, BudgetPeriod.DAY, afterTheHandover)
+        )
+    }
 }

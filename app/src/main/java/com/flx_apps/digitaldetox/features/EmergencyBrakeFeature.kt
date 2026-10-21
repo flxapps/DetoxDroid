@@ -21,6 +21,7 @@ import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
@@ -165,7 +166,9 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     fun locksSettings(featureId: FeatureId): Boolean {
         if (!isBraking() || featureId == CommitmentPasswordFeatureId) return false
         return featureId == RuleGroups.LOCK_ID || RuleGroups.isGroupId(featureId) ||
-                FeaturesProvider.getFeatureById(featureId) is LockableFeature
+                FeaturesProvider.getFeatureById(featureId) is LockableFeature ||
+                // the step features' settings decide what the locked groups do
+                Step.entries.any { it.feature.id == featureId }
     }
 
     /** Whether the end of the running brake has been asked for and is being waited out. */

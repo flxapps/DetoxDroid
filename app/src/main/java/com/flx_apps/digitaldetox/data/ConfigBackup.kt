@@ -12,7 +12,9 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.BuildConfig
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeatureId
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.features.DisableAppsFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
@@ -196,13 +198,21 @@ object ConfigBackup {
 
     /**
      * Writes [values] back (the file's values as [preview] filtered them), leaving preferences the
-     * file does not name alone.
+     * file does not name alone. A file from before there were groups carries the features' own
+     * lists instead; those become groups through the migration, which runs once the store says it
+     * holds none, so the groups of this phone make way for the rules in the file.
      * @return how many values were written
      */
     suspend fun import(values: Map<String, Any>): Int {
         if (values.isEmpty()) return 0
         var written = 0
         DataStore.editLocked { preferences ->
+            if (isFromBeforeGroups(values)) {
+                preferences.asMap().keys
+                    .filter { RuleGroups.isGroupId(it.name) || it.name == RULE_GROUPS_ORDER }
+                    .forEach { preferences.remove(it) }
+                preferences[intPreferencesKey(RULE_GROUPS_VERSION)] = 0
+            }
             for ((name, value) in values) {
                 val key = keyFor(name, value) ?: continue
                 @Suppress("UNCHECKED_CAST")
@@ -211,6 +221,20 @@ object ConfigBackup {
             }
         }
         return written
+    }
+
+    private const val RULE_GROUPS_ORDER = "ruleGroups_order"
+    private const val RULE_GROUPS_VERSION = "ruleGroups_version"
+
+    /** Whether the file was written before groups and carries a feature's own rules. */
+    private fun isFromBeforeGroups(values: Map<String, Any>): Boolean {
+        if (RULE_GROUPS_VERSION in values || RULE_GROUPS_ORDER in values) return false
+        val legacyFeatures = listOf(GrayscaleAppsFeatureId, DisableAppsFeatureId, BreakDoomScrollingFeatureId)
+        return values.keys.any { name ->
+            legacyFeatures.any { id ->
+                name == "${id}_exceptions" || name == "${id}_scheduleRules" || name == "${id}_isActivated"
+            }
+        }
     }
 
     /**

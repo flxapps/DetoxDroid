@@ -10,6 +10,8 @@ import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeningActivity
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,8 +67,12 @@ class DisableAppsWaitTest {
             AppDisabledOverlayService::class.java.name
 
     /** Books [minutes] of use of the group's apps, ending a minute ago. */
+    /** A moment today that is a budget window away from no midnight, whenever the test runs. */
+    private fun noonToday(): Long =
+        LocalDate.now().atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
     private fun useUp(minutes: Int) {
-        val endMs = System.currentTimeMillis() - 60_000L
+        val endMs = noonToday() - 60_000L
         GroupBudgets.onForeground(listOf(group), nowMs = endMs - minutes * 60_000L)
         GroupBudgets.onForeground(emptyList(), nowMs = endMs)
     }
@@ -130,7 +136,7 @@ class DisableAppsWaitTest {
     @Test
     fun `time in a listed app stops counting when nothing is in front any more`() {
         group.budgetMs = 30 * 60_000L
-        val startMs = System.currentTimeMillis() - 10 * 60_000L
+        val startMs = noonToday() - 10 * 60_000L
         GroupBudgets.onForeground(listOf(group), nowMs = startMs)
         // ten minutes in the app, then the screen goes off while it is still open
         GroupBudgets.stopAll(nowMs = startMs + 10 * 60_000L)

@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -107,11 +108,19 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
      */
     fun getConfiguredLockedFeatureIds(): Set<String> {
         val ids = lockedFeatureIds
+        val groups = RuleGroups.all.mapTo(mutableSetOf()) { it.id }
         return when {
             ids.contains(LOCKED_FEATURES_NONE_SENTINEL) -> emptySet()
-            RuleGroups.LOCK_ID in ids -> ids - RuleGroups.LOCK_ID + RuleGroups.all.map { it.id }
+            RuleGroups.LOCK_ID in ids -> ids - RuleGroups.LOCK_ID + groups
             else -> ids
-        }
+        }.filterTo(mutableSetOf()) { !RuleGroups.isGroupId(it) || it in groups }
+    }
+
+    /** A group is gone: its id leaves the lock list, where it would otherwise be counted on. */
+    fun forgetLockable(id: String) {
+        val ids = lockedFeatureIds
+        if (id !in ids) return
+        updateLockedFeatureIds(ids - id)
     }
 
     private fun notifyStateChanged() {
@@ -230,6 +239,11 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         // Explicit user choice: lock no feature settings.
         if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
         if (featureId == RuleGroups.LOCK_ID) return RuleGroups.all.any { isFeatureProtected(it.id) }
+        // the settings of a step feature can take from every group that uses the step (a gray
+        // filter switched off grays nothing), so they are protected as soon as one of those is
+        Step.entries.firstOrNull { it.feature.id == featureId }?.let { step ->
+            return RuleGroups.enabled().any { it.usesFeature(step.feature) && isFeatureProtected(it.id) }
+        }
 
         return if (lockedFeatureIds.isEmpty()) {
             // Backward-compatibility fallback for older persisted states.
