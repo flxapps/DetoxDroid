@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -680,8 +681,8 @@ private fun ScreenTimeDonut(today: TodayDonut, navViewModel: NavViewModel) {
 
 /**
  * Stands in for the donut when it has nothing to draw: one quiet line on why, and the one thing
- * that can be done about it, where there is one. The home screen is about the features below it,
- * and an empty chart is no reason to push them down.
+ * that can be done about it, where there is one. It takes about the room the ring takes, so the
+ * groups below sit where they always sit, and stays faint: the home screen is about them.
  */
 @Composable
 private fun ScreenTimeHint(today: TodayDonut, refreshKey: Any?, navViewModel: NavViewModel) {
@@ -690,45 +691,46 @@ private fun ScreenTimeHint(today: TodayDonut, refreshKey: Any?, navViewModel: Na
     // granted it long ago sends them to a settings page that already says yes, and leaves them
     // with nothing to try.
     val hasUsageAccess = remember(refreshKey) { UsageAccessUtil.hasUsageAccess(context) }
-    Row(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .heightIn(min = 200.dp)
+            .padding(horizontal = 40.dp, vertical = 16.dp)
     ) {
         Icon(
             imageVector = Icons.Outlined.QueryStats,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier
-                .padding(top = 2.dp)
-                .size(20.dp)
+                .padding(bottom = 12.dp)
+                .size(36.dp)
         )
-        Column(modifier = Modifier.padding(start = 12.dp)) {
-            when {
-                // Everything used today is left out. The usage screen is where that is undone,
-                // so the way there must not go with the numbers.
-                today.leftOutMs > 0L -> {
-                    HintText(R.string.home_screenTime_allLeftOut)
-                    HintAction(R.string.home_screenTime_allLeftOut_action) {
-                        navViewModel.openRoute(NavigationRoutes.UsageStats(showExclusions = true))
-                    }
+        when {
+            // Everything used today is left out. The usage screen is where that is undone,
+            // so the way there must not go with the numbers.
+            today.leftOutMs > 0L -> {
+                HintText(R.string.home_screenTime_allLeftOut)
+                HintAction(R.string.home_screenTime_allLeftOut_action) {
+                    navViewModel.openRoute(NavigationRoutes.UsageStats(showExclusions = true))
                 }
+            }
 
-                hasUsageAccess -> HintText(R.string.home_screenTime_unavailable)
+            hasUsageAccess -> HintText(R.string.home_screenTime_unavailable)
 
-                else -> {
-                    HintText(R.string.usageStats_usageAccessRequired)
-                    HintAction(R.string.action_grantPermission) {
-                        NavigationUtil.openUsageAccessSettings(context)
-                    }
-                    if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
-                        HintText(
-                            R.string.usageStats_usageAccess_restrictedSettingsHint,
-                            MaterialTheme.typography.bodySmall
-                        )
-                        HintAction(R.string.action_openAppInfo) {
-                            NavigationUtil.openAppInfoSettings(context)
-                        }
+            else -> {
+                HintText(R.string.usageStats_usageAccessRequired)
+                HintAction(R.string.action_grantPermission) {
+                    NavigationUtil.openUsageAccessSettings(context)
+                }
+                if (RestrictedSettingsUtil.mayBlockSpecialAccess(context)) {
+                    HintText(
+                        R.string.usageStats_usageAccess_restrictedSettingsHint,
+                        MaterialTheme.typography.bodySmall
+                    )
+                    HintAction(R.string.action_openAppInfo) {
+                        NavigationUtil.openAppInfoSettings(context)
                     }
                 }
             }
@@ -744,14 +746,15 @@ private fun HintText(
     Text(
         text = stringResource(id = textRes),
         style = style,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center
     )
 }
 
-/** A text button that lines up with the [HintText] above it instead of sitting indented. */
+/** The one thing to do about it, centered under the line like the line itself. */
 @Composable
 private fun HintAction(@StringRes labelRes: Int, onClick: () -> Unit) {
-    TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 0.dp)) {
+    TextButton(onClick = onClick) {
         Text(text = stringResource(id = labelRes))
     }
 }
