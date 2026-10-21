@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +68,10 @@ class CommitmentPasswordViewModel @Inject constructor(
                 updateState()
             }
         }
+        // groups come and go and get renamed while this screen is open
+        viewModelScope.launch {
+            RuleGroups.changes.collect { loadLockableFeatures() }
+        }
     }
 
     fun updateState() {
@@ -87,7 +92,7 @@ class CommitmentPasswordViewModel @Inject constructor(
     }
 
     private fun loadLockableFeatures() {
-        val features = CommitmentPasswordFeature.getLockables()
+        val features = CommitmentPasswordFeature.getLockables(context)
         _lockableFeatures.value = features
 
         val configuredIds = CommitmentPasswordFeature.getConfiguredLockedFeatureIds()

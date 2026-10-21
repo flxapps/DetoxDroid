@@ -3,7 +3,6 @@ package com.flx_apps.digitaldetox.features
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -103,14 +102,15 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     )
 
     /**
-     * Returns the configured feature IDs to lock.
-     * An explicit "none" selection is stored internally via a sentinel.
+     * The ids the password locks, as the lock list shows them: an explicit "none" is empty, and
+     * the all-groups entry older states hold stands for every group there is.
      */
     fun getConfiguredLockedFeatureIds(): Set<String> {
-        return if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) {
-            emptySet()
-        } else {
-            lockedFeatureIds
+        val ids = lockedFeatureIds
+        return when {
+            ids.contains(LOCKED_FEATURES_NONE_SENTINEL) -> emptySet()
+            RuleGroups.LOCK_ID in ids -> ids - RuleGroups.LOCK_ID + RuleGroups.all.map { it.id }
+            else -> ids
         }
     }
 
@@ -214,46 +214,52 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     /**
-     * Returns true if the given feature (or group, which all answer to [RuleGroups.LOCK_ID]) is
-     * configured to be protected by the password, regardless of whether the session is currently
-     * unlocked.
+     * Whether the feature or group with [featureId] is configured to be protected by the
+     * password, regardless of whether the session is currently unlocked. [RuleGroups.LOCK_ID]
+     * asks about the groups as a whole: any of them.
+     *
+     * Groups lock one by one. That opens no way around a locked group, since every group that
+     * covers an app applies and the strictest wins: another group can only add to what a locked
+     * one does, never take from it.
      */
     fun isFeatureProtected(featureId: String): Boolean {
         if (!isActivated) return false
         if (!isPasswordSet(DetoxDroidApplication.appContext)) return false
         if (featureId == id) return true
-        val lockId = if (RuleGroups.isGroupId(featureId)) RuleGroups.LOCK_ID else featureId
 
         // Explicit user choice: lock no feature settings.
         if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
+        if (featureId == RuleGroups.LOCK_ID) return RuleGroups.all.any { isFeatureProtected(it.id) }
 
         return if (lockedFeatureIds.isEmpty()) {
             // Backward-compatibility fallback for older persisted states.
-            getLockables().any { it.id == lockId }
+            getLockables().any { it.id == featureId }
         } else {
-            lockedFeatureIds.contains(lockId)
+            featureId in lockedFeatureIds ||
+                    RuleGroups.isGroupId(featureId) && RuleGroups.LOCK_ID in lockedFeatureIds
         }
     }
 
-    /**
-     * Something the password can lock: the groups, as one entry, or a feature that implements
-     * [LockableFeature].
-     */
-    data class Lockable(
-        val id: String, @StringRes val titleRes: Int, val lockedByDefault: Boolean
-    )
+    /** Something the password can lock: a group, or a feature that implements [LockableFeature]. */
+    data class Lockable(val id: String, val title: String, val lockedByDefault: Boolean)
 
     /** Everything the password can lock, the groups first. */
-    fun getLockables(): List<Lockable> = listOf(
-        Lockable(RuleGroups.LOCK_ID, R.string.ruleGroups_title, lockedByDefault = true)
-    ) + FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
-        .filterIsInstance<Feature>().filter { it.id != id }
-        .map { Lockable(it.id, it.texts.title, (it as LockableFeature).lockedByDefault) }
+    fun getLockables(context: Context = DetoxDroidApplication.appContext): List<Lockable> =
+        RuleGroups.all.map { group ->
+            Lockable(
+                group.id, group.name.ifBlank { context.getString(R.string.ruleGroups_unnamed) },
+                lockedByDefault = true
+            )
+        } + FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
+            .filterIsInstance<Feature>().filter { it.id != id }
+            .map {
+                Lockable(it.id, context.getString(it.texts.title), (it as LockableFeature).lockedByDefault)
+            }
 
     /**
-     * Populate [lockedFeatureIds] from the current default selections (the groups and every
+     * Populate [lockedFeatureIds] from the current default selections (every group and every
      * lockable feature whose [LockableFeature.lockedByDefault] is true). Called once when
-     * enabling the feature.
+     * enabling the feature. A group made later starts out unlocked: it can only add rules.
      */
     fun initializeLockedFeatures() {
         if (lockedFeatureIds.isEmpty()) {

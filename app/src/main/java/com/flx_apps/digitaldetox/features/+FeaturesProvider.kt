@@ -163,13 +163,10 @@ object FeaturesProvider {
 
     /**
      * Whether the settings of the feature or group with [id] can't be changed right now, because
-     * the commitment password protects them or a running brake does. The groups answer as one,
-     * see [RuleGroups.LOCK_ID].
+     * the commitment password protects them or a running brake does. [RuleGroups.LOCK_ID] asks
+     * about the groups as a whole.
      */
-    fun areSettingsLocked(id: String): Boolean {
-        val lockId = if (RuleGroups.isGroupId(id)) RuleGroups.LOCK_ID else id
-        return CommitmentPasswordFeature.isFeatureLocked(lockId) ||
-                EmergencyBrakeFeature.locksSettings(lockId)
-    }
+    fun areSettingsLocked(id: String): Boolean =
+        CommitmentPasswordFeature.isFeatureLocked(id) || EmergencyBrakeFeature.locksSettings(id)
 }
 

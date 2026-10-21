@@ -34,9 +34,14 @@ class OnboardingLockTest {
     }
 
     @Test
-    fun theGroupsAreCoveredByThePassword() {
-        val lockable = CommitmentPasswordFeature.getLockables().first { it.id == RuleGroups.LOCK_ID }
-        assertTrue("the groups are not locked by default", lockable.lockedByDefault)
+    fun aGroupIsCoveredByThePassword() {
+        val group = RuleGroups.create { name = "Feeds" }
+        try {
+            val lockable = CommitmentPasswordFeature.getLockables().first { it.id == group.id }
+            assertTrue("a group is not locked by default", lockable.lockedByDefault)
+        } finally {
+            RuleGroups.delete(group.id)
+        }
     }
 
     @Test

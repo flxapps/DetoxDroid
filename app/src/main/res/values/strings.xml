@@ -703,7 +703,7 @@
     <string name="feature_commitmentPassword_selectFeatures">What to lock</string>
     <string name="feature_commitmentPassword_selectAll">All</string>
     <string name="feature_commitmentPassword_selectNone">None</string>
-    <string name="feature_commitmentPassword_featuresSelected">%1$d of %2$d features selected</string>
+    <string name="feature_commitmentPassword_featuresSelected">%1$d of %2$d selected</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: strengthen with Device Owner</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Commitment Password works with Device Admin. Device Owner also blocks uninstalling DetoxDroid. Tap to view the ADB command.</string>
     <string name="feature_commitmentPassword_stop_locked">Stop is locked by Commitment Password. Unlock settings first.</string>

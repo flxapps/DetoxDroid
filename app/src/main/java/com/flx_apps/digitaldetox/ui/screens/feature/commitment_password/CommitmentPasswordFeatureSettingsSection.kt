@@ -131,7 +131,8 @@ private fun FeatureSelectionSection(
 
     if (lockableFeatures.isEmpty()) return
 
-    Column(modifier = Modifier.alpha(if (enabled) 1f else 0.5f)) {
+    // locking more never needs the passphrase, locking less does
+    Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -144,7 +145,7 @@ private fun FeatureSelectionSection(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = { viewModel.selectAllFeatures() }, enabled = enabled) {
+            TextButton(onClick = { viewModel.selectAllFeatures() }) {
                 Text(stringResource(R.string.feature_commitmentPassword_selectAll))
             }
             TextButton(onClick = { viewModel.deselectAllFeatures() }, enabled = enabled) {
@@ -154,19 +155,22 @@ private fun FeatureSelectionSection(
         SettingsGroup {
             lockableFeatures.forEach { feature ->
                 val selected = selectedFeatureIds.contains(feature.id)
+                val rowEnabled = enabled || !selected
                 val iconRes = FeaturesProvider.getFeatureById(feature.id)?.iconRes
                     ?: R.drawable.ic_app_exceptions
                 ListItem(
-                    headlineContent = { Text(text = stringResource(feature.titleRes)) },
+                    headlineContent = { Text(text = feature.title) },
                     leadingContent = {
                         Icon(painter = painterResource(iconRes), contentDescription = null)
                     },
                     trailingContent = {
-                        Checkbox(checked = selected, onCheckedChange = null, enabled = enabled)
+                        Checkbox(checked = selected, onCheckedChange = null, enabled = rowEnabled)
                     },
-                    modifier = Modifier.toggleable(
-                        value = selected, enabled = enabled, role = Role.Checkbox
-                    ) { viewModel.toggleFeatureSelection(feature.id) }
+                    modifier = Modifier
+                        .alpha(if (rowEnabled) 1f else 0.5f)
+                        .toggleable(
+                            value = selected, enabled = rowEnabled, role = Role.Checkbox
+                        ) { viewModel.toggleFeatureSelection(feature.id) }
                 )
             }
         }

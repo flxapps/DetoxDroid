@@ -213,17 +213,17 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
         { version++; onFeatureChanged() }
     }
     // the chips edit the groups' lists, so a running brake and a commitment password in force
-    // lock them like every other setting of the groups
+    // lock them like every other setting of the groups, group by group
     val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val passwordToken by CommitmentPasswordFeature.stateToken.collectAsState()
     val groupsChanged by RuleGroups.changes.collectAsState()
     val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
     val groups = remember(groupsChanged) { RuleGroups.all }
-    val locked = remember(brakeToken, passwordToken) {
-        FeaturesProvider.areSettingsLocked(RuleGroups.LOCK_ID)
+    val lockedIds = remember(brakeToken, passwordToken, groupsChanged) {
+        groups.filter { FeaturesProvider.areSettingsLocked(it.id) }.mapTo(mutableSetOf()) { it.id }
     }
 
-    if (groups.isEmpty() || locked) {
+    if (groups.isEmpty() || lockedIds.size == groups.size) {
         Text(
             when {
                 groups.isEmpty() -> stringResource(R.string.usageStats_noGroups)
@@ -252,6 +252,7 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
                     label = group.name.ifBlank { stringResource(R.string.ruleGroups_unnamed) },
                     color = MaterialTheme.colorScheme.primary,
                     isActive = covered,
+                    enabled = group.id !in lockedIds,
                     onClick = { scope.toggleCoverage(app, group, onToggled) })
             }
         }
@@ -294,10 +295,11 @@ private fun CoroutineScope.toggleCoverage(
 
 @Composable
 private fun FeatureActionChip(
-    label: String, color: Color, isActive: Boolean, onClick: () -> Unit
+    label: String, color: Color, isActive: Boolean, enabled: Boolean = true, onClick: () -> Unit
 ) {
     FilterChip(
         selected = isActive,
+        enabled = enabled,
         onClick = onClick,
         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
         colors = FilterChipDefaults.filterChipColors(

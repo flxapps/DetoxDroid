@@ -682,7 +682,7 @@
     <string name="feature_commitmentPassword_selectFeatures">Was gesperrt wird</string>
     <string name="feature_commitmentPassword_selectAll">Alle</string>
     <string name="feature_commitmentPassword_selectNone">Keine</string>
-    <string name="feature_commitmentPassword_featuresSelected">%1$d von %2$d Funktionen ausgewählt</string>
+    <string name="feature_commitmentPassword_featuresSelected">%1$d von %2$d ausgewählt</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: mit Device Owner verstärken</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort kommt mit Geräteadministrator-Rechten aus. Device Owner verhindert zusätzlich, dass sich DetoxDroid deinstallieren lässt. Tippe für den ADB-Befehl.</string>
     <string name="feature_commitmentPassword_stop_locked">Stoppen ist durch das Commitment-Passwort gesperrt. Entsperre zuerst die Einstellungen.</string>

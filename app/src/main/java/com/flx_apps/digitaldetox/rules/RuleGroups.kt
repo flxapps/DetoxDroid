@@ -25,9 +25,9 @@ object RuleGroups {
     private const val ORDER_SEPARATOR = ","
 
     /**
-     * What the groups answer to in the commitment password's lock list and under a brake: one
-     * entry for all of them, since a lock that covered some groups would be walked around by
-     * moving an app into another one.
+     * Stands for every group at once: what the onboarding and the brake ask about when they mean
+     * all of them, and what the commitment password's lock list held before groups could be
+     * locked one by one.
      */
     const val LOCK_ID = "RuleGroups"
 
