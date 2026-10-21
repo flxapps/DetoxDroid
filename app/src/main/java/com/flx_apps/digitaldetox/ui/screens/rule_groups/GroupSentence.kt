@@ -170,7 +170,8 @@ object GroupSentence {
                 builder.link(whole, template)
                 return
             }
-            val tokens = Regex("\\{(scope|budget|schedule|steps)}")
+            // both braces escaped: Android's regex engine, unlike the JVM's, refuses a bare "}"
+            val tokens = Regex("\\{(scope|budget|schedule|steps)\\}")
             var last = 0
             tokens.findAll(template).forEach { match ->
                 builder.append(template.substring(last, match.range.first))
