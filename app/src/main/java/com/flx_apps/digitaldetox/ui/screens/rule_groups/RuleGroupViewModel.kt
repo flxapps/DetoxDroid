@@ -77,16 +77,7 @@ class RuleGroupViewModel @Inject constructor(
         return feature.takeIf { !it.hasPermissions(getApplication()) }
     }
 
-    /**
-     * Where gray starts when the step is switched on: two thirds into the budget, so the gray
-     * stretch shows before a lock at the end; from the start without a budget.
-     */
-    private fun RuleGroup.defaultGrayAfterMs(): Long = if (hasBudget) {
-        val fiveMinutes = TimeUnit.MINUTES.toMillis(5)
-        (budgetMs * 2 / 3 / fiveMinutes * fiveMinutes).coerceIn(0L, budgetMs)
-    } else {
-        0L
-    }
+    private fun RuleGroup.defaultGrayAfterMs(): Long = RuleGroup.defaultGrayAfterMs(budgetMs)
 
     fun setWaitMs(ms: Long) = edit { waitBeforeOpeningMs = ms }
 

@@ -283,7 +283,7 @@ private fun ScheduleStatusLine(status: ScheduleStatus, now: LocalDateTime) {
 }
 
 /** A moment within the coming week: its time, and its day as well unless that is today. */
-private fun momentText(at: LocalDateTime, now: LocalDateTime, locale: Locale): String {
+internal fun momentText(at: LocalDateTime, now: LocalDateTime, locale: Locale): String {
     val time = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(at)
     return if (at.toLocalDate() == now.toLocalDate()) {
         time

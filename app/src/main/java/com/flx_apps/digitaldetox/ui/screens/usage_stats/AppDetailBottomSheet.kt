@@ -42,6 +42,9 @@ import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.colorRes
+import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.toShortDurationString
@@ -248,9 +251,11 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
         key(version) {
             groups.forEach { group ->
                 val covered = coversApp(group, app)
+                // in the color of the group's strongest step, as the chips on the rows are
+                val step = GroupTexts.strongestStep(group, isWebsite = app.isWebsite)
                 FeatureActionChip(
-                    label = group.name.ifBlank { stringResource(R.string.ruleGroups_unnamed) },
-                    color = MaterialTheme.colorScheme.primary,
+                    label = GroupTexts.name(LocalContext.current, group),
+                    color = step?.let { brandTone(it.colorRes).content } ?: MaterialTheme.colorScheme.primary,
                     isActive = covered,
                     enabled = group.id !in lockedIds,
                     onClick = { scope.toggleCoverage(app, group, onToggled) })

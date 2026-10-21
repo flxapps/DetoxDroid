@@ -75,7 +75,7 @@ fun GroupBudgetScreen(
     val period by viewModel.period.collectAsState()
     val lastDays by viewModel.lastDays.collectAsState()
     val amountText = if (minutes > 0) {
-        minutes.minutes.toHrMinString(context)
+        GroupTexts.duration(context, minutes * 60_000L)
     } else {
         stringResource(id = R.string.ruleGroups_budget_noLimit)
     }
@@ -177,7 +177,7 @@ fun GroupBudgetScreen(
                     ChipFlowRow(modifier = Modifier.align(Alignment.CenterHorizontally)) {
                         GroupBudgetViewModel.Presets.forEach { preset ->
                             OptionChip(
-                                label = preset.minutes.toHrMinString(context),
+                                label = GroupTexts.duration(context, preset * 60_000L),
                                 selected = minutes == preset,
                                 enabled = !locked,
                                 onClick = { viewModel.setMinutes(preset) }
@@ -229,7 +229,7 @@ private fun LastDaysCard(days: List<DayUsage>?, budgetMinutes: Int, period: Budg
             Text(
                 text = stringResource(
                     id = R.string.ruleGroups_budget_lastDays_average,
-                    averageMs.milliseconds.toHrMinString(context)
+                    GroupTexts.duration(context, averageMs)
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium

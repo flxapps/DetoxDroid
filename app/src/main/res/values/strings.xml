@@ -60,7 +60,6 @@
 
     <!-- region Common Formats -->
     <string name="duration_minutes">%d min</string>
-    <string name="duration_minutes_used">used</string>
     <string name="duration_hoursMinutes">%1$d h %2$d min</string>
     <string name="duration_hours">%d h</string>
     <string name="duration_hours_short">%dh</string>
@@ -244,6 +243,7 @@
     <string name="ruleGroups_title">Your groups</string>
     <string name="ruleGroups_new">New group</string>
     <string name="ruleGroups_unnamed">Group</string>
+    <string name="ruleGroups_quotedName">“%s”</string>
     <string name="ruleGroups_name">Name</string>
     <string name="ruleGroups_menu">More</string>
     <string name="ruleGroups_rename">Rename</string>
@@ -271,6 +271,7 @@
     <string name="ruleGroups_card_usedOf">%1$s of %2$s</string>
     <string name="ruleGroups_card_allExcept">All except</string>
     <string name="ruleGroups_status_offUntil">Off until %s</string>
+    <string name="ruleGroups_status_usedUp">Used up</string>
     <string name="ruleGroups_status_locked">Locked</string>
     <string name="ruleGroups_status_gray">Gray</string>
     <string name="ruleGroups_status_wait">Wait %s</string>
@@ -280,8 +281,8 @@
     <!-- what a group covers, as the subject of its sentence -->
     <string name="ruleGroups_scope_nothingYet">no apps or websites yet</string>
     <string name="ruleGroups_scope_allApps">All apps</string>
-    <string name="ruleGroups_scope_everything">Every app and website</string>
-    <string name="ruleGroups_scope_allWebsites">Every website</string>
+    <string name="ruleGroups_scope_everything">All apps and websites</string>
+    <string name="ruleGroups_scope_allWebsites">All websites</string>
     <string name="ruleGroups_scope_allExcept">All apps except %s</string>
     <string name="ruleGroups_scope_andAllWebsites">%s and every website</string>
     <plurals name="ruleGroups_scope_andMore">
@@ -305,6 +306,10 @@
     <plurals name="ruleGroups_schedule_windows">
         <item quantity="one">in %d time window</item>
         <item quantity="other">in %d time windows</item>
+    </plurals>
+    <plurals name="ruleGroups_schedule_windowsShort">
+        <item quantity="one">%d time window</item>
+        <item quantity="other">%d time windows</item>
     </plurals>
     <plurals name="ruleGroups_schedule_moreWindows">
         <item quantity="one">and %d more</item>
@@ -414,6 +419,8 @@
     <string name="ruleGroups_step_scrollBreak_off">A break screen when the feed won\'t end</string>
     <string name="ruleGroups_step_lock">Lock</string>
     <string name="ruleGroups_step_lock_on">At %s, until the next window</string>
+    <string name="ruleGroups_step_lock_on_day">At %s, for the rest of the day</string>
+    <string name="ruleGroups_step_lock_on_hour">At %s, until the next full hour</string>
     <string name="ruleGroups_step_lock_always">The whole time</string>
     <string name="ruleGroups_step_lock_off">Keeps them out of reach</string>
     <string name="ruleGroups_step_onlySelectedApps">Only for a group of selected apps</string>
@@ -465,16 +472,16 @@
     <string name="ruleGroups_template_gamblingAndPorn">Gambling and porn</string>
     <string name="ruleGroups_template_gamblingAndPorn_description">Betting apps, gambling sites and porn sites stay locked, in every browser.</string>
     <string name="ruleGroups_template_nightsOff">Nights off</string>
-    <string name="ruleGroups_template_nightsOff_description">Feeds, videos and games lock from 22:00 to 07:00, every day.</string>
+    <string name="ruleGroups_template_nightsOff_description">Feeds, videos and games lock from %1$s to %2$s, every day.</string>
     <string name="ruleGroups_template_workHours">Work hours</string>
-    <string name="ruleGroups_template_workHours_description">Feeds, videos, games, news and shops lock on weekdays from 09:00 to 17:00.</string>
+    <string name="ruleGroups_template_workHours_description">Feeds, videos, games, news and shops lock on weekdays from %1$s to %2$s.</string>
     <string name="ruleGroups_template_grayEssentials">Gray, except the essentials</string>
     <string name="ruleGroups_template_grayEssentials_description">Every app and website turns gray, except the phone, camera, maps, clock, calendar and your messengers.</string>
     <string name="ruleGroups_template_empty">Start empty</string>
     <string name="ruleGroups_template_empty_description">Nothing picked, nothing set.</string>
     <string name="ruleGroups_setup_what_these">These apps count. The list starts with the usual suspects; untick what isn\'t one.</string>
     <string name="ruleGroups_setup_what_except">Everything counts except what you tick here. Tick what you need as it is.</string>
-    <string name="ruleGroups_setup_what_hint">Websites work in Chrome, Firefox and most of their relatives. More can be added on the group\'s screen.</string>
+    <string name="ruleGroups_setup_what_hint">Websites work in Chrome, Firefox and most of their relatives. More apps and websites can be added on the group\'s screen.</string>
     <string name="ruleGroups_setup_budget_description">How long the group\'s apps and websites get, together.</string>
     <string name="ruleGroups_setup_schedule_hint">Exact days and times can be set on the group\'s screen.</string>
     <string name="ruleGroups_schedulePreset_always">Always</string>
@@ -498,14 +505,10 @@
     <string name="feature_grayscale">Turn gray</string>
     <string name="feature_grayscale_subtitle">How the gray looks</string>
     <string name="feature_grayscale_description">Takes the color out of what a group turns gray, and the pull with it. Which apps, when and after how much use is set on the group.</string>
-    <string name="feature_grayscale_allowedColorScreenTime">Daily color budget</string>
-    <string name="feature_grayscale_allowedColorScreenTime_description">How long these apps stay in color each day. After that, they turn gray until tomorrow. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_grayscale_extraDim">Extra dim</string>
     <string name="feature_grayscale_extraDim_description">Darker than the brightness slider goes, while a covered app is open. Long-press to set how dark.</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Ignore pop-ups and panels</string>
     <string name="feature_grayscale_ignoreNonFullScreen_description">The volume panel or the status bar no longer flip the color back and forth.</string>
-    <string name="feature_grayscale_exceptions_summary_notList">%d apps are left alone.</string>
-    <string name="feature_grayscale_exceptions_summary_onlyList">Active in %d apps.</string>
     <string name="feature_grayscale_noEffects">Switch on grayscale, extra dim or the screen filter first.</string>
     <string name="feature_grayscale_noEffects_noPermission">Switch on the screen filter first, or set up real grayscale.</string>
     <string name="feature_grayscale_systemGrayscale">Grayscale</string>
@@ -600,9 +603,6 @@
     <string name="feature_doomScrolling_subtitle">Sensitivity and cooldown</string>
     <string name="feature_doomScrolling_description">Experimental. Spots long, fast scrolling in the apps a group covers and offers a way out. Which apps and after how long is set on the group.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Time until warning</string>
-    <string name="feature_doomScrolling_timeUntilWarning_description">How long the scrolling may run before the warning shows up.</string>
-    <string name="feature_doomScrolling_exceptions_summary_notList">Doomscrolling checks are skipped in %d apps.</string>
-    <string name="feature_doomScrolling_exceptions_summary_onlyList">Doomscrolling checks are active in %d apps.</string>
     <string name="feature_doomScrolling_cooldownTime">Cooldown</string>
     <string name="feature_doomScrolling_cooldownTime_description">How long the app, or just the feed that set it off, stays shut after a break.</string>
     <string name="feature_doomScrolling_sensitivity">Sensitivity</string>
@@ -636,13 +636,6 @@
     <string name="feature_disableApps">Wait and lock</string>
     <string name="feature_disableApps_subtitle">How locked apps are kept away</string>
     <string name="feature_disableApps_description">What a lock does to an app once it takes hold. Which apps, when and for how long is set on the group. The wait needs nothing here.</string>
-    <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
-    <string name="feature_disableApps_allowedDailyTime">Daily time budget</string>
-    <string name="feature_disableApps_allowedDailyTime_description">How long you get these apps and websites each day. After that, they are locked until the next day. (DetoxDroid must be running to track screen time.)</string>
-    <string name="feature_disableApps_allowedDailyTime_noLimit">No limit</string>
-    <string name="feature_disableApps_waitBeforeOpening">Wait before opening</string>
-    <string name="feature_disableApps_waitBeforeOpening_description">These apps and websites make you wait before they open. Once you\'ve waited, each one opens right away until the screen turns off.</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time they are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
     <string name="feature_disableApps_operationMode">What a lock does</string>
     <string name="feature_disableApps_operationMode_block">Block</string>
     <string name="feature_disableApps_operationMode_block_description">A screen over the app, with a way back</string>

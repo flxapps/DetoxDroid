@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
@@ -53,9 +54,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
 import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.ui.widgets.AppIcon
-import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.Websites
-import kotlin.time.Duration.Companion.milliseconds
 
 /** How many app icons a card shows before the rest become "+3". */
 private const val CARD_APP_ICONS = 4
@@ -186,27 +185,33 @@ fun RuleGroupCard(group: RuleGroup, onClick: () -> Unit, modifier: Modifier = Mo
             if (group.hasBudget) {
                 BudgetBar(fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f))
             }
-            // what the group does, the budget line and when it counts, on one line
+            // what the group does, the budget line and when it counts, on one line: the budget
+            // keeps its words, the schedule takes what is left and wraps once before it is cut
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 StepIcons(group = group)
-                Text(
-                    text = if (group.hasBudget) {
-                        stringResource(
+                if (group.hasBudget) {
+                    Text(
+                        text = stringResource(
                             id = R.string.ruleGroups_card_usedOf,
-                            usedMs.coerceAtMost(group.budgetMs).milliseconds.toHrMinString(context),
-                            group.budgetMs.milliseconds.toHrMinString(context)
-                        )
-                    } else "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                )
+                            GroupTexts.duration(context, usedMs.coerceAtMost(group.budgetMs)),
+                            GroupTexts.duration(context, group.budgetMs)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
                 Text(
                     text = scheduleText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp)
                 )
             }
         }
@@ -270,13 +275,9 @@ private fun StatusChip(status: GroupStatus) {
 }
 
 /**
- * The apps and websites of a group in one row: the first app icons, one chip for the websites,
- * and how many more there are. A group of all apps but a few shows what it leaves out, marked
- * as such.
- */
-/**
- * The first few of a group's apps as icons, then a chip for the websites and one for the rest.
- * Used on the group's own screen; the home cards say it in words.
+ * The first few of a group's apps as icons, then a chip for the websites and one for the rest. A
+ * group of all apps but a few shows what it leaves out, marked as such. Used on the group's own
+ * screen; the home cards say it in words.
  */
 @Composable
 internal fun ScopeIcons(apps: List<String>, websites: List<String>, allApps: Boolean) {

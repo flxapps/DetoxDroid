@@ -94,9 +94,19 @@ object GroupSentence {
         return GroupSentenceText(render(links, main), render(links, noBudget))
     }
 
+    /**
+     * Whether the group's lock and wait reach anything: its apps when it names them, its websites
+     * when it has any. A lock a group of all apps but a few keeps switched on holds nothing.
+     */
+    private val RuleGroup.holdsBack: Boolean get() = canHoldBackApps || reachesWebsites
+
+    private val RuleGroup.locksHere: Boolean get() = locks && holdsBack
+
+    private val RuleGroup.waitsHere: Boolean get() = waits && holdsBack
+
     /** The values of the steps that are on, by the part that stands for them. */
     private fun stepValues(context: Context, group: RuleGroup): Map<SentencePart, String> = buildMap {
-        if (group.waits) put(SentencePart.WAIT, GroupTexts.seconds(context, group.waitBeforeOpeningMs))
+        if (group.waitsHere) put(SentencePart.WAIT, GroupTexts.seconds(context, group.waitBeforeOpeningMs))
         if (group.grays && !group.graysFromStart) {
             put(SentencePart.GRAY, GroupTexts.minutes(context, group.grayAfterMs))
         }
@@ -113,7 +123,7 @@ object GroupSentence {
     private fun stepsWithBudget(context: Context, group: RuleGroup, count: Int): List<String> {
         val res = context.resources
         val sentences = mutableListOf<String>()
-        if (group.waits) sentences += context.getString(R.string.ruleGroups_before_wait)
+        if (group.waitsHere) sentences += context.getString(R.string.ruleGroups_before_wait)
         if (group.grays && group.graysFromStart) {
             sentences += context.getString(R.string.ruleGroups_before_grayAlways)
         }
@@ -121,14 +131,17 @@ object GroupSentence {
         val graysInside = group.grays && !group.graysFromStart && group.grayAfterMs < group.budgetMs
         val graysAtEnd = group.grays && !group.graysFromStart && group.grayAfterMs >= group.budgetMs
         when {
-            graysInside && group.locks ->
+            graysInside && group.locksHere ->
                 sentences += res.getQuantityString(R.plurals.ruleGroups_after_grayFromThenLock, count)
 
             graysInside -> sentences += res.getQuantityString(R.plurals.ruleGroups_after_grayFrom, count)
-            group.locks -> sentences += res.getQuantityString(R.plurals.ruleGroups_after_lock, count)
+            group.locksHere -> sentences += res.getQuantityString(R.plurals.ruleGroups_after_lock, count)
             graysAtEnd -> sentences += res.getQuantityString(R.plurals.ruleGroups_after_gray, count)
         }
-        if (sentences.isEmpty()) sentences += context.getString(R.string.ruleGroups_after_nothing)
+        // a budget that ends in nothing is said so, whatever runs while it lasts
+        if (!group.locksHere && !graysAtEnd) {
+            sentences += context.getString(R.string.ruleGroups_after_nothing)
+        }
         return sentences
     }
 
@@ -136,10 +149,10 @@ object GroupSentence {
     private fun stepsWithoutBudget(context: Context, group: RuleGroup, count: Int): String? {
         val res = context.resources
         val phrases = buildList {
-            if (group.waits) add(res.getQuantityString(R.plurals.ruleGroups_steps_wait, count))
+            if (group.waitsHere) add(res.getQuantityString(R.plurals.ruleGroups_steps_wait, count))
             if (group.grays) add(res.getQuantityString(R.plurals.ruleGroups_steps_gray, count))
             if (group.breaksScrolling) add(res.getQuantityString(R.plurals.ruleGroups_steps_scroll, count))
-            if (group.locks) add(res.getQuantityString(R.plurals.ruleGroups_steps_lock, count))
+            if (group.locksHere) add(res.getQuantityString(R.plurals.ruleGroups_steps_lock, count))
         }
         return phrases.takeIf { it.isNotEmpty() }?.let { GroupTexts.joinNatural(it) }
     }

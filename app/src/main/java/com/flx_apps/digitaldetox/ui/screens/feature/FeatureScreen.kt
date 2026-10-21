@@ -107,6 +107,7 @@ fun FeatureScreen(
                         },
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                         modifier = Modifier.padding(end = 16.dp)
                     )
                 } else {

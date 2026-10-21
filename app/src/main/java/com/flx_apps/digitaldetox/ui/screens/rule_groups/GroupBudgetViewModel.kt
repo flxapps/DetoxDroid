@@ -46,7 +46,7 @@ class GroupBudgetViewModel @Inject constructor(
         const val STEP_MINUTES = 5
 
         /** The budgets on offer as chips, in minutes. */
-        val Presets = listOf(15, 30, 60)
+        val Presets = listOf(15, 30, 60, 120)
 
         @Composable
         fun withGroupId(groupId: GroupId): GroupBudgetViewModel =

@@ -77,7 +77,11 @@ object GroupTexts {
         val apps = Websites.appsOf(group.appExceptions).filter { context.isInstalled(it) }
         val websites = Websites.websitesOf(group.appExceptions)
         val appNames = apps.map { context.appLabel(it) }.sortedBy { it.lowercase(Locale.getDefault()) }
-        val websitesText = websitesPhrase(context, websites)
+        val allApps = group.appExceptionListType == AppExceptionListType.NOT_LIST
+        val allWebsites = group.websiteListType == AppExceptionListType.NOT_LIST
+        // a group of all apps but a few covers the browsers anyway, so sites it lists on top add
+        // nothing to its subject and would read as if they were left out with the apps
+        val websitesText = if (allApps && !allWebsites) null else websitesPhrase(context, websites)
         // a short list reads as one: "Instagram, TikTok and 4 websites". A long one names a few
         // apps, counts the rest, and adds the websites after that, so no "and" meets another.
         val listedText = when {
@@ -89,8 +93,6 @@ object GroupTexts {
             )
         }
         val listed = listOfNotNull(listedText)
-        val allApps = group.appExceptionListType == AppExceptionListType.NOT_LIST
-        val allWebsites = group.websiteListType == AppExceptionListType.NOT_LIST
         return when {
             allApps && listed.isEmpty() -> context.getString(
                 if (allWebsites) R.string.ruleGroups_scope_everything else R.string.ruleGroups_scope_allApps
@@ -147,7 +149,7 @@ object GroupTexts {
      * day from 22:00 to 07:00", "on weekends". Null without a schedule.
      */
     fun schedule(context: Context, rules: Collection<FeatureScheduleRule>): String? {
-        if (rules.isEmpty()) return null
+        if (rules.isEmpty() || rules.singleOrNull()?.isAlways() == true) return null
         if (rules.size > 1) {
             return context.resources.getQuantityString(
                 R.plurals.ruleGroups_schedule_windows, rules.size, rules.size
@@ -181,10 +183,12 @@ object GroupTexts {
 
     /** "Weekdays, 10:00 to 22:00" for a card line, "Always" without a schedule. */
     fun scheduleShort(context: Context, rules: Collection<FeatureScheduleRule>): String {
-        if (rules.isEmpty()) return context.getString(R.string.ruleGroups_schedule_always)
+        if (rules.isEmpty() || rules.singleOrNull()?.isAlways() == true) {
+            return context.getString(R.string.ruleGroups_schedule_always)
+        }
         if (rules.size > 1) {
             return context.resources.getQuantityString(
-                R.plurals.ruleGroups_schedule_windows, rules.size, rules.size
+                R.plurals.ruleGroups_schedule_windowsShort, rules.size, rules.size
             )
         }
         val rule = rules.first()
@@ -196,6 +200,38 @@ object GroupTexts {
             days, formatter.format(rule.start), formatter.format(rule.end)
         )
     }
+
+    /** Every day, all day: a rule that says what no rule says. */
+    private fun FeatureScheduleRule.isAlways(): Boolean =
+        start == end && (daysOfWeek.isEmpty() || daysOfWeek.toSet().size == 7)
+
+    /**
+     * What the lock step's row says while it is on with a budget: when the lock takes hold and
+     * how long it stays, which depends on what ends the budget's window.
+     */
+    fun lockOn(context: Context, budgetMs: Long, period: BudgetPeriod, scheduled: Boolean): String =
+        context.getString(
+            when {
+                period == BudgetPeriod.HOUR -> R.string.ruleGroups_step_lock_on_hour
+                scheduled -> R.string.ruleGroups_step_lock_on
+                else -> R.string.ruleGroups_step_lock_on_day
+            },
+            minutes(context, budgetMs)
+        )
+
+    /**
+     * The step of [group] that holds its apps, or with [isWebsite] its websites, back hardest, or
+     * null for a group without a step for them. What a chip for the group is colored by.
+     */
+    fun strongestStep(group: RuleGroup, isWebsite: Boolean): Step? =
+        listOf(Step.LOCK, Step.GRAY, Step.SCROLL_BREAK, Step.WAIT).firstOrNull { step ->
+            group.hasStep(step) &&
+                    (isWebsite || group.canHoldBackApps || step != Step.LOCK && step != Step.WAIT)
+        }
+
+    /** [name] in the quotation marks of the user's language, for a step named mid-sentence. */
+    fun quoted(context: Context, name: String): String =
+        context.getString(R.string.ruleGroups_quotedName, name)
 
     /** "10 s", "5 min": a step's value as a short amount. */
     fun seconds(context: Context, ms: Long): String =

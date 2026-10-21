@@ -61,6 +61,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +76,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -107,6 +112,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.schedule.ScheduleStatus
 import com.flx_apps.digitaldetox.ui.screens.schedule.activeMinutes
 import com.flx_apps.digitaldetox.ui.screens.schedule.hourLabel
+import com.flx_apps.digitaldetox.ui.screens.schedule.momentText
 import com.flx_apps.digitaldetox.ui.screens.schedule.orderedWeekDays
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
 import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
@@ -124,9 +130,6 @@ import java.util.Locale
 
 /** The waits on offer, in seconds. */
 private val WaitChoicesSeconds = listOf(5, 10, 15, 20, 30, 45, 60)
-
-/** The index of the steps card in the list, where the sentence's steps link scrolls to. */
-private const val STEPS_ITEM_INDEX = 5
 
 /** How many time windows the schedule card lists before it counts the rest. */
 private const val SCHEDULE_LINES = 4
@@ -166,11 +169,16 @@ fun RuleGroupScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
-    var menuOpen by remember { mutableStateOf(false) }
-    var renaming by remember { mutableStateOf(false) }
-    var deleting by remember { mutableStateOf(false) }
+    var menuOpen by rememberSaveable { mutableStateOf(false) }
+    var renaming by rememberSaveable { mutableStateOf(false) }
+    var deleting by rememberSaveable { mutableStateOf(false) }
     // the step whose value is being picked, from a row or from a value in the sentence
-    var picking by remember { mutableStateOf<Step?>(null) }
+    var picking by rememberSaveable { mutableStateOf<Step?>(null) }
+    // a locked group's values stay as they are, from the rows and from the sentence alike
+    val pick = { step: Step -> if (!locked) picking = step }
+    val showsPermissionNotes = missingPermissions.isNotEmpty() && group.isEnabled
+    // the banner, the notes, the sentence, the overlaps and today come before the steps card
+    val stepsItemIndex = 4 + (if (showsPermissionNotes) 1 else 0) + (if (group.idleSteps.isNotEmpty()) 1 else 0)
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -187,10 +195,12 @@ fun RuleGroupScreen(
                     )
                 },
                 actions = {
+                    val groupName = GroupTexts.name(context, group)
                     Switch(
                         checked = group.isEnabled,
                         enabled = !locked,
-                        onCheckedChange = { viewModel.setEnabled(it) }
+                        onCheckedChange = { viewModel.setEnabled(it) },
+                        modifier = Modifier.semantics { contentDescription = groupName }
                     )
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(
@@ -225,7 +235,7 @@ fun RuleGroupScreen(
                 modifier = Modifier.padding(padding)
             ) {
                 item { SettingsLockBannerIfNeeded(featureId = groupId) }
-                if (missingPermissions.isNotEmpty()) {
+                if (showsPermissionNotes) {
                     item {
                         key(revision) {
                             PermissionNotes(steps = missingPermissions, navViewModel = navViewModel)
@@ -238,7 +248,7 @@ fun RuleGroupScreen(
                             IdleStepsNote(
                                 group = group,
                                 onSetBudget = { navViewModel.openRoute(NavigationRoutes.GroupBudget(groupId)) },
-                                onPickGray = { picking = Step.GRAY }
+                                onPickGray = { pick(Step.GRAY) }
                             )
                         }
                     }
@@ -256,11 +266,11 @@ fun RuleGroupScreen(
                                 navViewModel.openRoute(NavigationRoutes.FeatureSchedule(groupId))
 
                             SentencePart.STEPS ->
-                                scope.launch { listState.animateScrollToItem(STEPS_ITEM_INDEX) }
+                                scope.launch { listState.animateScrollToItem(stepsItemIndex) }
 
-                            SentencePart.WAIT -> picking = Step.WAIT
-                            SentencePart.GRAY -> picking = Step.GRAY
-                            SentencePart.SCROLL -> picking = Step.SCROLL_BREAK
+                            SentencePart.WAIT -> pick(Step.WAIT)
+                            SentencePart.GRAY -> pick(Step.GRAY)
+                            SentencePart.SCROLL -> pick(Step.SCROLL_BREAK)
                         }
                     }) }
                 }
@@ -309,7 +319,9 @@ fun RuleGroupScreen(
                 }
                 item {
                     key(revision) { Text(
-                        text = if (group.hasBudget && group.scheduleRules.isNotEmpty()) {
+                        text = if (group.hasBudget && group.scheduleRules.isNotEmpty() &&
+                            group.budgetPeriod == BudgetPeriod.DAY
+                        ) {
                             stringResource(
                                 id = R.string.ruleGroups_hint_countsFromWindow,
                                 GroupTexts.duration(context, group.budgetMs)
@@ -355,7 +367,7 @@ fun RuleGroupScreen(
 
 @Composable
 private fun RenameDialog(name: String, onRename: (String) -> Unit, onDismiss: () -> Unit) {
-    var value by remember { mutableStateOf(name) }
+    var value by rememberSaveable { mutableStateOf(name) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(id = R.string.ruleGroups_rename)) },
@@ -394,7 +406,9 @@ private fun PermissionNotes(steps: Set<Step>, navViewModel: NavViewModel) {
         byPermission.forEach { (messageRes, waiting) ->
             val feature = waiting.first().feature as NeedsPermissionsFeature
             val hasAction = feature.activationBlockedHasAction(context)
-            val names = GroupTexts.joinNatural(waiting.map { stringResource(id = it.titleRes) })
+            val names = GroupTexts.joinNatural(
+                waiting.map { GroupTexts.quoted(context, stringResource(id = it.titleRes)) }
+            )
             PermissionNote(
                 title = pluralStringResource(
                     id = R.plurals.ruleGroups_permission_steps, count = waiting.size, names
@@ -421,6 +435,7 @@ private fun PermissionNotes(steps: Set<Step>, navViewModel: NavViewModel) {
  */
 @Composable
 private fun IdleStepsNote(group: RuleGroup, onSetBudget: () -> Unit, onPickGray: () -> Unit) {
+    val context = LocalContext.current
     val idle = group.idleSteps
     if (group.hasBudget) {
         Note(
@@ -428,16 +443,20 @@ private fun IdleStepsNote(group: RuleGroup, onSetBudget: () -> Unit, onPickGray:
             title = stringResource(id = R.string.ruleGroups_idle_grayAtLock_title),
             message = stringResource(id = R.string.ruleGroups_idle_grayAtLock_message),
             actionLabel = stringResource(id = R.string.ruleGroups_idle_grayAtLock_action),
-            onAction = onPickGray
+            onAction = onPickGray,
+            quiet = true
         )
     } else {
-        val names = GroupTexts.joinNatural(idle.map { stringResource(id = it.titleRes) })
+        val names = GroupTexts.joinNatural(
+            idle.map { GroupTexts.quoted(context, stringResource(id = it.titleRes)) }
+        )
         Note(
             icon = Icons.Outlined.Info,
             title = stringResource(id = R.string.ruleGroups_idle_noBudget_title),
             message = pluralStringResource(id = R.plurals.ruleGroups_idle_noBudget_message, count = idle.size, names),
             actionLabel = stringResource(id = R.string.ruleGroups_idle_setBudget),
-            onAction = onSetBudget
+            onAction = onSetBudget,
+            quiet = true
         )
     }
 }
@@ -446,7 +465,10 @@ private fun IdleStepsNote(group: RuleGroup, onSetBudget: () -> Unit, onPickGray:
 private fun PermissionNote(title: String, message: String, actionLabel: String, onAction: () -> Unit) =
     Note(Icons.Outlined.WarningAmber, title, message, actionLabel, onAction)
 
-/** A quiet line with a small sign and the one action it asks for. */
+/**
+ * A line with a small sign and the one action it asks for. A [quiet] one is a remark on the
+ * rule, not a warning, and wears a calmer color than the one about a missing permission.
+ */
 @Composable
 private fun Note(
     icon: ImageVector,
@@ -454,12 +476,13 @@ private fun Note(
     message: String,
     actionLabel: String,
     onAction: () -> Unit,
+    quiet: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = colors.tertiaryContainer,
-        contentColor = colors.onTertiaryContainer,
+        color = if (quiet) colors.secondaryContainer else colors.tertiaryContainer,
+        contentColor = if (quiet) colors.onSecondaryContainer else colors.onTertiaryContainer,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
@@ -504,6 +527,7 @@ private fun SentenceCard(group: RuleGroup, onPart: (SentencePart) -> Unit) {
     val sentence = remember(group, linkStyle) { GroupSentence.build(context, group, linkStyle, onPart) }
     val apps = remember(group.appExceptions) { Websites.appsOf(group.appExceptions).sorted() }
     val websites = remember(group.appExceptions) { Websites.websitesOf(group.appExceptions).sorted() }
+    val scopeDescription = remember(group) { GroupTexts.scope(context, group)?.first.orEmpty() }
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -518,6 +542,10 @@ private fun SentenceCard(group: RuleGroup, onPart: (SentencePart) -> Unit) {
                         .padding(bottom = 14.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable { onPart(SentencePart.SCOPE) }
+                        .semantics {
+                            role = Role.Button
+                            contentDescription = scopeDescription
+                        }
                 ) {
                     ScopeIcons(apps = apps, websites = websites, allApps = !group.canHoldBackApps)
                 }
@@ -562,9 +590,10 @@ private fun OverlapNote(group: RuleGroup) {
             val named = if (apps.size <= 3) {
                 GroupTexts.joinNatural(apps)
             } else {
+                // "A, B and 3 more": the two names with a comma, so no "and" meets another
                 pluralStringResource(
                     id = R.plurals.ruleGroups_scope_andMore, count = apps.size - 2,
-                    GroupTexts.joinNatural(apps.take(2)), apps.size - 2
+                    apps.take(2).joinToString(", "), apps.size - 2
                 )
             }
             Text(
@@ -623,7 +652,9 @@ private fun TodayCard(group: RuleGroup, onClick: () -> Unit) {
             val until = (scheduleStatus(group.scheduleRules, now) as? ScheduleStatus.InactiveUntil)?.until
             Text(
                 text = if (until != null) {
-                    stringResource(id = R.string.ruleGroups_status_offUntil, GroupTexts.time(until.toLocalTime()))
+                    stringResource(
+                        id = R.string.ruleGroups_status_offUntil, momentText(until, now, Locale.getDefault())
+                    )
                 } else {
                     stringResource(id = R.string.state_off)
                 },
@@ -656,9 +687,9 @@ private fun TodayCard(group: RuleGroup, onClick: () -> Unit) {
                             id = when {
                                 group.locks && group.canHoldBackApps -> R.string.ruleGroups_status_locked
                                 group.grays -> R.string.ruleGroups_status_gray
-                                else -> R.string.today_budget_usedUp
+                                else -> R.string.ruleGroups_status_usedUp
                             }
-                        ).replaceFirstChar { it.titlecase(Locale.getDefault()) },
+                        ),
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -781,7 +812,7 @@ private fun StepsCard(
 ) {
     val context = LocalContext.current
     val locked = LocalSettingsLocked.current
-    var showingHowItWorks by remember { mutableStateOf(false) }
+    var showingHowItWorks by rememberSaveable { mutableStateOf(false) }
     GroupCard(contentPadding = PaddingValues(vertical = 16.dp)) {
         Text(
             text = stringResource(id = R.string.ruleGroups_steps_title),
@@ -790,8 +821,10 @@ private fun StepsCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Step.entries.forEach { step ->
-            val available = step != Step.LOCK && step != Step.WAIT || group.canHoldBackApps
-            val on = group.hasStep(step)
+            // a lock or a wait reaches named apps and websites, see RuleGroup.canHoldBackApps
+            val available = step != Step.LOCK && step != Step.WAIT ||
+                    group.canHoldBackApps || group.reachesWebsites
+            val on = group.hasStep(step) && available
             // the lock has no value of its own, and gray only has one inside a budget
             val hasValue = on && when (step) {
                 Step.WAIT, Step.SCROLL_BREAK -> true
@@ -832,7 +865,8 @@ private fun StepsCard(
 
         Step.GRAY -> {
             val budgetMinutes = (group.budgetMs / 60_000L).toInt()
-            val choices = (0..budgetMinutes step 5).toList()
+            // on a grid of five minutes, plus the budget itself where that is off the grid
+            val choices = ((0..budgetMinutes step 5) + budgetMinutes).distinct()
             val current = (group.grayAfterMs / 60_000L).toInt()
             NumberPickerDialog(
                 titleText = stringResource(id = R.string.ruleGroups_step_gray_from),
@@ -887,14 +921,21 @@ private fun stepSubtitle(group: RuleGroup, step: Step, available: Boolean): Stri
 
         Step.LOCK -> when {
             !group.locks -> stringResource(id = R.string.ruleGroups_step_lock_off)
-            group.hasBudget -> stringResource(id = R.string.ruleGroups_step_lock_on, GroupTexts.minutes(context, group.budgetMs))
+            group.hasBudget -> GroupTexts.lockOn(
+                context, group.budgetMs, group.budgetPeriod, group.scheduleRules.isNotEmpty()
+            )
+
             else -> stringResource(id = R.string.ruleGroups_step_lock_always)
         }
     }
 }
 
+/**
+ * One step: its icon in its color while it is on, its name, what it does or is set to, and the
+ * switch. A row with a value to change opens its picker on tap. Also the setup's row.
+ */
 @Composable
-private fun StepRow(
+internal fun StepRow(
     step: Step,
     on: Boolean,
     enabled: Boolean,
@@ -904,6 +945,7 @@ private fun StepRow(
     onClick: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
+    val title = stringResource(id = step.titleRes)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -932,7 +974,7 @@ private fun StepRow(
                 .weight(1f)
                 .padding(horizontal = 14.dp)
         ) {
-            Text(text = stringResource(id = step.titleRes), style = MaterialTheme.typography.bodyLarge)
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
             // a value that can be changed is underlined like the parts of the sentence above
             Text(
                 text = subtitle,
@@ -941,7 +983,12 @@ private fun StepRow(
                 textDecoration = if (hasValue && enabled) TextDecoration.Underline else null
             )
         }
-        Switch(checked = on, onCheckedChange = onToggle, enabled = enabled)
+        Switch(
+            checked = on,
+            onCheckedChange = onToggle,
+            enabled = enabled,
+            modifier = Modifier.semantics { contentDescription = title }
+        )
     }
 }
 

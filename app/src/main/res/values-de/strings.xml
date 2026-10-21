@@ -56,7 +56,6 @@
 
     <!-- region Common Formats -->
     <string name="duration_minutes">%d Min.</string>
-    <string name="duration_minutes_used">genutzt</string>
     <string name="duration_hoursMinutes">%1$d Std. %2$d Min.</string>
     <string name="duration_hours">%d Std.</string>
     <string name="duration_hours_short">%dh</string>
@@ -235,6 +234,7 @@
     <string name="ruleGroups_title">Deine Gruppen</string>
     <string name="ruleGroups_new">Neue Gruppe</string>
     <string name="ruleGroups_unnamed">Gruppe</string>
+    <string name="ruleGroups_quotedName">„%s“</string>
     <string name="ruleGroups_name">Name</string>
     <string name="ruleGroups_menu">Mehr</string>
     <string name="ruleGroups_rename">Umbenennen</string>
@@ -247,10 +247,10 @@
     <string name="ruleGroups_migrated_locked">Gesperrte Apps</string>
     <string name="ruleGroups_migrated_scrollBreaks">Scroll-Pausen</string>
     <string name="ruleGroups_onboarding_name">Ablenkende Apps</string>
-    <string name="ruleGroups_feature_unused">In keiner Gruppe im Einsatz</string>
+    <string name="ruleGroups_feature_unused">In keiner Gruppe</string>
     <plurals name="ruleGroups_feature_usedBy">
-        <item quantity="one">In %d Gruppe im Einsatz</item>
-        <item quantity="other">In %d Gruppen im Einsatz</item>
+        <item quantity="one">In %d Gruppe</item>
+        <item quantity="other">In %d Gruppen</item>
     </plurals>
     <string name="home_section_more">Mehr</string>
     <string name="home_finishSetup_message_grayEffects">Eine Gruppe macht Apps grau, aber alle Grau-Effekte sind aus.</string>
@@ -260,6 +260,7 @@
     <string name="ruleGroups_card_usedOf">%1$s von %2$s</string>
     <string name="ruleGroups_card_allExcept">Alle außer</string>
     <string name="ruleGroups_status_offUntil">Aus bis %s</string>
+    <string name="ruleGroups_status_usedUp">Aufgebraucht</string>
     <string name="ruleGroups_status_locked">Gesperrt</string>
     <string name="ruleGroups_status_gray">Grau</string>
     <string name="ruleGroups_status_wait">%s warten</string>
@@ -268,8 +269,8 @@
 
     <string name="ruleGroups_scope_nothingYet">noch keine Apps oder Websites</string>
     <string name="ruleGroups_scope_allApps">Alle Apps</string>
-    <string name="ruleGroups_scope_everything">Jede App und jede Website</string>
-    <string name="ruleGroups_scope_allWebsites">Jede Website</string>
+    <string name="ruleGroups_scope_everything">Alle Apps und Websites</string>
+    <string name="ruleGroups_scope_allWebsites">Alle Websites</string>
     <string name="ruleGroups_scope_allExcept">Alle Apps außer %s</string>
     <string name="ruleGroups_scope_andAllWebsites">%s und jede Website</string>
     <plurals name="ruleGroups_scope_andMore">
@@ -293,6 +294,10 @@
     <plurals name="ruleGroups_schedule_windows">
         <item quantity="one">in %d Zeitfenster</item>
         <item quantity="other">in %d Zeitfenstern</item>
+    </plurals>
+    <plurals name="ruleGroups_schedule_windowsShort">
+        <item quantity="one">%d Zeitfenster</item>
+        <item quantity="other">%d Zeitfenster</item>
     </plurals>
     <plurals name="ruleGroups_schedule_moreWindows">
         <item quantity="one">und %d weiteres</item>
@@ -355,12 +360,12 @@
     <string name="ruleGroups_noBudget">{budget}.</string>
     <string name="ruleGroups_overlap">%1$s gilt auch für %2$s.</string>
     <plurals name="ruleGroups_permission_steps">
-        <item quantity="one">„%s“ kann noch nichts tun.</item>
+        <item quantity="one">%s kann noch nichts tun.</item>
         <item quantity="other">%s können noch nichts tun.</item>
     </plurals>
     <string name="ruleGroups_idle_noBudget_title">Ab der ersten Minute gesperrt</string>
     <plurals name="ruleGroups_idle_noBudget_message">
-        <item quantity="one">„%s“ kommt so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
+        <item quantity="one">%s kommt so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
         <item quantity="other">%s kommen so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
     </plurals>
     <string name="ruleGroups_idle_setBudget">Budget setzen</string>
@@ -376,13 +381,13 @@
     <string name="ruleGroups_today_groupOff">Die Gruppe ist aus</string>
     <string name="ruleGroups_today_freshBudget">Das Budget fängt neu an, wenn das Zeitfenster aufgeht.</string>
     <string name="ruleGroups_today_grayFrom">Grau ab %s</string>
-    <string name="ruleGroups_today_grayAt">Grau bei %s</string>
-    <string name="ruleGroups_today_lockedAt">Gesperrt bei %s</string>
+    <string name="ruleGroups_today_grayAt">Grau ab %s</string>
+    <string name="ruleGroups_today_lockedAt">Gesperrt ab %s</string>
 
     <string name="ruleGroups_steps_title">Was passiert</string>
     <string name="ruleGroups_step_wait">Vor dem Öffnen warten</string>
     <string name="ruleGroups_step_wait_on">%s bei jedem Öffnen</string>
-    <string name="ruleGroups_step_wait_off">Ein Moment, um es sich anders zu überlegen</string>
+    <string name="ruleGroups_step_wait_off">Ein Moment, um es dir anders zu überlegen</string>
     <string name="ruleGroups_step_gray">Grau werden</string>
     <string name="ruleGroups_step_gray_on">Ab %s</string>
     <string name="ruleGroups_step_gray_always">Die ganze Zeit</string>
@@ -394,7 +399,9 @@
     <string name="ruleGroups_step_scrollBreak_on">Nach %s Scrollen</string>
     <string name="ruleGroups_step_scrollBreak_off">Eine Pause, wenn der Feed nicht aufhört</string>
     <string name="ruleGroups_step_lock">Sperren</string>
-    <string name="ruleGroups_step_lock_on">Bei %s, bis zum nächsten Zeitfenster</string>
+    <string name="ruleGroups_step_lock_on">Ab %s, bis zum nächsten Zeitfenster</string>
+    <string name="ruleGroups_step_lock_on_day">Ab %s, für den Rest des Tages</string>
+    <string name="ruleGroups_step_lock_on_hour">Ab %s, bis zur nächsten vollen Stunde</string>
     <string name="ruleGroups_step_lock_always">Die ganze Zeit</string>
     <string name="ruleGroups_step_lock_off">Hält sie außer Reichweite</string>
     <string name="ruleGroups_step_onlySelectedApps">Nur bei einer Gruppe aus ausgewählten Apps</string>
@@ -444,16 +451,16 @@
     <string name="ruleGroups_template_gamblingAndPorn">Glücksspiel und Pornos</string>
     <string name="ruleGroups_template_gamblingAndPorn_description">Wett-Apps, Glücksspiel- und Pornoseiten bleiben gesperrt, in jedem Browser.</string>
     <string name="ruleGroups_template_nightsOff">Nachts Ruhe</string>
-    <string name="ruleGroups_template_nightsOff_description">Feeds, Videos und Spiele sind jeden Tag von 22:00 bis 07:00 gesperrt.</string>
+    <string name="ruleGroups_template_nightsOff_description">Feeds, Videos und Spiele sind jeden Tag von %1$s bis %2$s gesperrt.</string>
     <string name="ruleGroups_template_workHours">Arbeitszeit</string>
-    <string name="ruleGroups_template_workHours_description">Feeds, Videos, Spiele, Nachrichten und Shops sind werktags von 09:00 bis 17:00 gesperrt.</string>
+    <string name="ruleGroups_template_workHours_description">Feeds, Videos, Spiele, Nachrichten und Shops sind werktags von %1$s bis %2$s gesperrt.</string>
     <string name="ruleGroups_template_grayEssentials">Grau, bis auf das Nötigste</string>
-    <string name="ruleGroups_template_grayEssentials_description">Jede App und jede Website wird grau, außer Telefon, Kamera, Karten, Uhr, Kalender und deine Messenger.</string>
+    <string name="ruleGroups_template_grayEssentials_description">Jede App und jede Website wird grau, außer Telefon, Kamera, Karten, Uhr, Kalender und deinen Messengern.</string>
     <string name="ruleGroups_template_empty">Leer anfangen</string>
     <string name="ruleGroups_template_empty_description">Nichts ausgewählt, nichts eingestellt.</string>
-    <string name="ruleGroups_setup_what_these">Diese Apps zählen. Die üblichen Verdächtigen stehen oben; hak ab, was keiner ist.</string>
-    <string name="ruleGroups_setup_what_except">Alles zählt, außer dem, was du hier abhakst. Hak ab, was du so brauchst, wie es ist.</string>
-    <string name="ruleGroups_setup_what_hint">Websites funktionieren in Chrome, Firefox und den meisten Verwandten. Mehr davon gibt es später auf dem Bildschirm der Gruppe.</string>
+    <string name="ruleGroups_setup_what_these">Diese Apps zählen. Die üblichen Verdächtigen stehen oben; nimm den Haken raus, wo keiner ist.</string>
+    <string name="ruleGroups_setup_what_except">Alles zählt, außer dem, was du hier abhakst. Setz einen Haken bei allem, was so bleiben soll, wie es ist.</string>
+    <string name="ruleGroups_setup_what_hint">Websites funktionieren in Chrome, Firefox und den meisten Verwandten. Mehr Apps und Websites gibt\'s später auf dem Bildschirm der Gruppe.</string>
     <string name="ruleGroups_setup_budget_description">Wie lange die Apps und Websites der Gruppe zusammen bekommen.</string>
     <string name="ruleGroups_setup_schedule_hint">Genaue Tage und Uhrzeiten stellst du später auf dem Bildschirm der Gruppe ein.</string>
     <string name="ruleGroups_schedulePreset_always">Immer</string>
@@ -477,14 +484,10 @@
     <string name="feature_grayscale">Grau werden</string>
     <string name="feature_grayscale_subtitle">Wie das Grau aussieht</string>
     <string name="feature_grayscale_description">Nimmt dem die Farbe, was eine Gruppe grau macht, und damit den halben Reiz. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
-    <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
-    <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
     <string name="feature_grayscale_extraDim_description">Dunkler, als der Helligkeitsregler hergibt, solange eine erfasste App offen ist. Lange drücken, um einzustellen, wie dunkel.</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Pop-ups und Leisten ignorieren</string>
     <string name="feature_grayscale_ignoreNonFullScreen_description">Lautstärkeregler oder Statusleiste schalten die Farbe dann nicht mehr hin und her.</string>
-    <string name="feature_grayscale_exceptions_summary_notList">%d Apps bleiben unangetastet.</string>
-    <string name="feature_grayscale_exceptions_summary_onlyList">Greift in %d Apps.</string>
     <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extra dunkel oder den Bildschirmfilter ein.</string>
     <string name="feature_grayscale_noEffects_noPermission">Schalte erst den Bildschirmfilter ein oder richte echte Graustufen ein.</string>
     <string name="feature_grayscale_systemGrayscale">Graustufen</string>
@@ -579,9 +582,6 @@
     <string name="feature_doomScrolling_subtitle">Empfindlichkeit und Abklingzeit</string>
     <string name="feature_doomScrolling_description">Experimentell. Erkennt langes, schnelles Scrollen in den Apps einer Gruppe und bietet dir einen Ausstieg an. Welche Apps und ab wann, das stellst du in der Gruppe ein.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Zeit bis zur Warnung</string>
-    <string name="feature_doomScrolling_timeUntilWarning_description">So lange darfst du scrollen, bevor die Warnung kommt.</string>
-    <string name="feature_doomScrolling_exceptions_summary_notList">%d Apps sind von der Scroll-Erkennung ausgenommen.</string>
-    <string name="feature_doomScrolling_exceptions_summary_onlyList">Die Scroll-Erkennung läuft in %d Apps.</string>
     <string name="feature_doomScrolling_cooldownTime">Abkühlphase</string>
     <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App zu, oder nur der Feed, der es ausgelöst hat.</string>
     <string name="feature_doomScrolling_sensitivity">Empfindlichkeit</string>
@@ -615,13 +615,6 @@
     <string name="feature_disableApps">Warten und sperren</string>
     <string name="feature_disableApps_subtitle">Wie gesperrte Apps weggehalten werden</string>
     <string name="feature_disableApps_description">Was eine Sperre mit einer App macht, sobald sie greift. Welche Apps, wann und wie lange, das stellst du in der Gruppe ein. Das Warten braucht hier nichts.</string>
-    <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
-    <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
-    <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps und Websites. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
-    <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
-    <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
-    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps und Websites lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht jede sofort auf, bis der Bildschirm wieder ausgeht.</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget ist alles sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
     <string name="feature_disableApps_operationMode">Was eine Sperre macht</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
     <string name="feature_disableApps_operationMode_block_description">Ein Bildschirm vor der App, mit Weg zurück</string>

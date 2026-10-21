@@ -235,6 +235,22 @@ object GroupTemplates {
     }
 
     /** The websites the setup offers for [template] as chips, the draft's own among them. */
+    /**
+     * A template's description, with the times of its schedule written the way the user reads
+     * the time, rather than fixed in the text.
+     */
+    fun description(context: Context, template: GroupTemplate): String {
+        val preset = when (template) {
+            GroupTemplate.NIGHTS_OFF -> SchedulePreset.NIGHTS
+            GroupTemplate.WORK_HOURS -> SchedulePreset.WORK_HOURS
+            else -> return context.getString(template.descriptionRes)
+        }
+        val rule = preset.rules().first()
+        return context.getString(
+            template.descriptionRes, GroupTexts.time(rule.start), GroupTexts.time(rule.end)
+        )
+    }
+
     fun websiteSuggestions(template: GroupTemplate): List<String> = when (template) {
         GroupTemplate.FEEDS -> listOf(
             social, site("youtube.com/shorts"), site("instagram.com/reels"), site("youtube.com"), site("news.google.com")

@@ -15,9 +15,11 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.rules.GroupBudgets
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.ui.screens.schedule.ScheduleStatus
+import com.flx_apps.digitaldetox.ui.screens.schedule.momentText
 import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
 import com.flx_apps.digitaldetox.ui.theme.BrandTone
 import java.time.LocalDateTime
+import java.util.Locale
 
 /**
  * What a group is doing right now, for the chip on its card: off, off until its window opens,
@@ -39,7 +41,9 @@ class GroupStatus(
             if (!group.isActiveAt(now)) {
                 val until = (scheduleStatus(group.scheduleRules, now) as? ScheduleStatus.InactiveUntil)?.until
                 val text = if (until != null) {
-                    context.getString(R.string.ruleGroups_status_offUntil, GroupTexts.time(until.toLocalTime()))
+                    context.getString(
+                        R.string.ruleGroups_status_offUntil, momentText(until, now, Locale.getDefault())
+                    )
                 } else {
                     context.getString(R.string.state_off)
                 }
@@ -71,7 +75,7 @@ class GroupStatus(
                         context.getString(R.string.ruleGroups_status_gray), Icons.Default.Contrast, true, R.color.purple
                     )
 
-                    else -> GroupStatus(context.getString(R.string.today_budget_usedUp), null, false)
+                    else -> GroupStatus(context.getString(R.string.ruleGroups_status_usedUp), null, false)
                 }
             }
             return when {

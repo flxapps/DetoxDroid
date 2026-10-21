@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,7 +46,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -63,14 +61,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
 import com.flx_apps.digitaldetox.rules.Step
+import com.flx_apps.digitaldetox.ui.screens.app_exceptions.AddWebsiteField
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.theme.brandTone
@@ -136,12 +133,13 @@ fun NewRuleGroupScreen(
                     TextButton(onClick = { viewModel.back() }) {
                         Text(stringResource(id = R.string.action_back))
                     }
+                    // nothing to go on with before the template's picks are in
                     if (step == NewGroupStep.WHAT) {
-                        Button(onClick = { viewModel.next() }) {
+                        Button(onClick = { viewModel.next() }, enabled = draft != null) {
                             Text(stringResource(id = R.string.onboarding_action_next))
                         }
                     } else {
-                        Button(onClick = {
+                        Button(enabled = draft != null, onClick = {
                             viewModel.create()?.let {
                                 navViewModel.replaceRoute(NavigationRoutes.RuleGroup(it))
                             }
@@ -254,7 +252,7 @@ private fun TemplateCard(template: GroupTemplate, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = stringResource(id = template.descriptionRes),
+                    text = GroupTemplates.description(LocalContext.current, template),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)
@@ -340,7 +338,7 @@ private fun WhatStep(viewModel: NewRuleGroupViewModel) {
                     )
                 }
             }
-            AddWebsiteRow(onAdd = viewModel::addWebsite)
+            AddWebsiteField(enabled = true, onAdd = viewModel::addWebsite)
             Text(
                 text = stringResource(id = R.string.ruleGroups_setup_what_hint),
                 style = MaterialTheme.typography.bodySmall,
@@ -349,44 +347,6 @@ private fun WhatStep(viewModel: NewRuleGroupViewModel) {
             )
         }
     }
-}
-
-@Composable
-private fun AddWebsiteRow(onAdd: (String) -> Boolean) {
-    var input by remember { mutableStateOf("") }
-    var invalid by remember { mutableStateOf(false) }
-    val submit = {
-        if (onAdd(input)) {
-            input = ""
-            invalid = false
-        } else {
-            invalid = true
-        }
-    }
-    OutlinedTextField(
-        value = input,
-        onValueChange = { input = it; invalid = false },
-        singleLine = true,
-        isError = invalid,
-        label = { Text(stringResource(id = R.string.websites_add_label)) },
-        placeholder = { Text(stringResource(id = R.string.websites_add_placeholder)) },
-        supportingText = if (invalid) {
-            { Text(stringResource(id = R.string.websites_add_invalid)) }
-        } else null,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { submit() }),
-        trailingIcon = {
-            IconButton(onClick = submit, enabled = input.isNotBlank()) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(id = R.string.websites_add_action)
-                )
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    )
 }
 
 /** How strict: the budget, the steps and the schedule, each a tap. */
@@ -414,7 +374,7 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
                 modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
             )
             ChipFlowRow {
-                listOf(15, 30, 60, 120).forEach { preset ->
+                GroupBudgetViewModel.Presets.forEach { preset ->
                     OptionChip(
                         label = GroupTexts.duration(context, preset * 60_000L),
                         selected = budgetMinutes == preset,
@@ -458,7 +418,7 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp)
             )
-            val canHoldBack = draft.listType == AppExceptionListType.ONLY_LIST
+            val canHoldBack = draft.listType == AppExceptionListType.ONLY_LIST || draft.websites.isNotEmpty()
             Step.entries.forEach { step ->
                 val available = (step != Step.LOCK && step != Step.WAIT) || canHoldBack
                 val on = when (step) {
@@ -472,8 +432,9 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
                     step == Step.GRAY && on && draft.budgetMs > 0L && draft.grayAfterMs > 0L ->
                         stringResource(id = R.string.ruleGroups_step_gray_on, GroupTexts.minutes(context, draft.grayAfterMs))
 
-                    step == Step.LOCK && on && draft.budgetMs > 0L ->
-                        stringResource(id = R.string.ruleGroups_step_lock_on, GroupTexts.minutes(context, draft.budgetMs))
+                    step == Step.LOCK && on && draft.budgetMs > 0L -> GroupTexts.lockOn(
+                        context, draft.budgetMs, draft.period, draft.schedule != SchedulePreset.ALWAYS
+                    )
 
                     step == Step.WAIT && on ->
                         stringResource(id = R.string.ruleGroups_step_wait_on, GroupTexts.seconds(context, draft.waitMs))
@@ -491,35 +452,15 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
                         }
                     )
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = step.icon,
-                        contentDescription = null,
-                        tint = if (on) brandTone(step.colorRes).content else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 14.dp)
-                    ) {
-                        Text(text = stringResource(id = step.titleRes), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = on && available,
-                        enabled = available,
-                        onCheckedChange = { viewModel.setStep(step, it) }
-                    )
-                }
+                StepRow(
+                    step = step,
+                    on = on && available,
+                    enabled = available,
+                    subtitle = subtitle,
+                    hasValue = false,
+                    onToggle = { viewModel.setStep(step, it) },
+                    onClick = {},
+                )
             }
         }
         GroupCard {

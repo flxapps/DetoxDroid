@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
+import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
 import com.flx_apps.digitaldetox.rules.GroupId
@@ -15,6 +15,7 @@ import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.RankedAppRow
 import com.flx_apps.digitaldetox.util.RankedApps
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
+import com.flx_apps.digitaldetox.util.knownCategoryOf
 import com.flx_apps.digitaldetox.websites.Websites
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -91,6 +92,30 @@ class NewRuleGroupViewModel @Inject constructor(
             (GroupTemplates.websiteSuggestions(template) + draft.websites).distinct()
         val (picked, rest) = installed.partition { it.packageName in draft.apps }
         _rows.value = picked + rest.take(DistractingAppsHeuristic.MAX_DISPLAYED_APPS)
+        // a pick the ranking left out (the phone's own dialer, a system app without usage) has
+        // to be on the list all the same, or it could not be unticked
+        val unranked = draft.apps - picked.mapTo(mutableSetOf()) { it.packageName }
+        if (unranked.isNotEmpty()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val extra = ApplicationInfoRepository.getInstalledApps()
+                    .filter { it.packageName in unranked }
+                    .map { app ->
+                        RankedAppRow(
+                            packageName = app.packageName,
+                            appName = app.appName,
+                            appCategory = app.appCategory,
+                            isSystemApp = app.isSystemApp,
+                            knownCategory = knownCategoryOf(app.packageName),
+                            osCategory = app.osCategory,
+                            avgDailyUsageMs = 0L,
+                            preChecked = true,
+                        )
+                    }
+                if (_draft.value?.template == template) {
+                    _rows.update { rows -> rows?.let { picked + extra + it.drop(picked.size) } }
+                }
+            }
+        }
     }
 
     fun next() {
@@ -157,12 +182,7 @@ class NewRuleGroupViewModel @Inject constructor(
 
     fun setSchedule(schedule: SchedulePreset) = edit { copy(schedule = schedule) }
 
-    private fun defaultGrayAfter(budgetMs: Long): Long = if (budgetMs > 0L) {
-        val fiveMinutes = TimeUnit.MINUTES.toMillis(5)
-        (budgetMs * 2 / 3 / fiveMinutes * fiveMinutes).coerceIn(0L, budgetMs)
-    } else {
-        0L
-    }
+    private fun defaultGrayAfter(budgetMs: Long): Long = RuleGroup.defaultGrayAfterMs(budgetMs)
 
     /** Writes the draft as a group and returns its id, or null when there is no draft. */
     fun create(): GroupId? {
@@ -172,7 +192,7 @@ class NewRuleGroupViewModel @Inject constructor(
             name = RuleGroups.uniqueName(draft.name.trim().ifBlank { fallbackName })
             appExceptions = draft.apps + draft.websites
             appExceptionListType = draft.listType
-            websiteListType = AppExceptionListType.ONLY_LIST
+            websiteListType = draft.listType
             scheduleRules = draft.schedule.rules()
             budgetMs = draft.budgetMs
             budgetPeriod = draft.period
