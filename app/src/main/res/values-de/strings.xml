@@ -305,24 +305,24 @@
         <item quantity="other">haben noch keine Schritte</item>
     </plurals>
     <plurals name="ruleGroups_steps_wait">
-        <item quantity="one">wartet vor dem Öffnen %s</item>
-        <item quantity="other">warten vor dem Öffnen %s</item>
+        <item quantity="one">wartet vor dem Öffnen {wait}</item>
+        <item quantity="other">warten vor dem Öffnen {wait}</item>
     </plurals>
     <plurals name="ruleGroups_steps_gray">
         <item quantity="one">ist grau</item>
         <item quantity="other">sind grau</item>
     </plurals>
     <plurals name="ruleGroups_steps_scroll">
-        <item quantity="one">bekommt nach %s Scrollen eine Pause</item>
-        <item quantity="other">bekommen nach %s Scrollen eine Pause</item>
+        <item quantity="one">bekommt nach {scroll} Scrollen eine Pause</item>
+        <item quantity="other">bekommen nach {scroll} Scrollen eine Pause</item>
     </plurals>
     <plurals name="ruleGroups_steps_lock">
         <item quantity="one">ist gesperrt</item>
         <item quantity="other">sind gesperrt</item>
     </plurals>
-    <string name="ruleGroups_before_wait">Jedes Öffnen wartet erst mal %s.</string>
+    <string name="ruleGroups_before_wait">Jedes Öffnen wartet erst mal {wait}.</string>
     <string name="ruleGroups_before_grayAlways">Die ganze Zeit grau.</string>
-    <string name="ruleGroups_before_scroll">Doomscrolling bekommt nach %s eine Pause.</string>
+    <string name="ruleGroups_before_scroll">Doomscrolling bekommt nach {scroll} eine Pause.</string>
     <plurals name="ruleGroups_after_lock">
         <item quantity="one">Danach ist es gesperrt.</item>
         <item quantity="other">Danach sind sie gesperrt.</item>
@@ -332,19 +332,32 @@
         <item quantity="other">Danach werden sie grau.</item>
     </plurals>
     <plurals name="ruleGroups_after_grayFrom">
-        <item quantity="one">Ab %s wird es grau.</item>
-        <item quantity="other">Ab %s werden sie grau.</item>
+        <item quantity="one">Ab {gray} wird es grau.</item>
+        <item quantity="other">Ab {gray} werden sie grau.</item>
     </plurals>
     <plurals name="ruleGroups_after_grayFromThenLock">
-        <item quantity="one">Ab %s wird es grau, danach gesperrt.</item>
-        <item quantity="other">Ab %s werden sie grau, danach gesperrt.</item>
+        <item quantity="one">Ab {gray} wird es grau, danach gesperrt.</item>
+        <item quantity="other">Ab {gray} werden sie grau, danach gesperrt.</item>
     </plurals>
-    <string name="ruleGroups_after_nothing">Danach passiert noch nichts.</string>
+    <string name="ruleGroups_after_nothing">Danach {steps}.</string>
+    <string name="ruleGroups_steps_nothingHappens">passiert noch nichts</string>
+    <string name="ruleGroups_noBudget_value">Kein Zeitbudget</string>
+    <string name="ruleGroups_noBudget_withSteps">{budget}, das gilt also ab der ersten Minute.</string>
+    <string name="ruleGroups_noBudget">{budget}.</string>
     <string name="ruleGroups_overlap">%1$s gilt auch für %2$s.</string>
     <plurals name="ruleGroups_permission_steps">
         <item quantity="one">„%s“ kann noch nichts tun.</item>
         <item quantity="other">%s können noch nichts tun.</item>
     </plurals>
+    <string name="ruleGroups_idle_noBudget_title">Ab der ersten Minute gesperrt</string>
+    <plurals name="ruleGroups_idle_noBudget_message">
+        <item quantity="one">„%s“ kommt so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
+        <item quantity="other">%s kommen so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
+    </plurals>
+    <string name="ruleGroups_idle_setBudget">Budget setzen</string>
+    <string name="ruleGroups_idle_grayAtLock_title">Grau fängt da an, wo die Sperre greift</string>
+    <string name="ruleGroups_idle_grayAtLock_message">Es wird also nie grau. Wähl einen früheren Zeitpunkt.</string>
+    <string name="ruleGroups_idle_grayAtLock_action">Früher</string>
     <string name="ruleGroups_hint_tapToChange">Tipp auf einen unterstrichenen Teil, um ihn zu ändern.</string>
     <string name="ruleGroups_hint_countsFromWindow">Tipp auf einen unterstrichenen Teil, um ihn zu ändern. Die %s zählen ab dem Moment, in dem das Zeitfenster aufgeht, nicht ab Mitternacht.</string>
 
@@ -380,11 +393,6 @@
     <string name="ruleGroups_steps_featureSettings">Funktionseinstellungen</string>
     <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Erkennung. Für alle Gruppen gleich.</string>
     <string name="ruleGroups_steps_featureSettings_description">Wie Grau aussieht, wie eine Sperre Apps weghält, wie Scrollen bewertet wird. Das hängt an deinem Handy und gilt für alle Gruppen gleich.</string>
-    <string name="ruleGroups_timeline_wait">%s warten bei jedem Öffnen</string>
-    <string name="ruleGroups_timeline_grayFrom">Grau ab %s</string>
-    <string name="ruleGroups_timeline_grayAlways">Durchgehend grau</string>
-    <string name="ruleGroups_timeline_lockedAt">Gesperrt bei %s</string>
-    <string name="ruleGroups_timeline_locked">Gesperrt</string>
     <string name="ruleGroups_when_title">Wann es zählt</string>
 
     <string name="ruleGroups_budget_title">Wie viel</string>

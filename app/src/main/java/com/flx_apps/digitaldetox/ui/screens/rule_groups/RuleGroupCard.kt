@@ -266,8 +266,9 @@ private fun StatusChip(status: GroupStatus) {
  * and how many more there are. A group of all apps but a few shows what it leaves out, marked
  * as such.
  */
+/** The first few of a group's apps as icons, then a chip for the websites and one for the rest. */
 @Composable
-private fun ScopeIcons(apps: List<String>, websites: List<String>, allApps: Boolean) {
+internal fun ScopeIcons(apps: List<String>, websites: List<String>, allApps: Boolean) {
     val context = LocalContext.current
     val shownApps = apps.take(CARD_APP_ICONS)
     val more = apps.size - shownApps.size

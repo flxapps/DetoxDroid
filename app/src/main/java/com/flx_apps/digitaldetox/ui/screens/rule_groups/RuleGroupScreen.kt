@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.rule_groups
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,11 +26,13 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
@@ -61,7 +64,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -155,6 +163,8 @@ fun RuleGroupScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var renaming by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
+    // the step whose value is being picked, from a row or from a value in the sentence
+    var picking by remember { mutableStateOf<Step?>(null) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -216,6 +226,17 @@ fun RuleGroupScreen(
                         }
                     }
                 }
+                if (group.idleSteps.isNotEmpty()) {
+                    item {
+                        key(revision) {
+                            IdleStepsNote(
+                                group = group,
+                                onSetBudget = { navViewModel.openRoute(NavigationRoutes.GroupBudget(groupId)) },
+                                onPickGray = { picking = Step.GRAY }
+                            )
+                        }
+                    }
+                }
                 item {
                     key(revision) { SentenceCard(group = group, onPart = { part ->
                         when (part) {
@@ -230,6 +251,10 @@ fun RuleGroupScreen(
 
                             SentencePart.STEPS ->
                                 scope.launch { listState.animateScrollToItem(STEPS_ITEM_INDEX) }
+
+                            SentencePart.WAIT -> picking = Step.WAIT
+                            SentencePart.GRAY -> picking = Step.GRAY
+                            SentencePart.SCROLL -> picking = Step.SCROLL_BREAK
                         }
                     }) }
                 }
@@ -238,6 +263,8 @@ fun RuleGroupScreen(
                 item {
                     key(revision) { StepsCard(
                         group = group,
+                        picking = picking,
+                        onPickingChange = { picking = it },
                         onToggle = { step, on ->
                             val missing = viewModel.setStep(step, on)
                             if (missing != null) {
@@ -377,9 +404,46 @@ private fun PermissionNotes(steps: Set<Step>, navViewModel: NavViewModel) {
     }
 }
 
-/** A quiet line with a small warning sign and the one action it asks for. */
+/**
+ * Says when a step is on that the lock never lets run, and offers the one change that would:
+ * a budget for the lock to wait for, or an earlier start for the gray.
+ */
 @Composable
-private fun PermissionNote(title: String, message: String, actionLabel: String, onAction: () -> Unit) {
+private fun IdleStepsNote(group: RuleGroup, onSetBudget: () -> Unit, onPickGray: () -> Unit) {
+    val idle = group.idleSteps
+    if (group.hasBudget) {
+        Note(
+            icon = Icons.Outlined.Info,
+            title = stringResource(id = R.string.ruleGroups_idle_grayAtLock_title),
+            message = stringResource(id = R.string.ruleGroups_idle_grayAtLock_message),
+            actionLabel = stringResource(id = R.string.ruleGroups_idle_grayAtLock_action),
+            onAction = onPickGray
+        )
+    } else {
+        val names = GroupTexts.joinNatural(idle.map { stringResource(id = it.titleRes) })
+        Note(
+            icon = Icons.Outlined.Info,
+            title = stringResource(id = R.string.ruleGroups_idle_noBudget_title),
+            message = pluralStringResource(id = R.plurals.ruleGroups_idle_noBudget_message, count = idle.size, names),
+            actionLabel = stringResource(id = R.string.ruleGroups_idle_setBudget),
+            onAction = onSetBudget
+        )
+    }
+}
+
+@Composable
+private fun PermissionNote(title: String, message: String, actionLabel: String, onAction: () -> Unit) =
+    Note(Icons.Outlined.WarningAmber, title, message, actionLabel, onAction)
+
+/** A quiet line with a small sign and the one action it asks for. */
+@Composable
+private fun Note(
+    icon: ImageVector,
+    title: String,
+    message: String,
+    actionLabel: String,
+    onAction: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -394,7 +458,7 @@ private fun PermissionNote(title: String, message: String, actionLabel: String, 
             modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
         ) {
             Icon(
-                imageVector = Icons.Outlined.WarningAmber,
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )
@@ -415,7 +479,10 @@ private fun PermissionNote(title: String, message: String, actionLabel: String, 
     }
 }
 
-/** The rule as one sentence of links. */
+/**
+ * The rule as a sentence whose changeable parts are links, the group's apps as icons above it,
+ * and below it what happens as the budget runs down.
+ */
 @Composable
 private fun SentenceCard(group: RuleGroup, onPart: (SentencePart) -> Unit) {
     val context = LocalContext.current
@@ -424,6 +491,8 @@ private fun SentenceCard(group: RuleGroup, onPart: (SentencePart) -> Unit) {
         textDecoration = TextDecoration.Underline
     )
     val sentence = remember(group, linkStyle) { GroupSentence.build(context, group, linkStyle, onPart) }
+    val apps = remember(group.appExceptions) { Websites.appsOf(group.appExceptions).sorted() }
+    val websites = remember(group.appExceptions) { Websites.websitesOf(group.appExceptions).sorted() }
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -431,12 +500,33 @@ private fun SentenceCard(group: RuleGroup, onPart: (SentencePart) -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = sentence,
-            style = MaterialTheme.typography.headlineSmall.copy(lineHeight = 38.sp),
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp)
-        )
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 22.dp)) {
+            if (apps.isNotEmpty() || websites.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 14.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onPart(SentencePart.SCOPE) }
+                ) {
+                    ScopeIcons(apps = apps, websites = websites, allApps = !group.canHoldBackApps)
+                }
+            }
+            Text(
+                text = sentence.main,
+                style = MaterialTheme.typography.headlineSmall.copy(lineHeight = 34.sp),
+                fontWeight = FontWeight.Medium
+            )
+            sentence.steps?.let {
+                // what happens as the budget runs down, or that there is none, a step down in
+                // size: the values in it are links, the words around them are not
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 26.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+        }
     }
 }
 
@@ -567,11 +657,7 @@ private fun TodayCard(group: RuleGroup) {
         Spacer(modifier = Modifier.height(14.dp))
         val grayTone = brandTone(Step.GRAY.colorRes)
         val lockTone = brandTone(Step.LOCK.colorRes)
-        ThresholdBar(
-            fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f),
-            marker = if (graysInside) group.grayAfterMs.toFloat() / group.budgetMs else null,
-            markerColor = grayTone.content
-        )
+        BudgetShapeBar(group = group, usedMs = usedMs)
         // each caption in the color of its step
         val captions = listOfNotNull(
             if (graysInside) {
@@ -609,30 +695,67 @@ private fun TodayCard(group: RuleGroup) {
     }
 }
 
-/** A budget bar with an optional mark where the gray step starts. */
+/**
+ * The budget as a bar, with how much of it is used: the theme's color until the gray step
+ * starts, the gray step's color from there to the end, and a block in the lock's where that takes
+ * hold. The used stretch is drawn in full strength, the rest faintly, so one bar says both what
+ * the budget looks like and where today stands in it.
+ */
 @Composable
-private fun ThresholdBar(fraction: Float, marker: Float?, markerColor: Color) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        BudgetBar(fraction = fraction, height = 10.dp)
-        marker?.let {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                if (it > 0f) Spacer(modifier = Modifier.weight(it))
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(10.dp)
-                        .background(markerColor)
+private fun BudgetShapeBar(group: RuleGroup, usedMs: Long) {
+    val colors = MaterialTheme.colorScheme
+    val colorPart = colors.primary
+    val grayPart = brandTone(Step.GRAY.colorRes).content
+    val lockPart = brandTone(Step.LOCK.colorRes).content
+    val locks = group.locks && group.canHoldBackApps
+    val grayFromMs = if (group.grays) group.grayAfterMs.coerceIn(0L, group.budgetMs) else group.budgetMs
+    val grayAt = grayFromMs.toFloat() / group.budgetMs
+    val fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f)
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(12.dp)
+    ) {
+        val gap = 2.dp.toPx()
+        val lockWidth = if (locks) size.height else 0f
+        val trackWidth = size.width - lockWidth - (if (locks) gap else 0f)
+        val grayStart = trackWidth * grayAt
+        val radius = CornerRadius(size.height / 2f)
+        fun drawShape(alpha: Float) {
+            if (grayStart > 0f) {
+                drawRoundRect(
+                    color = colorPart.copy(alpha = alpha),
+                    size = Size(grayStart, size.height),
+                    cornerRadius = radius
                 )
-                if (it < 1f) Spacer(modifier = Modifier.weight(1f - it))
             }
+            if (grayStart < trackWidth) {
+                val from = if (grayStart > 0f) grayStart + gap else 0f
+                drawRoundRect(
+                    color = grayPart.copy(alpha = alpha),
+                    topLeft = Offset(from, 0f),
+                    size = Size((trackWidth - from).coerceAtLeast(0f), size.height),
+                    cornerRadius = radius
+                )
+            }
+        }
+        drawShape(alpha = 0.35f)
+        if (fraction > 0f) clipRect(right = trackWidth * fraction) { drawShape(alpha = 1f) }
+        if (locks) {
+            drawRoundRect(
+                color = lockPart,
+                topLeft = Offset(size.width - lockWidth, 0f),
+                size = Size(lockWidth, size.height),
+                cornerRadius = radius
+            )
         }
     }
 }
 
 /**
- * The steps, in the order they take hold and only ever stricter: a timeline of the budget on
- * top, then a row per step with its switch and its value, and at the bottom the way to the
- * screens that say how the steps work on this phone, which is the same for every group.
+ * The steps, in the order they take hold and only ever stricter: a row per step with its switch
+ * and its value, and at the bottom the way to the screens that say how the steps work on this
+ * phone, which is the same for every group.
  */
 @Composable
 private fun StepsCard(
@@ -641,11 +764,12 @@ private fun StepsCard(
     onWait: (Long) -> Unit,
     onGrayAfter: (Long) -> Unit,
     onScrollBreakAfter: (Long) -> Unit,
+    picking: Step?,
+    onPickingChange: (Step?) -> Unit,
     onOpenFeature: (Feature) -> Unit,
 ) {
     val context = LocalContext.current
     val locked = LocalSettingsLocked.current
-    var picking by remember { mutableStateOf<Step?>(null) }
     var showingHowItWorks by remember { mutableStateOf(false) }
     GroupCard(contentPadding = PaddingValues(vertical = 16.dp)) {
         Text(
@@ -653,7 +777,7 @@ private fun StepsCard(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 20.dp)
         )
-        StepsTimeline(group = group, modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Step.entries.forEach { step ->
             val available = step != Step.LOCK && step != Step.WAIT || group.canHoldBackApps
             val on = group.hasStep(step)
@@ -670,9 +794,13 @@ private fun StepsCard(
                 subtitle = stepSubtitle(group, step, available),
                 hasValue = hasValue,
                 onToggle = { onToggle(step, it) },
-                onClick = { if (hasValue) picking = step },
+                onClick = { if (hasValue) onPickingChange(step) },
             )
         }
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)
+        )
         HowItWorksRow(onClick = { showingHowItWorks = true })
     }
     if (showingHowItWorks) {
@@ -688,7 +816,7 @@ private fun StepsCard(
             range = WaitChoicesSeconds,
             label = { context.getString(R.string.duration_seconds_short, it) },
             onValueSelected = { onWait(it * 1000L) },
-            onDismissRequest = { picking = null }
+            onDismissRequest = { onPickingChange(null) }
         )
 
         Step.GRAY -> {
@@ -706,7 +834,7 @@ private fun StepsCard(
                     else context.getString(R.string.ruleGroups_step_gray_fromMinutes, it)
                 },
                 onValueSelected = { onGrayAfter(it * 60_000L) },
-                onDismissRequest = { picking = null }
+                onDismissRequest = { onPickingChange(null) }
             )
         }
 
@@ -716,7 +844,7 @@ private fun StepsCard(
             range = 1..60,
             label = { context.getString(R.string.duration_minutes, it) },
             onValueSelected = { onScrollBreakAfter(it * 60_000L) },
-            onDismissRequest = { picking = null }
+            onDismissRequest = { onPickingChange(null) }
         )
 
         else -> {}
@@ -815,7 +943,7 @@ private fun HowItWorksRow(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 4.dp)
+            .padding(start = 20.dp, end = 12.dp, top = 10.dp, bottom = 2.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Tune,
@@ -890,90 +1018,6 @@ private fun StepFeaturesSheet(onOpen: (Feature) -> Unit, onDismiss: () -> Unit) 
             }
         }
     }
-}
-
-/**
- * The budget as a bar: in color until gray starts, gray until the budget ends, a dark block where
- * the lock takes hold. Without a budget, one block in the color of what the group does.
- */
-@Composable
-private fun StepsTimeline(group: RuleGroup, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    val colors = MaterialTheme.colorScheme
-    val grayColor = colors.outline
-    val lockColor = brandTone(Step.LOCK.colorRes).content
-    val locks = group.locks && group.canHoldBackApps
-    Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(14.dp)
-                .clip(CircleShape),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            if (group.hasBudget) {
-                val grayFrom = when {
-                    !group.grays -> group.budgetMs
-                    else -> group.grayAfterMs.coerceIn(0L, group.budgetMs)
-                }
-                if (grayFrom > 0L) Segment(colors.primary, grayFrom.toFloat())
-                if (group.budgetMs - grayFrom > 0L) Segment(grayColor, (group.budgetMs - grayFrom).toFloat())
-                if (locks) {
-                    Box(
-                        modifier = Modifier
-                            .width(14.dp)
-                            .fillMaxHeight()
-                            .background(lockColor)
-                    )
-                }
-            } else {
-                Segment(
-                    when {
-                        locks -> lockColor
-                        group.grays -> grayColor
-                        else -> colors.primary
-                    }, 1f
-                )
-            }
-        }
-        val labels = listOfNotNull(
-            if (group.waits) {
-                stringResource(id = R.string.ruleGroups_timeline_wait, GroupTexts.seconds(context, group.waitBeforeOpeningMs))
-            } else null,
-            when {
-                !group.grays -> null
-                group.hasBudget && !group.graysFromStart ->
-                    stringResource(id = R.string.ruleGroups_timeline_grayFrom, GroupTexts.minutes(context, group.grayAfterMs))
-
-                else -> stringResource(id = R.string.ruleGroups_timeline_grayAlways)
-            },
-            when {
-                !locks -> null
-                group.hasBudget ->
-                    stringResource(id = R.string.ruleGroups_timeline_lockedAt, GroupTexts.minutes(context, group.budgetMs))
-
-                else -> stringResource(id = R.string.ruleGroups_timeline_locked)
-            }
-        )
-        if (labels.isNotEmpty()) {
-            Text(
-                text = labels.joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun androidx.compose.foundation.layout.RowScope.Segment(color: Color, weight: Float) {
-    Box(
-        modifier = Modifier
-            .weight(weight)
-            .fillMaxHeight()
-            .background(color)
-    )
 }
 
 /** When the group counts: today's hours, the days of the week, and the schedule in words. */

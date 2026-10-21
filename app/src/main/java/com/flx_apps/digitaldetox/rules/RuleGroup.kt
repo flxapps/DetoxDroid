@@ -134,6 +134,20 @@ class RuleGroup internal constructor(val id: GroupId) :
     /** The steps that are on, in the order they take hold. */
     val steps: List<Step> get() = Step.entries.filter(::hasStep)
 
+    /**
+     * The steps that are on but never get a turn, because the lock comes first: without a budget
+     * it holds from the first minute, and a gray step that starts where the lock does never
+     * shows. Websites do not count here, a group that cannot hold back its apps has no lock on
+     * them.
+     */
+    val idleSteps: List<Step>
+        get() = when {
+            !locks || !canHoldBackApps -> emptyList()
+            !hasBudget -> steps.filter { it != Step.LOCK }
+            grays && !graysFromStart && grayAfterMs >= budgetMs -> listOf(Step.GRAY)
+            else -> emptyList()
+        }
+
     /** Whether any of the group's steps is run by [feature]. */
     fun usesFeature(feature: Feature): Boolean = steps.any { it.feature == feature }
 

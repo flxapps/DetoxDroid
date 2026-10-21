@@ -319,24 +319,24 @@
         <item quantity="other">have no steps yet</item>
     </plurals>
     <plurals name="ruleGroups_steps_wait">
-        <item quantity="one">waits %s before opening</item>
-        <item quantity="other">wait %s before opening</item>
+        <item quantity="one">waits {wait} before opening</item>
+        <item quantity="other">wait {wait} before opening</item>
     </plurals>
     <plurals name="ruleGroups_steps_gray">
         <item quantity="one">is gray</item>
         <item quantity="other">are gray</item>
     </plurals>
     <plurals name="ruleGroups_steps_scroll">
-        <item quantity="one">gets a break after %s of scrolling</item>
-        <item quantity="other">get a break after %s of scrolling</item>
+        <item quantity="one">gets a break after {scroll} of scrolling</item>
+        <item quantity="other">get a break after {scroll} of scrolling</item>
     </plurals>
     <plurals name="ruleGroups_steps_lock">
         <item quantity="one">is locked</item>
         <item quantity="other">are locked</item>
     </plurals>
-    <string name="ruleGroups_before_wait">Each open waits %s first.</string>
+    <string name="ruleGroups_before_wait">Each open waits {wait} first.</string>
     <string name="ruleGroups_before_grayAlways">Gray the whole time.</string>
-    <string name="ruleGroups_before_scroll">Doomscrolling gets a break after %s.</string>
+    <string name="ruleGroups_before_scroll">Doomscrolling gets a break after {scroll}.</string>
     <plurals name="ruleGroups_after_lock">
         <item quantity="one">After that, it locks.</item>
         <item quantity="other">After that, they lock.</item>
@@ -346,20 +346,35 @@
         <item quantity="other">After that, they turn gray.</item>
     </plurals>
     <plurals name="ruleGroups_after_grayFrom">
-        <item quantity="one">From %s on, it turns gray.</item>
-        <item quantity="other">From %s on, they turn gray.</item>
+        <item quantity="one">From {gray} on, it turns gray.</item>
+        <item quantity="other">From {gray} on, they turn gray.</item>
     </plurals>
     <plurals name="ruleGroups_after_grayFromThenLock">
-        <item quantity="one">From %s on, it turns gray, and after that, it locks.</item>
-        <item quantity="other">From %s on, they turn gray, and after that, they lock.</item>
+        <item quantity="one">From {gray} on, it turns gray, and after that, it locks.</item>
+        <item quantity="other">From {gray} on, they turn gray, and after that, they lock.</item>
     </plurals>
-    <string name="ruleGroups_after_nothing">After that, nothing happens yet.</string>
+    <string name="ruleGroups_after_nothing">After that, {steps}.</string>
+    <string name="ruleGroups_steps_nothingHappens">nothing happens yet</string>
+    <!-- the second paragraph of a group without a budget; {budget} is the way to add one -->
+    <string name="ruleGroups_noBudget_value">No time budget</string>
+    <string name="ruleGroups_noBudget_withSteps">{budget}, so this applies from the first minute.</string>
+    <string name="ruleGroups_noBudget">{budget}.</string>
     <string name="ruleGroups_overlap">%1$s also covers %2$s.</string>
     <!-- the quantity is how many steps wait for the same permission -->
     <plurals name="ruleGroups_permission_steps">
         <item quantity="one">%s can\'t do anything yet.</item>
         <item quantity="other">%s can\'t do anything yet.</item>
     </plurals>
+    <!-- steps the lock never lets run; the quantity is how many -->
+    <string name="ruleGroups_idle_noBudget_title">Locked from the first minute</string>
+    <plurals name="ruleGroups_idle_noBudget_message">
+        <item quantity="one">%s never gets a turn. A time budget would hold the lock off until it\'s used up.</item>
+        <item quantity="other">%s never get a turn. A time budget would hold the lock off until it\'s used up.</item>
+    </plurals>
+    <string name="ruleGroups_idle_setBudget">Set a budget</string>
+    <string name="ruleGroups_idle_grayAtLock_title">Gray starts where the lock does</string>
+    <string name="ruleGroups_idle_grayAtLock_message">So it never shows. Pick an earlier time.</string>
+    <string name="ruleGroups_idle_grayAtLock_action">Earlier</string>
     <string name="ruleGroups_hint_tapToChange">Tap any underlined part to change it.</string>
     <string name="ruleGroups_hint_countsFromWindow">Tap any underlined part to change it. The %s count from when the window opens, not from midnight.</string>
 
@@ -397,11 +412,6 @@
     <string name="ruleGroups_steps_featureSettings">Feature settings</string>
     <string name="ruleGroups_steps_featureSettings_subtitle">Gray look, lock mode, scroll detection. Shared by all groups.</string>
     <string name="ruleGroups_steps_featureSettings_description">How gray looks, how a lock keeps apps away, how scrolling is judged. These are about your phone and the same for every group.</string>
-    <string name="ruleGroups_timeline_wait">Wait %s at each open</string>
-    <string name="ruleGroups_timeline_grayFrom">Gray from %s</string>
-    <string name="ruleGroups_timeline_grayAlways">Gray throughout</string>
-    <string name="ruleGroups_timeline_lockedAt">Locked at %s</string>
-    <string name="ruleGroups_timeline_locked">Locked</string>
     <string name="ruleGroups_when_title">When it counts</string>
 
     <!-- the budget screen -->
