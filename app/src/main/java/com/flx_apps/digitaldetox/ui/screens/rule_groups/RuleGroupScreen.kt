@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.rule_groups
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,8 +39,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -70,12 +69,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -89,9 +86,12 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
 import com.flx_apps.digitaldetox.rules.GroupBudgets
 import com.flx_apps.digitaldetox.rules.GroupId
@@ -986,9 +986,10 @@ private fun HowItWorksRow(onClick: () -> Unit) {
 }
 
 /**
- * The three features behind the four steps, each leading to its settings: how gray looks, how
- * a lock keeps apps away, how scrolling is judged. Those are about the phone and shared by every
- * group, which is why they are not on the rows above.
+ * The three features behind the four steps, each leading to its settings: how a lock keeps apps
+ * away, how gray looks, how scrolling is judged. Those are about the phone and shared by every
+ * group, which is why they are not on the rows above. Each tile wears the color of its step so it
+ * reads as the same thing as the row on the card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1001,38 +1002,88 @@ private fun StepFeaturesSheet(onOpen: (Feature) -> Unit, onDismiss: () -> Unit) 
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
         ) {
             Text(
                 text = stringResource(id = R.string.ruleGroups_steps_featureSettings),
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 24.dp)
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
             Text(
                 text = stringResource(id = R.string.ruleGroups_steps_featureSettings_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 16.dp)
             )
-            features.forEach { feature ->
-                ListItem(
-                    headlineContent = { Text(stringResource(id = feature.texts.title)) },
-                    supportingContent = { Text(stringResource(id = feature.texts.subtitle)) },
-                    leadingContent = {
-                        Icon(painter = painterResource(id = feature.iconRes), contentDescription = null)
-                    },
-                    trailingContent = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null
-                        )
-                    },
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    modifier = Modifier.clickable { onOpen(feature) }
-                )
+            features.forEachIndexed { index, feature ->
+                if (index > 0) Spacer(modifier = Modifier.height(8.dp))
+                StepFeatureTile(feature = feature, onClick = { onOpen(feature) })
             }
         }
     }
+}
+
+/** One feature on the sheet: the icon box of its step, its name, and what its screen lets you set. */
+@Composable
+private fun StepFeatureTile(feature: Feature, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    // a feature behind two steps (wait and lock) wears the color of the stronger one
+    val step = remember(feature) { Step.entries.last { it.feature == feature } }
+    val tone = brandTone(step.colorRes)
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = colors.surfaceContainerHigh,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 14.dp, end = 10.dp, top = 14.dp, bottom = 14.dp)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(tone.container)
+            ) {
+                Icon(
+                    imageVector = step.icon,
+                    contentDescription = null,
+                    tint = tone.content,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp)
+            ) {
+                Text(text = stringResource(id = feature.texts.title), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = stringResource(id = featureSettingsSummary(feature)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = colors.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** What the settings screen of a step feature is about, in one line. */
+@StringRes
+private fun featureSettingsSummary(feature: Feature): Int = when (feature) {
+    DisableAppsFeature -> R.string.ruleGroups_steps_featureSettings_lock
+    GrayscaleAppsFeature -> R.string.ruleGroups_steps_featureSettings_gray
+    BreakDoomScrollingFeature -> R.string.ruleGroups_steps_featureSettings_scroll
+    else -> feature.texts.subtitle
 }
 
 /** When the group counts: today's hours, the days of the week, and the schedule in words. */

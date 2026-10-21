@@ -400,8 +400,11 @@
     <string name="ruleGroups_step_onlySelectedApps">Nur bei einer Gruppe aus ausgewählten Apps</string>
     <string name="ruleGroups_step_tune">Wie es funktioniert</string>
     <string name="ruleGroups_steps_featureSettings">Funktionseinstellungen</string>
-    <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Erkennung. Für alle Gruppen gleich.</string>
-    <string name="ruleGroups_steps_featureSettings_description">Wie Grau aussieht, wie eine Sperre Apps weghält, wie Scrollen bewertet wird. Das hängt an deinem Handy und gilt für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Pausen. Für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_description">Gelten fürs ganze Handy, also für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_lock">Mit Bildschirm sperren, einfrieren oder deaktivieren</string>
+    <string name="ruleGroups_steps_featureSettings_gray">Echte Graustufen oder Bildschirmfilter, und wie stark</string>
+    <string name="ruleGroups_steps_featureSettings_scroll">Wie schnell eine Pause kommt und wie lange sie hält</string>
     <string name="ruleGroups_when_title">Wann aktiv</string>
 
     <string name="ruleGroups_budget_title">Wie viel</string>

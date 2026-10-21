@@ -419,8 +419,11 @@
     <string name="ruleGroups_step_onlySelectedApps">Only for a group of selected apps</string>
     <string name="ruleGroups_step_tune">How it works</string>
     <string name="ruleGroups_steps_featureSettings">Feature settings</string>
-    <string name="ruleGroups_steps_featureSettings_subtitle">Gray look, lock mode, scroll detection. Shared by all groups.</string>
-    <string name="ruleGroups_steps_featureSettings_description">How gray looks, how a lock keeps apps away, how scrolling is judged. These are about your phone and the same for every group.</string>
+    <string name="ruleGroups_steps_featureSettings_subtitle">Gray look, lock mode, scroll breaks. Same for every group.</string>
+    <string name="ruleGroups_steps_featureSettings_description">Phone-wide settings, the same for every group.</string>
+    <string name="ruleGroups_steps_featureSettings_lock">Block with a screen, suspend, or deactivate</string>
+    <string name="ruleGroups_steps_featureSettings_gray">Real grayscale or a screen filter, and how strong</string>
+    <string name="ruleGroups_steps_featureSettings_scroll">How easily a break kicks in, and how long it holds</string>
     <string name="ruleGroups_when_title">When active</string>
 
     <!-- the budget screen -->
