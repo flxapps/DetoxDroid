@@ -15,7 +15,7 @@ import com.flx_apps.digitaldetox.util.UsageAccessUtil
 object TodayScreenTime {
     fun byPackage(context: Context): Map<String, Long> =
         if (UsageAccessUtil.hasUsageAccess(context)) {
-            UsageStatsProvider.usageStatsToday().mapValues { it.value.screenTimeMs }
+            UsageStatsProvider.foregroundTimeToday()
         } else {
             UsageStatsTracker.foregroundTimeRecorder.snapshot()
                 .mapValues { it.value.foregroundMs }

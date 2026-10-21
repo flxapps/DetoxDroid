@@ -15,7 +15,6 @@ import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
-import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.DailyAppCounter
 import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import com.flx_apps.digitaldetox.util.startOfDayMillis
@@ -61,8 +60,8 @@ class UsageStatsRepository @Inject constructor(
         val startMs = today.startOfDayMillis(zone)
         val endMs = System.currentTimeMillis()
 
-        val osStats = UsageStatsProvider.queryForPeriod(startMs, endMs)
         val eventCounts = UsageStatsProvider.queryEventCounts(startMs, endMs)
+        val osStats = eventCounts.foregroundTimeByPackage()
         val launchCounts = eventCounts.launchCounts
         val groupedSessionCounts = UsageStatsProvider.groupSessionCounts(eventCounts.sessions)
 
@@ -91,7 +90,7 @@ class UsageStatsRepository @Inject constructor(
                 rowId = DailyAppUsage.createRowId(today, pkg),
                 date = today,
                 packageName = pkg,
-                totalTimeMs = stat?.screenTimeMs ?: prior?.totalTimeMs ?: 0L,
+                totalTimeMs = stat ?: prior?.totalTimeMs ?: 0L,
                 sessionCount = groupedSessionCounts[pkg] ?: prior?.sessionCount ?: 0,
                 launchCount = launchCounts[pkg] ?: prior?.launchCount ?: 0,
                 scrollCount = mergeCounter(

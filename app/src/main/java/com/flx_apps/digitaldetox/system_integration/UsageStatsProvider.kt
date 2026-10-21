@@ -42,25 +42,31 @@ object UsageStatsProvider {
             Context.USAGE_STATS_SERVICE
         ) as UsageStatsManager
 
-    /** Today's usage so far, one [UsageStats] per app with foreground time. */
-    fun usageStatsToday(): Map<String, UsageStats> =
-        queryForPeriod(LocalDate.now().startOfDayMillis(), System.currentTimeMillis())
+    /** Today's foreground time per app so far, from the event log, see [foregroundTimeByPackage]. */
+    fun foregroundTimeToday(): Map<String, Long> =
+        foregroundTimeByPackage(LocalDate.now().startOfDayMillis(), System.currentTimeMillis())
+
+    /**
+     * The foreground time per app between [startMs] and [endMs], added up from the event log. The
+     * daily buckets of [queryForPeriod] cannot give this for a part of a day: a bucket begins with
+     * the first event after the previous one ran out and runs a day from there, so it is not
+     * aligned to midnight and carries whatever came before it. The event log is kept for a few
+     * days only, so this is for today and yesterday; the buckets remain the source further back.
+     */
+    fun foregroundTimeByPackage(startMs: Long, endMs: Long): Map<String, Long> =
+        queryEventCounts(startMs, endMs).foregroundTimeByPackage()
 
     /**
      * Queries the OS daily usage buckets for [startMs]..[endMs] and merges them into one
-     * [UsageStats] per package, dropping apps without foreground time in the period.
-     *
-     * [startMs] is a midnight. The system rolls its daily buckets over at the first event after
-     * midnight, so the previous day's bucket reaches a few minutes into the day and the query
-     * hands it back as well. It carries the whole previous day, and for an app that was open
-     * across midnight its last use is stamped after it, which is why the buckets are told apart by
-     * where they begin rather than by when the app was last used.
+     * [UsageStats] per package, dropping apps without foreground time in the period. A bucket is
+     * a day long but begins where the previous one ran out, not at midnight, so the buckets of a
+     * calendar day include what spilled over from the day before, see [foregroundTimeByPackage].
      */
     fun queryForPeriod(startMs: Long, endMs: Long): Map<String, UsageStats> {
         return usageStatsManager.queryUsageStats(
             UsageStatsManager.INTERVAL_DAILY, startMs, endMs
         ).filter {
-            it.firstTimeStamp >= startMs && it.totalTimeInForeground > 0
+            it.lastTimeUsed >= startMs && it.totalTimeInForeground > 0
         }.distinctBy {
             // One query can hand back the same daily bucket more than once, and add() below sums
             // whatever it is given, so a bucket that arrives twice reads as an app used for twice
@@ -87,6 +93,13 @@ object UsageStatsProvider {
         val unlockHourBuckets: IntArray,
         val sessions: List<SessionInfo>
     ) {
+        /** The foreground time per app, the [sessions] added up. */
+        fun foregroundTimeByPackage(): Map<String, Long> {
+            val totals = HashMap<String, Long>()
+            sessions.forEach { totals.merge(it.packageName, it.totalTimeMs, Long::plus) }
+            return totals
+        }
+
         companion object {
             /** What the event log amounts to when there is no permission to read it. */
             val EMPTY = EventCounts(emptyMap(), IntArray(24), 0, IntArray(24), emptyList())
@@ -118,6 +131,9 @@ object UsageStatsProvider {
 
         var currentPkg: String? = null
         var currentStartMs: Long = 0
+        // until the first app comes to the front inside the range, a pause is the app that was
+        // already in front when the range began, in front since then
+        var beforeFirstResume = true
 
         fun endCurrentSession(endTimeMs: Long) {
             val pkg = currentPkg ?: return
@@ -145,9 +161,15 @@ object UsageStatsProvider {
                     endCurrentSession(event.timeStamp)
                     currentPkg = event.packageName
                     currentStartMs = event.timeStamp
+                    beforeFirstResume = false
                 }
 
                 UsageEvents.Event.ACTIVITY_PAUSED -> {
+                    if (beforeFirstResume && currentPkg == null) {
+                        currentPkg = event.packageName
+                        currentStartMs = startMs
+                        beforeFirstResume = false
+                    }
                     if (currentPkg == event.packageName) {
                         endCurrentSession(event.timeStamp)
                     }

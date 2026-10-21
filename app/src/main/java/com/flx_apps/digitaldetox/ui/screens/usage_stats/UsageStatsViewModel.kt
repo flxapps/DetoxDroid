@@ -226,10 +226,11 @@ class UsageStatsViewModel @Inject constructor(
         val sessionCounts = UsageStatsProvider.groupSessionCounts(events.sessions)
 
         val allApps = if (readsOs) {
-            UsageStatsProvider.queryForPeriod(startMs, nowMs).mapValues { (pkg, stat) ->
+            // every app, the left-out ones too, which the exclusions sheet lists
+            UsageStatsProvider.foregroundTimeByPackage(startMs, nowMs).mapValues { (pkg, timeMs) ->
                 AggregatedAppStats(
                     packageName = pkg,
-                    totalTimeMs = stat.screenTimeMs,
+                    totalTimeMs = timeMs,
                     launchCount = events.launchCounts[pkg] ?: 0,
                     sessionCount = sessionCounts[pkg] ?: 0,
                     scrollCount = UsageStatsTracker.scrollEventCounter.countFor(pkg),
@@ -246,8 +247,8 @@ class UsageStatsViewModel @Inject constructor(
             today.minusDays(1).startOfDayMillis(zone)
         val yesterday = today.minusDays(1)
         val yesterdayTotal = if (readsOs) {
-            UsageStatsProvider.queryForPeriod(yesterdayStartMs, startMs)
-                .filterKeys { !exclusions.excludes(it) }.values.sumOf { it.screenTimeMs }
+            UsageStatsProvider.foregroundTimeByPackage(yesterdayStartMs, startMs)
+                .filterKeys { !exclusions.excludes(it) }.values.sum()
         } else {
             repository.getHistorical(yesterday, yesterday, source)
                 .filterNot { exclusions.excludes(it.packageName) }.sumOf { it.totalTimeMs }
