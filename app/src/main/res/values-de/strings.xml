@@ -335,7 +335,10 @@
     </plurals>
     <string name="ruleGroups_after_nothing">Danach passiert noch nichts.</string>
     <string name="ruleGroups_overlap">%1$s gilt auch für %2$s.</string>
-    <string name="ruleGroups_permission_missing">„%1$s“ wartet noch auf eine Berechtigung. %2$s</string>
+    <plurals name="ruleGroups_permission_steps">
+        <item quantity="one">„%s“ kann noch nichts tun.</item>
+        <item quantity="other">%s können noch nichts tun.</item>
+    </plurals>
     <string name="ruleGroups_hint_tapToChange">Tipp auf einen unterstrichenen Teil, um ihn zu ändern.</string>
     <string name="ruleGroups_hint_countsFromWindow">Tipp auf einen unterstrichenen Teil, um ihn zu ändern. Die %s zählen ab dem Moment, in dem das Zeitfenster aufgeht, nicht ab Mitternacht.</string>
 

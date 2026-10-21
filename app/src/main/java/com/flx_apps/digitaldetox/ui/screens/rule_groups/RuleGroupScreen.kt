@@ -24,9 +24,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
+import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
@@ -93,7 +93,6 @@ import com.flx_apps.digitaldetox.ui.screens.schedule.orderedWeekDays
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
 import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
-import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -131,6 +130,7 @@ fun RuleGroupScreen(
     // the group is one instance whose fields change in place, so nothing below would be told of
     // an edit by itself: every card is keyed on this and redrawn after each
     val revision = version.toLong() * 1_000_003L + groupsChanged
+    val missingPermissions = remember(revision) { Rules.stepsMissingPermission(context, group ?: return@remember emptySet()) }
     if (group == null) {
         // deleted, from here or from a restored settings file
         LaunchedEffect(Unit) { navViewModel.onBackPress() }
@@ -199,7 +199,13 @@ fun RuleGroupScreen(
                 modifier = Modifier.padding(padding)
             ) {
                 item { SettingsLockBannerIfNeeded(featureId = groupId) }
-                item { key(revision) { PermissionBanners(group = group, navViewModel = navViewModel) } }
+                if (missingPermissions.isNotEmpty()) {
+                    item {
+                        key(revision) {
+                            PermissionNotes(steps = missingPermissions, navViewModel = navViewModel)
+                        }
+                    }
+                }
                 item {
                     key(revision) { SentenceCard(group = group, onPart = { part ->
                         when (part) {
@@ -326,41 +332,75 @@ private fun RenameDialog(name: String, onRename: (String) -> Unit, onDismiss: ()
 }
 
 /**
- * One card per step that is on but cannot do anything yet for lack of a permission, with the way
- * to grant it.
+ * One note per missing permission, naming the steps that wait for it, with the way to grant it.
+ * Per permission rather than per step: the wait, the lock and the scroll breaks all want the same
+ * one, and three cards saying so would push the rule off the screen.
  */
 @Composable
-private fun PermissionBanners(group: RuleGroup, navViewModel: NavViewModel) {
+private fun PermissionNotes(steps: Set<Step>, navViewModel: NavViewModel) {
     val context = LocalContext.current
-    val missing = remember(group.steps) { Rules.stepsMissingPermission(context, group) }
-    if (missing.isEmpty()) return
-    Column {
-        missing.forEach { step ->
-            val feature = step.feature as com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
-            IconCard(icon = Icons.Default.Warning) {
-                Text(
-                    text = stringResource(
-                        id = R.string.ruleGroups_permission_missing,
-                        stringResource(id = step.titleRes),
-                        stringResource(id = feature.activationBlockedMessage(context))
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Button(
-                    onClick = {
-                        if (feature.activationBlockedHasAction(context)) {
-                            feature.requestPermissions(context, navViewModel)
-                        } else {
-                            navViewModel.openRoute(NavigationRoutes.ManageFeature(step.feature.id))
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(id = R.string.action_go))
+    val byPermission = remember(steps) {
+        steps.groupBy { (it.feature as NeedsPermissionsFeature).activationBlockedMessage(context) }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        byPermission.forEach { (messageRes, waiting) ->
+            val feature = waiting.first().feature as NeedsPermissionsFeature
+            val hasAction = feature.activationBlockedHasAction(context)
+            val names = GroupTexts.joinNatural(waiting.map { stringResource(id = it.titleRes) })
+            PermissionNote(
+                title = pluralStringResource(
+                    id = R.plurals.ruleGroups_permission_steps, count = waiting.size, names
+                ),
+                message = stringResource(id = messageRes),
+                actionLabel = stringResource(
+                    id = if (hasAction) R.string.action_grantPermission else R.string.ruleGroups_step_tune
+                ),
+                onAction = {
+                    if (hasAction) {
+                        feature.requestPermissions(context, navViewModel)
+                    } else {
+                        navViewModel.openRoute(NavigationRoutes.ManageFeature(waiting.first().feature.id))
+                    }
                 }
+            )
+        }
+    }
+}
+
+/** A quiet line with a small warning sign and the one action it asks for. */
+@Composable
+private fun PermissionNote(title: String, message: String, actionLabel: String, onAction: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = colors.tertiaryContainer,
+        contentColor = colors.onTertiaryContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.WarningAmber,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(text = message, style = MaterialTheme.typography.bodySmall)
             }
+            TextButton(onClick = onAction) { Text(text = actionLabel) }
         }
     }
 }

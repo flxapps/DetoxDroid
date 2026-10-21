@@ -349,7 +349,11 @@
     </plurals>
     <string name="ruleGroups_after_nothing">After that, nothing happens yet.</string>
     <string name="ruleGroups_overlap">%1$s also covers %2$s.</string>
-    <string name="ruleGroups_permission_missing">%1$s is waiting for a permission. %2$s</string>
+    <!-- the quantity is how many steps wait for the same permission -->
+    <plurals name="ruleGroups_permission_steps">
+        <item quantity="one">%s can\'t do anything yet.</item>
+        <item quantity="other">%s can\'t do anything yet.</item>
+    </plurals>
     <string name="ruleGroups_hint_tapToChange">Tap any underlined part to change it.</string>
     <string name="ruleGroups_hint_countsFromWindow">Tap any underlined part to change it. The %s count from when the window opens, not from midnight.</string>
 
