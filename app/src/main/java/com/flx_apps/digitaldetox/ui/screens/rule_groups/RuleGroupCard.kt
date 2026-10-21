@@ -147,8 +147,10 @@ fun RuleGroupCard(group: RuleGroup, onClick: () -> Unit, modifier: Modifier = Mo
     val now = rememberCurrentMinute()
     val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val status = remember(group, now, brakeToken) { GroupStatus.of(context, group, now) }
-    val apps = remember(group.appExceptions) { Websites.appsOf(group.appExceptions).sorted() }
-    val websites = remember(group.appExceptions) { Websites.websitesOf(group.appExceptions).sorted() }
+    // in words rather than icons: a list of colorful app icons per card makes the home loud
+    val scopeText = remember(group.appExceptions, group.appExceptionListType, group.websiteListType) {
+        GroupTexts.scope(context, group)?.first ?: context.getString(R.string.ruleGroups_scope_nothingYet)
+    }
     val scheduleText = remember(group.scheduleRules) {
         GroupTexts.scheduleShort(context, group.scheduleRules)
     }
@@ -173,7 +175,13 @@ fun RuleGroupCard(group: RuleGroup, onClick: () -> Unit, modifier: Modifier = Mo
                 )
                 StatusChip(status)
             }
-            ScopeIcons(apps = apps, websites = websites, allApps = !group.canHoldBackApps)
+            Text(
+                text = scopeText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
             val usedMs = if (group.hasBudget) remember(group, now) { GroupBudgets.usedMs(group) } else 0L
             if (group.hasBudget) {
                 BudgetBar(fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f))
@@ -266,7 +274,10 @@ private fun StatusChip(status: GroupStatus) {
  * and how many more there are. A group of all apps but a few shows what it leaves out, marked
  * as such.
  */
-/** The first few of a group's apps as icons, then a chip for the websites and one for the rest. */
+/**
+ * The first few of a group's apps as icons, then a chip for the websites and one for the rest.
+ * Used on the group's own screen; the home cards say it in words.
+ */
 @Composable
 internal fun ScopeIcons(apps: List<String>, websites: List<String>, allApps: Boolean) {
     val context = LocalContext.current
