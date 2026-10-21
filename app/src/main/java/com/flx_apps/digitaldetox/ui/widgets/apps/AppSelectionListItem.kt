@@ -31,7 +31,8 @@ fun AppSelectionListItem(
     packageName: String,
     appName: String,
     appCategory: String,
-    isSystemApp: Boolean,
+    /** A package without a launcher icon, one of the system's own parts; the badge says so. */
+    isBackgroundApp: Boolean,
     checked: Boolean,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -88,9 +89,9 @@ fun AppSelectionListItem(
                 // nearly every row
                 val showCategory = appCategory.isNotBlank() &&
                         appCategory != stringResource(id = R.string.appCategories_other)
-                if (showTags && (isSystemApp || showCategory)) {
+                if (showTags && (isBackgroundApp || showCategory)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (isSystemApp) {
+                        if (isBackgroundApp) {
                             Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                                 Text(
                                     text = stringResource(id = R.string.appList_badge_system),

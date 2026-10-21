@@ -131,16 +131,20 @@ class AppExceptionsViewModel @Inject constructor(
     val selectedAppCategories = _selectedAppCategories.asStateFlow()
 
     /**
-     * Whether system apps should be shown.
+     * Whether the apps with a launcher icon are shown, user and preinstalled alike. The camera, the
+     * browser and the video app that came with the phone are system apps, and they are what a
+     * group is made for.
      */
-    private val _showSystemApps = MutableStateFlow(false)
-    val showSystemApps = _showSystemApps.asStateFlow()
+    private val _showLaunchableApps = MutableStateFlow(true)
+    val showLaunchableApps = _showLaunchableApps.asStateFlow()
 
     /**
-     * Whether user apps should be shown.
+     * Whether the packages without a launcher icon are shown: the system's own parts, services and
+     * providers, which nobody opens and so nobody has to wait for or turn gray. Off by default,
+     * since they outnumber the apps several times over.
      */
-    private val _showUserApps = MutableStateFlow(true)
-    val showUserApps = _showUserApps.asStateFlow()
+    private val _showBackgroundApps = MutableStateFlow(false)
+    val showBackgroundApps = _showBackgroundApps.asStateFlow()
 
     /**
      * Holds the list of all installed apps that are currently filtered by the query, the
@@ -272,8 +276,11 @@ class AppExceptionsViewModel @Inject constructor(
             )
             if (!appNameContainsQuery) return@filter false
             if (item.isException) return@filter true
-            val appTypeShouldBeShown =
-                item.appInfo.isSystemApp && _showSystemApps.value || !item.appInfo.isSystemApp && _showUserApps.value
+            val appTypeShouldBeShown = if (item.appInfo.hasLaunchIntent) {
+                _showLaunchableApps.value
+            } else {
+                _showBackgroundApps.value
+            }
             val appCategoryShouldBeShown =
                 showAllCategories || _selectedAppCategories.value[item.appInfo.appCategory] == true
             appTypeShouldBeShown && appCategoryShouldBeShown
@@ -433,18 +440,18 @@ class AppExceptionsViewModel @Inject constructor(
     }
 
     /**
-     * Toggles whether system apps should be shown.
+     * Toggles whether the apps with a launcher icon are shown.
      */
-    fun toggleShowSystemApps() {
-        _showSystemApps.value = !_showSystemApps.value
+    fun toggleShowLaunchableApps() {
+        _showLaunchableApps.value = !_showLaunchableApps.value
         filterApps()
     }
 
     /**
-     * Toggles whether user apps should be shown.
+     * Toggles whether the packages without a launcher icon are shown.
      */
-    fun toggleShowUserApps() {
-        _showUserApps.value = !_showUserApps.value
+    fun toggleShowBackgroundApps() {
+        _showBackgroundApps.value = !_showBackgroundApps.value
         filterApps()
     }
 

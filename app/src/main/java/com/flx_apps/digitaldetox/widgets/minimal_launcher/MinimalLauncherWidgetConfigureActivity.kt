@@ -182,8 +182,6 @@ private fun MinimalLauncherWidgetConfigureScreen(
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var showFiltersSheet by rememberSaveable { mutableStateOf(false) }
-    var showSystemApps by rememberSaveable { mutableStateOf(false) }
-    var showUserApps by rememberSaveable { mutableStateOf(true) }
     val selectedCategories = remember { mutableStateListOf<String>() }
 
     var renameTargetPackage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -246,10 +244,6 @@ private fun MinimalLauncherWidgetConfigureScreen(
     fun matchesAvailableFilters(
         appInfo: LaunchableAppInfo,
     ): Boolean {
-        val isSystemApp = appInfo.isSystemApp
-        val showByType = (showSystemApps && isSystemApp) || (showUserApps && !isSystemApp)
-        if (!showByType) return false
-
         val matchesCategory = appInfo.appCategory.isBlank() || selectedCategories.contains(appInfo.appCategory)
         if (!matchesCategory) return false
 
@@ -433,7 +427,8 @@ private fun MinimalLauncherWidgetConfigureScreen(
                                 packageName = app.packageName,
                                 appName = app.appName,
                                 appCategory = app.appCategory,
-                                isSystemApp = app.isSystemApp,
+                                // every app here has a launcher icon, so none is a system part
+                                isBackgroundApp = false,
                                 checked = false,
                                 modifier = Modifier.animateItem(),
                                 onCheckedChange = { checked -> updateSelected(app.packageName, checked) }
@@ -447,11 +442,8 @@ private fun MinimalLauncherWidgetConfigureScreen(
 
     if (showFiltersSheet) {
         AppFilterSheet(
-            showSystemApps = showSystemApps,
-            showUserApps = showUserApps,
+            appTypes = null,
             categories = availableCategories.associateWith { selectedCategories.contains(it) },
-            onToggleSystemApps = { showSystemApps = !showSystemApps },
-            onToggleUserApps = { showUserApps = !showUserApps },
             onToggleCategory = { category ->
                 if (!selectedCategories.remove(category)) selectedCategories.add(category)
             },

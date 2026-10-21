@@ -113,8 +113,8 @@
     <string name="appList_section_available">Verfügbare Apps</string>
     <string name="appList_selected_empty">Noch keine Apps ausgewählt.</string>
     <string name="appList_badge_system">System</string>
-    <string name="appList_filter_userApps">Nutzer-Apps</string>
-    <string name="appList_filter_systemApps">System-Apps</string>
+    <string name="appList_filter_launchable">Apps, die du öffnen kannst</string>
+    <string name="appList_filter_background">Apps ohne Symbol</string>
     <string name="appList_tab_apps">Apps</string>
     <string name="appList_tab_websites">Websites</string>
     <string name="appList_browser_websites_all">Auf jeder Website darin aktiv</string>

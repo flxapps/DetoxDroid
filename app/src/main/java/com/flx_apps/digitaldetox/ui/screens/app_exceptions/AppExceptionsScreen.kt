@@ -56,6 +56,7 @@ import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppFilterSheet
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppTypeFilter
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppListTab
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppListTabSelector
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppListSectionHeader
@@ -629,7 +630,7 @@ fun AppExceptionListItem(
         packageName = item.appInfo.packageName,
         appName = item.appInfo.appName,
         appCategory = item.appInfo.appCategory,
-        isSystemApp = item.appInfo.isSystemApp,
+        isBackgroundApp = !item.appInfo.hasLaunchIntent,
         checked = item.isException,
         modifier = modifier,
         enabled = !settingsLocked,
@@ -649,11 +650,13 @@ fun AppExceptionsListSettingsSheet(
     viewModel: AppExceptionsViewModel = viewModel()
 ) {
     AppFilterSheet(
-        showSystemApps = viewModel.showSystemApps.collectAsState().value,
-        showUserApps = viewModel.showUserApps.collectAsState().value,
+        appTypes = AppTypeFilter(
+            launchable = viewModel.showLaunchableApps.collectAsState().value,
+            background = viewModel.showBackgroundApps.collectAsState().value,
+            onToggleLaunchable = { viewModel.toggleShowLaunchableApps() },
+            onToggleBackground = { viewModel.toggleShowBackgroundApps() },
+        ),
         categories = viewModel.selectedAppCategories.collectAsState().value,
-        onToggleSystemApps = { viewModel.toggleShowSystemApps() },
-        onToggleUserApps = { viewModel.toggleShowUserApps() },
         onToggleCategory = { viewModel.toggleAppCategory(it) },
         onDismiss = { viewModel.setShowListSettingsSheet(false) },
     )

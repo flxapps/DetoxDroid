@@ -120,8 +120,8 @@
     <string name="appList_section_available">Available apps</string>
     <string name="appList_selected_empty">No apps selected yet.</string>
     <string name="appList_badge_system">System</string>
-    <string name="appList_filter_userApps">User apps</string>
-    <string name="appList_filter_systemApps">System apps</string>
+    <string name="appList_filter_launchable">Apps you can open</string>
+    <string name="appList_filter_background">Apps without an icon</string>
     <string name="appList_tab_apps">Apps</string>
     <string name="appList_tab_websites">Websites</string>
     <string name="appList_browser_websites_all">Active on every website in it</string>

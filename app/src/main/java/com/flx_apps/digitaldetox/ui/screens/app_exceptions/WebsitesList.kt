@@ -279,7 +279,7 @@ private fun WebsiteListItem(
         packageName = entry,
         appName = title,
         appCategory = "",
-        isSystemApp = false,
+        isBackgroundApp = false,
         checked = checked,
         modifier = modifier,
         enabled = enabled,

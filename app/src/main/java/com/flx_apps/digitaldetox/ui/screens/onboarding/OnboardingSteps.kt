@@ -540,7 +540,7 @@ internal fun PickAppsStep(viewModel: OnboardingViewModel) {
                         packageName = row.packageName,
                         appName = row.appName,
                         appCategory = row.appCategory,
-                        isSystemApp = row.isSystemApp,
+                        isBackgroundApp = false,
                         checked = row.checked,
                         supportingText = if (hasUsageData && row.avgDailyUsageMs > 0) {
                             stringResource(

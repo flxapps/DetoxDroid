@@ -294,7 +294,7 @@ private fun WhatStep(viewModel: NewRuleGroupViewModel) {
                 packageName = row.packageName,
                 appName = row.appName,
                 appCategory = row.appCategory,
-                isSystemApp = row.isSystemApp,
+                isBackgroundApp = false,
                 checked = row.packageName in current.apps,
                 supportingText = if (hasUsageData && row.avgDailyUsageMs > 0) {
                     stringResource(
