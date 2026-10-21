@@ -800,7 +800,7 @@ private fun StepRow(
     }
 }
 
-/** The footer of the steps card: one line that leads to how the steps work on this phone. */
+/** The footer of the steps card: the way to the settings of the features behind the steps. */
 @Composable
 private fun HowItWorksRow(onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -817,14 +817,21 @@ private fun HowItWorksRow(onClick: () -> Unit) {
             tint = colors.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
         )
-        Text(
-            text = stringResource(id = R.string.ruleGroups_steps_howTheyWork),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 14.dp)
-        )
+        ) {
+            Text(
+                text = stringResource(id = R.string.ruleGroups_steps_featureSettings),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = stringResource(id = R.string.ruleGroups_steps_featureSettings_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant
+            )
+        }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
@@ -848,12 +855,12 @@ private fun StepFeaturesSheet(onOpen: (Feature) -> Unit, onDismiss: () -> Unit) 
     ) {
         Column(modifier = Modifier.padding(bottom = 24.dp)) {
             Text(
-                text = stringResource(id = R.string.ruleGroups_steps_howTheyWork),
+                text = stringResource(id = R.string.ruleGroups_steps_featureSettings),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
             Text(
-                text = stringResource(id = R.string.ruleGroups_steps_howTheyWork_description),
+                text = stringResource(id = R.string.ruleGroups_steps_featureSettings_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 8.dp)

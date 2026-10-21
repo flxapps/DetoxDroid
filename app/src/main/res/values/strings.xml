@@ -394,8 +394,9 @@
     <string name="ruleGroups_step_lock_off">Keeps them out of reach</string>
     <string name="ruleGroups_step_onlySelectedApps">Only for a group of selected apps</string>
     <string name="ruleGroups_step_tune">How it works</string>
-    <string name="ruleGroups_steps_howTheyWork">How the steps work</string>
-    <string name="ruleGroups_steps_howTheyWork_description">How gray looks, how a lock keeps apps away, how scrolling is judged. These are about your phone and the same for every group.</string>
+    <string name="ruleGroups_steps_featureSettings">Feature settings</string>
+    <string name="ruleGroups_steps_featureSettings_subtitle">Gray look, lock mode, scroll detection. Shared by all groups.</string>
+    <string name="ruleGroups_steps_featureSettings_description">How gray looks, how a lock keeps apps away, how scrolling is judged. These are about your phone and the same for every group.</string>
     <string name="ruleGroups_timeline_wait">Wait %s at each open</string>
     <string name="ruleGroups_timeline_grayFrom">Gray from %s</string>
     <string name="ruleGroups_timeline_grayAlways">Gray throughout</string>

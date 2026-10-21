@@ -377,8 +377,9 @@
     <string name="ruleGroups_step_lock_off">Hält sie außer Reichweite</string>
     <string name="ruleGroups_step_onlySelectedApps">Nur bei einer Gruppe aus ausgewählten Apps</string>
     <string name="ruleGroups_step_tune">Wie es funktioniert</string>
-    <string name="ruleGroups_steps_howTheyWork">Wie die Schritte arbeiten</string>
-    <string name="ruleGroups_steps_howTheyWork_description">Wie Grau aussieht, wie eine Sperre Apps weghält, wie Scrollen bewertet wird. Das hängt an deinem Handy und gilt für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings">Funktionseinstellungen</string>
+    <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Erkennung. Für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_description">Wie Grau aussieht, wie eine Sperre Apps weghält, wie Scrollen bewertet wird. Das hängt an deinem Handy und gilt für alle Gruppen gleich.</string>
     <string name="ruleGroups_timeline_wait">%s warten bei jedem Öffnen</string>
     <string name="ruleGroups_timeline_grayFrom">Grau ab %s</string>
     <string name="ruleGroups_timeline_grayAlways">Durchgehend grau</string>
