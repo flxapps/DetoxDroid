@@ -49,12 +49,18 @@ object UsageStatsProvider {
     /**
      * Queries the OS daily usage buckets for [startMs]..[endMs] and merges them into one
      * [UsageStats] per package, dropping apps without foreground time in the period.
+     *
+     * [startMs] is a midnight. The system rolls its daily buckets over at the first event after
+     * midnight, so the previous day's bucket reaches a few minutes into the day and the query
+     * hands it back as well. It carries the whole previous day, and for an app that was open
+     * across midnight its last use is stamped after it, which is why the buckets are told apart by
+     * where they begin rather than by when the app was last used.
      */
     fun queryForPeriod(startMs: Long, endMs: Long): Map<String, UsageStats> {
         return usageStatsManager.queryUsageStats(
             UsageStatsManager.INTERVAL_DAILY, startMs, endMs
         ).filter {
-            it.lastTimeUsed >= startMs && it.totalTimeInForeground > 0
+            it.firstTimeStamp >= startMs && it.totalTimeInForeground > 0
         }.distinctBy {
             // One query can hand back the same daily bucket more than once, and add() below sums
             // whatever it is given, so a bucket that arrives twice reads as an app used for twice
