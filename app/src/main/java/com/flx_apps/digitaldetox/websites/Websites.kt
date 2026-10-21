@@ -64,6 +64,10 @@ object Websites {
     /** The list entry that stands for the whole of [site] (see [siteOf]). */
     fun entryOfSite(site: String): String = SITE_PREFIX + site
 
+    /** The site a `web:` [entry] stands for, or null for a collection or an app. */
+    fun siteOfEntry(entry: String): String? =
+        entry.takeIf { it.startsWith(SITE_PREFIX) }?.removePrefix(SITE_PREFIX)
+
     /**
      * Whether [feature] covers [site] as a website, through an entry of its own, a collection, or
      * "every website but the listed ones". The browser the site is shown in is not asked.

@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BrightnessLow
-import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.InvertColors
@@ -37,32 +36,26 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
 import com.flx_apps.digitaldetox.features.ScreenFilterEffects
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
-import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
-import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
-import com.flx_apps.digitaldetox.ui.widgets.BudgetTrailing
-import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
 import com.flx_apps.digitaldetox.ui.widgets.SheetSetting
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
-import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.minutes
 
 /**
- * A tile for the grayscale apps feature settings screen.
+ * The settings of the gray step: which filters make the apps gray and how strongly. Which apps,
+ * when and after how much use is set on the groups.
  */
 @Composable
 fun GrayscaleAppsFeatureSettingsSection(
@@ -81,17 +74,8 @@ fun GrayscaleAppsFeatureSettingsSection(
     val canWriteSecureSettings = hasWriteSecureSettingsPermission()
     SettingsGroup {
         ShizukuWizardTile()
-        OpenAppExceptionsTile(
-            subtitleRes = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
-                R.string.feature_grayscale_exceptions_summary_notList
-            } else {
-                R.string.feature_grayscale_exceptions_summary_onlyList
-            }
-        )
-        OpenScheduleTile()
         if (canWriteSecureSettings) SystemGrayscaleTile()
         ScreenFilterTile()
-        AllowedDailyColorScreenTimeTile()
     }
     val extraDim = viewModel.extraDimActivated.collectAsState().value
     AdvancedSettings(
@@ -317,41 +301,5 @@ fun IgnoreFullScreenAppsTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = 
         checked = viewModel.ignoreNonFullScreenApps.collectAsState().value,
         onCheckedChange = { viewModel.toggleIgnoreNonFullScreenApps() },
         leadingIcon = Icons.Default.Fullscreen
-    )
-}
-
-/**
- * The UI element for setting the allowed daily color screen time. On click, a dialog will be shown
- * that allows the user to set the allowed daily color screen time.
- */
-@Composable
-fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
-    val context = LocalContext.current
-    val showAllowedDailyColorScreenTimeDialog =
-        viewModel.showAllowedDailyColorScreenTimeDialog.collectAsState().value
-    val allowedDailyColorScreenTime =
-        viewModel.allowedDailyColorScreenTime.collectAsState().value.toInt()
-    if (showAllowedDailyColorScreenTimeDialog) {
-        NumberPickerDialog(titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
-            initialValue = allowedDailyColorScreenTime,
-            onValueSelected = { viewModel.setAllowedDailyColorScreenTime(it.toLong()) },
-            onDismissRequest = { viewModel.setShowAllowedDailyColorScreenTimeDialog(false) },
-            range = 0..180 step 5,
-            label = { it.minutes.toHrMinString(context) })
-    }
-
-    SimpleListTile(
-        titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
-        subtitleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime_description),
-        trailing = {
-            BudgetTrailing(
-                budgetText = stringResource(
-                    id = R.string.duration_minutes, allowedDailyColorScreenTime
-                ),
-                usedMs = GrayscaleAppsFeature.currentUsedUpScreenTime()
-            )
-        },
-        onClick = { viewModel.setShowAllowedDailyColorScreenTimeDialog(true) },
-        leadingIcon = Icons.Default.ColorLens
     )
 }

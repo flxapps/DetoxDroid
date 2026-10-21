@@ -49,8 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
-import com.flx_apps.digitaldetox.feature_types.FeatureId
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.SettingsLockBannerIfNeeded
@@ -65,15 +63,17 @@ import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionTopBar
 
 /**
- * This screen allows the user to manage the app exceptions for a feature.
+ * This screen allows the user to manage the apps and websites of a group (or of a feature that
+ * still has a list of its own, see [com.flx_apps.digitaldetox.rules.RuleOwners]).
  *
- * It displays all installed apps and lets the user decide whether this feature should apply to all
- * apps except selected ones, or only to selected ones.
+ * It displays all installed apps and lets the user decide whether the group should cover all
+ * apps except selected ones, or only selected ones.
+ * @param featureId the id of the group or feature whose list it is
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageAppExceptionsScreen(
-    featureId: FeatureId,
+    featureId: String,
     appExceptionsViewModel: AppExceptionsViewModel = AppExceptionsViewModel.withFeatureId(featureId),
 ) {
     var showSearchBar by remember { mutableStateOf(false) }
@@ -342,7 +342,7 @@ private fun CopyExceptionsFromButton(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = stringResource(id = source.titleRes))
+                            Text(text = source.title)
                             Text(
                                 text = if (source.websiteCount > 0) {
                                     stringResource(
@@ -382,7 +382,7 @@ private fun AppsListTypeCard(
 ) {
     val listType = viewModel.exceptionListType.collectAsState().value
     val count = viewModel.selectedAppCount.collectAsState().value
-    val allowed = (viewModel.feature as SupportsAppExceptionsFeature).listTypes
+    val allowed = viewModel.scope.listTypes
     ListTypeCard(
         options = mapOf(
             R.string.feature_settings_exceptions_listType_notList to AppExceptionListType.NOT_LIST,

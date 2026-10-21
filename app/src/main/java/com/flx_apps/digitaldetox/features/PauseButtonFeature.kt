@@ -18,6 +18,7 @@ import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
@@ -191,6 +192,8 @@ object PauseButtonFeature : Feature(), LockableFeature {
             if (!stop && it.id in pauseExemptFeatureIds) return@forEach
             it.onPause(context)
         }
+        // a paused DetoxDroid sees no app switches that could end a budget's session later
+        Rules.onNothingInFront()
         DetoxDroidAccessibilityService.updateState()
     }
 
@@ -209,6 +212,8 @@ object PauseButtonFeature : Feature(), LockableFeature {
             service.updateForegroundNotification()
         }
         DetoxDroidAccessibilityService.updateState()
+        // the app in front counts again, and the features judge it as if it had just come up
+        Rules.reevaluateForeground()
     }
 
     fun isPausing(): Boolean {

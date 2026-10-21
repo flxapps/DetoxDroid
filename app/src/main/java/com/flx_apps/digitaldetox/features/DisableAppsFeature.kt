@@ -8,25 +8,20 @@ import android.content.Intent
 import android.media.AudioManager
 import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
-import com.flx_apps.digitaldetox.feature_types.LockableFeature
-import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
-import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.AppSuspender
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
@@ -37,10 +32,9 @@ import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeni
 import com.flx_apps.digitaldetox.util.DailyAppCounter
 import com.flx_apps.digitaldetox.websites.Websites
 import timber.log.Timber
-import java.time.LocalDate
 
 /**
- * How a listed app is kept out of reach once its daily time is up.
+ * How a locked app is kept out of reach.
  *
  * [BLOCK] draws a screen over it and needs the overlay permission, which anyone can grant.
  * [DEACTIVATE] hides it outright and needs device owner, which a phone with any account on it
@@ -58,27 +52,17 @@ enum class DisableAppsMode {
 val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
 
 /**
- * This feature can disable apps. If DetoxDroid has DEVICE_ADMIN permission, it can completely
- * deactivate apps, so they are not visible in the launcher anymore. Otherwise it can only make
- * them unusable by showing a warning screen when the user tries to open them.
+ * Runs the wait and the lock steps of the groups (see [com.flx_apps.digitaldetox.rules.Step]).
+ * Which apps and websites, when, and after how much use is the groups' business; what happens then
+ * is decided here: a wait screen before an open, and once a group's lock has taken hold a block
+ * screen, a suspension or a hidden launcher icon, depending on [operationMode].
  *
- * Until the [allowedDailyScreenTime] is used up, it can also make the apps wait: every open then
- * goes through [WaitBeforeOpeningActivity] first. The wait prices each open, however short, and
- * the budget caps the minutes, so together they catch both the quick checks and the long sessions.
+ * The feature is on whenever a switched-on group uses one of its steps.
  */
 object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
-    // only the apps to be disabled can be listed: a list of apps that are *not* disabled would
-    // disable everything else, DetoxDroid's own settings and the phone app included
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
-        DisableAppsFeatureId,
-        defaultExceptionListType = AppExceptionListType.ONLY_LIST,
-        listTypes = listOf(AppExceptionListType.ONLY_LIST),
-    ),
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(DisableAppsFeatureId),
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
-    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(DisableAppsFeatureId),
-    LockableFeature, PausableFeature, BrakeAwareFeature {
+    PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,
@@ -89,28 +73,10 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
         DisableAppsFeatureSettingsSection()
     }
 
-    /**
-     * Marks [allowedDailyScreenTime] as unlimited: the apps are never disabled, so only the
-     * [waitBeforeOpening] applies.
-     */
-    const val NO_DAILY_LIMIT = -1L
-
-    /**
-     * The allowed daily screen time in milliseconds. If the user has already used more screen time
-     * than this value, the apps will be disabled. If the value is 0, the apps will always be
-     * disabled, while the feature and DetoxDroid are active; with [NO_DAILY_LIMIT], never.
-     */
-    var allowedDailyScreenTime: Long by DataStoreProperty(
-        longPreferencesKey("${id}_allowedDailyScreenTime"), 0L
-    )
-
-    /**
-     * How long a listed app makes the user wait before it opens, in milliseconds; 0 means no wait.
-     * Only applies while there is screen time left, afterwards the apps are disabled anyway.
-     */
-    var waitBeforeOpening: Long by DataStoreProperty(
-        longPreferencesKey("${id}_waitBeforeOpening"), 0L
-    )
+    /** On while any switched-on group waits or locks; the groups are the switch. */
+    override var isActivated: Boolean
+        get() = Rules.usesFeature(this)
+        set(@Suppress("UNUSED_PARAMETER") value) {}
 
     /**
      * The apps the user has sat out the wait for since the screen last turned on. They open right
@@ -140,7 +106,7 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     }
 
     /**
-     * The operation mode of the feature. By default, it is set to [DisableAppsMode.BLOCK], because
+     * How a locked app is kept out of reach. By default [DisableAppsMode.BLOCK], because
      * [DisableAppsMode.DEACTIVATE] requires the DEVICE_ADMIN permission, which has to be granted by
      * the user from the computer using adb.
      * @see DisableAppsMode
@@ -157,89 +123,32 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     val blockCounter = DailyAppCounter()
 
-    /**
-     * The apps and websites that are to be disabled are implemented using the [appExceptions]. A
-     * website can also be held back for not being listed, see [websiteListType] and [appliesTo].
-     * @see SupportsAppExceptionsFeature
-     */
-    val disableableApps: Set<String>
-        get() = appExceptions
+    /** The apps this feature has hidden through device admin and not shown again. */
+    private var hiddenApps = setOf<String>()
 
     /**
-     * The [disableableApps] that are apps. Only these can be deactivated or suspended; a website is
-     * always held back by the block screen.
-     */
-    private val disableableInstalledApps: Set<String>
-        get() = Websites.appsOf(appExceptions)
-
-    /**
-     * Whether the apps are currently deactivated.
-     */
-    private var isAppsDeactivated = false
-
-    /**
-     * The disableable app that most recently started a tracking session. Used by
-     * [budgetTimer] to know which app to block when the budget runs out mid-session.
-     */
-    @Volatile
-    private var lastTrackedPackage: String? = null
-
-    /** Blocks the app the user stays in once the daily budget runs out in the middle of it. */
-    private val budgetTimer = BudgetTimer(this) {
-        val packageName = lastTrackedPackage ?: return@BudgetTimer
-        if (isActive() && !hasScreenTimeLeft()) {
-            enforceOn(DetoxDroidApplication.appContext, packageName)
-        }
-    }
-
-    /**
-     * Whether the listed apps may still be used today: always with [NO_DAILY_LIMIT], never with a
-     * limit of 0, otherwise until the used up screen time reaches [allowedDailyScreenTime]. Under
-     * a brake the budget counts as spent, whatever is left of it.
-     */
-    internal fun hasScreenTimeLeft(): Boolean = when {
-        EmergencyBrakeFeature.covers(this) -> false
-        allowedDailyScreenTime == NO_DAILY_LIMIT -> true
-        allowedDailyScreenTime == 0L -> false
-        // includes the running tracking session, so the budget also runs out while the user stays
-        // inside a single tracked app
-        else -> currentUsedUpScreenTime() < allowedDailyScreenTime
-    }
-
-    /**
-     * The listed apps that are blocked right now: opening one ends on the block screen, or finds
-     * it deactivated or suspended. None while DetoxDroid is not running, the feature is paused or
-     * outside its schedule, or there is screen time left.
+     * The apps that are locked right now: named by a group whose lock has taken hold. Opening one
+     * ends on the block screen, or finds it deactivated or suspended. None while DetoxDroid is not
+     * running or the feature is paused.
      */
     fun blockedApps(): Set<String> {
         val enforcing = DetoxDroidAccessibilityService.instance != null && isActive() &&
                 !PauseButtonFeature.isFeaturePaused(this)
-        // Until the first app switch after midnight the tracker holds yesterday's total, which
-        // says nothing about today. A limit of 0 and a brake block whatever it holds.
-        val totalFromYesterday = today != LocalDate.now() && allowedDailyScreenTime > 0L &&
-                !EmergencyBrakeFeature.covers(this)
-        return if (enforcing && !totalFromYesterday && !hasScreenTimeLeft()) disableableInstalledApps
-        else emptySet()
+        return if (enforcing) Rules.lockedApps() else emptySet()
     }
 
+    /** Every app a switched-on group can lock, whether its lock has taken hold or not. */
+    private fun lockableApps(): Set<String> = RuleGroups.enabled()
+        .filter { it.locks && it.canHoldBackApps }
+        .flatMapTo(mutableSetOf()) { Websites.appsOf(it.appExceptions) }
+
     /**
-     * A brake takes the listed apps away the moment it is pulled, where the mode can do that
-     * without one of them being opened first, and its end hands them back while there is budget
-     * left. Blocking has nothing to do here: its screen goes up when a listed app is opened.
+     * A brake takes the locked apps away the moment it is pulled, where the mode can do that
+     * without one of them being opened first, and its end hands back what is no longer locked.
+     * Blocking has nothing to do here: its screen goes up when a locked app is opened.
      */
     override fun onBrakeChanged(context: Context) {
-        if (hasScreenTimeLeft()) {
-            if (operationMode == DisableAppsMode.DEACTIVATE) {
-                setAppsDeactivated(context, false, forceOperation = true)
-            }
-            releaseSuspendedAppsIfEntitled()
-            return
-        }
-        when (operationMode) {
-            DisableAppsMode.BLOCK -> {}
-            DisableAppsMode.DEACTIVATE -> setAppsDeactivated(context, true)
-            DisableAppsMode.SUSPEND -> AppSuspender.suspend(disableableInstalledApps)
-        }
+        syncHeldBackApps(context)
     }
 
     /**
@@ -266,14 +175,10 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     }
 
     override fun onPause(context: Context) {
-        // a paused feature sees no more app switches, so the time in a listed app that is still
-        // open stops counting here and not when the next app shows up, maybe the next morning
-        eventuallyIncreaseUsedUpScreenTime()
-        budgetTimer.cancel()
         waitedForApps.clear()
         if (operationMode == DisableAppsMode.DEACTIVATE) {
-            // if the apps are deactivated, we need to reactivate them when DetoxDroid is paused
-            setAppsDeactivated(context, false, forceOperation = true)
+            // whatever is hidden comes back when DetoxDroid is paused
+            setAppsDeactivated(context, lockableApps() + hiddenApps, false)
         }
         AppSuspender.releaseAll()
     }
@@ -286,19 +191,39 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      */
     fun releaseSuspendedAppsIfEntitled() {
         if (!AppSuspender.hasSuspendedApps) return
-        val stillEnforcing =
-            isActive() && operationMode == DisableAppsMode.SUSPEND && !hasScreenTimeLeft()
-        if (stillEnforcing) return
-        AppSuspender.releaseAll()
+        val stillLocked = if (isActive() && operationMode == DisableAppsMode.SUSPEND) {
+            Rules.lockedApps()
+        } else {
+            emptySet()
+        }
+        AppSuspender.release(AppSuspender.suspended - stillLocked)
     }
 
     /**
-     * When an app is opened, it is checked whether the app is in the list of apps that should be
-     * disabled. If it is, the used up screen time is increased by the time since the last
-     * disableable app was opened.
-     *
-     * If the user has already used up their daily screen time, the apps are disabled. Before
-     * that, an app the user has not waited for yet is held back by the [WaitBeforeOpeningActivity].
+     * Brings the suspended and hidden apps in line with what the groups lock right now, for the
+     * modes that keep apps away without a block screen.
+     */
+    private fun syncHeldBackApps(context: Context) {
+        when (operationMode) {
+            DisableAppsMode.BLOCK -> {}
+            DisableAppsMode.SUSPEND -> {
+                val locked = Rules.lockedApps()
+                AppSuspender.release(AppSuspender.suspended - locked)
+                AppSuspender.suspend(locked)
+            }
+
+            DisableAppsMode.DEACTIVATE -> {
+                val locked = Rules.lockedApps()
+                setAppsDeactivated(context, hiddenApps - locked, false)
+                setAppsDeactivated(context, locked, true)
+            }
+        }
+    }
+
+    /**
+     * When an app or website comes to the front, the groups say whether it waits, opens or is
+     * locked. The wait comes first, unless the app has been waited for since the screen last came
+     * on; a lock that has taken hold wins over the wait.
      */
     override fun onAppOpened(
         context: Context, packageName: String, accessibilityEvent: AccessibilityEvent
@@ -309,43 +234,35 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             DetoxDroidAccessibilityService.instance?.leaveWebsite()
             return
         }
-        if (!appliesTo(packageName)) {
-            // the app is not in the list of apps that should be disabled, so increase the used up
-            // screen time and return
-            eventuallyIncreaseUsedUpScreenTime()
-            // the line above rolls the budget over at midnight, and a suspended app cannot report
-            // its own window events, so this is where a new day reaches the listed apps
-            releaseSuspendedAppsIfEntitled()
-            return
+        when (val decision = Rules.lockDecision(packageName)) {
+            Rules.LockDecision.NotCovered -> {
+                // a suspended app cannot report its own window events, so a budget that reset
+                // or a window that closed reaches the locked apps on the next other app
+                releaseSuspendedAppsIfEntitled()
+            }
+
+            is Rules.LockDecision.Wait -> {
+                if (packageName !in waitedForApps && mayHoldBack(context)) {
+                    WaitBeforeOpeningActivity.start(
+                        context, packageName, decision.waitMs,
+                        label = DetoxDroidAccessibilityService.instance?.currentWebsiteName()
+                            ?.takeIf { Websites.isWebsite(packageName) }
+                    )
+                }
+            }
+
+            is Rules.LockDecision.Open -> {
+                // the groups count the time and come back through reevaluateForeground when the
+                // budget runs out
+            }
+
+            is Rules.LockDecision.Locked -> enforceOn(context, packageName)
         }
-        val screenTimeLeft = hasScreenTimeLeft()
-        if (screenTimeLeft && waitBeforeOpening > 0L && packageName !in waitedForApps &&
-            mayHoldBack(context)
-        ) {
-            // no tracking here: the wait is not screen time, and the wait screen stops the app
-            // (its window event also ends any session a previous listed app left running)
-            WaitBeforeOpeningActivity.start(
-                context, packageName, waitBeforeOpening,
-                label = DetoxDroidAccessibilityService.instance?.currentWebsiteName()
-                    ?.takeIf { Websites.isWebsite(packageName) }
-            )
-            return
-        }
-        eventuallyStartTracking() // start tracking the screen time
-        lastTrackedPackage = packageName
-        if (screenTimeLeft) {
-            // the user has not used up their daily screen time yet; re-check when the budget is
-            // expected to be exhausted, because no further window events arrive while the user
-            // stays in this app
-            budgetTimer.schedule(allowedDailyScreenTime)
-            return
-        }
-        enforceOn(context, packageName)
     }
 
     /**
-     * Applies the configured [operationMode] to [packageName]: shows the blocking overlay or
-     * deactivates the configured apps via device admin. A website cannot be deactivated or
+     * Applies the configured [operationMode] to [packageName]: shows the blocking overlay or takes
+     * the locked apps away through device admin or Shizuku. A website cannot be deactivated or
      * suspended, so it gets the block screen in every mode.
      */
     private fun enforceOn(context: Context, packageName: String) {
@@ -358,54 +275,41 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
                 })
             }
 
-            DisableAppsMode.DEACTIVATE -> {
-                setAppsDeactivated(context, true)
-            }
-
-            DisableAppsMode.SUSPEND -> {
-                AppSuspender.suspend(disableableInstalledApps)
-            }
+            DisableAppsMode.DEACTIVATE, DisableAppsMode.SUSPEND -> syncHeldBackApps(context)
         }
     }
 
     /**
-     * When the screen is turned off, the used up screen time is increased by the time since the
-     * last disableable app was opened. Coming back to the phone counts as a new open, so every app
-     * has to be waited for again.
-     * @see eventuallyIncreaseUsedUpScreenTime
+     * Coming back to the phone counts as a new open, so every app has to be waited for again.
      */
     override fun onScreenTurnedOff(context: Context?) {
-        eventuallyIncreaseUsedUpScreenTime()
         waitedForApps.clear()
         leavingWebsite = null
         releaseSuspendedAppsIfEntitled()
     }
 
     /**
-     * Sets whether the apps should be deactivated or not using the [DevicePolicyManager].
+     * Hides [apps] from the launcher, or shows them again, using the [DevicePolicyManager].
      * "Deactivated" means that the apps are not visible in the launcher anymore and cannot be
      * opened or used in any way.
      * @see DevicePolicyManager.setApplicationHidden
      */
-    fun setAppsDeactivated(
-        context: Context, deactivated: Boolean, forceOperation: Boolean = false
-    ) {
-        val skipOperation = !forceOperation && deactivated == isAppsDeactivated
-        Timber.d("Setting apps deactivated: $deactivated (skip: $skipOperation)")
-        if (skipOperation || !DetoxDroidDeviceAdminReceiver.isGranted(context)) {
-            // the apps are already deactivated or the device admin permission is not granted, so
-            // we cannot do anything
-            return
-        }
+    fun setAppsDeactivated(context: Context, apps: Set<String>, deactivated: Boolean) {
+        if (apps.isEmpty() || !DetoxDroidDeviceAdminReceiver.isGranted(context)) return
+        Timber.d("Setting apps deactivated: $deactivated for $apps")
         val devicePolicyManager =
             (context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager)
-        disableableInstalledApps.forEach {
+        apps.forEach {
             val appDeactivated = devicePolicyManager.setApplicationHidden(
                 ComponentName(context, DetoxDroidDeviceAdminReceiver::class.java), it, deactivated
             )
             Timber.d("Operation on $it was successful: $appDeactivated")
         }
-        isAppsDeactivated = deactivated
+        hiddenApps = if (deactivated) hiddenApps + apps else hiddenApps - apps
+    }
+
+    /** Shows every app this feature hid again, whatever the groups say. */
+    fun reactivateAllApps(context: Context) {
+        setAppsDeactivated(context, lockableApps() + hiddenApps, false)
     }
 }
-

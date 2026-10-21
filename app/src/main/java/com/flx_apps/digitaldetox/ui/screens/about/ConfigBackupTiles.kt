@@ -314,7 +314,7 @@ private fun FeatureRow(feature: ConfigBackup.FeatureSummary) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = feature.titleRes?.let { stringResource(id = it) } ?: feature.featureId,
+            text = feature.name ?: feature.titleRes?.let { stringResource(id = it) } ?: feature.featureId,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)

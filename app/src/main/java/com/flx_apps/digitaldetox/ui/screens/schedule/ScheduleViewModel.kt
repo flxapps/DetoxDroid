@@ -1,13 +1,12 @@
 package com.flx_apps.digitaldetox.ui.screens.schedule
 
 import android.app.Application
-import com.flx_apps.digitaldetox.DetoxDroidApplication
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
-import com.flx_apps.digitaldetox.features.FeaturesProvider
-import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
+import com.flx_apps.digitaldetox.rules.RuleOwners
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
-import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -31,14 +30,16 @@ typealias ScheduleRuleId = Int
 typealias ScheduleRuleItem = Pair<ScheduleRuleId, FeatureScheduleRule>
 
 /**
- * The view model for the schedule screen. It contains the rules for when the feature should be
- * active or inactive (@see FeatureScheduleRule) and provides methods to add, edit and delete rules.
+ * The view model for the schedule screen. It contains the rules for when the group or feature
+ * should be active or inactive (@see FeatureScheduleRule) and provides methods to add, edit and
+ * delete rules. Whose schedule it is comes from the id the screen was opened with, see
+ * [RuleOwners].
  */
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
-    private val application: Application,
-    private val savedStateHandle: androidx.lifecycle.SavedStateHandle
-) : FeatureViewModel(application, savedStateHandle) {
+    application: Application,
+    savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     companion object : FeatureViewModelFactory() {
         /** The id of a rule that is being added and has no id of its own yet. */
         const val NEW_RULE_ID: ScheduleRuleId = -1
@@ -50,7 +51,13 @@ class ScheduleViewModel @Inject constructor(
         val NewRuleWindow: Pair<LocalTime, LocalTime> = LocalTime.of(9, 0) to LocalTime.of(17, 0)
     }
 
-    private val scheduleFeature = feature as SupportsScheduleFeature
+    /** The id of the group (or feature) whose schedule this is. */
+    val ownerId: String = savedStateHandle["featureId"]!!
+
+    private val scheduleFeature: SupportsScheduleFeature = RuleOwners.schedule(ownerId)!!
+
+    /** Whether the owner is switched on, which is when the schedule is doing anything. */
+    val isOwnerEnabled: Boolean get() = RuleOwners.isEnabled(ownerId)
 
     private val _rules =
         MutableStateFlow(scheduleFeature.scheduleRules.associateBy { featureScheduleRule ->
@@ -104,8 +111,7 @@ class ScheduleViewModel @Inject constructor(
         }
         scheduleFeature.scheduleRules = _rules.value.values.toSet()
         hideBottomSheet()
-        FeaturesProvider.startOrStopFeature(feature)
-        ServiceReliabilityScheduler.scheduleNextScheduleBoundary(DetoxDroidApplication.appContext)
+        RuleOwners.onChanged(ownerId)
     }
 
     /**
@@ -116,7 +122,6 @@ class ScheduleViewModel @Inject constructor(
         _rules.value = _rules.value.filterKeys { it != ruleId }
         scheduleFeature.scheduleRules = _rules.value.values.toSet()
         hideBottomSheet()
-        FeaturesProvider.startOrStopFeature(feature)
-        ServiceReliabilityScheduler.scheduleNextScheduleBoundary(DetoxDroidApplication.appContext)
+        RuleOwners.onChanged(ownerId)
     }
 }

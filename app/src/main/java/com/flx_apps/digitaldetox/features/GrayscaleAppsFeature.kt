@@ -11,7 +11,6 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
@@ -19,17 +18,15 @@ import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
-import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsWriteSecureSettingsPermission
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
-import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.eventuallyIncreaseUsedUpScreenTime
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature.onAppOpened
+import com.flx_apps.digitaldetox.rules.GroupBudgets
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterSpec
@@ -72,15 +69,15 @@ const val SoftenedBlurDp = 1f
 val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
 
 /**
- * The grayscale feature can be used to turn the screen grayscale depending on the schedule and
- * which app is currently in the foreground.
+ * Runs the gray step of the groups (see [com.flx_apps.digitaldetox.rules.Step]): takes the color
+ * out of the app in front while a group says so, with the system color filter, extra dim, the
+ * screen filter, or a mix of them. Which apps, when and after how much use is the groups'
+ * business; how gray looks is decided here.
+ *
+ * The feature is on whenever a switched-on group turns something gray.
  */
 object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
-    OnScreenTurnedOffSubscriptionFeature,
-    SupportsScheduleFeature by SupportsScheduleFeature.Impl(GrayscaleAppsFeatureId),
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(GrayscaleAppsFeatureId),
-    ScreenTimeTrackingFeature by ScreenTimeTrackingFeature.Impl(GrayscaleAppsFeatureId),
-    NeedsPermissionsFeature, LockableFeature, PausableFeature {
+    OnScreenTurnedOffSubscriptionFeature, NeedsPermissionsFeature, PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,
@@ -88,6 +85,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
     override val iconRes: Int = R.drawable.ic_contrast
     override val settingsContent: @Composable () -> Unit = { GrayscaleAppsFeatureSettingsSection() }
+
+    /** On while any switched-on group turns something gray; the groups are the switch. */
+    override var isActivated: Boolean
+        get() = Rules.usesFeature(this)
+        set(@Suppress("UNUSED_PARAMETER") value) {}
 
     /**
      * Represents, whether the feature's effects (system grayscale and/or the screen filter) are
@@ -230,27 +232,11 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     )
 
     /**
-     * Under a brake every app is filtered, the home screen included, whatever the app list says.
-     * The list itself is left alone, so the end of the brake returns to the selection as it was.
-     */
-    override fun appliesTo(packageName: String): Boolean =
-        EmergencyBrakeFeature.covers(this) || super<SupportsAppExceptionsFeature>.appliesTo(packageName)
-
-    /**
-     * The allowed daily color screen time in milliseconds. Once this limit is reached, the grayscale
-     * filter will be turned on and will stay on until the next day.
-     */
-    var allowedDailyColorScreenTime: Long by DataStoreProperty(
-        longPreferencesKey("${id}_allowedDailyColorScreenTime"), 0L
-    )
-
-    /**
-     * Time actually spent with the grayscale filter applied today. Only the portion of tracked
-     * screen time above the [allowedDailyColorScreenTime] allowance counts — the allowance
-     * portion is spent in color.
+     * Time spent past a gray threshold in the current window, for the usage statistics. Groups
+     * can overlap, so the largest of them stands for all rather than their sum.
      */
     fun currentGrayscaleTimeMs(): Long =
-        (currentUsedUpScreenTime() - allowedDailyColorScreenTime).coerceAtLeast(0L)
+        RuleGroups.enabled().filter { it.grays }.maxOfOrNull { GroupBudgets.grayMs(it) } ?: 0L
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
@@ -274,15 +260,6 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * a person could is not a person, and is not worth a tug of war over a system setting.
      */
     private val recentReassertions = RecentEvents()
-
-    /** Turns the color app the user stays in gray once the color allowance runs out in it. */
-    private val allowanceTimer = BudgetTimer(this) {
-        if (isActive() && allowedDailyColorScreenTime > 0 &&
-            currentUsedUpScreenTime() > allowedDailyColorScreenTime
-        ) {
-            setEffectsActive(DetoxDroidApplication.appContext, true)
-        }
-    }
 
     /**
      * On start, we trigger [onAppOpened] once to turn the grayscale filter on or off depending on
@@ -322,7 +299,6 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
      * On a pause, turn the grayscale filter off.
      */
     override fun onPause(context: Context) {
-        allowanceTimer.cancel()
         context.applicationContext.contentResolver.unregisterContentObserver(systemFilterObserver)
         recentReassertions.clear()
         setEffectsActive(context, false)
@@ -340,45 +316,32 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
             Timber.d("grayscale: $packageName skipped, window is not full screen")
             return
         }
-        // the effects should be on while an app covered by the exception list config is in the
-        // foreground (and the daily color allowance, if any, is used up)
+        // the effects should be on while a group has the app in front gray: from the start, or
+        // once its budget has reached the gray threshold. Under a brake every app is gray, the
+        // home screen included, whatever the groups say.
         val braking = EmergencyBrakeFeature.covers(this)
-        val shouldApplyEffects = packageName != OwnPackage && appliesTo(packageName)
+        val decision = Rules.grayDecision(packageName)
+        val shouldApplyEffects =
+            packageName != OwnPackage && (braking || decision == Rules.GrayDecision.Gray)
         // Every report of grayscale applying to the wrong app comes down to one of three things:
-        // which package the service decided was in front, whether the exception list covers it
-        // (or a brake overrides it), and what the filter state already was. None of them is
-        // visible from the outside, and the answer that arrives with a bug report is a screen
-        // that "sometimes" stays gray.
+        // which package the service decided was in front, what the groups make of it (or a brake
+        // overriding them), and what the filter state already was. None of them is visible from
+        // the outside, and the answer that arrives with a bug report is a screen that
+        // "sometimes" stays gray.
         Timber.d(
-            "grayscale: $packageName listed=$shouldApplyEffects active=$areEffectsActive " + "listType=$appExceptionListType braking=$braking"
+            "grayscale: $packageName decision=$decision active=$areEffectsActive braking=$braking"
         )
 
-        if (!shouldApplyEffects) {
-            // the effects should not be turned on, so we increase the used up screen time
-            eventuallyIncreaseUsedUpScreenTime()
-        } else if (braking) {
-            // A brake neither grants the color allowance nor spends it: it covers apps the
-            // allowance was never meant for, and an hour of gray maps would otherwise use up
-            // the minutes of color the listed apps have left for the day.
-            eventuallyIncreaseUsedUpScreenTime()
-            allowanceTimer.cancel()
-        } else {
-            eventuallyStartTracking()
-            // currentUsedUpScreenTime() includes the running tracking session, so the allowance
-            // also runs out while the user stays inside a single color app
-            if (allowedDailyColorScreenTime > 0 && currentUsedUpScreenTime() <= allowedDailyColorScreenTime) {
-                // allowance available → the user gets color; also lift a still-active filter
-                // (e.g. right after the midnight reset or after the allowance was raised)
-                if (areEffectsActive) setEffectsActive(context, false)
-                // re-check when the allowance is expected to be used up, because no further
-                // window events arrive while the user stays in this app
-                allowanceTimer.schedule(allowedDailyColorScreenTime)
-                return
-            }
+        if (decision is Rules.GrayDecision.Color && !braking) {
+            // color for now; also lift a still-active filter (right after a window opened again
+            // or the budget was raised). The groups come back through reevaluateForeground when
+            // the threshold is reached, no window event arrives while the user stays in the app.
+            if (areEffectsActive) setEffectsActive(context, false)
+            return
         }
 
         // an app that is only gray because of the brake gets the light version of the blur
-        val softened = braking && !super<SupportsAppExceptionsFeature>.appliesTo(packageName)
+        val softened = braking && decision == Rules.GrayDecision.NotCovered
         if (shouldApplyEffects != areEffectsActive) {
             // only touch the system settings and the window manager if the state should change
             isScreenFilterSoftened = softened
@@ -433,12 +396,9 @@ object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     private const val MaxReassertionsPerWindow = 5
 
     /**
-     * When the screen is turned off, the used up screen time is increased by the time since the
-     * last grayscale app was opened.
-     * @see eventuallyIncreaseUsedUpScreenTime
+     * When the screen is turned off, the filter comes off with it.
      */
     override fun onScreenTurnedOff(context: Context?) {
-        eventuallyIncreaseUsedUpScreenTime()
         // The lock screen is not the app the filter was meant for, and it is the first thing the
         // user sees on the way back. DetoxDroidAccessibilityService forgets the foreground package
         // at the same time, so the window event that arrives after unlocking re-evaluates even when

@@ -7,6 +7,8 @@ import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 
@@ -86,7 +88,12 @@ object FeaturesProvider {
         lastActiveFeaturesReload = System.currentTimeMillis()
         // the new set is in place before any callback runs: onStart/onPause read activeFeatures
         // themselves, and would otherwise walk straight back into another reload
-        if (notifyTransitions) notifyScheduleTransitions(previouslyActive, _activeFeatures)
+        if (notifyTransitions) {
+            notifyScheduleTransitions(previouslyActive, _activeFeatures)
+            // a group's window opening or closing changes nothing about which features are
+            // active, only what they do with the app in front
+            Rules.applyScheduleTransitions()
+        }
     }
 
     /**
@@ -155,10 +162,14 @@ object FeaturesProvider {
     }
 
     /**
-     * Whether the settings of the feature with [id] can't be changed right now, because the
-     * commitment password protects them or a running brake does.
+     * Whether the settings of the feature or group with [id] can't be changed right now, because
+     * the commitment password protects them or a running brake does. The groups answer as one,
+     * see [RuleGroups.LOCK_ID].
      */
-    fun areSettingsLocked(id: FeatureId): Boolean =
-        CommitmentPasswordFeature.isFeatureLocked(id) || EmergencyBrakeFeature.locksSettings(id)
+    fun areSettingsLocked(id: String): Boolean {
+        val lockId = if (RuleGroups.isGroupId(id)) RuleGroups.LOCK_ID else id
+        return CommitmentPasswordFeature.isFeatureLocked(lockId) ||
+                EmergencyBrakeFeature.locksSettings(lockId)
+    }
 }
 

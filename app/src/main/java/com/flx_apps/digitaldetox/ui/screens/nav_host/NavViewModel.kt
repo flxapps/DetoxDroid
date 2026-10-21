@@ -94,6 +94,15 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
     }
 
     /**
+     * Opens [route] in place of the screen in front, so going back skips that screen: the setup
+     * of a new group hands over to the group it made.
+     */
+    fun replaceRoute(route: NavigationRoutes) {
+        navController.pop()
+        openRoute(route)
+    }
+
+    /**
      * Opens a route from the [NavigationRoutes] enum.
      */
     fun openRoute(route: NavigationRoutes) {

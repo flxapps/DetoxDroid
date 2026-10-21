@@ -3,11 +3,11 @@ package com.flx_apps.digitaldetox.system_integration
 import android.content.Context
 import androidx.annotation.StringRes
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.Feature
-import com.flx_apps.digitaldetox.feature_types.ScreenTimeTrackingFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.rules.GroupBudgets
+import com.flx_apps.digitaldetox.rules.GroupId
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageExclusions
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.DistancePerspective
@@ -33,10 +33,8 @@ data class TodaySummary(
     /** Null where the system's event log, which is where unlocks come from, is out of reach. */
     val unlocks: Int?,
     val scrolledMeters: Double,
-    /** The Disable Apps time budget, null while there is none. */
-    val timeBudget: Budget?,
-    /** The Make Apps Boring color budget, null while there is none. */
-    val colorBudget: Budget?,
+    /** The budgets of the switched-on groups that have one, in the groups' order. */
+    val budgets: List<Budget>,
     /**
      * The screen time of the apps left out of the numbers. Tells "nothing used yet" apart from
      * "everything used is left out", which has to offer the way back to those settings.
@@ -84,7 +82,21 @@ data class TodaySummary(
         }
     }
 
-    data class Budget(val allowedMs: Long, val leftMs: Long) {
+    /**
+     * What is left of one group's budget.
+     * @param locks whether the group locks its apps once the budget is used, as opposed to only
+     * turning them gray
+     * @param colorLeftMs how long the apps stay in color, for a group that turns gray at a point
+     * inside its budget; null where the group does not turn gray, or is gray from the start
+     */
+    data class Budget(
+        val groupId: GroupId,
+        val name: String,
+        val allowedMs: Long,
+        val leftMs: Long,
+        val locks: Boolean,
+        val colorLeftMs: Long? = null,
+    ) {
         /** "12 min left", rounded up so the last seconds don't read as nothing left. */
         fun leftText(context: Context): String = if (leftMs > 0L) {
             val leftMinutes = (leftMs + MINUTE_MS - 1) / MINUTE_MS
@@ -142,40 +154,29 @@ data class TodaySummary(
                 scrolledMeters = DistancePerspective.pixelsToMeters(
                     scrolledPx, context.resources.displayMetrics
                 ),
-                timeBudget = timeBudget(),
-                colorBudget = colorBudget(),
+                budgets = budgets(),
                 leftOutMs = used.values.sum() - byPackage.values.sum(),
                 vsUsual = vsUsual,
                 screenTimeByPackage = byPackage,
             )
         }
 
-        /** What is left today of the Disable Apps time budget, null while there is none. */
-        fun timeBudget(): Budget? = timeAllowanceMs()?.let { budgetOf(DisableAppsFeature, it) }
+        /** What is left of every switched-on group's budget, in the groups' order. */
+        fun budgets(): List<Budget> =
+            RuleGroups.enabled().filter { it.hasBudget }.map { budgetOf(it) }
 
-        /** What is left today of the Make Apps Boring color budget, null while there is none. */
-        fun colorBudget(): Budget? = colorAllowanceMs()?.let { budgetOf(GrayscaleAppsFeature, it) }
-
-        private fun timeAllowanceMs() =
-            allowanceOf(DisableAppsFeature, DisableAppsFeature.allowedDailyScreenTime)
-
-        private fun colorAllowanceMs() =
-            allowanceOf(GrayscaleAppsFeature, GrayscaleAppsFeature.allowedDailyColorScreenTime)
-
-        /**
-         * Only a positive allowance is a budget: Disable Apps reads 0 as locked all day and a
-         * negative value as no limit, and a color budget of 0 means there is none.
-         */
-        private fun allowanceOf(feature: Feature, allowedMs: Long): Long? =
-            allowedMs.takeIf { feature.isActivated && it > 0L }
-
-        private fun budgetOf(tracking: ScreenTimeTrackingFeature, allowedMs: Long): Budget {
-            // the tracker only resets its total on the first app switch after midnight, so until
-            // then what it holds is yesterday's
-            val usedMs = if (tracking.today == LocalDate.now()) {
-                tracking.currentUsedUpScreenTime()
-            } else 0L
-            return Budget(allowedMs, (allowedMs - usedMs).coerceAtLeast(0L))
+        private fun budgetOf(group: RuleGroup): Budget {
+            val usedMs = GroupBudgets.usedMs(group)
+            return Budget(
+                groupId = group.id,
+                name = group.name,
+                allowedMs = group.budgetMs,
+                leftMs = (group.budgetMs - usedMs).coerceAtLeast(0L),
+                locks = group.locks,
+                colorLeftMs = if (group.grays && !group.graysFromStart) {
+                    (group.grayAfterMs - usedMs).coerceAtLeast(0L)
+                } else null,
+            )
         }
     }
 
@@ -186,15 +187,17 @@ data class TodaySummary(
     data class Settings(
         val excludedApps: Set<String>,
         val excludedCategories: Set<Int>,
-        val timeAllowanceMs: Long?,
-        val colorAllowanceMs: Long?,
+        /** The budgets as configured: one line per group with the parts a reading depends on. */
+        val budgets: List<String>,
     ) {
         companion object {
             fun current() = Settings(
                 UsageStatsSettings.excludedApps,
                 UsageStatsSettings.excludedCategories,
-                timeAllowanceMs(),
-                colorAllowanceMs(),
+                RuleGroups.all.map {
+                    "${it.id}|${it.name}|${it.isEnabled}|${it.budgetMs}|${it.budgetPeriod}|" +
+                            "${it.grayAfterMs}|${it.locks}"
+                },
             )
         }
     }

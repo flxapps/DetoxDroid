@@ -86,3 +86,22 @@ fun <T> DataStore<Preferences>.loadValue(key: Preferences.Key<*>): T? {
         data[key] as T?
     }
 }
+
+/**
+ * Drops every preference whose key starts with [prefix], behind the same lock as the other writes.
+ * What a deleted group stored would otherwise sit in the file for good, and come back in every
+ * settings file written after it.
+ */
+fun DataStore<Preferences>.removeKeysWithPrefix(prefix: String) {
+    dataStorePersistScope.launch {
+        try {
+            editLocked { preferences ->
+                preferences.asMap().keys
+                    .filter { it.name.startsWith(prefix) }
+                    .forEach { preferences.remove(it) }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to remove DataStore preferences with prefix %s", prefix)
+        }
+    }
+}

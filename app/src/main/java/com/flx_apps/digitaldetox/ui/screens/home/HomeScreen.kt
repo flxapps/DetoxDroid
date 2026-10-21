@@ -80,6 +80,9 @@ import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.widgets.AccessibilityDisclosureSupport
+import com.flx_apps.digitaldetox.rules.Step
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.RuleGroupsSection
+import com.flx_apps.digitaldetox.ui.widgets.SectionHeader
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.StatusIndicator
 import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
@@ -297,8 +300,15 @@ private fun HomeScreenContent(it: PaddingValues, droidState: SleepyDroidState) {
             BatteryOptimizationCard()
         }
         item {
+            RuleGroupsSection()
+        }
+        item {
+            SectionHeader(title = stringResource(id = R.string.home_section_more))
             SettingsGroup {
-                FeaturesProvider.featureList.forEach { OpenFeatureTile(feature = it) }
+                // the step features are switched on and off by the groups and reached from them
+                FeaturesProvider.featureList
+                    .filter { feature -> Step.entries.none { it.feature == feature } }
+                    .forEach { OpenFeatureTile(feature = it) }
             }
             SettingsGroup {
                 UninstallDetoxDroidTile()

@@ -7,7 +7,6 @@ import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
-import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.flx_apps.digitaldetox.util.PrivilegedShell
 import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
@@ -125,12 +124,10 @@ class ShizukuSetupViewModel @Inject constructor(
     }
 
     /**
-     * Finishes what onboarding could not: activates any pending feature whose permission just
-     * arrived (grayscale via the freshly granted WRITE_SECURE_SETTINGS) and starts the
-     * accessibility service.
+     * Starts the accessibility service now that the permission is there. A gray step that was
+     * waiting for it takes hold on its own.
      */
     private fun onPermissionGranted() {
-        OnboardingState.resolvePendingFeatureActivations()
         if (DetoxDroidAccessibilityService.state.value == DetoxDroidState.Inactive) {
             runCatching { AccessibilityServiceController.activate(application) }
         }

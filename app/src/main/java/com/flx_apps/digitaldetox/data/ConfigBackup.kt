@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.widgets.WidgetSettingsStore
 import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.flow.first
@@ -87,7 +88,7 @@ object ConfigBackup {
     )
 
     /** Key suffixes of state that belongs to today, see the class docs. */
-    private val EXCLUDED_SUFFIXES = listOf("_usedUpScreenTime")
+    private val EXCLUDED_SUFFIXES = listOf("_usedUpScreenTime", "_budgetWindow")
 
     fun suggestedFileName(): String = "detoxdroid-settings-${LocalDate.now()}.json"
 
@@ -108,13 +109,17 @@ object ConfigBackup {
         val values: Map<String, Any>,
     )
 
-    /** One feature's share of a file, for the user to look at before restoring. */
+    /**
+     * One feature's or group's share of a file, for the user to look at before restoring. A group
+     * carries its [name]; a feature its [titleRes].
+     */
     data class FeatureSummary(
         val featureId: String,
         @StringRes val titleRes: Int?,
         val isActivated: Boolean?,
         val appCount: Int?,
         val websiteCount: Int = 0,
+        val name: String? = null,
     )
 
     /**
@@ -153,6 +158,20 @@ object ConfigBackup {
         val values = applicable(file.values.filterKeys { isBackedUp(it) }, current)
         val knownFeatureIds = FeaturesProvider.featureList.map { it.id }.toSet()
         val byFeature = values.keys.groupBy { featureIdOf(it) }
+        // the groups first, in the order the file lists them, then the features
+        val groupIds = (values["ruleGroups_order"] as? String).orEmpty().split(",")
+            .filter { it.isNotBlank() && values.keys.any { key -> key.startsWith("${it}_") } }
+        val groups = groupIds.map { groupId ->
+            val entries = (values["${groupId}_exceptions"] as? Set<*>)?.filterIsInstance<String>()
+            FeatureSummary(
+                featureId = groupId,
+                titleRes = null,
+                isActivated = values["${groupId}_isActivated"] as? Boolean,
+                appCount = entries?.let { Websites.appsOf(it).size },
+                websiteCount = entries?.let { Websites.websitesOf(it).size } ?: 0,
+                name = values["${groupId}_name"] as? String,
+            )
+        }
         val features = FeaturesProvider.featureList.filter { it.id in byFeature }.map { feature ->
             val entries = (values["${feature.id}_exceptions"] as? Set<*>)?.filterIsInstance<String>()
             FeatureSummary(
@@ -163,11 +182,14 @@ object ConfigBackup {
                 websiteCount = entries?.let { Websites.websitesOf(it).size } ?: 0
             )
         }
+        val groupKeys = values.keys.count { key -> groupIds.any { key.startsWith("${it}_") } }
         return Preview(
             file = file,
             values = values,
-            features = features,
-            otherSettings = byFeature.filterKeys { it !in knownFeatureIds }.values.sumOf { it.size },
+            features = groups + features,
+            otherSettings = byFeature.filterKeys { it !in knownFeatureIds }.values.sumOf { it.size } -
+                    groupKeys - (if ("ruleGroups_order" in values) 1 else 0) -
+                    (if ("ruleGroups_version" in values) 1 else 0),
             changes = values.count { (name, value) -> current[name] != value }
         )
     }

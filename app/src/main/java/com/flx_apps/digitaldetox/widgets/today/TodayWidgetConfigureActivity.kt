@@ -57,7 +57,7 @@ class TodayWidgetConfigureActivity : ComponentActivity() {
                 val views by produceState<TodayWidgetViews?>(initialValue = null) {
                     // with nothing to read, the preview still shows the look, just without numbers
                     val summary = ScreenTimeSurfaces.widgetSummary(applicationContext)
-                        ?: TodaySummary(LocalDate.now(), 0L, emptyList(), null, 0.0, null, null, 0L)
+                        ?: TodaySummary(LocalDate.now(), 0L, emptyList(), null, 0.0, emptyList(), 0L)
                     value = TodayWidgetViews(
                         this@TodayWidgetConfigureActivity,
                         summary,

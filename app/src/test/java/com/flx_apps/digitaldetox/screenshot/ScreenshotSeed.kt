@@ -10,17 +10,20 @@ import com.flx_apps.digitaldetox.data.DailyAppUsage
 import com.flx_apps.digitaldetox.data.DailyAppUsageDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
-import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.features.DoNotDisturbFeature
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowUsageStatsManager
+import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 
 /**
@@ -45,14 +48,40 @@ object ScreenshotSeed {
     private val todayMinutes = listOf(38, 27, 22, 16, 11, 7, 5)
 
     /**
-     * Makes DetoxDroid appear "running" with a few features enabled, so the home screen shows the
-     * green "Running" state and green feature indicators.
+     * Makes DetoxDroid appear "running" with two groups and a few features enabled, so the home
+     * screen shows the green "Running" state, the group cards and green feature indicators.
      */
     fun seedActiveState() {
         DetoxDroidAccessibilityService.state.value = DetoxDroidState.Active
-        GrayscaleAppsFeature.isActivated = true
+        val context = DetoxDroidApplication.appContext
+        if (RuleGroups.all.isEmpty()) {
+            RuleGroups.create {
+                name = context.getString(R.string.ruleGroups_template_feeds)
+                appExceptions = setOf("com.instagram.android", "com.google.android.youtube")
+                budgetMs = 30 * 60_000L
+                grayAfterMs = 20 * 60_000L
+                locks = true
+                scrollBreakAfterMs = 3 * 60_000L
+                scheduleRules = setOf(
+                    FeatureScheduleRule(
+                        listOf(
+                            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+                            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
+                        ),
+                        LocalTime.of(10, 0), LocalTime.of(22, 0)
+                    )
+                )
+            }
+            RuleGroups.create {
+                name = context.getString(R.string.ruleGroups_template_nightsOff)
+                appExceptions = setOf("com.instagram.android", "com.google.android.youtube", "com.spotify.music")
+                locks = true
+                scheduleRules = setOf(
+                    FeatureScheduleRule(emptyList(), LocalTime.of(22, 0), LocalTime.of(7, 0))
+                )
+            }
+        }
         DoNotDisturbFeature.isActivated = true
-        BreakDoomScrollingFeature.isActivated = true
         PauseButtonFeature.isActivated = true
         // Unlock premium so the usage-stats timeframe selector shows without lock badges.
         PremiumManager.unlock()

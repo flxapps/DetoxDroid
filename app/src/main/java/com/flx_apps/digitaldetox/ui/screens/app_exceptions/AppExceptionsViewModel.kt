@@ -1,17 +1,17 @@
 package com.flx_apps.digitaldetox.ui.screens.app_exceptions
 
 import android.app.Application
-import androidx.annotation.StringRes
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoData
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
-import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
-import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.RuleOwners
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModelFactory
 import com.flx_apps.digitaldetox.websites.InstalledBrowsers
 import com.flx_apps.digitaldetox.websites.WebsiteCollection
@@ -41,10 +41,10 @@ data class AppExceptionItem(
 )
 
 /**
- * A feature whose app selection can be copied into the current one ("Copy from…").
+ * A group whose app selection can be copied into the current one ("Copy from…").
  */
 data class ExceptionsCopySource(
-    val featureId: String, @StringRes val titleRes: Int, val appCount: Int, val websiteCount: Int
+    val featureId: String, val title: String, val appCount: Int, val websiteCount: Int
 )
 
 /**
@@ -68,37 +68,36 @@ data class CollectionItem(
 
 /**
  * The view model for the [ManageAppExceptionsScreen]. It contains all installed apps and provides
- * methods to filter and toggle the exception state of apps.
+ * methods to filter and toggle the exception state of apps. The list belongs to the owner whose
+ * id the screen was opened with, a group as a rule, see [RuleOwners].
  */
 @HiltViewModel
 class AppExceptionsViewModel @Inject constructor(
-    application: Application, savedStateHandle: androidx.lifecycle.SavedStateHandle
-) : FeatureViewModel(application, savedStateHandle) {
+    application: Application, savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     companion object : FeatureViewModelFactory()
 
-    /**
-     * Feature cast to [SupportsAppExceptionsFeature].
-     */
-    private val appExceptionsFeature = feature as SupportsAppExceptionsFeature
+    /** The id of the group (or feature) whose list this is. */
+    val ownerId: String = savedStateHandle["featureId"]!!
+
+    /** The list under [ownerId]. */
+    val scope: SupportsAppExceptionsFeature = RuleOwners.appScope(ownerId)!!
+
+    private val appExceptionsFeature = scope
 
     /**
      * Package name of DetoxDroid itself.
      */
     private val appPackageName = application.packageName
 
-    /**
-     * Allowed list types for the current feature.
-     *
-     * Some features (e.g. [DisableAppsFeature]) only support [AppExceptionListType.ONLY_LIST].
-     */
+    /** The list types the owner offers for its apps. */
     private val allowedListTypes = appExceptionsFeature.listTypes
 
     /**
-     * Whether the current app should be hidden from the selection list.
-     *
-     * For [DisableAppsFeature], DetoxDroid must never deactivate itself.
+     * DetoxDroid is never in a list. A group can lock what it names, and a locked DetoxDroid
+     * would have no way back in.
      */
-    private val shouldExcludeCurrentApp = feature == DisableAppsFeature
+    private val shouldExcludeCurrentApp = true
 
     /**
      * Initial list type shown in the UI.
@@ -297,6 +296,7 @@ class AppExceptionsViewModel @Inject constructor(
         else appExceptionsFeature.appExceptions -= packageName
         _appExceptionItems = _appExceptionItems.toMutableList().also { it[index] = toggled }
         updateSelectionCounts()
+        RuleOwners.onChanged(ownerId)
         if (toggled.isException &&
             appExceptionsFeature.appExceptions.size >= POWER_USE_APP_EXCEPTIONS_THRESHOLD
         ) {
@@ -306,18 +306,18 @@ class AppExceptionsViewModel @Inject constructor(
     }
 
     /**
-     * The other features this feature's selection can be copied from: every feature with app
-     * exceptions that has at least one app or website selected.
+     * The other groups this selection can be copied from: every group that has at least one app
+     * or website selected.
      */
     private fun loadCopySources(): List<ExceptionsCopySource> {
-        return FeaturesProvider.featureList
-            .filter { it.id != feature.id && it is SupportsAppExceptionsFeature }
+        return RuleGroups.all
+            .filter { it.id != ownerId }
             .mapNotNull { source ->
-                val exceptions = (source as SupportsAppExceptionsFeature).appExceptions
+                val exceptions = source.appExceptions
                 val appCount = ApplicationInfoRepository.countInstalled(Websites.appsOf(exceptions))
                 val websiteCount = Websites.websitesOf(exceptions).size
                 if (appCount + websiteCount == 0) null
-                else ExceptionsCopySource(source.id, source.texts.title, appCount, websiteCount)
+                else ExceptionsCopySource(source.id, source.name, appCount, websiteCount)
             }
     }
 
@@ -334,6 +334,7 @@ class AppExceptionsViewModel @Inject constructor(
         _sites.value = listOf(SiteItem(entry, Websites.displayName(getApplication(), entry), true)) +
                 _sites.value.filter { it.entry != entry }
         refreshWebsites()
+        RuleOwners.onChanged(ownerId)
         return true
     }
 
@@ -345,6 +346,7 @@ class AppExceptionsViewModel @Inject constructor(
             appExceptionsFeature.appExceptions += entry
         }
         refreshWebsites()
+        RuleOwners.onChanged(ownerId)
     }
 
     /**
@@ -397,11 +399,11 @@ class AppExceptionsViewModel @Inject constructor(
      * rebuilt so the UI regroups immediately.
      */
     fun copyExceptionsFrom(featureId: String) {
-        val source = FeaturesProvider.getFeatureById(featureId) as? SupportsAppExceptionsFeature
-            ?: return
+        val source = RuleOwners.appScope(featureId) ?: return
         var newExceptions = source.appExceptions
         if (shouldExcludeCurrentApp) newExceptions = newExceptions - appPackageName
         replaceExceptions(newExceptions)
+        RuleOwners.onChanged(ownerId)
     }
 
     /**
@@ -470,6 +472,7 @@ class AppExceptionsViewModel @Inject constructor(
         appExceptionsFeature.appExceptionListType = type
         _exceptionListType.value = type
         updateSelectionCounts()
+        RuleOwners.onChanged(ownerId)
     }
 
     /**
@@ -481,6 +484,7 @@ class AppExceptionsViewModel @Inject constructor(
         if (clearSelection) replaceExceptions(Websites.appsOf(appExceptionsFeature.appExceptions))
         appExceptionsFeature.websiteListType = type
         _websiteListType.value = type
+        RuleOwners.onChanged(ownerId)
     }
 
     /**

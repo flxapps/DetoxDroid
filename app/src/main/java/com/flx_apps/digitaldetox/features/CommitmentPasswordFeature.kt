@@ -3,6 +3,7 @@ package com.flx_apps.digitaldetox.features
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -15,6 +16,7 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -212,42 +214,51 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     /**
-     * Returns true if the given feature is configured to be protected by the password, regardless
-     * of whether the session is currently unlocked.
+     * Returns true if the given feature (or group, which all answer to [RuleGroups.LOCK_ID]) is
+     * configured to be protected by the password, regardless of whether the session is currently
+     * unlocked.
      */
     fun isFeatureProtected(featureId: String): Boolean {
         if (!isActivated) return false
         if (!isPasswordSet(DetoxDroidApplication.appContext)) return false
         if (featureId == id) return true
+        val lockId = if (RuleGroups.isGroupId(featureId)) RuleGroups.LOCK_ID else featureId
 
         // Explicit user choice: lock no feature settings.
         if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
 
         return if (lockedFeatureIds.isEmpty()) {
             // Backward-compatibility fallback for older persisted states.
-            getLockableFeatures().any { it.id == featureId }
+            getLockables().any { it.id == lockId }
         } else {
-            lockedFeatureIds.contains(featureId)
+            lockedFeatureIds.contains(lockId)
         }
     }
 
     /**
-     * Returns all features that implement [LockableFeature].
+     * Something the password can lock: the groups, as one entry, or a feature that implements
+     * [LockableFeature].
      */
-    fun getLockableFeatures(): List<Feature> {
-        return FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
-            .filterIsInstance<Feature>().filter { it.id != id }
-    }
+    data class Lockable(
+        val id: String, @StringRes val titleRes: Int, val lockedByDefault: Boolean
+    )
+
+    /** Everything the password can lock, the groups first. */
+    fun getLockables(): List<Lockable> = listOf(
+        Lockable(RuleGroups.LOCK_ID, R.string.ruleGroups_title, lockedByDefault = true)
+    ) + FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
+        .filterIsInstance<Feature>().filter { it.id != id }
+        .map { Lockable(it.id, it.texts.title, (it as LockableFeature).lockedByDefault) }
 
     /**
-     * Populate [lockedFeatureIds] from the current default selections (all lockable features
-     * whose [LockableFeature.lockedByDefault] is true). Called once when enabling the feature.
+     * Populate [lockedFeatureIds] from the current default selections (the groups and every
+     * lockable feature whose [LockableFeature.lockedByDefault] is true). Called once when
+     * enabling the feature.
      */
     fun initializeLockedFeatures() {
         if (lockedFeatureIds.isEmpty()) {
             updateLockedFeatureIds(
-                getLockableFeatures().filter { (it as? LockableFeature)?.lockedByDefault == true }
-                    .map { it.id }.toSet()
+                getLockables().filter { it.lockedByDefault }.map { it.id }.toSet()
             )
         }
     }

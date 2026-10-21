@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroupsMigration
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.ForceStopRecovery
@@ -97,6 +98,8 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         scheduleUsageStatsSnapshot()
         // before anything reads the secure setting as "DetoxDroid is off"
         ForceStopRecovery.onAppStart(this)
+        // the rules the features used to carry become groups, before anything reads either
+        RuleGroupsMigration.runIfNeeded(this)
         ServiceReliabilityScheduler.schedule(this)
         restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)

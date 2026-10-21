@@ -38,7 +38,7 @@ class CommitmentPasswordStoreTest {
     fun withoutAStoreNoFeatureReportsItselfLocked() {
         CommitmentPasswordFeature.isActivated = true
         try {
-            CommitmentPasswordFeature.getLockableFeatures().forEach {
+            CommitmentPasswordFeature.getLockables().forEach {
                 assertFalse(it.id, CommitmentPasswordFeature.isFeatureLocked(it.id))
             }
         } finally {

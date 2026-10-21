@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
@@ -153,10 +154,12 @@ private fun FeatureSelectionSection(
         SettingsGroup {
             lockableFeatures.forEach { feature ->
                 val selected = selectedFeatureIds.contains(feature.id)
+                val iconRes = FeaturesProvider.getFeatureById(feature.id)?.iconRes
+                    ?: R.drawable.ic_app_exceptions
                 ListItem(
-                    headlineContent = { Text(text = stringResource(feature.texts.title)) },
+                    headlineContent = { Text(text = stringResource(feature.titleRes)) },
                     leadingContent = {
-                        Icon(painter = painterResource(feature.iconRes), contentDescription = null)
+                        Icon(painter = painterResource(iconRes), contentDescription = null)
                     },
                     trailingContent = {
                         Checkbox(checked = selected, onCheckedChange = null, enabled = enabled)

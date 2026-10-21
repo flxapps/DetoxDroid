@@ -14,6 +14,8 @@ import com.flx_apps.digitaldetox.data.repository.UsageSource
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.system_integration.TodaySummary
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
@@ -259,7 +261,7 @@ class UsageStatsViewModel @Inject constructor(
             breakCount = todayRows.sumOf { it.breakCount },
             blockCount = todayRows.sumOf { it.blockCount },
             grayscaleTimeMs = GrayscaleAppsFeature.currentGrayscaleTimeMs(),
-            colorScreenTimeRemainingMs = TodaySummary.colorBudget()?.leftMs
+            colorScreenTimeRemainingMs = TodaySummary.budgets().mapNotNull { it.colorLeftMs }.minOrNull()
         )
 
         _uiState.update {
@@ -437,26 +439,15 @@ class UsageStatsViewModel @Inject constructor(
      * first load. Blocking, but each file only once per process.
      */
     private fun loadListedCollections() {
-        listOf(GrayscaleAppsFeature, DisableAppsFeature, BreakDoomScrollingFeature)
-            .flatMap { feature -> feature.appExceptions.mapNotNull(Websites::collectionOf) }
+        RuleGroups.all
+            .flatMap { group -> group.appExceptions.mapNotNull(Websites::collectionOf) }
             .toSet()
             .forEach { WebsiteCollections.load(getApplication(), it) }
     }
 
-    /** What each feature does on [site] as a website, like [detoxBadgesFor] for an app. */
-    private fun websiteBadgesFor(site: String): List<DetoxBadge> = buildList {
-        if (GrayscaleAppsFeature.isActivated && Websites.covers(GrayscaleAppsFeature, site)) {
-            add(DetoxBadge.GRAYSCALE)
-        }
-        if (DisableAppsFeature.isActivated && Websites.covers(DisableAppsFeature, site)) {
-            add(DetoxBadge.DISABLED)
-        }
-        if (BreakDoomScrollingFeature.isActivated &&
-            Websites.covers(BreakDoomScrollingFeature, site)
-        ) {
-            add(DetoxBadge.DOOM_SCROLL)
-        }
-    }
+    /** What the groups do on [site] as a website, like [detoxBadgesFor] for an app. */
+    private fun websiteBadgesFor(site: String): List<DetoxBadge> =
+        badgesOf(RuleGroups.enabled().filter { Websites.covers(it, site) })
 
     private fun sumHourBuckets(buckets: List<IntArray>): IntArray {
         return IntArray(24) { hour -> buckets.sumOf { it.getOrElse(hour) { 0 } } }
@@ -662,16 +653,14 @@ class UsageStatsViewModel @Inject constructor(
         )
     }
 
-    private fun detoxBadgesFor(packageName: String): List<DetoxBadge> = buildList {
-        if (GrayscaleAppsFeature.isActivated && GrayscaleAppsFeature.appliesTo(packageName)) {
-            add(DetoxBadge.GRAYSCALE)
-        }
-        if (DisableAppsFeature.isActivated && DisableAppsFeature.disableableApps.contains(packageName)) {
-            add(DetoxBadge.DISABLED)
-        }
-        if (BreakDoomScrollingFeature.isActivated && BreakDoomScrollingFeature.appliesTo(packageName)) {
-            add(DetoxBadge.DOOM_SCROLL)
-        }
+    private fun detoxBadgesFor(packageName: String): List<DetoxBadge> =
+        badgesOf(RuleGroups.enabled().filter { it.appliesTo(packageName) })
+
+    /** The steps the [covering] groups apply, as badges. */
+    private fun badgesOf(covering: List<RuleGroup>): List<DetoxBadge> = buildList {
+        if (covering.any { it.grays }) add(DetoxBadge.GRAYSCALE)
+        if (covering.any { it.locks && it.canHoldBackApps }) add(DetoxBadge.DISABLED)
+        if (covering.any { it.breaksScrolling }) add(DetoxBadge.DOOM_SCROLL)
     }
 
     private fun buildDetoxImpact(

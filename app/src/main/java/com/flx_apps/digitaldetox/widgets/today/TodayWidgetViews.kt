@@ -11,12 +11,8 @@ import android.widget.RemoteViews
 import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
 import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.FeatureId
-import com.flx_apps.digitaldetox.features.DisableAppsFeatureId
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
 import com.flx_apps.digitaldetox.system_integration.TodaySummary
 import com.flx_apps.digitaldetox.system_integration.TodaySummary.Companion.TOP_APP_LIMIT
 import com.flx_apps.digitaldetox.util.appIconBitmap
@@ -54,24 +50,13 @@ internal class TodayWidgetViews(
         MainActivity.openHomeIntent(context)
     }
 
-    private val budgets = listOfNotNull(
-        summary.timeBudget?.let {
-            BudgetLine(
-                R.drawable.ic_disable_app,
-                R.string.feature_disableApps_allowedDailyTime,
-                it,
-                DisableAppsFeatureId
-            )
-        },
-        summary.colorBudget?.let {
-            BudgetLine(
-                R.drawable.ic_contrast,
-                R.string.feature_grayscale_allowedColorScreenTime,
-                it,
-                GrayscaleAppsFeatureId
-            )
-        },
-    )
+    private val budgets = summary.budgets.map {
+        BudgetLine(
+            iconRes = if (it.locks) R.drawable.ic_disable_app else R.drawable.ic_contrast,
+            name = it.name,
+            budget = it,
+        )
+    }
 
     private val apps: List<AppLine> by lazy {
         val iconSizePx = (APP_ICON_SIZE_DP * context.resources.displayMetrics.density).roundToInt()
@@ -235,7 +220,7 @@ internal class TodayWidgetViews(
         lines.forEach { line ->
             val row = RemoteViews(packageName, R.layout.widget_today_budget_row)
             row.setImageViewResource(R.id.widget_today_budget_icon, line.iconRes)
-            row.setTextViewText(R.id.widget_today_budget_name, context.getString(line.nameRes))
+            row.setTextViewText(R.id.widget_today_budget_name, line.name)
             row.setTextViewText(R.id.widget_today_budget_left, line.budget.leftText(context))
             row.setProgressBar(
                 R.id.widget_today_budget_bar,
@@ -245,7 +230,7 @@ internal class TodayWidgetViews(
             )
             row.setOnClickPendingIntent(
                 R.id.widget_today_budget_row,
-                MainActivity.openFeatureIntent(context, line.featureId)
+                MainActivity.openGroupIntent(context, line.budget.groupId)
             )
             addView(R.id.widget_today_budgets, row)
         }
@@ -263,9 +248,8 @@ internal class TodayWidgetViews(
 
     private class BudgetLine(
         @DrawableRes val iconRes: Int,
-        @StringRes val nameRes: Int,
+        val name: String,
         val budget: TodaySummary.Budget,
-        val featureId: FeatureId,
     )
 
     private companion object {

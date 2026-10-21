@@ -8,6 +8,8 @@ import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER
 import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER_ENABLED
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.ScreenFilterMode
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -36,6 +38,7 @@ class GrayscaleSystemFilterTest {
     private val resolver get() = context.contentResolver
     private val listed = "com.example.feed"
     private val unlisted = "com.example.maps"
+    private lateinit var group: RuleGroup
 
     @Before
     fun setUp() {
@@ -46,20 +49,20 @@ class GrayscaleSystemFilterTest {
         GrayscaleAppsFeature.screenFilterMode = ScreenFilterMode.OFF
         GrayscaleAppsFeature.systemGrayscale = true
         GrayscaleAppsFeature.extraDim = false
-        GrayscaleAppsFeature.allowedDailyColorScreenTime = 0L
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-        GrayscaleAppsFeature.appExceptions = setOf(listed)
-        GrayscaleAppsFeature.isActivated = true
+        group = RuleGroups.create {
+            name = "Gray"
+            appExceptions = setOf(listed)
+            appExceptionListType = AppExceptionListType.ONLY_LIST
+            grayAfterMs = 0L
+        }
     }
 
     @After
     fun tearDown() {
         GrayscaleAppsFeature.onPause(context)
-        GrayscaleAppsFeature.isActivated = false
+        RuleGroups.delete(group.id)
         GrayscaleAppsFeature.screenFilterMode = ScreenFilterMode.AUTO
         GrayscaleAppsFeature.extraDim = true
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.NOT_LIST
-        GrayscaleAppsFeature.appExceptions = emptySet()
     }
 
     private fun open(packageName: String) =

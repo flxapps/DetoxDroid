@@ -20,6 +20,7 @@ import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
@@ -158,12 +159,14 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     fun covers(feature: Feature): Boolean = feature is PausableFeature && isBraking()
 
     /**
-     * Whether a running brake locks the settings of the feature with [featureId]. The commitment
-     * password keeps its own lock.
+     * Whether a running brake locks the settings of the feature or the groups with [featureId]
+     * (see [RuleGroups.LOCK_ID]). The commitment password keeps its own lock.
      */
-    fun locksSettings(featureId: FeatureId): Boolean =
-        featureId != CommitmentPasswordFeatureId &&
-                FeaturesProvider.getFeatureById(featureId) is LockableFeature && isBraking()
+    fun locksSettings(featureId: FeatureId): Boolean {
+        if (!isBraking() || featureId == CommitmentPasswordFeatureId) return false
+        return featureId == RuleGroups.LOCK_ID || RuleGroups.isGroupId(featureId) ||
+                FeaturesProvider.getFeatureById(featureId) is LockableFeature
+    }
 
     /** Whether the end of the running brake has been asked for and is being waited out. */
     fun isEndRequested(): Boolean = isBraking() && endRequestedAt > 0L

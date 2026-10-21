@@ -22,16 +22,16 @@ import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
-import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
@@ -39,6 +39,7 @@ import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.BrowserAddressBars
 import com.flx_apps.digitaldetox.websites.StrandedPages
+import com.flx_apps.digitaldetox.websites.WebPage
 import com.flx_apps.digitaldetox.websites.WebsiteCollections
 import com.flx_apps.digitaldetox.websites.WebsiteMonitor
 import com.flx_apps.digitaldetox.websites.Websites
@@ -166,30 +167,23 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private val strandedPages = StrandedPages()
 
     /**
-     * What each app-opened feature was last told is in front: an app, or the entry of its list a
-     * website falls under. A new page only reaches the features it changes this for.
+     * What the features were last told is in front: an app, or for a website the entry the groups
+     * list it under (see [Rules.Foreground.subject]). A new page only reaches the features when it
+     * changes this.
      */
-    private val dispatchedForeground = HashMap<FeatureId, String>()
-
-    /**
-     * What [feature] is told is in front when [app] is: for a browser, the website it shows as the
-     * feature's own list sees it (see [Websites.foregroundEntry]), otherwise [app] itself. Each
-     * feature gets its own answer, so one that lists `youtube.com` and one that lists the browser
-     * both see what they listed, and a site excepted from a feature stays excepted inside a browser
-     * the feature covers.
-     */
-    private fun foregroundFor(feature: Feature, app: String): String {
-        val page = websiteMonitor.page ?: return app
-        if (app != websiteMonitor.browserPackage || feature !is SupportsAppExceptionsFeature) return app
-        return Websites.foregroundEntry(feature, page) ?: app
-    }
+    private var dispatchedSubject: String? = null
 
     /**
      * What [feature] is told is in front right now, for a feature that re-evaluates without a fresh
-     * window event (resuming from a pause, a brake starting): see [foregroundFor].
+     * window event (resuming from a pause, a brake starting): the subject the groups resolved for
+     * the last app switch, or the app itself before any.
      */
-    fun foregroundFor(feature: Feature): String =
-        foregroundFor(feature, foregroundAppMonitor.currentPackage)
+    fun foregroundFor(@Suppress("UNUSED_PARAMETER") feature: Feature): String =
+        Rules.foreground?.subject ?: foregroundAppMonitor.currentPackage
+
+    /** The page the browser in front shows, or null when no readable browser is in front. */
+    private fun pageInFront(app: String): WebPage? =
+        websiteMonitor.page?.takeIf { app == websiteMonitor.browserPackage }
 
     /**
      * The site the browser in front shows, the way it would be typed ("youtube.com"), or null when
@@ -211,7 +205,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * (see [StrandedPages]), gets an empty page put in front of it instead.
      */
     fun leaveWebsite() {
-        dispatchedForeground.entries.removeAll { Websites.isWebsite(it.value) }
+        if (dispatchedSubject?.let(Websites::isWebsite) == true) dispatchedSubject = null
         val browser = websiteMonitor.browserPackage
         val page = websiteMonitor.page
         if (browser != null && page != null) {
@@ -250,7 +244,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         mainHandler.removeCallbacks(settleForegroundApp)
         foregroundAppMonitor.forget()
         websiteMonitor.reset()
-        dispatchedForeground.clear()
+        dispatchedSubject = null
         updateWebsiteEvents(false)
     }
 
@@ -547,34 +541,47 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         watchWebsites(packageName)
         websiteMonitor.browserPackage?.let { strandedPages.onPageShown(it, websiteMonitor.page) }
         UsageStatsTracker.onWebsite(countedSite(packageName))
-        dispatchedForeground.clear()
+        val foreground = Rules.onForeground(packageName, pageInFront(packageName))
+        dispatchedSubject = foreground.subject
+        dispatchToFeatures(foreground.subject, accessibilityEvent)
+    }
+
+    /** Hands [subject] to the active [OnAppOpenedSubscriptionFeature]s a pause does not suspend. */
+    private fun dispatchToFeatures(subject: String, accessibilityEvent: AccessibilityEvent) {
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
-            val feature = it as Feature
-            val foreground = foregroundFor(feature, packageName)
-            dispatchedForeground[feature.id] = foreground
-            if (PauseButtonFeature.isFeaturePaused(feature)) return@forEach
-            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, foreground, accessibilityEvent)
+            if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
+            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, subject, accessibilityEvent)
         }
     }
 
     /**
-     * The browser in front shows another page. Tells the features whose answer to "what is in
-     * front" this changes, and only them: the rest are still in the same browser.
+     * Judges the app in front again without a window event: a budget ran out, a group's window
+     * opened or closed, a group was edited, a pause ended. The budgets and the features see it as
+     * if the app had just come to the front, the usage statistics do not.
+     */
+    fun redispatchForegroundApp() {
+        val app = foregroundAppMonitor.currentPackage
+        if (app.isEmpty()) return
+        watchWebsites(app)
+        val foreground = Rules.onForeground(app, pageInFront(app))
+        dispatchedSubject = foreground.subject
+        dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
+    }
+
+    /**
+     * The browser in front shows another page. The budgets hear of it either way; the features
+     * only when it changes what they are told is in front, otherwise they are still in the same
+     * browser.
      */
     private fun dispatchWebsiteChange() {
         val app = foregroundAppMonitor.currentPackage
         if (app != websiteMonitor.browserPackage) return
         strandedPages.onPageShown(app, websiteMonitor.page)
         UsageStatsTracker.onWebsite(countedSite(app))
-        val event = AccessibilityEventUtil.createEvent(isFullScreen = true)
-        FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
-            val feature = it as Feature
-            val foreground = foregroundFor(feature, app)
-            if (dispatchedForeground[feature.id] == foreground) return@forEach
-            dispatchedForeground[feature.id] = foreground
-            if (PauseButtonFeature.isFeaturePaused(feature)) return@forEach
-            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, foreground, event)
-        }
+        val foreground = Rules.onForeground(app, websiteMonitor.page)
+        if (dispatchedSubject == foreground.subject) return
+        dispatchedSubject = foreground.subject
+        dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
     }
 
     /**
@@ -587,15 +594,13 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Follows the websites of [app] when it is a browser and websites matter to some active
-     * feature (see [Websites.matterTo]), or the user has the time on them counted. Otherwise the
-     * address bar is never read and no content change is asked for.
+     * Follows the websites of [app] when it is a browser and websites matter to some active group
+     * (see [Websites.matterTo]), or the user has the time on them counted. Otherwise the address
+     * bar is never read and no content change is asked for.
      */
     private fun watchWebsites(app: String) {
-        val features = FeaturesProvider.activeFeatures
-            .filterIsInstance<SupportsAppExceptionsFeature>()
-            .filter(Websites::matterTo)
-        val collections = features
+        val groups = RuleGroups.active().filter(Websites::matterTo)
+        val collections = groups
             .flatMap { it.appExceptions.mapNotNull(Websites::collectionOf) }
             .toSet()
         if (collections.isNotEmpty()) {
@@ -606,7 +611,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             }
         }
         websiteMonitor.onForegroundApp(
-            app, watch = features.isNotEmpty() || UsageStatsSettings.countWebsites
+            app, watch = groups.isNotEmpty() || UsageStatsSettings.countWebsites
         )
         updateWebsiteEvents(websiteMonitor.browserPackage != null)
     }
@@ -655,11 +660,17 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             )
 
         val app = accessibilityEvent.packageName.toString()
+        // a scroll in a browser is a scroll in the website the groups list it under, like a switch
+        val subject = if (app == foregroundAppMonitor.currentPackage) {
+            dispatchedSubject ?: app
+        } else {
+            app
+        }
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
-                foregroundFor(it, app),
+                subject,
                 scrollViewId,
                 scrollViewSize = scrollViewSize,
                 viewIdResourceName = viewIdResourceName,
@@ -683,6 +694,8 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         ForceStopRecovery.recordRunning(this, false)
 
         mainHandler.removeCallbacks(settleForegroundApp)
+        // nothing is in front of a service that is gone, so the budgets stop counting
+        Rules.onNothingInFront()
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }
@@ -806,20 +819,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      */
     private fun notificationDetails(today: TodaySummary): String? {
         val lines = buildList {
-            today.timeBudget?.let {
+            today.budgets.forEach {
                 add(
                     getString(
                         R.string.app_notification_budget,
-                        getString(R.string.feature_disableApps_allowedDailyTime),
-                        it.leftText(this@DetoxDroidAccessibilityService)
-                    )
-                )
-            }
-            today.colorBudget?.let {
-                add(
-                    getString(
-                        R.string.app_notification_budget,
-                        getString(R.string.feature_grayscale_allowedColorScreenTime),
+                        it.name,
                         it.leftText(this@DetoxDroidAccessibilityService)
                     )
                 )
