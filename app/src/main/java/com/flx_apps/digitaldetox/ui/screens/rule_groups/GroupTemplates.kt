@@ -12,15 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.Forum
-import androidx.compose.material.icons.filled.LiveTv
-import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.SportsEsports
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.flx_apps.digitaldetox.R
@@ -60,45 +55,25 @@ enum class GroupTemplate(
         R.string.ruleGroups_template_feeds, R.string.ruleGroups_template_feeds_description,
         Icons.Default.Forum, R.color.orange, TemplateSection.WHAT
     ),
-    SHORT_VIDEO(
-        R.string.ruleGroups_template_shortVideo, R.string.ruleGroups_template_shortVideo_description,
-        Icons.Default.SmartDisplay, R.color.pink, TemplateSection.WHAT
-    ),
-    GAMES(
-        R.string.ruleGroups_template_games, R.string.ruleGroups_template_games_description,
+    VIDEOS_AND_GAMES(
+        R.string.ruleGroups_template_videosAndGames, R.string.ruleGroups_template_videosAndGames_description,
         Icons.Default.SportsEsports, R.color.green, TemplateSection.WHAT
-    ),
-    STREAMING(
-        R.string.ruleGroups_template_streaming, R.string.ruleGroups_template_streaming_description,
-        Icons.Default.LiveTv, R.color.yellow, TemplateSection.WHAT
-    ),
-    NEWS(
-        R.string.ruleGroups_template_news, R.string.ruleGroups_template_news_description,
-        Icons.Default.Newspaper, R.color.blue, TemplateSection.WHAT
     ),
     SHOPPING(
         R.string.ruleGroups_template_shopping, R.string.ruleGroups_template_shopping_description,
-        Icons.Default.ShoppingBag, R.color.purple, TemplateSection.WHAT
+        Icons.Default.ShoppingBag, R.color.yellow, TemplateSection.WHAT
     ),
-    BETTING(
-        R.string.ruleGroups_template_betting, R.string.ruleGroups_template_betting_description,
-        Icons.Default.Casino, R.color.pink, TemplateSection.WHAT
-    ),
-    ADULT(
-        R.string.ruleGroups_template_adult, R.string.ruleGroups_template_adult_description,
-        Icons.Default.Block, R.color.orange, TemplateSection.WHAT
+    GAMBLING_AND_PORN(
+        R.string.ruleGroups_template_gamblingAndPorn, R.string.ruleGroups_template_gamblingAndPorn_description,
+        Icons.Default.Block, R.color.pink, TemplateSection.WHAT
     ),
     NIGHTS_OFF(
         R.string.ruleGroups_template_nightsOff, R.string.ruleGroups_template_nightsOff_description,
         Icons.Default.Bedtime, R.color.blue, TemplateSection.WHEN
     ),
-    MORNINGS(
-        R.string.ruleGroups_template_mornings, R.string.ruleGroups_template_mornings_description,
-        Icons.Default.WbSunny, R.color.yellow, TemplateSection.WHEN
-    ),
     WORK_HOURS(
         R.string.ruleGroups_template_workHours, R.string.ruleGroups_template_workHours_description,
-        Icons.Default.Work, R.color.green, TemplateSection.WHEN
+        Icons.Default.Work, R.color.blue, TemplateSection.WHEN
     ),
     GRAY_ESSENTIALS(
         R.string.ruleGroups_template_grayEssentials, R.string.ruleGroups_template_grayEssentials_description,
@@ -164,12 +139,11 @@ data class GroupDraft(
 
 /**
  * What each template picks and sets. The apps come from [KnownApps] and the store's categories,
- * the websites from the collections that ship with the app and a few named sites, for news and
- * shops the ones of the phone's language.
+ * the websites from the collections that ship with the app and a few named sites, for the shops
+ * the ones of the phone's language.
  */
 object GroupTemplates {
     private val RankedAppRow.isFeed get() = KnownApps.isFeed(packageName, osCategory)
-    private val RankedAppRow.isShortVideo get() = KnownApps.isShortVideo(packageName)
     private val RankedAppRow.isStreaming get() = KnownApps.isStreaming(packageName, osCategory)
     private val RankedAppRow.isNews get() = KnownApps.isNews(packageName, osCategory)
     private val RankedAppRow.isShop get() = KnownApps.isShop(packageName)
@@ -182,26 +156,7 @@ object GroupTemplates {
     private val social get() = collection(WebsiteCollection.SOCIAL)
     private val video get() = collection(WebsiteCollection.VIDEO)
 
-    /** The short-video corners of the big sites, which a browser reaches without the apps. */
-    private val shortVideoSites
-        get() = listOf(
-            site("youtube.com/shorts"), site("tiktok.com"), site("instagram.com/reels"), site("facebook.com/reel")
-        )
-
     private val german get() = Locale.getDefault().language == "de"
-
-    private val newsSites
-        get() = if (german) {
-            listOf(
-                site("news.google.com"), site("spiegel.de"), site("tagesschau.de"), site("bild.de"),
-                site("zeit.de"), site("welt.de"), site("n-tv.de")
-            )
-        } else {
-            listOf(
-                site("news.google.com"), site("nytimes.com"), site("bbc.com"), site("theguardian.com"),
-                site("cnn.com"), site("foxnews.com"), site("washingtonpost.com")
-            )
-        }
 
     private val shopSites
         get() = if (german) {
@@ -238,44 +193,23 @@ object GroupTemplates {
             schedule = SchedulePreset.ALWAYS,
         )
         return when (template) {
-            // the whole ladder: scroll breaks all along, gray before the end, then the lock
+            // the whole ladder: scroll breaks all along, gray before the end, then the lock. News
+            // apps are feeds too, the same thumb does the same thing in them
             GroupTemplate.FEEDS -> base.copy(
-                apps = pick { it.isFeed },
-                websites = setOf(social),
+                apps = pick { it.isFeed || it.isNews },
+                websites = setOf(social, site("youtube.com/shorts")),
                 budgetMs = minutes(30),
                 grayAfterMs = minutes(20),
                 locks = true,
                 scrollBreakAfterMs = BreakDoomScrollingFeature.DefaultTimeUntilWarningMs,
             )
 
-            GroupTemplate.SHORT_VIDEO -> base.copy(
-                apps = pick { it.isShortVideo },
-                websites = shortVideoSites.toSet(),
-                locks = true,
-            )
-
-            GroupTemplate.GAMES -> base.copy(
-                apps = pick { it.isGame },
-                budgetMs = minutes(60),
-                grayAfterMs = minutes(40),
-                locks = true,
-            )
-
-            GroupTemplate.STREAMING -> base.copy(
-                apps = pick { it.isStreaming },
+            GroupTemplate.VIDEOS_AND_GAMES -> base.copy(
+                apps = pick { it.isStreaming || it.isGame },
                 websites = setOf(video),
                 budgetMs = minutes(60),
                 grayAfterMs = minutes(45),
                 locks = true,
-            )
-
-            GroupTemplate.NEWS -> base.copy(
-                apps = pick { it.isNews },
-                websites = newsSites.toSet(),
-                budgetMs = minutes(15),
-                grayAfterMs = minutes(10),
-                locks = true,
-                scrollBreakAfterMs = BreakDoomScrollingFeature.DefaultTimeUntilWarningMs,
             )
 
             // the wait is the point: an impulse rarely survives ten seconds
@@ -287,33 +221,21 @@ object GroupTemplates {
                 locks = true,
             )
 
-            GroupTemplate.BETTING -> base.copy(
+            GroupTemplate.GAMBLING_AND_PORN -> base.copy(
                 apps = pick { it.isBetting },
-                websites = setOf(collection(WebsiteCollection.GAMBLING)),
-                locks = true,
-            )
-
-            GroupTemplate.ADULT -> base.copy(
-                websites = setOf(collection(WebsiteCollection.ADULT)),
+                websites = setOf(collection(WebsiteCollection.GAMBLING), collection(WebsiteCollection.ADULT)),
                 locks = true,
             )
 
             GroupTemplate.NIGHTS_OFF -> base.copy(
-                apps = pick { it.isFeed || it.isStreaming || it.isGame },
+                apps = pick { it.isFeed || it.isNews || it.isStreaming || it.isGame },
                 websites = setOf(social, video),
                 locks = true,
                 schedule = SchedulePreset.NIGHTS,
             )
 
-            GroupTemplate.MORNINGS -> base.copy(
-                apps = pick { it.isFeed || it.isStreaming || it.isNews },
-                websites = setOf(social, video) + newsSites,
-                locks = true,
-                schedule = SchedulePreset.MORNINGS,
-            )
-
             GroupTemplate.WORK_HOURS -> base.copy(
-                apps = pick { it.isFeed || it.isStreaming || it.isGame || it.isNews || it.isShop },
+                apps = pick { it.isFeed || it.isNews || it.isStreaming || it.isGame || it.isShop },
                 websites = setOf(social, video),
                 locks = true,
                 schedule = SchedulePreset.WORK_HOURS,
@@ -331,19 +253,18 @@ object GroupTemplates {
 
     /** The websites the setup offers for [template] as chips, the draft's own among them. */
     fun websiteSuggestions(template: GroupTemplate): List<String> = when (template) {
-        GroupTemplate.FEEDS -> listOf(social, site("reddit.com"), site("x.com"), site("youtube.com"))
-        GroupTemplate.SHORT_VIDEO -> shortVideoSites
-        GroupTemplate.GAMES -> emptyList()
-        GroupTemplate.STREAMING -> listOf(video, site("youtube.com"), site("netflix.com"), site("twitch.tv"))
-        GroupTemplate.NEWS -> newsSites
+        GroupTemplate.FEEDS -> listOf(
+            social, site("youtube.com/shorts"), site("instagram.com/reels"), site("youtube.com"), site("news.google.com")
+        )
+
+        GroupTemplate.VIDEOS_AND_GAMES -> listOf(video)
         GroupTemplate.SHOPPING -> shopSites
-        GroupTemplate.BETTING -> listOf(collection(WebsiteCollection.GAMBLING))
-        GroupTemplate.ADULT -> listOf(collection(WebsiteCollection.ADULT))
-        GroupTemplate.NIGHTS_OFF -> listOf(social, video, site("reddit.com"))
-        GroupTemplate.MORNINGS -> listOf(social, video) + newsSites
-        GroupTemplate.WORK_HOURS -> listOf(social, video, site("reddit.com"))
+        GroupTemplate.GAMBLING_AND_PORN ->
+            listOf(collection(WebsiteCollection.GAMBLING), collection(WebsiteCollection.ADULT))
+
+        GroupTemplate.NIGHTS_OFF, GroupTemplate.WORK_HOURS -> listOf(social, video)
         GroupTemplate.GRAY_ESSENTIALS -> listOf(site("maps.google.com"), site("wikipedia.org"))
-        GroupTemplate.EMPTY -> listOf(social, video, site("youtube.com"), site("reddit.com"))
+        GroupTemplate.EMPTY -> listOf(social, video, site("youtube.com"), site("news.google.com"))
     }
 
     /**

@@ -108,8 +108,6 @@ object KnownApps {
         "com.google.android.calendar", "com.samsung.android.calendar",
     )
 
-    fun isShortVideo(packageName: String): Boolean = packageName in shortVideo
-
     /** A social feed, a short-video feed included; never a messenger, whatever the store says. */
     fun isFeed(packageName: String, osCategory: Int): Boolean =
         packageName in feeds || packageName in shortVideo ||
