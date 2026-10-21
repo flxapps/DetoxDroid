@@ -11,6 +11,7 @@ import com.flx_apps.digitaldetox.rules.GroupId
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.rules.Step
+import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
 import com.flx_apps.digitaldetox.util.RankedAppRow
 import com.flx_apps.digitaldetox.util.RankedApps
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
@@ -38,9 +39,16 @@ class NewRuleGroupViewModel @Inject constructor(
     private val _step = MutableStateFlow(NewGroupStep.TEMPLATE)
     val step: StateFlow<NewGroupStep> = _step
 
-    /** The installed apps, most distracting first; null while they are read. */
-    private val _ranked = MutableStateFlow<List<RankedAppRow>?>(null)
-    val ranked: StateFlow<List<RankedAppRow>?> = _ranked
+    /** Every installed app that could be worth a rule, most distracting first. */
+    private var installed: List<RankedAppRow>? = null
+
+    /**
+     * The apps the list shows: the template's picks first, then the most distracting of the
+     * rest; null while the apps are read. Fixed once the template is applied, so unticking a
+     * pick does not make it vanish.
+     */
+    private val _rows = MutableStateFlow<List<RankedAppRow>?>(null)
+    val rows: StateFlow<List<RankedAppRow>?> = _rows
 
     /** Whether the ranking has real usage behind it, so the rows can show it. */
     private val _hasUsageData = MutableStateFlow(false)
@@ -58,28 +66,31 @@ class NewRuleGroupViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            // all of them, not the onboarding's top thirty: a template picks by name
             val (rows, hasUsageData) = RankedApps.load(
-                application, UsageAccessUtil.hasUsageAccess(application)
+                application, UsageAccessUtil.hasUsageAccess(application), limit = Int.MAX_VALUE
             )
             _hasUsageData.value = hasUsageData
-            _ranked.value = rows
+            installed = rows
             pendingTemplate?.let { applyTemplate(it, rows) }
         }
     }
 
     /** Starts from [template] and moves on to what counts. */
     fun chooseTemplate(template: GroupTemplate) {
-        val rows = _ranked.value
+        val rows = installed
         if (rows == null) pendingTemplate = template else applyTemplate(template, rows)
         _step.value = NewGroupStep.WHAT
     }
 
-    private fun applyTemplate(template: GroupTemplate, rows: List<RankedAppRow>) {
+    private fun applyTemplate(template: GroupTemplate, installed: List<RankedAppRow>) {
         pendingTemplate = null
-        val draft = GroupTemplates.draft(application, template, rows)
+        val draft = GroupTemplates.draft(application, template, installed)
         _draft.value = draft
         _websiteChoices.value =
             (GroupTemplates.websiteSuggestions(template) + draft.websites).distinct()
+        val (picked, rest) = installed.partition { it.packageName in draft.apps }
+        _rows.value = picked + rest.take(DistractingAppsHeuristic.MAX_DISPLAYED_APPS)
     }
 
     fun next() {

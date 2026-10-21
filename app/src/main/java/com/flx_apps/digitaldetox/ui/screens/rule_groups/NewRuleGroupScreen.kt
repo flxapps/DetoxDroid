@@ -190,8 +190,18 @@ private fun TemplateStep(onChoose: (GroupTemplate) -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
         )
-        GroupTemplate.entries.filter { it != GroupTemplate.EMPTY }.forEach { template ->
-            TemplateCard(template = template, onClick = { onChoose(template) })
+        TemplateSection.entries.forEach { section ->
+            val templates = GroupTemplate.entries.filter { it.section == section && it != GroupTemplate.EMPTY }
+            if (templates.isEmpty()) return@forEach
+            Text(
+                text = stringResource(id = section.titleRes),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+            )
+            templates.forEach { template ->
+                TemplateCard(template = template, onClick = { onChoose(template) })
+            }
         }
         OutlinedButton(
             onClick = { onChoose(GroupTemplate.EMPTY) },
@@ -259,11 +269,11 @@ private fun TemplateCard(template: GroupTemplate, onClick: () -> Unit) {
 private fun WhatStep(viewModel: NewRuleGroupViewModel) {
     val context = LocalContext.current
     val draft by viewModel.draft.collectAsState()
-    val ranked by viewModel.ranked.collectAsState()
+    val rows by viewModel.rows.collectAsState()
     val hasUsageData by viewModel.hasUsageData.collectAsState()
     val websiteChoices by viewModel.websiteChoices.collectAsState()
     val current = draft
-    if (current == null || ranked == null) {
+    if (current == null || rows == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -291,7 +301,7 @@ private fun WhatStep(viewModel: NewRuleGroupViewModel) {
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
             )
         }
-        items(ranked.orEmpty(), key = { it.packageName }) { row ->
+        items(rows.orEmpty(), key = { it.packageName }) { row ->
             AppSelectionListItem(
                 packageName = row.packageName,
                 appName = row.appName,

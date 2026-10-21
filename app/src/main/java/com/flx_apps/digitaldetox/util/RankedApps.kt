@@ -33,9 +33,14 @@ object RankedApps {
 
     /**
      * Blocking: reads the package manager and, with [hasUsageAccess], the usage records.
+     * @param limit how many rows at most, see [DistractingAppsHeuristic.rankApps]
      * @return the rows, and whether they are backed by real usage data
      */
-    fun load(context: Context, hasUsageAccess: Boolean): Pair<List<RankedAppRow>, Boolean> {
+    fun load(
+        context: Context,
+        hasUsageAccess: Boolean,
+        limit: Int = DistractingAppsHeuristic.MAX_DISPLAYED_APPS,
+    ): Pair<List<RankedAppRow>, Boolean> {
         val avgUsageByApp: Map<String, Long> = if (hasUsageAccess) {
             val totals = HashMap<String, Long>()
             UsageStatsProvider.queryDailyUsage(USAGE_DAYS).forEach { (_, statsByApp) ->
@@ -61,7 +66,7 @@ object RankedApps {
             )
         }
         val appsByPackage = installedApps.associateBy { it.packageName }
-        val rows = DistractingAppsHeuristic.rankApps(candidates).map { rankedApp ->
+        val rows = DistractingAppsHeuristic.rankApps(candidates, limit).map { rankedApp ->
             val appInfo = appsByPackage.getValue(rankedApp.packageName)
             RankedAppRow(
                 packageName = rankedApp.packageName,

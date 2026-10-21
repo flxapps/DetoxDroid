@@ -11,9 +11,17 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.LiveTv
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.SmartDisplay
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
@@ -21,14 +29,21 @@ import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
 import com.flx_apps.digitaldetox.rules.RuleGroup
-import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
-import com.flx_apps.digitaldetox.util.KnownAppCategory
+import com.flx_apps.digitaldetox.util.KnownApps
 import com.flx_apps.digitaldetox.util.RankedAppRow
 import com.flx_apps.digitaldetox.websites.WebsiteCollection
 import com.flx_apps.digitaldetox.websites.Websites
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.util.Locale
 import java.util.concurrent.TimeUnit
+
+/** The headings the templates are listed under. */
+enum class TemplateSection(@StringRes val titleRes: Int) {
+    WHAT(R.string.ruleGroups_templates_what),
+    WHEN(R.string.ruleGroups_templates_when),
+    PHONE(R.string.ruleGroups_templates_phone),
+}
 
 /**
  * The ready-made starting points for a new group. Everything in them can be changed afterwards.
@@ -39,26 +54,59 @@ enum class GroupTemplate(
     @StringRes val descriptionRes: Int,
     val icon: ImageVector,
     @ColorRes val colorRes: Int,
+    val section: TemplateSection,
 ) {
     FEEDS(
         R.string.ruleGroups_template_feeds, R.string.ruleGroups_template_feeds_description,
-        Icons.Default.Forum, R.color.orange
+        Icons.Default.Forum, R.color.orange, TemplateSection.WHAT
     ),
     SHORT_VIDEO(
         R.string.ruleGroups_template_shortVideo, R.string.ruleGroups_template_shortVideo_description,
-        Icons.Default.SmartDisplay, R.color.pink
+        Icons.Default.SmartDisplay, R.color.pink, TemplateSection.WHAT
     ),
-    GRAY_ESSENTIALS(
-        R.string.ruleGroups_template_grayEssentials, R.string.ruleGroups_template_grayEssentials_description,
-        Icons.Default.Contrast, R.color.purple
+    GAMES(
+        R.string.ruleGroups_template_games, R.string.ruleGroups_template_games_description,
+        Icons.Default.SportsEsports, R.color.green, TemplateSection.WHAT
+    ),
+    STREAMING(
+        R.string.ruleGroups_template_streaming, R.string.ruleGroups_template_streaming_description,
+        Icons.Default.LiveTv, R.color.yellow, TemplateSection.WHAT
+    ),
+    NEWS(
+        R.string.ruleGroups_template_news, R.string.ruleGroups_template_news_description,
+        Icons.Default.Newspaper, R.color.blue, TemplateSection.WHAT
+    ),
+    SHOPPING(
+        R.string.ruleGroups_template_shopping, R.string.ruleGroups_template_shopping_description,
+        Icons.Default.ShoppingBag, R.color.purple, TemplateSection.WHAT
+    ),
+    BETTING(
+        R.string.ruleGroups_template_betting, R.string.ruleGroups_template_betting_description,
+        Icons.Default.Casino, R.color.pink, TemplateSection.WHAT
+    ),
+    ADULT(
+        R.string.ruleGroups_template_adult, R.string.ruleGroups_template_adult_description,
+        Icons.Default.Block, R.color.orange, TemplateSection.WHAT
     ),
     NIGHTS_OFF(
         R.string.ruleGroups_template_nightsOff, R.string.ruleGroups_template_nightsOff_description,
-        Icons.Default.Bedtime, R.color.blue
+        Icons.Default.Bedtime, R.color.blue, TemplateSection.WHEN
+    ),
+    MORNINGS(
+        R.string.ruleGroups_template_mornings, R.string.ruleGroups_template_mornings_description,
+        Icons.Default.WbSunny, R.color.yellow, TemplateSection.WHEN
+    ),
+    WORK_HOURS(
+        R.string.ruleGroups_template_workHours, R.string.ruleGroups_template_workHours_description,
+        Icons.Default.Work, R.color.green, TemplateSection.WHEN
+    ),
+    GRAY_ESSENTIALS(
+        R.string.ruleGroups_template_grayEssentials, R.string.ruleGroups_template_grayEssentials_description,
+        Icons.Default.Contrast, R.color.purple, TemplateSection.PHONE
     ),
     EMPTY(
         R.string.ruleGroups_template_empty, R.string.ruleGroups_template_empty_description,
-        Icons.Default.Add, R.color.gray
+        Icons.Default.Add, R.color.gray, TemplateSection.PHONE
     ),
 }
 
@@ -66,25 +114,30 @@ enum class GroupTemplate(
 enum class SchedulePreset(@StringRes val titleRes: Int) {
     ALWAYS(R.string.ruleGroups_schedulePreset_always),
     WEEKDAYS(R.string.ruleGroups_schedulePreset_weekdays),
+    WORK_HOURS(R.string.ruleGroups_schedulePreset_workHours),
     EVENINGS(R.string.ruleGroups_schedulePreset_evenings),
     NIGHTS(R.string.ruleGroups_schedulePreset_nights),
+    MORNINGS(R.string.ruleGroups_schedulePreset_mornings),
     WEEKENDS(R.string.ruleGroups_schedulePreset_weekends);
 
     fun rules(): Set<FeatureScheduleRule> = when (this) {
         ALWAYS -> emptySet()
-        WEEKDAYS -> setOf(
-            FeatureScheduleRule(
-                listOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
-                LocalTime.of(10, 0), LocalTime.of(22, 0)
-            )
-        )
-
+        WEEKDAYS -> setOf(FeatureScheduleRule(weekdays, LocalTime.of(10, 0), LocalTime.of(22, 0)))
+        WORK_HOURS -> setOf(FeatureScheduleRule(weekdays, LocalTime.of(9, 0), LocalTime.of(17, 0)))
         EVENINGS -> setOf(FeatureScheduleRule(emptyList(), LocalTime.of(18, 0), LocalTime.of(23, 0)))
         NIGHTS -> setOf(FeatureScheduleRule(emptyList(), LocalTime.of(22, 0), LocalTime.of(7, 0)))
+        // from well before anyone gets up, so an early riser is covered too
+        MORNINGS -> setOf(FeatureScheduleRule(emptyList(), LocalTime.of(4, 0), LocalTime.of(9, 0)))
         WEEKENDS -> setOf(
             FeatureScheduleRule(
                 listOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY), LocalTime.MIDNIGHT, LocalTime.MIDNIGHT
             )
+        )
+    }
+
+    private companion object {
+        val weekdays = listOf(
+            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY
         )
     }
 }
@@ -109,29 +162,70 @@ data class GroupDraft(
     val schedule: SchedulePreset,
 )
 
+/**
+ * What each template picks and sets. The apps come from [KnownApps] and the store's categories,
+ * the websites from the collections that ship with the app and a few named sites, for news and
+ * shops the ones of the phone's language.
+ */
 object GroupTemplates {
-    /**
-     * The short-video apps, which no category tells apart from the rest of social media. YouTube
-     * is not among them: its Shorts cannot be told from the rest of the app, only in the browser.
-     */
-    private val shortVideoApps = setOf(
-        "com.zhiliaoapp.musically", "com.zhiliaoapp.musically.go", "com.ss.android.ugc.trill",
-        "com.ss.android.ugc.trill.go", "com.kwai.video", "video.like", "video.like.lite",
-        "com.ss.android.ugc.boom", "com.ss.android.ugc.boomlite"
-    )
+    private val RankedAppRow.isFeed get() = KnownApps.isFeed(packageName, osCategory)
+    private val RankedAppRow.isShortVideo get() = KnownApps.isShortVideo(packageName)
+    private val RankedAppRow.isStreaming get() = KnownApps.isStreaming(packageName, osCategory)
+    private val RankedAppRow.isNews get() = KnownApps.isNews(packageName, osCategory)
+    private val RankedAppRow.isShop get() = KnownApps.isShop(packageName)
+    private val RankedAppRow.isGame get() = KnownApps.isGame(packageName, osCategory)
+    private val RankedAppRow.isBetting get() = KnownApps.isBetting(packageName)
 
-    /** Messengers worth keeping in color while everything else is gray. */
-    private val messengers = setOf(
-        "org.thoughtcrime.securesms", "com.whatsapp", "org.telegram.messenger", "ch.threema.app",
-        "com.google.android.apps.messaging"
-    )
+    private fun site(input: String): String = requireNotNull(Websites.siteEntry(input)) { "not a site: $input" }
+    private fun collection(collection: WebsiteCollection): String = Websites.collectionEntry(collection)
 
-    /** Builds the draft [template] stands for, picking apps out of [ranked]. */
-    fun draft(context: Context, template: GroupTemplate, ranked: List<RankedAppRow>): GroupDraft {
-        val name = context.getString(template.titleRes)
+    private val social get() = collection(WebsiteCollection.SOCIAL)
+    private val video get() = collection(WebsiteCollection.VIDEO)
+
+    /** The short-video corners of the big sites, which a browser reaches without the apps. */
+    private val shortVideoSites
+        get() = listOf(
+            site("youtube.com/shorts"), site("tiktok.com"), site("instagram.com/reels"), site("facebook.com/reel")
+        )
+
+    private val german get() = Locale.getDefault().language == "de"
+
+    private val newsSites
+        get() = if (german) {
+            listOf(
+                site("news.google.com"), site("spiegel.de"), site("tagesschau.de"), site("bild.de"),
+                site("zeit.de"), site("welt.de"), site("n-tv.de")
+            )
+        } else {
+            listOf(
+                site("news.google.com"), site("nytimes.com"), site("bbc.com"), site("theguardian.com"),
+                site("cnn.com"), site("foxnews.com"), site("washingtonpost.com")
+            )
+        }
+
+    private val shopSites
+        get() = if (german) {
+            listOf(
+                site("amazon.de"), site("ebay.de"), site("kleinanzeigen.de"), site("zalando.de"),
+                site("otto.de"), site("temu.com"), site("shein.com"), site("aliexpress.com")
+            )
+        } else {
+            listOf(
+                site("amazon.com"), site("ebay.com"), site("temu.com"), site("shein.com"),
+                site("aliexpress.com"), site("etsy.com"), site("walmart.com")
+            )
+        }
+
+    private fun minutes(minutes: Long): Long = TimeUnit.MINUTES.toMillis(minutes)
+
+    /** Builds the draft [template] stands for, picking apps out of [installed]. */
+    fun draft(context: Context, template: GroupTemplate, installed: List<RankedAppRow>): GroupDraft {
+        fun pick(predicate: (RankedAppRow) -> Boolean): Set<String> =
+            installed.filter(predicate).mapTo(mutableSetOf()) { it.packageName }
+
         val base = GroupDraft(
             template = template,
-            name = name,
+            name = context.getString(template.titleRes),
             listType = AppExceptionListType.ONLY_LIST,
             apps = emptySet(),
             websites = emptySet(),
@@ -144,79 +238,122 @@ object GroupTemplates {
             schedule = SchedulePreset.ALWAYS,
         )
         return when (template) {
+            // the whole ladder: scroll breaks all along, gray before the end, then the lock
             GroupTemplate.FEEDS -> base.copy(
-                apps = ranked.filter { it.isSocial() }.mapTo(mutableSetOf()) { it.packageName },
-                websites = setOf(Websites.collectionEntry(WebsiteCollection.SOCIAL)),
-                budgetMs = TimeUnit.MINUTES.toMillis(30),
-                grayAfterMs = TimeUnit.MINUTES.toMillis(20),
+                apps = pick { it.isFeed },
+                websites = setOf(social),
+                budgetMs = minutes(30),
+                grayAfterMs = minutes(20),
                 locks = true,
                 scrollBreakAfterMs = BreakDoomScrollingFeature.DefaultTimeUntilWarningMs,
-                schedule = SchedulePreset.WEEKDAYS,
             )
 
             GroupTemplate.SHORT_VIDEO -> base.copy(
-                apps = ranked.filter { it.packageName in shortVideoApps }.mapTo(mutableSetOf()) { it.packageName },
-                websites = setOf(
-                    Websites.siteEntry("youtube.com/shorts")!!, Websites.siteEntry("tiktok.com")!!
-                ),
+                apps = pick { it.isShortVideo },
+                websites = shortVideoSites.toSet(),
                 locks = true,
+            )
+
+            GroupTemplate.GAMES -> base.copy(
+                apps = pick { it.isGame },
+                budgetMs = minutes(60),
+                grayAfterMs = minutes(40),
+                locks = true,
+            )
+
+            GroupTemplate.STREAMING -> base.copy(
+                apps = pick { it.isStreaming },
+                websites = setOf(video),
+                budgetMs = minutes(60),
+                grayAfterMs = minutes(45),
+                locks = true,
+            )
+
+            GroupTemplate.NEWS -> base.copy(
+                apps = pick { it.isNews },
+                websites = newsSites.toSet(),
+                budgetMs = minutes(15),
+                grayAfterMs = minutes(10),
+                locks = true,
+                scrollBreakAfterMs = BreakDoomScrollingFeature.DefaultTimeUntilWarningMs,
+            )
+
+            // the wait is the point: an impulse rarely survives ten seconds
+            GroupTemplate.SHOPPING -> base.copy(
+                apps = pick { it.isShop },
+                websites = shopSites.toSet(),
+                waitMs = DefaultWaitMs,
+                budgetMs = minutes(30),
+                locks = true,
+            )
+
+            GroupTemplate.BETTING -> base.copy(
+                apps = pick { it.isBetting },
+                websites = setOf(collection(WebsiteCollection.GAMBLING)),
+                locks = true,
+            )
+
+            GroupTemplate.ADULT -> base.copy(
+                websites = setOf(collection(WebsiteCollection.ADULT)),
+                locks = true,
+            )
+
+            GroupTemplate.NIGHTS_OFF -> base.copy(
+                apps = pick { it.isFeed || it.isStreaming || it.isGame },
+                websites = setOf(social, video),
+                locks = true,
+                schedule = SchedulePreset.NIGHTS,
+            )
+
+            GroupTemplate.MORNINGS -> base.copy(
+                apps = pick { it.isFeed || it.isStreaming || it.isNews },
+                websites = setOf(social, video) + newsSites,
+                locks = true,
+                schedule = SchedulePreset.MORNINGS,
+            )
+
+            GroupTemplate.WORK_HOURS -> base.copy(
+                apps = pick { it.isFeed || it.isStreaming || it.isGame || it.isNews || it.isShop },
+                websites = setOf(social, video),
+                locks = true,
+                schedule = SchedulePreset.WORK_HOURS,
             )
 
             GroupTemplate.GRAY_ESSENTIALS -> base.copy(
                 listType = AppExceptionListType.NOT_LIST,
-                apps = essentials(context, ranked),
+                apps = essentials(context, installed),
                 grayAfterMs = 0L,
-            )
-
-            GroupTemplate.NIGHTS_OFF -> base.copy(
-                apps = ranked.filter { it.isSocial() || it.isVideo() || it.isGame() }
-                    .mapTo(mutableSetOf()) { it.packageName },
-                locks = true,
-                schedule = SchedulePreset.NIGHTS,
             )
 
             GroupTemplate.EMPTY -> base.copy(name = "")
         }
     }
 
-    /** The websites the setup suggests for [template], as chips next to the apps. */
+    /** The websites the setup offers for [template] as chips, the draft's own among them. */
     fun websiteSuggestions(template: GroupTemplate): List<String> = when (template) {
-        GroupTemplate.FEEDS -> listOf(
-            Websites.collectionEntry(WebsiteCollection.SOCIAL),
-            Websites.siteEntry("reddit.com")!!, Websites.siteEntry("x.com")!!,
-            Websites.siteEntry("youtube.com")!!
-        )
-
-        GroupTemplate.SHORT_VIDEO -> listOf(
-            Websites.siteEntry("youtube.com/shorts")!!, Websites.siteEntry("tiktok.com")!!,
-            Websites.siteEntry("instagram.com/reels")!!
-        )
-
-        GroupTemplate.GRAY_ESSENTIALS -> listOf(
-            Websites.siteEntry("maps.google.com")!!, Websites.siteEntry("wikipedia.org")!!
-        )
-
-        GroupTemplate.NIGHTS_OFF -> listOf(
-            Websites.collectionEntry(WebsiteCollection.SOCIAL),
-            Websites.collectionEntry(WebsiteCollection.VIDEO),
-            Websites.siteEntry("reddit.com")!!
-        )
-
-        GroupTemplate.EMPTY -> listOf(
-            Websites.collectionEntry(WebsiteCollection.SOCIAL),
-            Websites.collectionEntry(WebsiteCollection.VIDEO),
-            Websites.siteEntry("youtube.com")!!, Websites.siteEntry("reddit.com")!!
-        )
+        GroupTemplate.FEEDS -> listOf(social, site("reddit.com"), site("x.com"), site("youtube.com"))
+        GroupTemplate.SHORT_VIDEO -> shortVideoSites
+        GroupTemplate.GAMES -> emptyList()
+        GroupTemplate.STREAMING -> listOf(video, site("youtube.com"), site("netflix.com"), site("twitch.tv"))
+        GroupTemplate.NEWS -> newsSites
+        GroupTemplate.SHOPPING -> shopSites
+        GroupTemplate.BETTING -> listOf(collection(WebsiteCollection.GAMBLING))
+        GroupTemplate.ADULT -> listOf(collection(WebsiteCollection.ADULT))
+        GroupTemplate.NIGHTS_OFF -> listOf(social, video, site("reddit.com"))
+        GroupTemplate.MORNINGS -> listOf(social, video) + newsSites
+        GroupTemplate.WORK_HOURS -> listOf(social, video, site("reddit.com"))
+        GroupTemplate.GRAY_ESSENTIALS -> listOf(site("maps.google.com"), site("wikipedia.org"))
+        GroupTemplate.EMPTY -> listOf(social, video, site("youtube.com"), site("reddit.com"))
     }
 
     /**
-     * The apps a gray phone still needs in color: the dialer, the camera, maps, the messages app
-     * and the messengers that are installed. Resolved on this phone rather than by package name,
-     * since every manufacturer ships its own.
+     * The apps a gray phone still needs in color: the dialer, the camera, maps, the messages app,
+     * the clock, the calendar and the messengers that are installed. The phone's own defaults are
+     * resolved rather than named, since every manufacturer ships its own.
      */
-    private fun essentials(context: Context, ranked: List<RankedAppRow>): Set<String> {
+    private fun essentials(context: Context, installed: List<RankedAppRow>): Set<String> {
         val packageManager = context.packageManager
-        val installed = ranked.mapTo(mutableSetOf()) { it.packageName }
+        val listed = installed.mapTo(mutableSetOf()) { it.packageName }
         val resolved = mutableSetOf<String>()
         runCatching {
             context.getSystemService(TelecomManager::class.java)?.defaultDialerPackage?.let { resolved += it }
@@ -231,19 +368,11 @@ object GroupTemplates {
                     .mapTo(resolved) { it.activityInfo.packageName }
             }
         }
-        resolved += messengers
-        // whatever the phone resolved that the list also knows, plus the known ones in the list
-        return resolved.filterTo(mutableSetOf()) { it in installed || packageManager.isInstalled(it) }
+        resolved += KnownApps.messengers
+        resolved += KnownApps.clocksAndCalendars
+        return resolved.filterTo(mutableSetOf()) { it in listed || packageManager.isInstalled(it) }
     }
 
     private fun android.content.pm.PackageManager.isInstalled(packageName: String): Boolean =
         runCatching { getApplicationInfo(packageName, 0) }.isSuccess
-
-    private fun RankedAppRow.isSocial() =
-        knownCategory == KnownAppCategory.SOCIAL || osCategory == DistractingAppsHeuristic.OS_CATEGORY_SOCIAL
-
-    private fun RankedAppRow.isVideo() =
-        knownCategory == KnownAppCategory.VIDEO || osCategory == DistractingAppsHeuristic.OS_CATEGORY_VIDEO
-
-    private fun RankedAppRow.isGame() = osCategory == DistractingAppsHeuristic.OS_CATEGORY_GAME
 }
