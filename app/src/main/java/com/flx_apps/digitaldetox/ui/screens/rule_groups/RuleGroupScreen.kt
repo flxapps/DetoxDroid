@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.outlined.Info
@@ -124,6 +125,9 @@ private val WaitChoicesSeconds = listOf(5, 10, 15, 20, 30, 45, 60)
 
 /** The index of the steps card in the list, where the sentence's steps link scrolls to. */
 private const val STEPS_ITEM_INDEX = 5
+
+/** How many time windows the schedule card lists before it counts the rest. */
+private const val SCHEDULE_LINES = 4
 
 /**
  * A group's screen. The whole rule is one sentence whose parts open their editors; below it,
@@ -1047,6 +1051,43 @@ private fun ScheduleCard(group: RuleGroup, onClick: () -> Unit) {
                 contentDescription = null,
                 tint = colors.onSurfaceVariant
             )
+        }
+        if (rules.size > 1) {
+            // windows on different days do not fit one bar and one row of dots: list them
+            val lines = remember(rules) {
+                rules.sortedWith(compareBy({ it.daysOfWeek.minOfOrNull { day -> day.value } ?: 0 }, { it.start }))
+                    .map { GroupTexts.scheduleShort(context, listOf(it)) }
+            }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(top = 12.dp)
+            ) {
+                lines.take(SCHEDULE_LINES).forEach { line ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = colors.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
+                    }
+                }
+                val more = lines.size - SCHEDULE_LINES
+                if (more > 0) {
+                    Text(
+                        text = pluralStringResource(id = R.plurals.ruleGroups_schedule_moreWindows, count = more, more),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 26.dp)
+                    )
+                }
+            }
+            return@GroupCard
         }
         Row(
             horizontalArrangement = Arrangement.spacedBy(2.dp),

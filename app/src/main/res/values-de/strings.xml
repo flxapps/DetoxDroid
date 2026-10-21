@@ -289,6 +289,10 @@
         <item quantity="one">in %d Zeitfenster</item>
         <item quantity="other">in %d Zeitfenstern</item>
     </plurals>
+    <plurals name="ruleGroups_schedule_moreWindows">
+        <item quantity="one">und %d weiteres</item>
+        <item quantity="other">und %d weitere</item>
+    </plurals>
 
     <plurals name="ruleGroups_sentence_budget">
         <item quantity="one">{scope} bekommt {budget}{schedule}.</item>
@@ -393,7 +397,7 @@
     <string name="ruleGroups_steps_featureSettings">Funktionseinstellungen</string>
     <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Erkennung. Für alle Gruppen gleich.</string>
     <string name="ruleGroups_steps_featureSettings_description">Wie Grau aussieht, wie eine Sperre Apps weghält, wie Scrollen bewertet wird. Das hängt an deinem Handy und gilt für alle Gruppen gleich.</string>
-    <string name="ruleGroups_when_title">Wann es zählt</string>
+    <string name="ruleGroups_when_title">Wann aktiv</string>
 
     <string name="ruleGroups_budget_title">Wie viel</string>
     <string name="ruleGroups_budget_use">%s nehmen</string>

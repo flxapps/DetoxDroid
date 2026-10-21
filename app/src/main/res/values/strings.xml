@@ -301,6 +301,10 @@
         <item quantity="one">in %d time window</item>
         <item quantity="other">in %d time windows</item>
     </plurals>
+    <plurals name="ruleGroups_schedule_moreWindows">
+        <item quantity="one">and %d more</item>
+        <item quantity="other">and %d more</item>
+    </plurals>
 
     <!-- The rule as one sentence. {scope}, {budget}, {schedule} and {steps} are filled in; keep
          them where the language wants them. The quantity is how many things the group names. -->
@@ -412,7 +416,7 @@
     <string name="ruleGroups_steps_featureSettings">Feature settings</string>
     <string name="ruleGroups_steps_featureSettings_subtitle">Gray look, lock mode, scroll detection. Shared by all groups.</string>
     <string name="ruleGroups_steps_featureSettings_description">How gray looks, how a lock keeps apps away, how scrolling is judged. These are about your phone and the same for every group.</string>
-    <string name="ruleGroups_when_title">When it counts</string>
+    <string name="ruleGroups_when_title">When active</string>
 
     <!-- the budget screen -->
     <string name="ruleGroups_budget_title">How much</string>
