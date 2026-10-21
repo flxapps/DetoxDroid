@@ -76,8 +76,8 @@ object ScreenFilterOverlay {
      * the screen no longer goes darker, so the dark-mode wash stays moderate: fogging an OLED app
      * to near-white at night is its own kind of broken.
      */
-    private const val WASH_COLOR_LIGHT = 0xFFE8E8E8.toInt()
-    private const val WASH_COLOR_DARK = 0xFF9A9A9A.toInt()
+    const val WASH_COLOR_LIGHT = 0xFFE8E8E8.toInt()
+    const val WASH_COLOR_DARK = 0xFF9A9A9A.toInt()
 
     /**
      * Whether this device can blur behind a window at all. Separate from

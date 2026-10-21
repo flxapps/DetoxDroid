@@ -476,26 +476,26 @@
     <!-- region Feature: Grayscale -->
     <string name="feature_grayscale">Grau werden</string>
     <string name="feature_grayscale_subtitle">Wie das Grau aussieht</string>
-    <string name="feature_grayscale_description">Nimmt den Apps und Websites die Farbe, die eine Gruppe grau macht. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
+    <string name="feature_grayscale_description">Nimmt dem die Farbe, was eine Gruppe grau macht, und damit den halben Reiz. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
     <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
     <string name="feature_grayscale_extraDim">Extra dunkel</string>
-    <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm unter das normale Minimum ab, solange eine App aus der Liste offen ist. (Lange drücken, um die Stärke einzustellen.)</string>
-    <string name="feature_grayscale_ignoreNonFullScreen">Eingeblendete Elemente ignorieren</string>
-    <string name="feature_grayscale_ignoreNonFullScreen_description">Kurz eingeblendete Elemente wie Lautstärkeregler oder Statusleiste schalten den Farbmodus dann nicht mehr um.</string>
+    <string name="feature_grayscale_extraDim_description">Dunkler, als der Helligkeitsregler hergibt, solange eine erfasste App offen ist. Lange drücken, um einzustellen, wie dunkel.</string>
+    <string name="feature_grayscale_ignoreNonFullScreen">Pop-ups und Leisten ignorieren</string>
+    <string name="feature_grayscale_ignoreNonFullScreen_description">Lautstärkeregler oder Statusleiste schalten die Farbe dann nicht mehr hin und her.</string>
     <string name="feature_grayscale_exceptions_summary_notList">%d Apps bleiben unangetastet.</string>
     <string name="feature_grayscale_exceptions_summary_onlyList">Greift in %d Apps.</string>
     <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extra dunkel oder den Bildschirmfilter ein.</string>
     <string name="feature_grayscale_noEffects_noPermission">Schalte erst den Bildschirmfilter ein oder richte echte Graustufen ein.</string>
     <string name="feature_grayscale_systemGrayscale">Graustufen</string>
-    <string name="feature_grayscale_systemGrayscale_description">Stellt den Farbfilter des Systems auf Graustufen, solange eine App aus der Liste offen ist. Kostet keinen Akku.</string>
+    <string name="feature_grayscale_systemGrayscale_description">Der Farbfilter des Systems, solange eine erfasste App offen ist. Kostet keinen Akku.</string>
     <string name="feature_grayscale_screenFilter">Bildschirmfilter</string>
-    <string name="feature_grayscale_screenFilter_description">Echte Graustufen brauchen einmalig einen Computer oder Shizuku. Bis dahin zieht ein Filter ablenkenden Apps die Farbe ab und macht sie unscharf.</string>
-    <string name="feature_grayscale_screenFilter_description_granted">Läuft zusätzlich zum Graustufenfilter des Systems. Du hast das Original schon, das hier lohnt sich also nur, wenn dich Graustufen allein zu wenig stören.</string>
+    <string name="feature_grayscale_screenFilter_description">Zieht die Farbe ab und macht unscharf, ganz ohne Einrichtung. Echte Graustufen brauchen einmal einen Computer oder Shizuku.</string>
+    <string name="feature_grayscale_screenFilter_description_granted">Zusätzlich zu den echten Graustufen, falls dich Grau allein zu wenig stört.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filterstärke</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">Wie stark der Filter eingreift. Je stärker, desto schlechter lässt sich Text lesen.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">Wie weit er geht. Zu stark, und Text wird schwer lesbar.</string>
     <string name="feature_grayscale_screenFilter_effects">Was der Filter macht</string>
-    <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 oder neuer, und im Energiesparmodus schaltet das System sie ab.</string>
+    <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 und pausiert im Energiesparmodus.</string>
     <string name="feature_grayscale_screenFilter_effects_shade">Schleier</string>
     <string name="feature_grayscale_screenFilter_effects_blur">Unschärfe</string>
     <string name="feature_grayscale_screenFilter_effects_both">Beides</string>
@@ -503,6 +503,8 @@
     <string name="feature_grayscale_screenFilter_summary_shade">Schleier, %d %%</string>
     <string name="feature_grayscale_screenFilter_summary_blur">Unschärfe, %d %%</string>
     <string name="feature_grayscale_screenFilter_summary_both">Schleier und Unschärfe, %d %%</string>
+    <string name="feature_grayscale_preview_normal">Normal</string>
+    <string name="feature_grayscale_preview_gray">Grau</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
@@ -575,18 +577,19 @@
     <!-- region Feature: Break Doom Scrolling -->
     <string name="feature_doomScrolling">„Doom Scrolling“ durchbrechen</string>
     <string name="feature_doomScrolling_subtitle">Empfindlichkeit und Abklingzeit</string>
-    <string name="feature_doomScrolling_description">EXPERIMENTELL: erkennt lange Scroll-Sessions in den Apps einer Gruppe und bietet dir einen Ausstieg an. Welche Apps und ab wann, das stellst du in der Gruppe ein.</string>
+    <string name="feature_doomScrolling_description">Experimentell. Erkennt langes, schnelles Scrollen in den Apps einer Gruppe und bietet dir einen Ausstieg an. Welche Apps und ab wann, das stellst du in der Gruppe ein.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Zeit bis zur Warnung</string>
     <string name="feature_doomScrolling_timeUntilWarning_description">So lange darfst du scrollen, bevor die Warnung kommt.</string>
     <string name="feature_doomScrolling_exceptions_summary_notList">%d Apps sind von der Scroll-Erkennung ausgenommen.</string>
     <string name="feature_doomScrolling_exceptions_summary_onlyList">Die Scroll-Erkennung läuft in %d Apps.</string>
     <string name="feature_doomScrolling_cooldownTime">Abkühlphase</string>
-    <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App nach einer Pause gesperrt (oder nur der Feed, der sie ausgelöst hat).</string>
+    <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App zu, oder nur der Feed, der es ausgelöst hat.</string>
     <string name="feature_doomScrolling_sensitivity">Empfindlichkeit</string>
-    <string name="feature_doomScrolling_sensitivity_description">Wie schnell zügiges Scrollen eine Pause auslöst. „Streng“ greift am frühesten ein. Endlose Feeds werden immer erkannt.</string>
+    <string name="feature_doomScrolling_sensitivity_description">Wie schnell du scrollen musst, bis eine Pause kommt. Endlose Feeds werden so oder so erkannt.</string>
     <string name="feature_doomScrolling_sensitivity_relaxed">Entspannt</string>
     <string name="feature_doomScrolling_sensitivity_balanced">Ausgewogen</string>
     <string name="feature_doomScrolling_sensitivity_strict">Streng</string>
+    <string name="feature_doomScrolling_sensitivity_screensPerMinute">Ab etwa %d Bildschirmen pro Minute</string>
 
     <!-- overlay shown when a doomscrolling session is detected -->
     <string name="feature_doomScrolling_warning_title">Aufwachen!</string>
@@ -610,7 +613,7 @@
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Warten und sperren</string>
     <string name="feature_disableApps_subtitle">Wie gesperrte Apps weggehalten werden</string>
-    <string name="feature_disableApps_description">Führt das Warten und das Sperren deiner Gruppen aus. Eine gesperrte App bekommt einen Bildschirm vorgesetzt, wird angehalten oder ganz deaktiviert, samt Launcher-Symbol und Benachrichtigungen. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
+    <string name="feature_disableApps_description">Was eine Sperre mit einer App macht, sobald sie greift. Welche Apps, wann und wie lange, das stellst du in der Gruppe ein. Das Warten braucht hier nichts.</string>
     <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
     <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
     <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps und Websites. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
@@ -618,12 +621,16 @@
     <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
     <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps und Websites lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht jede sofort auf, bis der Bildschirm wieder ausgeht.</string>
     <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget ist alles sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
-    <string name="feature_disableApps_operationMode">Betriebsmodus</string>
-    <string name="feature_disableApps_operationMode_description">Sperren legt einen Warnbildschirm über die App. Einfrieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
+    <string name="feature_disableApps_operationMode">Was eine Sperre macht</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
+    <string name="feature_disableApps_operationMode_block_description">Ein Bildschirm vor der App, mit Weg zurück</string>
     <string name="feature_disableApps_operationMode_suspend">Einfrieren</string>
     <string name="feature_disableApps_operationMode_suspend_needsShizuku">Zum Einfrieren von Apps muss Shizuku laufen.</string>
+    <string name="feature_disableApps_operationMode_suspend_description">Im Launcher ausgegraut, startet nicht</string>
+    <string name="feature_disableApps_operationMode_suspend_requirement">Braucht Shizuku</string>
     <string name="feature_disableApps_operationMode_deactivate">Deaktivieren</string>
+    <string name="feature_disableApps_operationMode_deactivate_description">Weg aus dem Launcher, Benachrichtigungen auch</string>
+    <string name="feature_disableApps_operationMode_deactivate_requirement">Braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben</string>
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
     <string name="feature_disableApps_overlay_message2">Mach eine Pause und komm morgen wieder.</string>

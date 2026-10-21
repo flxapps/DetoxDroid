@@ -497,26 +497,26 @@
     <!-- region Feature: Grayscale -->
     <string name="feature_grayscale">Turn gray</string>
     <string name="feature_grayscale_subtitle">How the gray looks</string>
-    <string name="feature_grayscale_description">Takes the color out of the apps and websites a group turns gray. Where the system grayscale filter is out of reach, a screen filter dulls and blurs them instead. Which apps, when and after how much use is set on the group.</string>
+    <string name="feature_grayscale_description">Takes the color out of what a group turns gray, and the pull with it. Which apps, when and after how much use is set on the group.</string>
     <string name="feature_grayscale_allowedColorScreenTime">Daily color budget</string>
     <string name="feature_grayscale_allowedColorScreenTime_description">How long these apps stay in color each day. After that, they turn gray until tomorrow. (DetoxDroid must be running to track screen time.)</string>
     <string name="feature_grayscale_extraDim">Extra dim</string>
-    <string name="feature_grayscale_extraDim_description">Dims the screen below its normal minimum while a listed app is open. (Long-press to adjust intensity.)</string>
-    <string name="feature_grayscale_ignoreNonFullScreen">Ignore non-fullscreen elements</string>
-    <string name="feature_grayscale_ignoreNonFullScreen_description">Ignores temporary overlays (for example volume panel or status bar) so they do not change color mode.</string>
+    <string name="feature_grayscale_extraDim_description">Darker than the brightness slider goes, while a covered app is open. Long-press to set how dark.</string>
+    <string name="feature_grayscale_ignoreNonFullScreen">Ignore pop-ups and panels</string>
+    <string name="feature_grayscale_ignoreNonFullScreen_description">The volume panel or the status bar no longer flip the color back and forth.</string>
     <string name="feature_grayscale_exceptions_summary_notList">%d apps are left alone.</string>
     <string name="feature_grayscale_exceptions_summary_onlyList">Active in %d apps.</string>
     <string name="feature_grayscale_noEffects">Switch on grayscale, extra dim or the screen filter first.</string>
     <string name="feature_grayscale_noEffects_noPermission">Switch on the screen filter first, or set up real grayscale.</string>
     <string name="feature_grayscale_systemGrayscale">Grayscale</string>
-    <string name="feature_grayscale_systemGrayscale_description">Switches the system color filter to grayscale while a listed app is open. Costs nothing in battery.</string>
+    <string name="feature_grayscale_systemGrayscale_description">The system\'s own color filter, while a covered app is open. Costs no battery.</string>
     <string name="feature_grayscale_screenFilter">Screen filter</string>
-    <string name="feature_grayscale_screenFilter_description">Real grayscale needs a one-time setup from a computer or via Shizuku. Until then, a filter washes the color out and blurs distracting apps.</string>
-    <string name="feature_grayscale_screenFilter_description_granted">Runs on top of the system grayscale filter. You already have the real thing, so this is only worth it if grayscale alone is too easy to ignore.</string>
+    <string name="feature_grayscale_screenFilter_description">Washes the color out and blurs, no setup needed. Real grayscale takes a computer or Shizuku, once.</string>
+    <string name="feature_grayscale_screenFilter_description_granted">On top of the real grayscale, for when gray alone is too easy to ignore.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filter strength</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">How far it goes. Stronger settings make text harder to read.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">How far it goes. Too strong, and text gets hard to read.</string>
     <string name="feature_grayscale_screenFilter_effects">What the filter does</string>
-    <string name="feature_grayscale_screenFilter_effects_description">Shading drains the color and the contrast. Blurring needs Android 12 or newer, and the system drops it while battery saver is on.</string>
+    <string name="feature_grayscale_screenFilter_effects_description">Shade drains color and contrast. Blur needs Android 12 and pauses in battery saver.</string>
     <string name="feature_grayscale_screenFilter_effects_shade">Shade</string>
     <string name="feature_grayscale_screenFilter_effects_blur">Blur</string>
     <string name="feature_grayscale_screenFilter_effects_both">Both</string>
@@ -524,6 +524,8 @@
     <string name="feature_grayscale_screenFilter_summary_shade">Shade, %d%%</string>
     <string name="feature_grayscale_screenFilter_summary_blur">Blur, %d%%</string>
     <string name="feature_grayscale_screenFilter_summary_both">Shade and blur, %d%%</string>
+    <string name="feature_grayscale_preview_normal">Normal</string>
+    <string name="feature_grayscale_preview_gray">Turned gray</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
@@ -596,18 +598,19 @@
     <!-- region Feature: Break Doom Scrolling -->
     <string name="feature_doomScrolling">Break \"Doom Scrolling\"</string>
     <string name="feature_doomScrolling_subtitle">Sensitivity and cooldown</string>
-    <string name="feature_doomScrolling_description">EXPERIMENTAL: detects long scrolling sessions in the apps a group covers and offers you a way out. Which apps and after how long is set on the group.</string>
+    <string name="feature_doomScrolling_description">Experimental. Spots long, fast scrolling in the apps a group covers and offers a way out. Which apps and after how long is set on the group.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Time until warning</string>
     <string name="feature_doomScrolling_timeUntilWarning_description">How long the scrolling may run before the warning shows up.</string>
     <string name="feature_doomScrolling_exceptions_summary_notList">Doomscrolling checks are skipped in %d apps.</string>
     <string name="feature_doomScrolling_exceptions_summary_onlyList">Doomscrolling checks are active in %d apps.</string>
-    <string name="feature_doomScrolling_cooldownTime">Cooldown period</string>
-    <string name="feature_doomScrolling_cooldownTime_description">After a doomscrolling break, the app (or just the feed that caused it) stays locked for this long.</string>
+    <string name="feature_doomScrolling_cooldownTime">Cooldown</string>
+    <string name="feature_doomScrolling_cooldownTime_description">How long the app, or just the feed that set it off, stays shut after a break.</string>
     <string name="feature_doomScrolling_sensitivity">Sensitivity</string>
-    <string name="feature_doomScrolling_sensitivity_description">How easily fast feed-scrolling triggers a break. \"Strict\" intervenes soonest. Endless feeds are always detected.</string>
+    <string name="feature_doomScrolling_sensitivity_description">How fast you have to scroll before a break. Endless feeds are caught either way.</string>
     <string name="feature_doomScrolling_sensitivity_relaxed">Relaxed</string>
     <string name="feature_doomScrolling_sensitivity_balanced">Balanced</string>
     <string name="feature_doomScrolling_sensitivity_strict">Strict</string>
+    <string name="feature_doomScrolling_sensitivity_screensPerMinute">From about %d screens a minute</string>
 
     <!-- overlay shown when a doomscrolling session is detected -->
     <string name="feature_doomScrolling_warning_title">Wake up!</string>
@@ -631,7 +634,7 @@
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Wait and lock</string>
     <string name="feature_disableApps_subtitle">How locked apps are kept away</string>
-    <string name="feature_disableApps_description">Runs the wait and the lock of your groups. A locked app can get a screen over it, be suspended, or be deactivated outright, launcher icon and notifications included. Which apps, when and after how much use is set on the group.</string>
+    <string name="feature_disableApps_description">What a lock does to an app once it takes hold. Which apps, when and for how long is set on the group. The wait needs nothing here.</string>
     <string name="feature_disableApps_manage_defined">%d apps listed for deactivation</string>
     <string name="feature_disableApps_allowedDailyTime">Daily time budget</string>
     <string name="feature_disableApps_allowedDailyTime_description">How long you get these apps and websites each day. After that, they are locked until the next day. (DetoxDroid must be running to track screen time.)</string>
@@ -639,12 +642,16 @@
     <string name="feature_disableApps_waitBeforeOpening">Wait before opening</string>
     <string name="feature_disableApps_waitBeforeOpening_description">These apps and websites make you wait before they open. Once you\'ve waited, each one opens right away until the screen turns off.</string>
     <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">With 0 min of daily screen time they are locked right away, so there is nothing to wait for. Set some time first, or no limit.</string>
-    <string name="feature_disableApps_operationMode">Operation mode</string>
-    <string name="feature_disableApps_operationMode_description">Block shows a warning screen over the app. Suspend greys it out in the launcher so it cannot start, and needs Shizuku. Deactivate hides it completely, and needs device owner, which most phones cannot give.</string>
+    <string name="feature_disableApps_operationMode">What a lock does</string>
     <string name="feature_disableApps_operationMode_block">Block</string>
+    <string name="feature_disableApps_operationMode_block_description">A screen over the app, with a way back</string>
     <string name="feature_disableApps_operationMode_suspend">Suspend</string>
     <string name="feature_disableApps_operationMode_suspend_needsShizuku">Suspending apps needs Shizuku running.</string>
+    <string name="feature_disableApps_operationMode_suspend_description">Grayed out in the launcher, won\'t start</string>
+    <string name="feature_disableApps_operationMode_suspend_requirement">Needs Shizuku</string>
     <string name="feature_disableApps_operationMode_deactivate">Deactivate</string>
+    <string name="feature_disableApps_operationMode_deactivate_description">Gone from the launcher, notifications too</string>
+    <string name="feature_disableApps_operationMode_deactivate_requirement">Needs device owner, which most phones can\'t give</string>
     <string name="feature_disableApps_overlay_title">Time\'s up!</string>
     <string name="feature_disableApps_overlay_message">You have used up your daily screen time for this app.</string>
     <string name="feature_disableApps_overlay_message2">Take a break and come back tomorrow.</string>
