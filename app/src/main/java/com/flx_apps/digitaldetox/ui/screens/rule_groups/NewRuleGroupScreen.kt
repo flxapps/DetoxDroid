@@ -73,6 +73,7 @@ import com.flx_apps.digitaldetox.rules.BudgetPeriod
 import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.ui.widgets.OptionChip
 import com.flx_apps.digitaldetox.ui.widgets.apps.AppSelectionListItem
@@ -212,6 +213,7 @@ private fun TemplateStep(onChoose: (GroupTemplate) -> Unit) {
 @Composable
 private fun TemplateCard(template: GroupTemplate, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val tone = brandTone(template.colorRes)
     Surface(
         shape = RoundedCornerShape(22.dp),
         color = colors.surfaceContainer,
@@ -226,12 +228,12 @@ private fun TemplateCard(template: GroupTemplate, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(colors.primaryContainer)
+                    .background(tone.container)
             ) {
                 Icon(
                     imageVector = template.icon,
                     contentDescription = null,
-                    tint = colors.onPrimaryContainer,
+                    tint = tone.content,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -488,7 +490,7 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
                     Icon(
                         imageVector = step.icon,
                         contentDescription = null,
-                        tint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (on) brandTone(step.colorRes).content else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Column(
                         modifier = Modifier

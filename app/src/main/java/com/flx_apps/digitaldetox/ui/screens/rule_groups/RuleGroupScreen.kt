@@ -99,6 +99,7 @@ import com.flx_apps.digitaldetox.ui.screens.schedule.hourLabel
 import com.flx_apps.digitaldetox.ui.screens.schedule.orderedWeekDays
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
 import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
+import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.util.appLabel
@@ -564,20 +565,24 @@ private fun TodayCard(group: RuleGroup) {
             }
         }
         Spacer(modifier = Modifier.height(14.dp))
+        val grayTone = brandTone(Step.GRAY.colorRes)
+        val lockTone = brandTone(Step.LOCK.colorRes)
         ThresholdBar(
             fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f),
-            marker = if (graysInside) group.grayAfterMs.toFloat() / group.budgetMs else null
+            marker = if (graysInside) group.grayAfterMs.toFloat() / group.budgetMs else null,
+            markerColor = grayTone.content
         )
+        // each caption in the color of its step
         val captions = listOfNotNull(
             if (graysInside) {
-                stringResource(id = R.string.ruleGroups_today_grayFrom, GroupTexts.minutes(context, group.grayAfterMs))
+                stringResource(id = R.string.ruleGroups_today_grayFrom, GroupTexts.minutes(context, group.grayAfterMs)) to grayTone.content
             } else null,
             when {
                 group.locks && group.canHoldBackApps ->
-                    stringResource(id = R.string.ruleGroups_today_lockedAt, GroupTexts.minutes(context, group.budgetMs))
+                    stringResource(id = R.string.ruleGroups_today_lockedAt, GroupTexts.minutes(context, group.budgetMs)) to lockTone.content
 
                 group.grays && !group.graysFromStart && !graysInside ->
-                    stringResource(id = R.string.ruleGroups_today_grayAt, GroupTexts.minutes(context, group.budgetMs))
+                    stringResource(id = R.string.ruleGroups_today_grayAt, GroupTexts.minutes(context, group.budgetMs)) to grayTone.content
 
                 else -> null
             }
@@ -586,11 +591,11 @@ private fun TodayCard(group: RuleGroup) {
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp)) {
-                captions.forEachIndexed { index, caption ->
+                captions.forEachIndexed { index, (caption, color) ->
                     Text(
                         text = caption,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = color,
                         modifier = Modifier.weight(1f),
                         textAlign = if (index == captions.lastIndex && captions.size > 1) {
                             androidx.compose.ui.text.style.TextAlign.End
@@ -606,7 +611,7 @@ private fun TodayCard(group: RuleGroup) {
 
 /** A budget bar with an optional mark where the gray step starts. */
 @Composable
-private fun ThresholdBar(fraction: Float, marker: Float?) {
+private fun ThresholdBar(fraction: Float, marker: Float?, markerColor: Color) {
     Box(modifier = Modifier.fillMaxWidth()) {
         BudgetBar(fraction = fraction, height = 10.dp)
         marker?.let {
@@ -614,9 +619,9 @@ private fun ThresholdBar(fraction: Float, marker: Float?) {
                 if (it > 0f) Spacer(modifier = Modifier.weight(it))
                 Box(
                     modifier = Modifier
-                        .width(2.dp)
+                        .width(3.dp)
                         .height(10.dp)
-                        .background(MaterialTheme.colorScheme.onSurface)
+                        .background(markerColor)
                 )
                 if (it < 1f) Spacer(modifier = Modifier.weight(1f - it))
             }
@@ -768,17 +773,18 @@ private fun StepRow(
             .clickable(enabled = enabled && hasValue, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
+        val tone = brandTone(step.colorRes)
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (on) colors.primaryContainer else colors.surfaceContainerHighest)
+                .background(if (on) tone.container else colors.surfaceContainerHighest)
         ) {
             Icon(
                 imageVector = step.icon,
                 contentDescription = null,
-                tint = if (on) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                tint = if (on) tone.content else colors.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -895,7 +901,7 @@ private fun StepsTimeline(group: RuleGroup, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
     val grayColor = colors.outline
-    val lockColor = colors.onSurface
+    val lockColor = brandTone(Step.LOCK.colorRes).content
     val locks = group.locks && group.canHoldBackApps
     Column(modifier = modifier) {
         Row(

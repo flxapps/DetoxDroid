@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox.ui.screens.rule_groups
 
 import android.content.Context
 import android.icu.text.ListFormatter
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Contrast
@@ -42,6 +43,15 @@ val Step.icon: ImageVector
         Step.GRAY -> Icons.Default.Contrast
         Step.SCROLL_BREAK -> Icons.Default.SwipeVertical
         Step.LOCK -> Icons.Default.Lock
+    }
+
+/** The color each step has throughout the app, the usage statistics' badges included. */
+val Step.colorRes: Int
+    @ColorRes get() = when (this) {
+        Step.WAIT -> R.color.yellow
+        Step.GRAY -> R.color.purple
+        Step.SCROLL_BREAK -> R.color.orange
+        Step.LOCK -> R.color.pink
     }
 
 /**

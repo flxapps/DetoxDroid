@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.provider.Telephony
 import android.telecom.TelecomManager
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,23 +30,36 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 import java.util.concurrent.TimeUnit
 
-/** The ready-made starting points for a new group. Everything in them can be changed afterwards. */
+/**
+ * The ready-made starting points for a new group. Everything in them can be changed afterwards.
+ * Each has one of the app's colors, the way the home screen's chart hands them out.
+ */
 enum class GroupTemplate(
     @StringRes val titleRes: Int,
     @StringRes val descriptionRes: Int,
     val icon: ImageVector,
+    @ColorRes val colorRes: Int,
 ) {
-    FEEDS(R.string.ruleGroups_template_feeds, R.string.ruleGroups_template_feeds_description, Icons.Default.Forum),
+    FEEDS(
+        R.string.ruleGroups_template_feeds, R.string.ruleGroups_template_feeds_description,
+        Icons.Default.Forum, R.color.orange
+    ),
     SHORT_VIDEO(
         R.string.ruleGroups_template_shortVideo, R.string.ruleGroups_template_shortVideo_description,
-        Icons.Default.SmartDisplay
+        Icons.Default.SmartDisplay, R.color.pink
     ),
     GRAY_ESSENTIALS(
         R.string.ruleGroups_template_grayEssentials, R.string.ruleGroups_template_grayEssentials_description,
-        Icons.Default.Contrast
+        Icons.Default.Contrast, R.color.purple
     ),
-    NIGHTS_OFF(R.string.ruleGroups_template_nightsOff, R.string.ruleGroups_template_nightsOff_description, Icons.Default.Bedtime),
-    EMPTY(R.string.ruleGroups_template_empty, R.string.ruleGroups_template_empty_description, Icons.Default.Add),
+    NIGHTS_OFF(
+        R.string.ruleGroups_template_nightsOff, R.string.ruleGroups_template_nightsOff_description,
+        Icons.Default.Bedtime, R.color.blue
+    ),
+    EMPTY(
+        R.string.ruleGroups_template_empty, R.string.ruleGroups_template_empty_description,
+        Icons.Default.Add, R.color.gray
+    ),
 }
 
 /** The schedules the setup offers as one tap each. */

@@ -51,6 +51,7 @@ import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
+import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.Websites
@@ -223,7 +224,7 @@ private fun StepIcons(group: RuleGroup) {
             Icon(
                 imageVector = step.icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = brandTone(step.colorRes).content,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -233,10 +234,19 @@ private fun StepIcons(group: RuleGroup) {
 @Composable
 private fun StatusChip(status: GroupStatus) {
     val colors = MaterialTheme.colorScheme
+    val tone = status.colorRes?.let { brandTone(it) }
     Surface(
         shape = CircleShape,
-        color = if (status.strong) colors.primaryContainer else colors.surfaceContainerHighest,
-        contentColor = if (status.strong) colors.onPrimaryContainer else colors.onSurfaceVariant,
+        color = when {
+            tone != null -> tone.container
+            status.strong -> colors.primaryContainer
+            else -> colors.surfaceContainerHighest
+        },
+        contentColor = when {
+            tone != null -> tone.content
+            status.strong -> colors.onPrimaryContainer
+            else -> colors.onSurfaceVariant
+        },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
