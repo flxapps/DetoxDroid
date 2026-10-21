@@ -37,6 +37,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.rules.GroupBudgets
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.schedule.rememberCurrentMinute
@@ -170,33 +173,59 @@ fun RuleGroupCard(group: RuleGroup, onClick: () -> Unit, modifier: Modifier = Mo
                 StatusChip(status)
             }
             ScopeIcons(apps = apps, websites = websites, allApps = !group.canHoldBackApps)
+            val usedMs = if (group.hasBudget) remember(group, now) { GroupBudgets.usedMs(group) } else 0L
             if (group.hasBudget) {
-                val usedMs = remember(group, now) { GroupBudgets.usedMs(group) }
                 BudgetBar(fraction = (usedMs.toFloat() / group.budgetMs).coerceIn(0f, 1f))
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(
+            }
+            // what the group does, the budget line and when it counts, on one line
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                StepIcons(group = group)
+                Text(
+                    text = if (group.hasBudget) {
+                        stringResource(
                             id = R.string.ruleGroups_card_usedOf,
                             usedMs.coerceAtMost(group.budgetMs).milliseconds.toHrMinString(context),
                             group.budgetMs.milliseconds.toHrMinString(context)
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = scheduleText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
+                        )
+                    } else "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
+                )
                 Text(
                     text = scheduleText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+/**
+ * The steps the group runs, as small icons in the order they take hold. A lock or wait that
+ * cannot reach the group's apps (a group of all apps but a few) is left out, as it does nothing.
+ */
+@Composable
+private fun StepIcons(group: RuleGroup) {
+    val steps = remember(group.steps, group.canHoldBackApps) {
+        group.steps.filter { it != Step.LOCK && it != Step.WAIT || group.canHoldBackApps }
+    }
+    if (steps.isEmpty()) return
+    val description = GroupTexts.joinNatural(steps.map { stringResource(id = it.titleRes) })
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.clearAndSetSemantics { contentDescription = description }
+    ) {
+        steps.forEach { step ->
+            Icon(
+                imageVector = step.icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
