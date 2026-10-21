@@ -789,9 +789,6 @@
     <string name="usageStats_byDay">Nach Tag</string>
     <string name="usageStats_weekdayAverages">Schnitt pro Wochentag</string>
     <string name="usageStats_detoxImpact">Detox-Wirkung</string>
-    <string name="usageStats_badge_grayscale">Graustufen</string>
-    <string name="usageStats_badge_disabled">Deaktiviert</string>
-    <string name="usageStats_badge_doomScroll">Scroll-Schutz</string>
     <string name="usageStats_grayscaleTime">In Graustufen</string>
     <string name="usageStats_colorRemaining">Farbe übrig</string>
     <string name="usageStats_scrollBreaks">Scroll-Pausen</string>

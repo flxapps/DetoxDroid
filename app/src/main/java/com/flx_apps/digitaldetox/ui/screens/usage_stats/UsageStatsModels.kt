@@ -1,5 +1,7 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
+import com.flx_apps.digitaldetox.rules.GroupId
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.websites.Websites
 import java.time.LocalDate
 
@@ -19,12 +21,17 @@ data class AppUsageStat(
     val scrollsPerMinute: Float,
     /** Physical scroll distance (the app's share of the scroll odometer). */
     val scrollDistanceMeters: Double,
-    val detoxBadges: List<DetoxBadge>
+    /** The groups that do something to it, see [GroupBadge]. */
+    val groups: List<GroupBadge>
 ) {
     val isWebsite: Boolean get() = Websites.isWebsite(packageName)
 }
 
-enum class DetoxBadge { GRAYSCALE, DISABLED, DOOM_SCROLL }
+/**
+ * One group that covers an app or website and has a step for it, for the chip on its row.
+ * @param step the strongest of the group's steps that reach it, which colors the chip
+ */
+data class GroupBadge(val groupId: GroupId, val name: String, val step: Step)
 
 data class DailyUsage(
     val date: LocalDate,

@@ -816,9 +816,6 @@
     <string name="usageStats_byDay">By day</string>
     <string name="usageStats_weekdayAverages">Weekday averages</string>
     <string name="usageStats_detoxImpact">Detox impact</string>
-    <string name="usageStats_badge_grayscale">Grayscale</string>
-    <string name="usageStats_badge_disabled">Disabled</string>
-    <string name="usageStats_badge_doomScroll">Scroll guard</string>
     <string name="usageStats_grayscaleTime">In grayscale</string>
     <string name="usageStats_colorRemaining">Color left</string>
     <string name="usageStats_scrollBreaks">Scroll breaks</string>

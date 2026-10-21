@@ -17,9 +17,11 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.system_integration.TodaySummary
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.system_integration.screenTimeMs
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
 import com.flx_apps.digitaldetox.util.DistancePerspective
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.appCategory
@@ -428,7 +430,7 @@ class UsageStatsViewModel @Inject constructor(
                     scrollIntensityScore = 0f,
                     scrollsPerMinute = 0f,
                     scrollDistanceMeters = 0.0,
-                    detoxBadges = websiteBadgesFor(site)
+                    groups = websiteGroupsFor(site)
                 )
             }
             .sortedByDescending { it.totalTimeMs }
@@ -445,9 +447,9 @@ class UsageStatsViewModel @Inject constructor(
             .forEach { WebsiteCollections.load(getApplication(), it) }
     }
 
-    /** What the groups do on [site] as a website, like [detoxBadgesFor] for an app. */
-    private fun websiteBadgesFor(site: String): List<DetoxBadge> =
-        badgesOf(RuleGroups.enabled().filter { Websites.covers(it, site) })
+    /** The groups with a step for [site] as a website, like [groupsFor] for an app. */
+    private fun websiteGroupsFor(site: String): List<GroupBadge> =
+        badgesOf(RuleGroups.enabled().filter { Websites.covers(it, site) }, isWebsite = true)
 
     private fun sumHourBuckets(buckets: List<IntArray>): IntArray {
         return IntArray(24) { hour -> buckets.sumOf { it.getOrElse(hour) { 0 } } }
@@ -649,18 +651,28 @@ class UsageStatsViewModel @Inject constructor(
             scrollIntensityScore = scrollIntensityScore(stat.scrollCount, stat.totalTimeMs),
             scrollsPerMinute = scrollsPerMinute(stat.scrollCount, stat.totalTimeMs),
             scrollDistanceMeters = pixelsToMeters(stat.scrollDistancePx),
-            detoxBadges = detoxBadgesFor(stat.packageName)
+            groups = groupsFor(stat.packageName)
         )
     }
 
-    private fun detoxBadgesFor(packageName: String): List<DetoxBadge> =
-        badgesOf(RuleGroups.enabled().filter { it.appliesTo(packageName) })
+    private fun groupsFor(packageName: String): List<GroupBadge> =
+        badgesOf(RuleGroups.enabled().filter { it.appliesTo(packageName) }, isWebsite = false)
 
-    /** The steps the [covering] groups apply, as badges. */
-    private fun badgesOf(covering: List<RuleGroup>): List<DetoxBadge> = buildList {
-        if (covering.any { it.grays }) add(DetoxBadge.GRAYSCALE)
-        if (covering.any { it.locks && it.canHoldBackApps }) add(DetoxBadge.DISABLED)
-        if (covering.any { it.breaksScrolling }) add(DetoxBadge.DOOM_SCROLL)
+    /**
+     * The [covering] groups that do something to what they cover, one badge each. A lock or a
+     * wait reaches an app only from a group that names it, a website from any group, see
+     * [RuleGroup.canHoldBackApps].
+     */
+    private fun badgesOf(covering: List<RuleGroup>, isWebsite: Boolean): List<GroupBadge> {
+        // the step that holds an app back hardest first: it is the one the chip is colored by
+        val byStrength = listOf(Step.LOCK, Step.GRAY, Step.SCROLL_BREAK, Step.WAIT)
+        return covering.mapNotNull { group ->
+            val step = byStrength.firstOrNull { step ->
+                group.hasStep(step) &&
+                        (isWebsite || group.canHoldBackApps || step != Step.LOCK && step != Step.WAIT)
+            } ?: return@mapNotNull null
+            GroupBadge(group.id, GroupTexts.name(getApplication(), group), step)
+        }
     }
 
     private fun buildDetoxImpact(
