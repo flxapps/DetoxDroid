@@ -30,7 +30,6 @@ import com.flx_apps.digitaldetox.websites.WebsiteCollection
 import com.flx_apps.digitaldetox.websites.Websites
 import java.time.DayOfWeek
 import java.time.LocalTime
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /** The headings the templates are listed under. */
@@ -139,8 +138,7 @@ data class GroupDraft(
 
 /**
  * What each template picks and sets. The apps come from [KnownApps] and the store's categories,
- * the websites from the collections that ship with the app and a few named sites, for the shops
- * the ones of the phone's language.
+ * the websites from the collections that ship with the app and a few named sites.
  */
 object GroupTemplates {
     private val RankedAppRow.isFeed get() = KnownApps.isFeed(packageName, osCategory)
@@ -155,21 +153,6 @@ object GroupTemplates {
 
     private val social get() = collection(WebsiteCollection.SOCIAL)
     private val video get() = collection(WebsiteCollection.VIDEO)
-
-    private val german get() = Locale.getDefault().language == "de"
-
-    private val shopSites
-        get() = if (german) {
-            listOf(
-                site("amazon.de"), site("ebay.de"), site("kleinanzeigen.de"), site("zalando.de"),
-                site("otto.de"), site("temu.com"), site("shein.com"), site("aliexpress.com")
-            )
-        } else {
-            listOf(
-                site("amazon.com"), site("ebay.com"), site("temu.com"), site("shein.com"),
-                site("aliexpress.com"), site("etsy.com"), site("walmart.com")
-            )
-        }
 
     private fun minutes(minutes: Long): Long = TimeUnit.MINUTES.toMillis(minutes)
 
@@ -215,7 +198,7 @@ object GroupTemplates {
             // the wait is the point: an impulse rarely survives ten seconds
             GroupTemplate.SHOPPING -> base.copy(
                 apps = pick { it.isShop },
-                websites = shopSites.toSet(),
+                websites = setOf(collection(WebsiteCollection.SHOPPING)),
                 waitMs = DefaultWaitMs,
                 budgetMs = minutes(30),
                 locks = true,
@@ -258,7 +241,7 @@ object GroupTemplates {
         )
 
         GroupTemplate.VIDEOS_AND_GAMES -> listOf(video)
-        GroupTemplate.SHOPPING -> shopSites
+        GroupTemplate.SHOPPING -> listOf(collection(WebsiteCollection.SHOPPING))
         GroupTemplate.GAMBLING_AND_PORN ->
             listOf(collection(WebsiteCollection.GAMBLING), collection(WebsiteCollection.ADULT))
 

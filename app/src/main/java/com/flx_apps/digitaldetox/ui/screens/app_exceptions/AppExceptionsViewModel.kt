@@ -374,7 +374,7 @@ class AppExceptionsViewModel @Inject constructor(
             CollectionItem(
                 collection = collection,
                 checked = Websites.collectionEntry(collection) in entries,
-                sample = if (collection.curated) domains?.sample.orEmpty() else emptyList(),
+                sample = if (collection.named) domains?.sample.orEmpty() else emptyList(),
                 size = domains?.size ?: 0,
             )
         }

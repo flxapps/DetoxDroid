@@ -13,39 +13,51 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * A list of sites that comes with the app and goes into a feature's list as one entry. The two
- * small ones are ours. The two large ones are the porn and gambling extensions of the StevenBlack
- * hosts lists (see the header of each file for the sources and their licenses), refreshed with
- * `scripts/update_website_lists.py` before a release. Nothing is downloaded at runtime.
+ * A list of sites that comes with the app and goes into a feature's list as one entry, in the
+ * order the screen shows them. The social and video lists are written by hand. The large ones
+ * come from the porn and gambling extensions of the StevenBlack hosts lists and from the UT1
+ * blacklists of the Université Toulouse 1 Capitole (see the header of each file for the sources
+ * and their licenses), refreshed with `scripts/update_website_lists.py` before a release. Nothing
+ * is downloaded at runtime.
  *
- * @param curated Whether we wrote the list ourselves. A curated list is short enough to name its
- *   sites on screen, a large one is shown by its size and source.
+ * @param named Whether the file opens with its best-known sites, so the row can name them: true
+ *   for a list we wrote and for a large one we gave a head. The other rows show size and source.
  * @param advanced Whether the screen folds the list away under "Advanced". The porn and gambling
  *   lists are for the few who come looking for them, and everyone else should not have to read
  *   past them.
+ * @param source Where a large list comes from, for its row; null for one that is entirely ours.
  */
 enum class WebsiteCollection(
     val id: String,
     @StringRes val title: Int,
     val asset: String,
-    val curated: Boolean,
+    val named: Boolean,
     val advanced: Boolean,
+    @StringRes val source: Int? = null,
 ) {
     SOCIAL(
         "social", R.string.websites_collection_social, "websites/social.txt",
-        curated = true, advanced = false
+        named = true, advanced = false
     ),
     VIDEO(
         "video", R.string.websites_collection_video, "websites/video.txt",
-        curated = true, advanced = false
+        named = true, advanced = false
+    ),
+    SHOPPING(
+        "shopping", R.string.websites_collection_shopping, "websites/shopping.txt",
+        named = true, advanced = false, source = R.string.websites_source_ut1
+    ),
+    DATING(
+        "dating", R.string.websites_collection_dating, "websites/dating.txt",
+        named = true, advanced = false, source = R.string.websites_source_ut1
     ),
     ADULT(
         "adult", R.string.websites_collection_adult, "websites/adult.txt",
-        curated = false, advanced = true
+        named = false, advanced = true, source = R.string.websites_source_stevenBlack
     ),
     GAMBLING(
         "gambling", R.string.websites_collection_gambling, "websites/gambling.txt",
-        curated = false, advanced = true
+        named = false, advanced = true, source = R.string.websites_source_stevenBlackAndUt1
     );
 
     companion object {
@@ -69,7 +81,7 @@ object WebsiteCollections {
     private val loading = ConcurrentHashMap.newKeySet<WebsiteCollection>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /** How many sites of a curated collection are named on screen before "and N more". */
+    /** How many sites of a named collection are shown on screen before "and N more". */
     private const val SAMPLE_SIZE = 4
 
     /**

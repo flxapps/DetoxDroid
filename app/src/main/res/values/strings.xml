@@ -160,11 +160,16 @@
     <string name="websites_section_collections">Ready-made lists</string>
     <string name="websites_collection_social">Social media</string>
     <string name="websites_collection_video">Video and streaming</string>
+    <string name="websites_collection_shopping">Shopping</string>
+    <string name="websites_collection_dating">Dating</string>
     <string name="websites_collection_adult">Porn sites</string>
     <string name="websites_collection_gambling">Gambling</string>
     <!-- the first few sites of a list, then how many it has on top -->
     <string name="websites_collection_sample">%1$s and %2$d more</string>
-    <string name="websites_collection_size">%s sites, from the StevenBlack hosts lists</string>
+    <string name="websites_collection_size">%1$s sites, %2$s</string>
+    <string name="websites_source_stevenBlack">from the StevenBlack hosts lists</string>
+    <string name="websites_source_ut1">from the UT1 blacklists of the Université Toulouse Capitole</string>
+    <string name="websites_source_stevenBlackAndUt1">from the StevenBlack hosts lists and the UT1 blacklists</string>
     <!-- %s is one browser or several, like "Chrome and Firefox" -->
     <string name="websites_browsers_readable">Works in %s.</string>
     <string name="websites_browsers_unreadable">DetoxDroid can\'t read %s, so websites go unnoticed there. Add the browser itself as an app instead.</string>

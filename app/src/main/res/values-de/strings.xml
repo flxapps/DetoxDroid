@@ -153,10 +153,15 @@
     <string name="websites_section_collections">Fertige Listen</string>
     <string name="websites_collection_social">Soziale Medien</string>
     <string name="websites_collection_video">Video und Streaming</string>
+    <string name="websites_collection_shopping">Shopping</string>
+    <string name="websites_collection_dating">Dating</string>
     <string name="websites_collection_adult">Pornoseiten</string>
     <string name="websites_collection_gambling">Glücksspiel</string>
     <string name="websites_collection_sample">%1$s und %2$d weitere</string>
-    <string name="websites_collection_size">%s Seiten aus den StevenBlack-Hosts-Listen</string>
+    <string name="websites_collection_size">%1$s Seiten, %2$s</string>
+    <string name="websites_source_stevenBlack">aus den StevenBlack-Hosts-Listen</string>
+    <string name="websites_source_ut1">aus den UT1-Blacklists der Université Toulouse Capitole</string>
+    <string name="websites_source_stevenBlackAndUt1">aus den StevenBlack-Hosts-Listen und den UT1-Blacklists</string>
     <string name="websites_browsers_readable">Klappt in %s.</string>
     <string name="websites_browsers_unreadable">%s kann DetoxDroid nicht lesen, Websites bleiben dort also unbemerkt. Nimm stattdessen den Browser selbst als App in die Liste.</string>
     <string name="websites_browsers_none">Keinen deiner Browser kann DetoxDroid lesen. Chrome, Firefox, Samsung Internet, Brave, Edge und die meisten ihrer Verwandten gehen.</string>

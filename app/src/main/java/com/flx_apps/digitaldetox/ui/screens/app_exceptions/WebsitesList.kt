@@ -18,7 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Casino
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -412,13 +414,13 @@ internal fun joinedNames(names: List<String>): String =
     ListFormatter.getInstance(LocalConfiguration.current.locales[0]).format(names)
 
 /**
- * What a collection row says under its name: the first sites of a list we wrote, or the size and
- * source of a large one. Null while it is loading.
+ * What a collection row says under its name: the best-known sites of a list that opens with
+ * them, or the size and source of a large one. Null while it is loading.
  */
 @Composable
 private fun CollectionItem.description(): String? = when {
     size == 0 -> null
-    collection.curated -> stringResource(
+    collection.named -> stringResource(
         id = R.string.websites_collection_sample,
         sample.joinToString(", "),
         size - sample.size
@@ -427,7 +429,8 @@ private fun CollectionItem.description(): String? = when {
     // the app's language, which can differ from the phone's
     else -> stringResource(
         id = R.string.websites_collection_size,
-        NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(size)
+        NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(size),
+        collection.source?.let { stringResource(id = it) }.orEmpty()
     )
 }
 
@@ -438,6 +441,8 @@ private fun CollectionItem.matches(query: String, title: String): Boolean =
 private val WebsiteCollection.icon: ImageVector
     get() = when (this) {
         WebsiteCollection.SOCIAL -> Icons.Default.Forum
+        WebsiteCollection.SHOPPING -> Icons.Default.ShoppingBag
+        WebsiteCollection.DATING -> Icons.Default.Favorite
         WebsiteCollection.VIDEO -> Icons.Default.SmartDisplay
         WebsiteCollection.ADULT -> Icons.Default.NoAdultContent
         WebsiteCollection.GAMBLING -> Icons.Default.Casino

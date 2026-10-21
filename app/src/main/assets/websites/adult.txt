@@ -1,12 +1,12 @@
-# Adult sites: the porn extension of the StevenBlack hosts project
-# (https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts), reduced to one domain per line, without "www.", sorted.
-# It merges these lists:
-#   BigDargon's adult domain blocking hosts file, MIT, https://github.com/bigdargon/hostsVN/
-#   brijrajparmar27 - pornography, CC BY 4.0, https://github.com/brijrajparmar27/host-sources
-#   pornhosts -- a consolidated anti porn hosts file, MIT, https://github.com/Clefspeare13/pornhosts
-#   Sinfonietta's porn blocking hosts file, MIT, https://github.com/Sinfonietta/hostfiles
-#   Sinfonietta's snuff-site blocking hosts file, MIT, https://github.com/Sinfonietta/hostfiles
-#   Tiuxo hostlist - pornography, CC BY 4.0, https://github.com/tiuxo/hosts
+# Adult sites: one domain per line, without "www.", sorted.
+# Sources:
+#   StevenBlack hosts, extension porn, MIT, https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn-only/hosts, merging:
+#     BigDargon's adult domain blocking hosts file, MIT, https://github.com/bigdargon/hostsVN/
+#     brijrajparmar27 - pornography, CC BY 4.0, https://github.com/brijrajparmar27/host-sources
+#     pornhosts -- a consolidated anti porn hosts file, MIT, https://github.com/Clefspeare13/pornhosts
+#     Sinfonietta's porn blocking hosts file, MIT, https://github.com/Sinfonietta/hostfiles
+#     Sinfonietta's snuff-site blocking hosts file, MIT, https://github.com/Sinfonietta/hostfiles
+#     Tiuxo hostlist - pornography, CC BY 4.0, https://github.com/tiuxo/hosts
 0.oldgyhogola.com
 0.xd-cdn.com
 0.xxx-cdn.com
@@ -17269,7 +17269,6 @@ foreqew.angelfire.com
 forever39.incest.click
 forgivemefather.com
 forgotten-angels.de
-forgotten_dark_angel.tripod.com
 forhertube.com
 forjav.com
 foroprepagoscolombia.com
@@ -44032,7 +44031,6 @@ pornspace.es
 pornspan.com
 pornspankbang.ru
 pornspare.com
-pornspare_com.imedia-stream.com
 pornspark.com
 pornsplit.com
 pornsplus.com
@@ -47708,7 +47706,6 @@ severeporn-com.photosporn.net
 severeporn-com.zproxy.org
 severeporn.com
 severesexfilms.com
-sex
 sex-1.19yoporn.com
 sex-2.19yoporn.com
 sex-3.19yoporn.com
@@ -54221,7 +54218,6 @@ toplistwebcams.com
 toplivegirls.com
 topmatureporn.com
 topmaturexxx.com
-topmodel_virginie.cmonbook.com
 topmomsporn.com
 topmomvideos.com
 topmonsterhentai.com
@@ -61604,7 +61600,6 @@ xxvn.com
 xxvnapi.com
 xxvnurl.com
 xxvs2.xxxvideosexy.com
-xxx
 xxx-1.amateurxfilms.com
 xxx-18-hot.com
 xxx-18-teen.com
