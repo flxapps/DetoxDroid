@@ -17,8 +17,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
@@ -808,7 +810,7 @@ private fun StepsCard(
         }
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp)
+            modifier = Modifier.padding(top = 8.dp)
         )
         HowItWorksRow(onClick = { showingHowItWorks = true })
     }
@@ -996,7 +998,11 @@ private fun StepFeaturesSheet(onOpen: (Feature) -> Unit, onDismiss: () -> Unit) 
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
-        Column(modifier = Modifier.padding(bottom = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
+        ) {
             Text(
                 text = stringResource(id = R.string.ruleGroups_steps_featureSettings),
                 style = MaterialTheme.typography.titleLarge,
