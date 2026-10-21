@@ -407,7 +407,11 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             // native memory below API 33). Without a source the event says too little to count.
             val source = accessibilityEvent.source ?: return
             val isTextField = AccessibilityEventUtil.isTextFieldScrollEvent(source)
-            val viewIdResourceName = source.viewIdResourceName
+            // the short-video pager a known app scrolls inside of counts as the surface, where
+            // there is one, so a break on it is scoped to it (see ScrollSurfaces)
+            val viewIdResourceName = ScrollSurfaces.surfaceOf(
+                this, accessibilityEvent.packageName?.toString(), source
+            )
             source.recycle()
             if (isTextField) return
             // usage statistics are pure measurement and keep counting during a pause —

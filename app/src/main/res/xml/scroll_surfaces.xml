@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The short-video pagers of known apps, Reels, Shorts and their kind, as the accessibility
+     service sees them. On these one swipe is one video, and a swipe every ten seconds never looks
+     like fast scrolling, so the scroll break goes by time and swipes on them instead of by speed.
+
+     An id that starts with "id/" belongs to the app's own package. It is matched against the
+     scrolled view and, where that one has no id of its own, against its nearest ancestors: a
+     ViewPager2 scrolls an inner list that has none.
+
+     Everything here only adds to the generic detection. An app or a surface that is not listed is
+     judged by its scroll physics like any other, and an id that no longer exists simply matches
+     nothing, so an old one can stay for older versions. To find an id, swipe through the surface
+     with a debug build and read the log: a run on a recognised pager is logged when it starts. -->
+<surfaces>
+    <app package="com.instagram.android"><shortVideos id="id/clips_viewer_view_pager" /></app>
+    <app package="com.myinsta.android"><shortVideos id="id/clips_viewer_view_pager" /></app>
+    <app package="com.google.android.youtube"><shortVideos id="id/reel_recycler" /></app>
+    <app package="app.revanced.android.youtube"><shortVideos id="id/reel_recycler" /></app>
+    <app package="app.morphe.android.youtube"><shortVideos id="id/reel_recycler" /></app>
+    <app package="com.zhiliaoapp.musically"><shortVideos id="id/view_pager_layout_wrapper" /></app>
+    <app package="com.ss.android.ugc.trill"><shortVideos id="id/view_pager_layout_wrapper" /></app>
+    <app package="com.snapchat.android"><shortVideos id="id/spotlight_container" /></app>
+</surfaces>

@@ -599,6 +599,7 @@
     <string name="feature_doomScrolling_warning_pullBrake">Für %s die Notbremse ziehen</string>
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
+    <string name="feature_doomScrolling_warning_context_shortVideos">In den letzten %2$d Minuten hast du %1$d Kurzvideos weggewischt.</string>
     <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei. Diesmal pausiert die ganze App.</string>
     <string name="feature_doomScrolling_warning_context_brakePulled">Das war Nummer %1$d in kurzer Zeit. Die Notbremse läuft jetzt bis %2$s.</string>
     <string name="feature_doomScrolling_warning_context_braking">Die Notbremse läuft, also bleibt die App bis %s zu.</string>

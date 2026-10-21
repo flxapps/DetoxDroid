@@ -620,6 +620,7 @@
     <string name="feature_doomScrolling_warning_pullBrake">Pull the brake for %s</string>
     <string name="feature_doomScrolling_warning_context_intensity">You\'ve flicked through about %1$d screens in the last %2$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_endless">This feed just keeps loading more. You\'ve been at it for %1$d minutes.</string>
+    <string name="feature_doomScrolling_warning_context_shortVideos">You\'ve swiped past %1$d short videos in the last %2$d minutes.</string>
     <string name="feature_doomScrolling_warning_context_probation">Back at it right after a break. This time the whole app pauses.</string>
     <string name="feature_doomScrolling_warning_context_brakePulled">That was number %1$d in a short time. The brake is on until %2$s.</string>
     <string name="feature_doomScrolling_warning_context_braking">The brake is on, so this app is away until %s.</string>
