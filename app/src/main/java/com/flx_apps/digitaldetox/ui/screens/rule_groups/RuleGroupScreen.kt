@@ -263,7 +263,12 @@ fun RuleGroupScreen(
                     }) }
                 }
                 item { key(revision) { OverlapNote(group = group) } }
-                item { key(revision) { TodayCard(group = group) } }
+                item {
+                    key(revision) { TodayCard(
+                        group = group,
+                        onClick = { navViewModel.openRoute(NavigationRoutes.GroupBudget(groupId)) }
+                    ) }
+                }
                 item {
                     key(revision) { StepsCard(
                         group = group,
@@ -571,9 +576,9 @@ private fun OverlapNote(group: RuleGroup) {
     }
 }
 
-/** Today's use against the budget, with the big number of what is left. */
+/** Today's use against the budget, with the big number of what is left. Opens the budget. */
 @Composable
-private fun TodayCard(group: RuleGroup) {
+private fun TodayCard(group: RuleGroup, onClick: () -> Unit) {
     if (!group.hasBudget) return
     val context = LocalContext.current
     val now = rememberCurrentMinute()
@@ -583,7 +588,7 @@ private fun TodayCard(group: RuleGroup) {
     val usedMs = remember(group, now) { GroupBudgets.usedMs(group) }
     val leftMs = (group.budgetMs - usedMs).coerceAtLeast(0L)
     val graysInside = group.grays && !group.graysFromStart && group.grayAfterMs < group.budgetMs
-    GroupCard {
+    GroupCard(onClick = onClick) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(
