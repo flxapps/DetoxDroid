@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 /** How a step is named and drawn wherever the groups show it. */
 val Step.titleRes: Int
@@ -66,11 +67,18 @@ object GroupTexts {
         val apps = Websites.appsOf(group.appExceptions).filter { context.isInstalled(it) }
         val websites = Websites.websitesOf(group.appExceptions)
         val appNames = apps.map { context.appLabel(it) }.sortedBy { it.lowercase(Locale.getDefault()) }
-        val listed = buildList {
-            if (appNames.isNotEmpty()) add(namedList(context, appNames))
-            if (websites.isNotEmpty()) add(websitesPhrase(context, websites))
+        val websitesText = websitesPhrase(context, websites)
+        // a short list reads as one: "Instagram, TikTok and 4 websites". A long one names a few
+        // apps, counts the rest, and adds the websites after that, so no "and" meets another.
+        val listedText = when {
+            appNames.isEmpty() -> websitesText
+            appNames.size <= NAMED_APPS -> joinNatural(appNames + listOfNotNull(websitesText))
+            websitesText == null -> namedList(context, appNames)
+            else -> context.getString(
+                R.string.ruleGroups_scope_plusWebsites, namedList(context, appNames), websitesText
+            )
         }
-        val listedText = joinNatural(listed)
+        val listed = listOfNotNull(listedText)
         val allApps = group.appExceptionListType == AppExceptionListType.NOT_LIST
         val allWebsites = group.websiteListType == AppExceptionListType.NOT_LIST
         return when {
@@ -85,22 +93,23 @@ object GroupTexts {
                 R.string.ruleGroups_scope_andAllWebsites, listedText
             ) to 2
 
-            else -> listedText to apps.size + websites.size
+            else -> listedText.orEmpty() to apps.size + websites.size
         }
     }
 
-    /** "Instagram, TikTok and 3 more": the first few names, then a count. */
+    /** "Instagram, TikTok and 3 more apps": the first few names, then a count. */
     private fun namedList(context: Context, names: List<String>): String {
         if (names.size <= NAMED_APPS) return joinNatural(names)
         val shown = names.take(NAMED_APPS - 1)
         val more = names.size - shown.size
         return context.resources.getQuantityString(
-            R.plurals.ruleGroups_scope_andMore, more, joinNatural(shown), more
+            R.plurals.ruleGroups_scope_moreApps, more, shown.joinToString(", "), more
         )
     }
 
-    /** "reddit.com", "youtube.com/shorts and x.com", "4 websites", "Social media". */
-    private fun websitesPhrase(context: Context, websites: Set<String>): String {
+    /** "reddit.com", "youtube.com/shorts and x.com", "4 websites"; null without any. */
+    private fun websitesPhrase(context: Context, websites: Set<String>): String? {
+        if (websites.isEmpty()) return null
         val names = websites.map { Websites.displayName(context, it) }.sorted()
         return if (names.size <= 2) {
             joinNatural(names)
@@ -114,7 +123,7 @@ object GroupTexts {
     /** "30 minutes per day", null without a budget. */
     fun budget(context: Context, group: RuleGroup): String? {
         if (!group.hasBudget) return null
-        val amount = group.budgetMs.milliseconds.toHrMinString(context)
+        val amount = duration(context, group.budgetMs)
         return context.getString(
             when (group.budgetPeriod) {
                 BudgetPeriod.DAY -> R.string.ruleGroups_budget_perDay
@@ -182,7 +191,19 @@ object GroupTexts {
     fun seconds(context: Context, ms: Long): String =
         context.getString(R.string.duration_seconds_short, (ms / 1000L).toInt())
 
-    fun minutes(context: Context, ms: Long): String = ms.milliseconds.toHrMinString(context)
+    fun minutes(context: Context, ms: Long): String = duration(context, ms)
+
+    /**
+     * "45 min", "1 h", "1 h 30 min": a budget or a threshold, whole minutes, without a "0 min"
+     * behind full hours.
+     */
+    fun duration(context: Context, ms: Long): String {
+        val minutes = ms.milliseconds.inWholeMinutes
+        return when {
+            minutes >= 60 && minutes % 60 == 0L -> context.getString(R.string.duration_hours, minutes / 60)
+            else -> minutes.minutes.toHrMinString(context)
+        }
+    }
 
     /** The time of day [time] as the user reads it. */
     fun time(time: LocalTime): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).format(time)

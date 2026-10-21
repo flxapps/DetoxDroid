@@ -116,15 +116,20 @@ class GroupBudgetViewModel @Inject constructor(
         setMinutes(next.coerceAtLeast(0))
     }
 
-    /** Writes the draft to the group. */
+    /**
+     * Writes the draft to the group. A gray step that sat at the end of the budget stays at the
+     * end: "in color for the budget, then gray" is a shape, not a number of minutes.
+     */
     fun save() {
         val group = group ?: return
+        val grayAtEnd = group.grays && !group.graysFromStart && group.grayAfterMs >= group.budgetMs
         group.budgetMs = if (_minutes.value > 0) {
             TimeUnit.MINUTES.toMillis(_minutes.value.toLong())
         } else {
             RuleGroup.NO_BUDGET
         }
         group.budgetPeriod = _period.value
+        if (grayAtEnd && group.hasBudget) group.grayAfterMs = group.budgetMs
         RuleGroups.onChanged()
     }
 }

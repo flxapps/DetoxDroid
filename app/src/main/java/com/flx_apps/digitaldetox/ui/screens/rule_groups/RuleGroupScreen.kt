@@ -68,6 +68,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
@@ -95,15 +96,13 @@ import com.flx_apps.digitaldetox.ui.screens.schedule.scheduleStatus
 import com.flx_apps.digitaldetox.ui.widgets.AppBarBackButton
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.util.appLabel
-import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.observeAsState
 import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import kotlin.math.abs
 import java.time.format.TextStyle
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 /** The waits on offer, in seconds. */
 private val WaitChoicesSeconds = listOf(5, 10, 15, 20, 30, 45, 60)
@@ -130,7 +129,11 @@ fun RuleGroupScreen(
     // the group is one instance whose fields change in place, so nothing below would be told of
     // an edit by itself: every card is keyed on this and redrawn after each
     val revision = version.toLong() * 1_000_003L + groupsChanged
-    val missingPermissions = remember(revision) { Rules.stepsMissingPermission(context, group ?: return@remember emptySet()) }
+    // re-read when the screen comes back, from the system settings the note sends the user to
+    val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    val missingPermissions = remember(revision, lifecycleState) {
+        Rules.stepsMissingPermission(context, group ?: return@remember emptySet())
+    }
     if (group == null) {
         // deleted, from here or from a restored settings file
         LaunchedEffect(Unit) { navViewModel.onBackPress() }
@@ -264,7 +267,7 @@ fun RuleGroupScreen(
                         text = if (group.hasBudget && group.scheduleRules.isNotEmpty()) {
                             stringResource(
                                 id = R.string.ruleGroups_hint_countsFromWindow,
-                                group.budgetMs.milliseconds.toHrMinString(context)
+                                GroupTexts.duration(context, group.budgetMs)
                             )
                         } else {
                             stringResource(id = R.string.ruleGroups_hint_tapToChange)
@@ -495,8 +498,8 @@ private fun TodayCard(group: RuleGroup) {
             Text(
                 text = stringResource(
                     id = R.string.ruleGroups_card_usedOf,
-                    usedMs.coerceAtMost(group.budgetMs).milliseconds.toHrMinString(context),
-                    group.budgetMs.milliseconds.toHrMinString(context)
+                    GroupTexts.duration(context, usedMs.coerceAtMost(group.budgetMs)),
+                    GroupTexts.duration(context, group.budgetMs)
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -529,7 +532,7 @@ private fun TodayCard(group: RuleGroup) {
                 if (leftMs > 0L) {
                     val leftMinutes = (leftMs + 59_999L) / 60_000L
                     Text(
-                        text = leftMinutes.minutes.toHrMinString(context),
+                        text = GroupTexts.duration(context, leftMinutes * 60_000L),
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -772,10 +775,12 @@ private fun StepRow(
                 .padding(horizontal = 14.dp)
         ) {
             Text(text = stringResource(id = step.titleRes), style = MaterialTheme.typography.bodyLarge)
+            // a value that can be changed is underlined like the parts of the sentence above
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant
+                color = if (hasValue && enabled) colors.primary else colors.onSurfaceVariant,
+                textDecoration = if (hasValue && enabled) TextDecoration.Underline else null
             )
         }
         Switch(checked = on, onCheckedChange = onToggle, enabled = enabled)

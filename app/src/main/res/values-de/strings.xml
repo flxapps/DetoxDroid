@@ -58,6 +58,7 @@
     <string name="duration_minutes">%d Min.</string>
     <string name="duration_minutes_used">genutzt</string>
     <string name="duration_hoursMinutes">%1$d Std. %2$d Min.</string>
+    <string name="duration_hours">%d Std.</string>
     <string name="duration_hours_short">%dh</string>
     <string name="duration_minutes_short">%dmin</string>
     <string name="duration_hoursCompact">%1$dh%2$dmin</string>
@@ -270,6 +271,11 @@
         <item quantity="one">%1$s und %2$d weitere</item>
         <item quantity="other">%1$s und %2$d weitere</item>
     </plurals>
+    <plurals name="ruleGroups_scope_moreApps">
+        <item quantity="one">%1$s und %2$d weitere App</item>
+        <item quantity="other">%1$s und %2$d weitere Apps</item>
+    </plurals>
+    <string name="ruleGroups_scope_plusWebsites">%1$s, dazu %2$s</string>
     <string name="ruleGroups_budget_perDay">%s pro Tag</string>
     <string name="ruleGroups_budget_perHour">%s pro Stunde</string>
     <string name="ruleGroups_schedule_always">Immer</string>

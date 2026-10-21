@@ -404,7 +404,7 @@ private fun HowStep(draft: GroupDraft, viewModel: NewRuleGroupViewModel) {
             ChipFlowRow {
                 listOf(15, 30, 60, 120).forEach { preset ->
                     OptionChip(
-                        label = preset.minutes.toHrMinString(context),
+                        label = GroupTexts.duration(context, preset * 60_000L),
                         selected = budgetMinutes == preset,
                         onClick = { viewModel.setBudgetMinutes(preset) }
                     )
