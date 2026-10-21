@@ -36,10 +36,10 @@ import java.time.LocalDate
  * them is showing.
  *
  * Neither can keep itself current. The widget host updates every 30 minutes at best, and polling
- * the usage records on a timer costs battery for numbers nobody is looking at. The records only
- * change when an app is left anyway: the system books an app's time when it goes to the
- * background, not while it is in front. So refreshes follow those moments, an app switch and the
- * screen going off, plus the screen coming back on into another day. What the surfaces show
+ * the usage records on a timer costs battery for numbers nobody is looking at. So refreshes follow
+ * the moments that matter to what is shown, an app switch and the screen going off, plus the
+ * screen coming back on into another day; the app in front grows by the minute in between, which
+ * nobody is looking at a widget to see. What the surfaces show
  * besides the records (the apps left out, the budgets, what is blocked, whether DetoxDroid runs,
  * usage access, the clock, the language) is followed from [start] on, and a change there shows at
  * once, see [invalidate].
@@ -197,10 +197,14 @@ object ScreenTimeSurfaces {
 
     private fun schedule(context: Context, delayMs: Long) {
         val appContext = context.applicationContext
+        val requestedAt = SystemClock.elapsedRealtime()
+        val requestedGeneration = generation
         pending = scope.launch {
             delay(delayMs)
             // from here on, a new request has data this refresh may already have missed
             if (pending == coroutineContext.job) pending = null
+            // a refresh that began after the request already has what it asked for
+            if (lastRefreshElapsedMs >= requestedAt && generation == requestedGeneration) return@launch
             refresh(appContext)
         }
     }

@@ -209,17 +209,26 @@ object UsageStatsProvider {
     }
 
     /**
-     * Queries the merged per-app usage for each of the last [days] calendar days (today first).
-     * Limited by the OS retention window for daily buckets.
+     * The foreground time per app for each of the last [days] calendar days (today first): from
+     * the event log where it still reaches, which is exact to the day, from the daily buckets
+     * further back, which spill over from the day before (see [foregroundTimeByPackage]).
      */
-    fun queryDailyUsage(days: Int): List<Pair<LocalDate, Map<String, UsageStats>>> {
+    fun queryDailyUsage(days: Int): List<Pair<LocalDate, Map<String, Long>>> {
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
         return (0 until days).map { dayOffset ->
             val date = today.minusDays(dayOffset.toLong())
             val startMs = date.startOfDayMillis(zone)
-            val endMs = date.plusDays(1).startOfDayMillis(zone)
-            date to queryForPeriod(startMs, endMs)
+            val endMs = minOf(date.plusDays(1).startOfDayMillis(zone), System.currentTimeMillis())
+            val events = queryEventCounts(startMs, endMs)
+            val fromEvents = events.foregroundTimeByPackage()
+            // a day the log no longer has leaves no session and no launch behind
+            val retained = fromEvents.isNotEmpty() || events.launchCounts.isNotEmpty()
+            date to if (retained) {
+                fromEvents
+            } else {
+                queryForPeriod(startMs, endMs).mapValues { it.value.screenTimeMs }
+            }
         }
     }
 }

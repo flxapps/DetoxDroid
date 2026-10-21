@@ -17,7 +17,6 @@ import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
-import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.system_integration.TodaySummary
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.system_integration.screenTimeMs
@@ -464,16 +463,17 @@ class UsageStatsViewModel @Inject constructor(
     private fun withBackfilledRecentDays(
         rows: List<DailyAppUsage>, start: LocalDate, end: LocalDate
     ): List<DailyAppUsage> {
-        val daysWithData = rows.mapTo(mutableSetOf()) { it.date }
+        // a row with counters only (a scroll, a break) says nothing about the day's screen time
+        val daysWithData = rows.filter { it.totalTimeMs > 0L }.mapTo(mutableSetOf()) { it.date }
         val backfilled = rows.toMutableList()
-        for ((date, stats) in UsageStatsProvider.queryDailyUsage(BACKFILL_DAYS)) {
+        for ((date, timeByApp) in UsageStatsProvider.queryDailyUsage(BACKFILL_DAYS)) {
             if (date < start || date > end || date in daysWithData) continue
-            stats.mapTo(backfilled) { (pkg, stat) ->
+            timeByApp.mapTo(backfilled) { (pkg, timeMs) ->
                 DailyAppUsage(
                     rowId = DailyAppUsage.createRowId(date, pkg),
                     date = date,
                     packageName = pkg,
-                    totalTimeMs = stat.screenTimeMs,
+                    totalTimeMs = timeMs,
                     sessionCount = 0,
                     launchCount = 0,
                     scrollCount = 0,
@@ -664,17 +664,11 @@ class UsageStatsViewModel @Inject constructor(
      * wait reaches an app only from a group that names it, a website from any group, see
      * [RuleGroup.canHoldBackApps].
      */
-    private fun badgesOf(covering: List<RuleGroup>, isWebsite: Boolean): List<GroupBadge> {
-        // the step that holds an app back hardest first: it is the one the chip is colored by
-        val byStrength = listOf(Step.LOCK, Step.GRAY, Step.SCROLL_BREAK, Step.WAIT)
-        return covering.mapNotNull { group ->
-            val step = byStrength.firstOrNull { step ->
-                group.hasStep(step) &&
-                        (isWebsite || group.canHoldBackApps || step != Step.LOCK && step != Step.WAIT)
-            } ?: return@mapNotNull null
+    private fun badgesOf(covering: List<RuleGroup>, isWebsite: Boolean): List<GroupBadge> =
+        covering.mapNotNull { group ->
+            val step = GroupTexts.strongestStep(group, isWebsite) ?: return@mapNotNull null
             GroupBadge(group.id, GroupTexts.name(getApplication(), group), step)
         }
-    }
 
     private fun buildDetoxImpact(
         breakCount: Int?,
@@ -714,7 +708,8 @@ class UsageStatsViewModel @Inject constructor(
             val end = LocalDate.now()
             val start = end.minusDays(APP_TREND_DAYS - 1L)
             val byDate = if (Websites.isWebsite(packageName)) {
-                val site = Websites.displayName(getApplication(), packageName)
+                val site = Websites.siteOfEntry(packageName)
+                    ?: Websites.displayName(getApplication(), packageName)
                 repository.getSiteHistorical(site, start, end)
                     .associate { it.date to it.timeMs }
             } else {

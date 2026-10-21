@@ -3,7 +3,6 @@ package com.flx_apps.digitaldetox.util
 import android.content.Context
 import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
-import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import java.util.concurrent.TimeUnit
 
 /** An installed app, ranked by how distracting it is likely to be, see [RankedApps]. */
@@ -43,9 +42,9 @@ object RankedApps {
     ): Pair<List<RankedAppRow>, Boolean> {
         val avgUsageByApp: Map<String, Long> = if (hasUsageAccess) {
             val totals = HashMap<String, Long>()
-            UsageStatsProvider.queryDailyUsage(USAGE_DAYS).forEach { (_, statsByApp) ->
-                statsByApp.forEach { (packageName, stats) ->
-                    totals.merge(packageName, stats.screenTimeMs, Long::plus)
+            UsageStatsProvider.queryDailyUsage(USAGE_DAYS).forEach { (_, timeByApp) ->
+                timeByApp.forEach { (packageName, timeMs) ->
+                    totals.merge(packageName, timeMs, Long::plus)
                 }
             }
             totals.mapValues { it.value / USAGE_DAYS }

@@ -1,5 +1,6 @@
 package com.flx_apps.digitaldetox.data.repository
 
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.flx_apps.digitaldetox.data.DailyAppUsage
 import com.flx_apps.digitaldetox.data.DailyAppUsageDao
 import com.flx_apps.digitaldetox.data.DailyDeviceStats
@@ -8,6 +9,7 @@ import com.flx_apps.digitaldetox.data.DailyGrayscaleStats
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
 import com.flx_apps.digitaldetox.data.DailyWebsiteUsage
 import com.flx_apps.digitaldetox.data.DailyWebsiteUsageDao
+import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsage
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
@@ -44,6 +46,20 @@ class UsageStatsRepository @Inject constructor(
     private val websiteDao: DailyWebsiteUsageDao
 ) {
     private val snapshotMutex = Mutex()
+
+    /**
+     * The day the last full snapshot was of. The first snapshot of a new day writes the day before
+     * down once more from the event log, which the snapshots before midnight could not finish.
+     * Read from the store on first use, not when the repository is made: the counters-only
+     * snapshots never need it.
+     */
+    private class LastSnapshotDay {
+        var value: String by DataStoreProperty(
+            stringPreferencesKey("UsageStatsRepository_lastSnapshotDay"), ""
+        )
+    }
+
+    private val lastSnapshotDay by lazy { LastSnapshotDay() }
     private var counterBaselineDate: LocalDate? = null
     private val scrollCounterBaselines = mutableMapOf<String, Int>()
     private val scrollDistanceBaselines = mutableMapOf<String, Int>()
@@ -136,7 +152,45 @@ class UsageStatsRepository @Inject constructor(
         )
 
         snapshotGrayscaleToday()
+        finishDayBefore(today)
     }.also { snapshotSelfMeasuredToday() }.also { snapshotWebsitesToday() }
+
+    /**
+     * Completes the rows of the day before [today] from the event log, once, when the day has
+     * changed since the last snapshot: the last snapshot before midnight stopped at whatever
+     * minute it ran, and only the log has the rest. A day the log no longer reaches is left as it
+     * was.
+     */
+    private suspend fun finishDayBefore(today: LocalDate) {
+        val last = lastSnapshotDay.value.takeIf { it.isNotEmpty() }
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        lastSnapshotDay.value = today.toString()
+        if (last == null || !last.isBefore(today)) return
+        val zone = ZoneId.systemDefault()
+        val events = UsageStatsProvider.queryEventCounts(
+            last.startOfDayMillis(zone), last.plusDays(1).startOfDayMillis(zone)
+        )
+        val totals = events.foregroundTimeByPackage()
+        if (totals.isEmpty()) return
+        val sessionCounts = UsageStatsProvider.groupSessionCounts(events.sessions)
+        val existing = dao.getForDate(last).associateBy { it.packageName }
+        val rows = (totals.keys + existing.keys).map { pkg ->
+            val prior = existing[pkg]
+            DailyAppUsage(
+                rowId = DailyAppUsage.createRowId(last, pkg),
+                date = last,
+                packageName = pkg,
+                totalTimeMs = totals[pkg] ?: prior?.totalTimeMs ?: 0L,
+                sessionCount = sessionCounts[pkg] ?: prior?.sessionCount ?: 0,
+                launchCount = events.launchCounts[pkg] ?: prior?.launchCount ?: 0,
+                scrollCount = prior?.scrollCount ?: 0,
+                scrollDistancePx = prior?.scrollDistancePx ?: 0,
+                breakCount = prior?.breakCount ?: 0,
+                blockCount = prior?.blockCount ?: 0,
+            )
+        }
+        dao.upsertAll(rows)
+    }
 
     private suspend fun snapshotGrayscaleToday() {
         val today = LocalDate.now()

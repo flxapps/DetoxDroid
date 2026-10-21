@@ -46,9 +46,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -67,6 +69,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.feature_types.Feature
@@ -475,15 +478,18 @@ fun OpenAboutTile(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
  */
 @Composable
 fun ScreenTimeChart(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
-    // observed so the chart re-renders when the user returns to the screen
+    // read again whenever the user returns to the screen, and only then: a lifecycle event on
+    // the way out (pausing, stopping) is no reason to read the records
     val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
+    var resumes by remember { mutableIntStateOf(0) }
+    LaunchedEffect(lifecycleState) { if (lifecycleState == Lifecycle.Event.ON_RESUME) resumes++ }
 
     val context = LocalContext.current
     // Starts from what the widget and the notification read last, so the screen below does not
-    // jump once the numbers are in, then reads afresh off the main thread: whenever the user
-    // returns to the screen, never on ordinary recompositions such as slice taps.
+    // jump once the numbers are in, then reads afresh off the main thread, never on ordinary
+    // recompositions such as slice taps.
     val cached = remember { ScreenTimeSurfaces.today?.let { TodayDonut.of(context, it) } }
-    val today by produceState(cached, lifecycleState) {
+    val today by produceState(cached, resumes) {
         value = withContext(Dispatchers.IO) { TodayDonut.read(context) } ?: value
     }
     // nothing read yet: better nothing than a hint that may turn out wrong a moment later

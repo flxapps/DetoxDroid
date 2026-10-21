@@ -1,16 +1,20 @@
 package com.flx_apps.digitaldetox.system_integration
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.StringRes
+import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.rules.GroupBudgets
 import com.flx_apps.digitaldetox.rules.GroupId
 import com.flx_apps.digitaldetox.rules.RuleGroup
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageExclusions
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.DistancePerspective
+import com.flx_apps.digitaldetox.util.ForegroundTimeRecorder
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
 import com.flx_apps.digitaldetox.util.formatDurationMsCompact
 import com.flx_apps.digitaldetox.util.toHrMinString
@@ -117,26 +121,32 @@ data class TodaySummary(
         private const val CLOSE_TO_USUAL_MS = 5 * MINUTE_MS
 
         /**
-         * Reads today's numbers. Blocking: the system's usage records sit behind a binder call. A
-         * [detailed] reading also has the unlocks and the comparison with a usual day, which only
-         * the widget shows. They walk the event log: today's, and once a day the week before.
+         * Reads today's numbers. Blocking: the system's usage records sit behind a binder call. The
+         * day's event log is walked once and gives the time per app, the unlocks and today's side
+         * of the comparison with a usual day; where usage access was not granted, and on some ROMs
+         * a sideloaded app never gets it, the time DetoxDroid measured itself while it ran stands
+         * in (see [ForegroundTimeRecorder]). A [detailed] reading also has the unlocks and the
+         * comparison, which only the widget shows; the comparison walks the week before once a day.
          */
         fun read(context: Context, detailed: Boolean): TodaySummary {
             val today = LocalDate.now()
+            val startMs = today.startOfDayMillis()
+            val nowMs = System.currentTimeMillis()
             val exclusions = UsageExclusions(context)
-            val used = TodayScreenTime.byPackage(context).filterValues { it > 0L }
+            val events = if (UsageAccessUtil.hasUsageAccess(context)) {
+                UsageStatsProvider.queryEventCounts(startMs, nowMs)
+            } else null
+            val used = (events?.foregroundTimeByPackage()
+                ?: UsageStatsTracker.foregroundTimeRecorder.snapshot().mapValues { it.value.foregroundMs })
+                .filterValues { it > 0L }
             val byPackage = used.filterKeys { !exclusions.excludes(it) }
             var unlocks: Int? = null
             var vsUsual: VsUsual? = null
-            if (detailed && UsageAccessUtil.hasUsageAccess(context)) {
-                val startMs = today.startOfDayMillis()
-                val nowMs = System.currentTimeMillis()
-                val events = UsageStatsProvider.queryEventCounts(startMs, nowMs) {
-                    !exclusions.excludes(it)
-                }
-                unlocks = events.unlockCount
+            if (detailed && events != null) {
+                // the event the unlocks are counted from exists from Android 9 on
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) unlocks = events.unlockCount
                 vsUsual = UsualScreenTime.byNow(exclusions, today, nowMs - startMs)?.let {
-                    VsUsual(todayMs = events.sessions.sumOf { session -> session.totalTimeMs }, it)
+                    VsUsual(todayMs = byPackage.values.sum(), it)
                 }
             }
             // the apps the time is counted for, as on the usage screen, so both arrive at the
@@ -169,7 +179,7 @@ data class TodaySummary(
             val usedMs = GroupBudgets.usedMs(group)
             return Budget(
                 groupId = group.id,
-                name = group.name,
+                name = GroupTexts.name(DetoxDroidApplication.appContext, group),
                 allowedMs = group.budgetMs,
                 leftMs = (group.budgetMs - usedMs).coerceAtLeast(0L),
                 locks = group.locks,
