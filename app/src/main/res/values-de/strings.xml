@@ -22,12 +22,12 @@
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>
     <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung mit deiner Bildschirmzeit von heute, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
     <string name="reliability_keepAlive_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt. Ohne die Benachrichtigung ließe sich DetoxDroid einfach wegwischen.</string>
-    <string name="reliability_battery_title">Uneingeschränkten Akku erlauben</string>
+    <string name="reliability_battery_title">Uneingeschränkte Akkunutzung erlauben</string>
     <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Handy Hintergrund-Apps aggressiv schließt.</string>
     <string name="reliability_onboarding_title">Zuverlässig bleiben</string>
     <string name="reliability_onboarding_message">Manche Handys stoppen Hintergrund-Apps, um Akku zu sparen. Dabei geht DetoxDroid schon mal unbemerkt mit aus. Diese optionalen Einstellungen helfen, dass es weiterläuft.</string>
     <string name="reliability_forceStopped_title">Dein Handy hat DetoxDroid ausgeschaltet</string>
-    <string name="reliability_forceStopped_message">Android schaltet die Bedienungshilfe einer App ab, sobald sie zwangsweise beendet wird, und das passiert schon mal beim Schließen aller Apps oder durch den Akku-Manager. Sperr DetoxDroid in der App-Übersicht, lass es im Hintergrund laufen und starte es dann wieder.</string>
+    <string name="reliability_forceStopped_message">Android schaltet die Bedienungshilfe einer App ab, sobald sie zwangsweise beendet wird, und das passiert schon mal beim Schließen aller Apps oder durch den Akku-Manager. Fixier DetoxDroid in den laufenden Apps, lass es im Hintergrund laufen und starte es dann wieder.</string>
     <string name="reliability_forceStopped_howTo">Zeig mir, wie</string>
     <string name="reliability_forceStopped_dismiss">Aus lassen</string>
     <!-- endregion -->
@@ -146,7 +146,7 @@
     <string name="websites_add_action">Hinzufügen</string>
     <string name="websites_add_invalid">Das sieht nicht nach einer Webadresse aus.</string>
     <string name="websites_section_yours">Deine Websites</string>
-    <string name="websites_section_yours_empty">Noch keine. Eine Seite zählt mit allem, was dazugehört, auch mit ihren Subdomains. Mit Pfad, etwa youtube.com/shorts, zählt nur dieser Teil.</string>
+    <string name="websites_section_yours_empty">Noch keine. Eine Website zählt mit allem, was dazugehört, auch mit ihren Subdomains. Mit Pfad, etwa youtube.com/shorts, zählt nur dieser Teil.</string>
     <string name="websites_section_collections">Fertige Listen</string>
     <string name="websites_collection_social">Soziale Medien</string>
     <string name="websites_collection_video">Video und Streaming</string>
@@ -155,13 +155,13 @@
     <string name="websites_collection_adult">Pornoseiten</string>
     <string name="websites_collection_gambling">Glücksspiel</string>
     <string name="websites_collection_sample">%1$s und %2$d weitere</string>
-    <string name="websites_collection_size">%1$s Seiten, %2$s</string>
+    <string name="websites_collection_size">%1$s Websites, %2$s</string>
     <string name="websites_source_stevenBlack">aus den StevenBlack-Hosts-Listen</string>
     <string name="websites_source_ut1">aus den UT1-Blacklists der Université Toulouse Capitole</string>
     <string name="websites_source_stevenBlackAndUt1">aus den StevenBlack-Hosts-Listen und den UT1-Blacklists</string>
-    <string name="websites_browsers_readable">Klappt in %s.</string>
-    <string name="websites_browsers_unreadable">%s kann DetoxDroid nicht lesen, Websites bleiben dort also unbemerkt. Nimm stattdessen den Browser selbst als App in die Liste.</string>
-    <string name="websites_browsers_none">Keinen deiner Browser kann DetoxDroid lesen. Chrome, Firefox, Samsung Internet, Brave, Edge und die meisten ihrer Verwandten gehen.</string>
+    <string name="websites_browsers_readable">Funktioniert in %s.</string>
+    <string name="websites_browsers_unreadable">%s kann DetoxDroid nicht lesen, Websites bleiben dort also unbemerkt. Nimm stattdessen die App selbst in die Liste.</string>
+    <string name="websites_browsers_none">Keinen deiner Browser kann DetoxDroid lesen. Chrome, Firefox, Samsung Internet, Brave, Edge und viele mehr gehen.</string>
     <string name="websites_inAppBrowsers">Links, die sich in einer anderen App öffnen, etwa im eingebauten Browser von Instagram, sind nicht abgedeckt.</string>
     <!-- endregion -->
 
@@ -187,7 +187,7 @@
     <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die Apps und Websites einer anderen Gruppe in diese Liste. Die aktuelle Auswahl ist damit weg.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d Apps</string>
     <string name="feature_settings_exceptions_switchListType_title">Ausgewählte Apps behalten?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList">Bisher gilt die Funktion nur für deine %d ausgewählten Apps. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList">Bisher gilt das nur für deine %d ausgewählten Apps. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Bisher sind deine %d ausgewählten Apps ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
     <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
@@ -207,14 +207,14 @@
     <string name="feature_settings_exceptions_listType_onlyList_websites">Nur ausgewählte Websites</string>
     <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d Apps, %2$d Websites</string>
     <string name="feature_settings_exceptions_switchListType_title_websites">Ausgewählte Websites behalten?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt die Funktion nur für die Websites, die du ausgewählt hast (%s). Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt das nur für die Websites, die du ausgewählt hast (%s). Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
     <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Bisher sind die Websites, die du ausgewählt hast (%s), ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
     <string name="feature_settings_schedule_hint">%d Zeitfenster</string>
     <string name="feature_settings_schedule_hint_activeAllTheTime">Durchgehend aktiv</string>
-    <string name="feature_settings_schedule_description">Mit einem Zeitfenster beschränkst du die Funktion auf bestimmte Tage und Uhrzeiten.</string>
+    <string name="feature_settings_schedule_description">Mit einem Zeitfenster gilt das nur an bestimmten Tagen und zu bestimmten Uhrzeiten.</string>
     <string name="feature_settings_schedule_everyDay">Täglich</string>
     <string name="feature_settings_schedule_allDay">ganztägig</string>
     <string name="feature_settings_schedule_nextDay">Folgetag</string>
@@ -332,7 +332,7 @@
         <item quantity="one">ist gesperrt</item>
         <item quantity="other">sind gesperrt</item>
     </plurals>
-    <string name="ruleGroups_before_wait">Jedes Öffnen wartet erst mal {wait}.</string>
+    <string name="ruleGroups_before_wait">Vor jedem Öffnen heißt es erst mal {wait} warten.</string>
     <string name="ruleGroups_before_grayAlways">Die ganze Zeit grau.</string>
     <string name="ruleGroups_before_scroll">Doomscrolling bekommt nach {scroll} eine Pause.</string>
     <plurals name="ruleGroups_after_lock">
@@ -366,7 +366,7 @@
         <item quantity="one">%s kommt so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
         <item quantity="other">%s kommen so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
     </plurals>
-    <string name="ruleGroups_idle_setBudget">Budget setzen</string>
+    <string name="ruleGroups_idle_setBudget">Budget festlegen</string>
     <string name="ruleGroups_idle_grayAtLock_title">Grau fängt da an, wo die Sperre greift</string>
     <string name="ruleGroups_idle_grayAtLock_message">Es wird also nie grau. Wähl einen früheren Zeitpunkt.</string>
     <string name="ruleGroups_idle_grayAtLock_action">Früher</string>
@@ -392,7 +392,7 @@
     <string name="ruleGroups_step_gray_off">Nimmt die Farbe raus, und damit den halben Reiz</string>
     <string name="ruleGroups_step_gray_from">Grau ab</string>
     <string name="ruleGroups_step_gray_fromStart">der ersten Minute</string>
-    <string name="ruleGroups_step_gray_fromMinutes">%d min</string>
+    <string name="ruleGroups_step_gray_fromMinutes">%d Min.</string>
     <string name="ruleGroups_step_scrollBreak">Doomscrolling unterbrechen</string>
     <string name="ruleGroups_step_scrollBreak_on">Nach %s Scrollen</string>
     <string name="ruleGroups_step_scrollBreak_off">Eine Pause, wenn der Feed nicht aufhört</string>
@@ -413,7 +413,7 @@
     <string name="ruleGroups_when_title">Wann aktiv</string>
 
     <string name="ruleGroups_budget_title">Wie viel</string>
-    <string name="ruleGroups_budget_use">%s nehmen</string>
+    <string name="ruleGroups_budget_use">%s nutzen</string>
     <string name="ruleGroups_budget_noLimit">Kein Limit</string>
     <string name="ruleGroups_budget_less">Weniger</string>
     <string name="ruleGroups_budget_more">Mehr</string>
@@ -459,7 +459,7 @@
     <string name="ruleGroups_template_empty_description">Nichts ausgewählt, nichts eingestellt.</string>
     <string name="ruleGroups_setup_what_these">Diese Apps zählen. Die üblichen Verdächtigen stehen oben; nimm den Haken raus, wo keiner ist.</string>
     <string name="ruleGroups_setup_what_except">Alles zählt, außer dem, was du hier abhakst. Setz einen Haken bei allem, was so bleiben soll, wie es ist.</string>
-    <string name="ruleGroups_setup_what_hint">Websites funktionieren in Chrome, Firefox und den meisten Verwandten. Mehr Apps und Websites gibt\'s später auf dem Bildschirm der Gruppe.</string>
+    <string name="ruleGroups_setup_what_hint">Websites funktionieren in Chrome, Firefox und den meisten Browsern, die darauf aufbauen. Mehr Apps und Websites gibt\'s später auf dem Bildschirm der Gruppe.</string>
     <string name="ruleGroups_setup_budget_description">Wie lange die Apps und Websites der Gruppe zusammen bekommen.</string>
     <string name="ruleGroups_setup_schedule_hint">Genaue Tage und Uhrzeiten stellst du später auf dem Bildschirm der Gruppe ein.</string>
     <string name="ruleGroups_schedulePreset_always">Immer</string>
@@ -482,12 +482,12 @@
     <!-- region Feature: Grayscale -->
     <string name="feature_grayscale">Grau werden</string>
     <string name="feature_grayscale_subtitle">Wie das Grau aussieht</string>
-    <string name="feature_grayscale_description">Nimmt dem die Farbe, was eine Gruppe grau macht, und damit den halben Reiz. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
-    <string name="feature_grayscale_extraDim">Extra dunkel</string>
+    <string name="feature_grayscale_description">Nimmt allem die Farbe, was eine Gruppe grau macht, und damit den halben Reiz. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
+    <string name="feature_grayscale_extraDim">Extradunkel</string>
     <string name="feature_grayscale_extraDim_description">Dunkler, als der Helligkeitsregler hergibt, solange eine erfasste App offen ist. Lange drücken, um einzustellen, wie dunkel.</string>
     <string name="feature_grayscale_ignoreNonFullScreen">Pop-ups und Leisten ignorieren</string>
     <string name="feature_grayscale_ignoreNonFullScreen_description">Lautstärkeregler oder Statusleiste schalten die Farbe dann nicht mehr hin und her.</string>
-    <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extra dunkel oder den Bildschirmfilter ein.</string>
+    <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extradunkel oder den Bildschirmfilter ein.</string>
     <string name="feature_grayscale_noEffects_noPermission">Schalte erst den Bildschirmfilter ein oder richte echte Graustufen ein.</string>
     <string name="feature_grayscale_systemGrayscale">Graustufen</string>
     <string name="feature_grayscale_systemGrayscale_description">Der Farbfilter des Systems, solange eine erfasste App offen ist. Kostet keinen Akku.</string>
@@ -541,7 +541,7 @@
     <!-- region Feature: Emergency Brake -->
     <string name="feature_brake">Notbremse</string>
     <string name="feature_brake_subtitle">Alle Regeln auf Anschlag, sofort</string>
-    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abdriftest. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, auf der strengsten Stufe: Der ganze Bildschirm wird grau, deine Apps aus der Liste sind gesperrt, egal wie viel Zeit heute noch übrig wäre, Zeitpläne gelten nicht, und pausieren kannst du auch nicht.</string>
+    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abdriftest. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, auf der strengsten Stufe: Der ganze Bildschirm wird grau, gesperrte Apps bleiben gesperrt, egal wie viel Zeit noch übrig wäre, Zeitpläne gelten nicht, und pausieren kannst du auch nicht.</string>
     <string name="feature_brake_status_off">Wähl aus, wie lange, und los geht\'s.</string>
     <string name="feature_brake_status_notActivated">Schalte die Notbremse erst oben ein.</string>
     <string name="feature_brake_status_notRunning">DetoxDroid läuft nicht, da gibt es nichts zu bremsen.</string>
@@ -559,7 +559,7 @@
     <string name="feature_brake_noPause">Keine Pause, solange die Notbremse läuft. Sie geht bis %s.</string>
     <string name="feature_brake_stop_locked">Die Notbremse läuft bis %s. So lange lässt sich DetoxDroid nicht stoppen.</string>
     <string name="feature_brake_ways">So löst du sie aus</string>
-    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Ein Tipp dort, und sie läuft so lange wie beim letzten Mal.</string>
+    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Einmal antippen, und sie läuft so lange wie beim letzten Mal.</string>
     <string name="feature_brake_fromQuickSettings_alreadyAdded">Die Notbremse ist schon in deinen Schnelleinstellungen.</string>
     <string name="feature_brake_fromHomeScreen">Startbildschirm</string>
     <string name="feature_brake_fromHomeScreen_description">Tippe hier, und die Notbremse bekommt ein eigenes Symbol auf deinem Startbildschirm. Halte das DetoxDroid-Symbol gedrückt, dann findest du sie da auch.</string>
@@ -567,7 +567,7 @@
     <string name="feature_brake_shortcut">Notbremse</string>
     <string name="feature_brake_autoPull_header">Von selbst auslösen</string>
     <string name="feature_brake_autoPull">Automatisch auslösen</string>
-    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doom Scrolling durchbrechen“ an ist.</string>
+    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doomscrolling unterbrechen“ an ist.</string>
     <string name="feature_brake_autoPull_breaks">Wie oft erwischt</string>
     <string name="feature_brake_autoPull_breaks_description">So oft muss es passieren, über alle Apps gezählt.</string>
     <string name="feature_brake_autoPull_window">Innerhalb von</string>
@@ -577,11 +577,11 @@
     <!-- endregion -->
 
     <!-- region Feature: Break Doom Scrolling -->
-    <string name="feature_doomScrolling">„Doom Scrolling“ durchbrechen</string>
+    <string name="feature_doomScrolling">Doomscrolling unterbrechen</string>
     <string name="feature_doomScrolling_subtitle">Empfindlichkeit und Abklingzeit</string>
     <string name="feature_doomScrolling_description">Experimentell. Erkennt langes, schnelles Scrollen in den Apps einer Gruppe und bietet dir einen Ausstieg an. Welche Apps und ab wann, das stellst du in der Gruppe ein.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Zeit bis zur Warnung</string>
-    <string name="feature_doomScrolling_cooldownTime">Abkühlphase</string>
+    <string name="feature_doomScrolling_cooldownTime">Abklingzeit</string>
     <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App zu, oder nur der Feed, der es ausgelöst hat.</string>
     <string name="feature_doomScrolling_sensitivity">Empfindlichkeit</string>
     <string name="feature_doomScrolling_sensitivity_description">Wie schnell du scrollen musst, bis eine Pause kommt. Endlose Feeds werden so oder so erkannt.</string>
@@ -594,7 +594,7 @@
     <string name="feature_doomScrolling_warning_title">Aufwachen!</string>
     <string name="feature_doomScrolling_warning_message">Sieht aus, als hättest du dich festgescrollt.</string>
     <string name="feature_doomScrolling_warning_exit">Hol mich hier raus</string>
-    <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann höre ich auf</string>
+    <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann hör ich auf</string>
     <string name="feature_doomScrolling_warning_pullBrake">Für %s die Notbremse ziehen</string>
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
@@ -604,7 +604,7 @@
     <string name="feature_doomScrolling_warning_context_braking">Die Notbremse läuft, also bleibt die App bis %s zu.</string>
     <string name="feature_doomScrolling_guideOut_title">Abgemacht ist abgemacht</string>
     <string name="feature_doomScrolling_guideOut_message">Hoffentlich hat sich\'s gelohnt. Zurück zum Startbildschirm.</string>
-    <string name="feature_doomScrolling_cooldown_title">Noch in der Abkühlphase</string>
+    <string name="feature_doomScrolling_cooldown_title">Abklingzeit läuft noch</string>
     <string name="feature_doomScrolling_cooldown_message">Hier läuft dir nichts weg. Genieß noch ein paar Minuten für dich.</string>
     <string name="feature_doomScrolling_cooldown_context_app">%1$s ist in %2$d Min. wieder da.</string>
     <string name="feature_doomScrolling_cooldown_context_surface">Dieser Feed in %1$s ist in %2$d Min. wieder da.</string>
@@ -612,8 +612,8 @@
 
     <!-- region Feature: Disable Apps -->
     <string name="feature_disableApps">Warten und sperren</string>
-    <string name="feature_disableApps_subtitle">Wie gesperrte Apps weggehalten werden</string>
-    <string name="feature_disableApps_description">Was eine Sperre mit einer App macht, sobald sie greift. Welche Apps, wann und wie lange, das stellst du in der Gruppe ein. Das Warten braucht hier nichts.</string>
+    <string name="feature_disableApps_subtitle">Wie eine Sperre aussieht</string>
+    <string name="feature_disableApps_description">Was eine Sperre mit einer App macht, sobald sie greift. Welche Apps, wann und wie lange, das stellst du in der Gruppe ein. Fürs Warten gibt es hier nichts einzustellen.</string>
     <string name="feature_disableApps_operationMode">Was eine Sperre macht</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
     <string name="feature_disableApps_operationMode_block_description">Ein Bildschirm vor der App, mit Weg zurück</string>
@@ -667,7 +667,7 @@
     </plurals>
     <string name="feature_commitmentPassword_show">Passphrase anzeigen</string>
     <string name="feature_commitmentPassword_hide">Passphrase verbergen</string>
-    <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuche es in %s erneut.</string>
+    <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuch\'s in %s noch mal.</string>
     <string name="feature_commitmentPassword_forgot">Passphrase vergessen?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase-Wiederherstellung</string>
     <string name="feature_commitmentPassword_recovery_message">Hast du deine Passphrase vergessen, kannst du einen 24-Stunden-Timer starten. Danach lässt sie sich zurücksetzen.\n\nBis dahin bleiben die Einstellungen gesperrt.</string>
@@ -717,7 +717,7 @@
     <!-- endregion -->
 
     <!-- region Minimal Launcher Widget -->
-    <string name="widget_minimalLauncher_name">DetoxDroid Launcher-Widget</string>
+    <string name="widget_minimalLauncher_name">DetoxDroid-Launcher-Widget</string>
     <string name="widget_minimalLauncher_description">Launcher-Widget, das ausgewählte Apps nur als Text anzeigt.</string>
     <string name="widget_minimalLauncher_empty">Tippe hier, um Apps auszuwählen</string>
     <string name="widget_minimalLauncher_configure_title">Launcher-Widget einrichten</string>
@@ -745,7 +745,7 @@
     <string name="widget_today_parts_description">Neben deiner Bildschirmzeit, sobald das Widget groß genug dafür ist.</string>
     <string name="widget_today_part_unlocks">Entsperrungen</string>
     <string name="widget_today_part_scrolled">Scroll-Strecke</string>
-    <string name="widget_today_part_vsUsual">Vergleich mit sonst</string>
+    <string name="widget_today_part_vsUsual">Vergleich mit einem normalen Tag</string>
     <string name="widget_today_part_apps">Meistgenutzte Apps</string>
     <string name="widget_today_part_budgets">Zeitbudgets</string>
     <string name="widget_today_part_scrollComparison">Strecke im Vergleich</string>
@@ -790,7 +790,7 @@
     <string name="usageStats_weekdayAverages">Schnitt pro Wochentag</string>
     <string name="usageStats_detoxImpact">Detox-Wirkung</string>
     <string name="usageStats_grayscaleTime">In Graustufen</string>
-    <string name="usageStats_colorRemaining">Farbe übrig</string>
+    <string name="usageStats_colorRemaining">In Farbe</string>
     <string name="usageStats_scrollBreaks">Scroll-Pausen</string>
     <string name="usageStats_blocks">Gesperrt</string>
     <string name="usageStats_launches">%d Öffnungen</string>
@@ -855,7 +855,7 @@
     <string name="usageStats_odometer_floors">≈ %1$d Stockwerke</string>
     <string name="usageStats_timeValue_setup">Was ist dir eine Stunde deiner Zeit wert?</string>
     <string name="usageStats_timeValue_hint">Tippe, um zu sehen, was deine Bildschirmzeit wert ist</string>
-    <string name="usageStats_timeValue_label">deine Bildschirmzeit bei %1$s</string>
+    <string name="usageStats_timeValue_label">deine Bildschirmzeit, gerechnet mit %1$s</string>
     <string name="usageStats_timeValue_off">aus</string>
     <string name="usageStats_ratePerHour">%1$s/Std.</string>
 
@@ -878,7 +878,7 @@
     <string name="onboarding_action_next">Weiter</string>
     <string name="onboarding_action_skipSetup">Einrichtung überspringen</string>
     <string name="onboarding_skipSetup_dialog_title">Einrichtung überspringen?</string>
-    <string name="onboarding_skipSetup_dialog_message">Dann wird nichts eingerichtet. Jede Funktion lässt sich später einzeln einstellen, oder du startest die Einrichtung im Über-Bereich noch einmal.</string>
+    <string name="onboarding_skipSetup_dialog_message">Dann wird nichts eingerichtet. Jede Funktion lässt sich später einzeln einstellen, oder du startest die Einrichtung unter „Über &amp; Einstellungen“ noch einmal.</string>
     <string name="onboarding_skipSetup_dialog_confirm">Überspringen</string>
     <string name="onboarding_progress_stepOf">Schritt %1$d von %2$d</string>
     <string name="onboarding_welcome_title">Hol dir deine Aufmerksamkeit zurück</string>
@@ -926,7 +926,7 @@
     <string name="onboarding_permissions_accessibility_manual">Tippe, um die Bedienungshilfen zu öffnen und DetoxDroid dort zu aktivieren.</string>
     <string name="onboarding_permissions_state_granted">Erteilt</string>
     <string name="onboarding_done_title">Alles bereit</string>
-    <string name="onboarding_done_message">DetoxDroid ist eingerichtet. Deine Auswahl ist jetzt eine Gruppe auf dem Startbildschirm; Apps, Zeitplan, Budget und Schritte bleiben dort änderbar.</string>
+    <string name="onboarding_done_message">DetoxDroid ist eingerichtet. Deine Auswahl ist jetzt eine Gruppe auf dem Startbildschirm. Apps, Zeitplan, Budget und Schritte kannst du dort jederzeit ändern.</string>
     <plurals name="onboarding_done_summary_scrollBreaks">
         <item quantity="one">Scroll-Pausen in %d App</item>
         <item quantity="other">Scroll-Pausen in %d Apps</item>
@@ -936,7 +936,7 @@
     <string name="onboarding_done_summary_grayscaleFilter">Ablenkende Apps werden nach %s täglicher Nutzung stumpf und unscharf. Echte Graustufen brauchen noch einen einmaligen Schritt.</string>
     <string name="onboarding_done_summary_blocking">Apps gesperrt nach %s täglicher Nutzung</string>
     <string name="onboarding_done_summary_blockingPending">Die App-Sperre ist eingerichtet. Ihr fehlt nur noch die Berechtigung „Über anderen Apps anzeigen“.</string>
-    <string name="onboarding_done_summary_accessibilityPending">DetoxDroids Bedienungshilfe läuft noch nicht. Du kannst sie über den Startbildschirm starten.</string>
+    <string name="onboarding_done_summary_accessibilityPending">Die Bedienungshilfe von DetoxDroid läuft noch nicht. Du kannst sie über den Startbildschirm starten.</string>
     <string name="onboarding_done_summary_nothing">Du hast keine Apps ausgewählt, deshalb wurde nichts eingerichtet. Schau dich in Ruhe auf dem Startbildschirm um.</string>
     <string name="onboarding_done_summary_rerunHint">Beim Abschließen kommt eine neue Gruppe zu deinen bisherigen dazu.</string>
     <string name="onboarding_done_summary_permissionsHint">Erteile die fehlenden Berechtigungen, um das anzuschalten. Später geht auch, wir erinnern dich auf dem Startbildschirm.</string>
