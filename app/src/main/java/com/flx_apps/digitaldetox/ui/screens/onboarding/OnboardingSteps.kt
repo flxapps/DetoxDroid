@@ -63,6 +63,7 @@ import androidx.lifecycle.Lifecycle
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import com.flx_apps.digitaldetox.ui.widgets.IconCard
 import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.rememberAccessibilityConsent
@@ -306,7 +307,7 @@ internal fun PermissionsStep(
                     if (canOneTapGrant) {
                         viewModel.grantWriteSecureSettings()
                     } else {
-                        navViewModel.openRoute(NavigationRoutes.ShizukuSetup)
+                        navViewModel.openRoute(NavigationRoutes.ShizukuSetup(ShizukuSetupGoal.GRAYSCALE))
                     }
                 })
         }

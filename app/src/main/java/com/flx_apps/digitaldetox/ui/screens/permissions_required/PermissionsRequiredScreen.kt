@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import com.flx_apps.digitaldetox.ui.widgets.HyperlinkText
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.flx_apps.digitaldetox.util.PrivilegedShell
@@ -177,7 +178,7 @@ fun PermissionsRequiredScreenContent(
                 description = stringResource(id = R.string.noPermissions_shizukuWizard),
                 buttonText = stringResource(id = R.string.noPermissions_shizukuWizard_go),
                 onGrantPermissions = {
-                    navViewModel.openRoute(NavigationRoutes.ShizukuSetup)
+                    navViewModel.openRoute(NavigationRoutes.ShizukuSetup(ShizukuSetupGoal.GRAYSCALE))
                 })
         }
 

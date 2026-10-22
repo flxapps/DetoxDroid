@@ -69,6 +69,7 @@ import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import com.flx_apps.digitaldetox.ui.theme.isAppInDarkTheme
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
@@ -332,7 +333,7 @@ private fun ShizukuWizardTile(navViewModel: NavViewModel = NavViewModel.navViewM
             )
         },
         allowClickWhenLocked = true,
-        onClick = { navViewModel.openRoute(NavigationRoutes.ShizukuSetup) })
+        onClick = { navViewModel.openRoute(NavigationRoutes.ShizukuSetup(ShizukuSetupGoal.GRAYSCALE)) })
 }
 
 /**

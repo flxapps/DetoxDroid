@@ -27,6 +27,7 @@ import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
 import com.flx_apps.digitaldetox.ui.screens.rule_groups.colorRes
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.ui.widgets.CardOption
 import com.flx_apps.digitaldetox.ui.widgets.OptionCards
@@ -98,7 +99,7 @@ fun OperationModeCards(
                     ),
                 )
 
-                DisableAppsMode.SUSPEND -> NavigationRoutes.ShizukuSetup
+                DisableAppsMode.SUSPEND -> NavigationRoutes.ShizukuSetup(ShizukuSetupGoal.SUSPEND)
                 DisableAppsMode.BLOCK -> return@OptionCards
             }
             featureViewModel.showSnackbar(

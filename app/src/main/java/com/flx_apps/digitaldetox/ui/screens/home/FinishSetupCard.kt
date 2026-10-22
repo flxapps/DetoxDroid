@@ -32,6 +32,7 @@ import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import com.flx_apps.digitaldetox.util.observeAsState
@@ -97,7 +98,9 @@ fun FinishSetupCard(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
                     waitsForGray && canWriteSecureSettings ->
                         navViewModel.openRoute(NavigationRoutes.ManageFeature(GrayscaleAppsFeatureId))
 
-                    waitsForGray -> navViewModel.openRoute(NavigationRoutes.ShizukuSetup)
+                    waitsForGray -> navViewModel.openRoute(
+                        NavigationRoutes.ShizukuSetup(ShizukuSetupGoal.GRAYSCALE)
+                    )
                     else -> NavigationUtil.openOverlayPermissionsSettings(context)
                 }
             }) {

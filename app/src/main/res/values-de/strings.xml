@@ -961,6 +961,10 @@
     <string name="shizukuSetup_step4_description">Ein Fingertipp, und DetoxDroid erteilt sich die Farbfilter-Berechtigung über Shizuku selbst.</string>
     <string name="shizukuSetup_completed_title">Fertig!</string>
     <string name="shizukuSetup_completed_message">Die Berechtigung steht, die Graustufen sind bereit. Falls sie seit deiner Einrichtung gewartet haben, laufen sie jetzt.</string>
+    <string name="shizukuSetup_suspend_title">Shizuku einrichten</string>
+    <string name="shizukuSetup_suspend_intro">Apps einfrieren geht nur über Shizuku, eine kostenlose Helfer-App. Die Einrichtung dauert etwa fünf Minuten. Ein Haken: Shizuku muss laufen, damit eine Sperre eine App einfrieren kann, und nach jedem Neustart ist es erst mal aus.</string>
+    <string name="shizukuSetup_suspend_step2_rebootHint">Nach jedem Neustart musst du Shizuku wieder starten. Bis dahin greift bei gesperrten Apps stattdessen „Sperren“, also der Bildschirm davor.</string>
+    <string name="shizukuSetup_suspend_completed_message">Shizuku läuft und DetoxDroid darf es nutzen. Geh zurück und wähle „Einfrieren“.</string>
     <!-- endregion -->
 
     <!-- region Elevated Permissions -->
