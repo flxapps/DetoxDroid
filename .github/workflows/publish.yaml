@@ -7,6 +7,10 @@ on:
         description: 'Force version bump type (patch, minor, major)'
         required: false
         default: ''
+      reuse-changelog:
+        description: "Hotfix: the store changelog carries the previous release notes over, under this release's own"
+        type: boolean
+        default: false
 
 jobs:
   build-and-release:
@@ -67,6 +71,7 @@ jobs:
           # Parse semantic version
           latest_version=${latest_tag#v}
           IFS='.' read -r major minor patch <<< "$latest_version"
+          previous_version_code=$((major * 10000 + minor * 100 + patch))
           
           # Default bump type based on conventional commits
           bump_type="patch"  # Default to patch
@@ -108,6 +113,7 @@ jobs:
           new_version="$major.$minor.$patch"
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
           echo "VERSION_CODE=$version_code" >> $GITHUB_ENV
+          echo "PREVIOUS_VERSION_CODE=$previous_version_code" >> $GITHUB_ENV
           echo "BUMP_TYPE=$bump_type" >> $GITHUB_ENV
           
           echo "New version: v$new_version"
@@ -192,25 +198,57 @@ jobs:
           # Show the changelog
           cat "$changelog_file"
 
+      # The GitHub release above is the record of what each version changed. The store changelog
+      # is what someone updating reads, and the client shows only the current version's file, so
+      # a hotfix may carry the notes of the release it repairs along underneath its own: whoever
+      # skips straight to the hotfix would otherwise never see them.
       - name: Trim the changelog for F-Droid
+        env:
+          REUSE_CHANGELOG: ${{ github.event.inputs.reuse-changelog }}
         run: |
-          python3 - "$RUNNER_TEMP/release-notes.md" \
-            "fastlane/metadata/android/en-US/changelogs/$VERSION_CODE.txt" <<'PY'
+          changelogs=fastlane/metadata/android/en-US/changelogs
+          previous=""
+          if [ "$REUSE_CHANGELOG" = "true" ]; then
+            previous="$changelogs/$PREVIOUS_VERSION_CODE.txt"
+            if [ ! -f "$previous" ]; then
+              echo "::error::nothing to carry over, $previous does not exist"
+              exit 1
+            fi
+          fi
+          python3 - "$RUNNER_TEMP/release-notes.md" "$changelogs/$VERSION_CODE.txt" \
+            ${previous:+"$previous"} <<'PY'
           import pathlib, sys
 
           src, out = (pathlib.Path(arg) for arg in sys.argv[1:3])
+          previous = pathlib.Path(sys.argv[3]) if len(sys.argv) > 3 else None
 
           # The notes open with a "### Release" heading. What follows is a section header
           # ("New Features") per group, then its "- " items.
-          heading, sections = None, []
-          for line in src.read_text(encoding='utf-8').splitlines():
-              if line.startswith('### '):
-                  heading = line
-              elif line.startswith('- '):
-                  if sections:
-                      sections[-1][1].append(line)
-              elif line.strip():
-                  sections.append([line, []])
+          def parse(path):
+              heading, sections = None, []
+              for line in path.read_text(encoding='utf-8').splitlines():
+                  if line.startswith('### '):
+                      heading = line
+                  elif line.startswith('- '):
+                      if sections:
+                          sections[-1][1].append(line)
+                  elif line.strip():
+                      sections.append([line, []])
+              return heading, sections
+
+          heading, own = parse(src)
+          sections = own
+
+          # The previous notes give the order of the sections and this release's items lead in
+          # each, so they are the last to be trimmed away.
+          if previous is not None:
+              sections = parse(previous)[1]
+              for header, items in own:
+                  section = next((s for s in sections if s[0] == header), None)
+                  if section is None:
+                      section = [header, []]
+                      sections.append(section)
+                  section[1] = items + [item for item in section[1] if item not in items]
 
           def render():
               groups = ['\n'.join([header] + items) for header, items in sections if items]
