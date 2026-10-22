@@ -16,6 +16,7 @@ import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -63,7 +64,7 @@ val DisableAppsFeatureId = Feature.createId(DisableAppsFeature::class.java)
 object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     OnScreenTurnedOffSubscriptionFeature,
     NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(),
-    PausableFeature, BrakeAwareFeature {
+    LockableFeature, PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         title = R.string.feature_disableApps,
         subtitle = R.string.feature_disableApps_subtitle,

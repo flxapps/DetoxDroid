@@ -17,6 +17,7 @@ import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -130,8 +131,8 @@ enum class DoomScrollingSensitivity(
  */
 object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     OnAppOpenedSubscriptionFeature, OnScreenTurnedOffSubscriptionFeature,
-    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), PausableFeature,
-    BrakeAwareFeature {
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature,
+    PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_doomScrolling,
         R.string.feature_doomScrolling_subtitle,

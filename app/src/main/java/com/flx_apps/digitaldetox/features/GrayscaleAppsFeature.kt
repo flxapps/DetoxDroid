@@ -19,6 +19,7 @@ import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsWriteSecureSettingsPermission
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
@@ -77,7 +78,8 @@ val GrayscaleAppsFeatureId = Feature.createId(GrayscaleAppsFeature::class.java)
  * The feature is on whenever a switched-on group turns something gray.
  */
 object GrayscaleAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
-    OnScreenTurnedOffSubscriptionFeature, NeedsPermissionsFeature, PausableFeature {
+    OnScreenTurnedOffSubscriptionFeature, NeedsPermissionsFeature, LockableFeature,
+    PausableFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_grayscale,
         R.string.feature_grayscale_subtitle,

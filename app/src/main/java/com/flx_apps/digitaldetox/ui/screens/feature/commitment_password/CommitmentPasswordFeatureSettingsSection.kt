@@ -160,6 +160,7 @@ private fun FeatureSelectionSection(
                     ?: R.drawable.ic_app_exceptions
                 ListItem(
                     headlineContent = { Text(text = feature.title) },
+                    supportingContent = feature.subtitle?.let { { Text(text = it) } },
                     leadingContent = {
                         Icon(painter = painterResource(iconRes), contentDescription = null)
                     },

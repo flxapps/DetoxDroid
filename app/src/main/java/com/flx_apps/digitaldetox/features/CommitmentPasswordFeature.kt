@@ -229,7 +229,8 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
      *
      * Groups lock one by one. That opens no way around a locked group, since every group that
      * covers an app applies and the strictest wins: another group can only add to what a locked
-     * one does, never take from it.
+     * one does, never take from it. The step features are lockables of their own: their screens
+     * hold the settings behind the steps, and the list says whether those are locked as well.
      */
     fun isFeatureProtected(featureId: String): Boolean {
         if (!isActivated) return false
@@ -239,12 +240,6 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         // Explicit user choice: lock no feature settings.
         if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
         if (featureId == RuleGroups.LOCK_ID) return RuleGroups.all.any { isFeatureProtected(it.id) }
-        // the settings of a step feature can take from every group that uses the step (a gray
-        // filter switched off grays nothing), so they are protected as soon as one of those is
-        Step.entries.firstOrNull { it.feature.id == featureId }?.let { step ->
-            return RuleGroups.enabled().any { it.usesFeature(step.feature) && isFeatureProtected(it.id) }
-        }
-
         return if (lockedFeatureIds.isEmpty()) {
             // Backward-compatibility fallback for older persisted states.
             getLockables().any { it.id == featureId }
@@ -254,8 +249,14 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
         }
     }
 
-    /** Something the password can lock: a group, or a feature that implements [LockableFeature]. */
-    data class Lockable(val id: String, val title: String, val lockedByDefault: Boolean)
+    /**
+     * Something the password can lock: a group, or a feature that implements [LockableFeature]. A
+     * step feature stands in the list next to the groups that use its step, so its [subtitle] says
+     * that it is the settings behind the step that are locked here.
+     */
+    data class Lockable(
+        val id: String, val title: String, val lockedByDefault: Boolean, val subtitle: String? = null
+    )
 
     /** Everything the password can lock, the groups first. */
     fun getLockables(context: Context = DetoxDroidApplication.appContext): List<Lockable> =
@@ -266,8 +267,14 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
             )
         } + FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
             .filterIsInstance<Feature>().filter { it.id != id }
-            .map {
-                Lockable(it.id, context.getString(it.texts.title), (it as LockableFeature).lockedByDefault)
+            .map { feature ->
+                val subtitle = if (Step.entries.any { it.feature == feature }) {
+                    context.getString(feature.texts.subtitle)
+                } else null
+                Lockable(
+                    feature.id, context.getString(feature.texts.title),
+                    (feature as LockableFeature).lockedByDefault, subtitle
+                )
             }
 
     /**
