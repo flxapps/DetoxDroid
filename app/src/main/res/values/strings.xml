@@ -441,7 +441,7 @@
     <string name="ruleGroups_budget_more">More</string>
     <string name="ruleGroups_budget_period_day">per day</string>
     <string name="ruleGroups_budget_period_hour">per hour</string>
-    <string name="ruleGroups_budget_perHour_hint">Counted from the top of each hour.</string>
+    <string name="ruleGroups_budget_perHour_hint">Starts over at every full hour, even while you are in an app.</string>
     <string name="ruleGroups_budget_perDay_pastMidnight_hint">The window runs past midnight, and so does the budget: it counts while the window is open and does not start over at midnight.</string>
     <string name="ruleGroups_budget_lastDays">Last 7 days in this group</string>
     <string name="ruleGroups_budget_lastDays_average">%s a day</string>

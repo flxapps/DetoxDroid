@@ -421,7 +421,7 @@
     <string name="ruleGroups_budget_more">Mehr</string>
     <string name="ruleGroups_budget_period_day">pro Tag</string>
     <string name="ruleGroups_budget_period_hour">pro Stunde</string>
-    <string name="ruleGroups_budget_perHour_hint">Gezählt ab jeder vollen Stunde.</string>
+    <string name="ruleGroups_budget_perHour_hint">Fängt zu jeder vollen Stunde von vorn an, auch wenn du gerade in einer App bist.</string>
     <string name="ruleGroups_budget_perDay_pastMidnight_hint">Das Zeitfenster geht über Mitternacht hinaus, das Budget auch: Es zählt, solange das Fenster offen ist, und fängt um Mitternacht nicht von vorn an.</string>
     <string name="ruleGroups_budget_lastDays">Letzte 7 Tage in dieser Gruppe</string>
     <string name="ruleGroups_budget_lastDays_average">%s am Tag</string>
