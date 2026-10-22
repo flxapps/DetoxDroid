@@ -73,7 +73,7 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
 
             is NavigationRoutes.Onboarding -> OnboardingScreen()
 
-            is NavigationRoutes.ShizukuSetup -> ShizukuSetupScreen()
+            is NavigationRoutes.ShizukuSetup -> ShizukuSetupScreen(goal = route.goal)
 
             is NavigationRoutes.ManageFeature -> FeatureScreen(
                 featureId = route.featureId

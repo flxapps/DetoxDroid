@@ -292,11 +292,17 @@ object DisableAppsFeature : Feature(), OnAppOpenedSubscriptionFeature,
     /**
      * Applies the configured [operationMode] to [packageName]: shows the blocking overlay or takes
      * the locked apps away through device admin or Shizuku. A website cannot be deactivated or
-     * suspended, so it gets the block screen in every mode.
+     * suspended, so it gets the block screen in every mode. So does an app while Shizuku is not
+     * running, which it is not after every reboot until started again: a lock that cannot suspend
+     * blocks rather than letting the app through.
      */
     private fun enforceOn(context: Context, packageName: String) {
         blockCounter.increment(packageName)
-        val mode = if (Websites.isWebsite(packageName)) DisableAppsMode.BLOCK else operationMode
+        val mode = when {
+            Websites.isWebsite(packageName) -> DisableAppsMode.BLOCK
+            operationMode == DisableAppsMode.SUSPEND && !AppSuspender.isAvailable -> DisableAppsMode.BLOCK
+            else -> operationMode
+        }
         when (mode) {
             DisableAppsMode.BLOCK -> {
                 blockScreenOver = packageName

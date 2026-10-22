@@ -987,6 +987,11 @@
     <string name="shizukuSetup_step4_description">One tap and DetoxDroid grants itself the color-filter permission through Shizuku.</string>
     <string name="shizukuSetup_completed_title">All done!</string>
     <string name="shizukuSetup_completed_message">The permission is granted and grayscale is ready. If it was waiting from your setup, it is now active.</string>
+    <!-- The same wizard opened for the suspend lock mode, which needs Shizuku itself rather than a permission -->
+    <string name="shizukuSetup_suspend_title">Set up Shizuku</string>
+    <string name="shizukuSetup_suspend_intro">Suspending apps goes through Shizuku, a free helper app. Setting it up takes about five minutes. One catch: Shizuku has to be running for a lock to suspend an app, and it stops at every reboot.</string>
+    <string name="shizukuSetup_suspend_step2_rebootHint">After every reboot you have to start Shizuku again. Until then, locked apps get the block screen instead.</string>
+    <string name="shizukuSetup_suspend_completed_message">Shizuku is running and DetoxDroid may use it. Go back and pick Suspend.</string>
     <!-- endregion -->
 
     <!-- region Elevated Permissions -->

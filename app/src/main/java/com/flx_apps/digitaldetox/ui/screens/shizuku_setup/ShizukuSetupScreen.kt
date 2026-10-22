@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -52,14 +53,18 @@ import com.flx_apps.digitaldetox.util.observeAsState
 import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 
 /**
- * Guided, computer-free setup for the WRITE_SECURE_SETTINGS permission via Shizuku: install →
- * start via wireless debugging → allow DetoxDroid → one-tap grant. The wizard advances by itself
- * (the view model polls the Shizuku state) and finishes any pending grayscale activation.
+ * Guided, computer-free Shizuku setup: install → start via wireless debugging → allow DetoxDroid,
+ * and for the grayscale permission a one-tap grant as the last step. The wizard advances by itself
+ * (the view model polls the Shizuku state) and finishes any pending grayscale activation. What it
+ * is for is the [goal], which also picks the wording.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShizukuSetupScreen(
-    viewModel: ShizukuSetupViewModel = hiltViewModel(),
+    goal: ShizukuSetupGoal,
+    viewModel: ShizukuSetupViewModel = hiltViewModel(
+        defaultArguments = bundleOf(ShizukuSetupViewModel.ARG_GOAL to goal.name)
+    ),
     navViewModel: NavViewModel = NavViewModel.navViewModel()
 ) {
     val context = LocalContext.current
@@ -71,7 +76,7 @@ fun ShizukuSetupScreen(
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(stringResource(id = R.string.shizukuSetup_title)) },
+        TopAppBar(title = { Text(stringResource(id = goal.titleRes)) },
             navigationIcon = {
                 IconButton(onClick = { navViewModel.onBackPress() }) {
                     Icon(
@@ -96,7 +101,7 @@ fun ShizukuSetupScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = stringResource(id = R.string.shizukuSetup_completed_message),
+                        text = stringResource(id = goal.completedMessageRes),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -112,7 +117,7 @@ fun ShizukuSetupScreen(
             }
 
             Text(
-                text = stringResource(id = R.string.shizukuSetup_intro),
+                text = stringResource(id = goal.introRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -145,7 +150,7 @@ fun ShizukuSetupScreen(
                 number = 2,
                 title = stringResource(id = R.string.shizukuSetup_step2_title),
                 description = stringResource(id = R.string.shizukuSetup_step2_description) + "\n\n" + stringResource(
-                    id = R.string.shizukuSetup_step2_rebootHint
+                    id = goal.rebootHintRes
                 ),
                 done = setupState in listOf(
                     ShizukuSetupState.RUNNING_NOT_GRANTED, ShizukuSetupState.READY
@@ -175,20 +180,50 @@ fun ShizukuSetupScreen(
                     Text(stringResource(id = R.string.shizukuSetup_step3_go))
                 }
             }
-            WizardStep(
-                number = 4,
-                title = stringResource(id = R.string.shizukuSetup_step4_title),
-                description = stringResource(id = R.string.shizukuSetup_step4_description),
-                done = false,
-                active = setupState == ShizukuSetupState.READY
-            ) {
-                Button(onClick = { viewModel.grantViaShizuku() }) {
-                    Text(stringResource(id = R.string.action_grantPermission))
+            if (goal == ShizukuSetupGoal.GRAYSCALE) {
+                WizardStep(
+                    number = 4,
+                    title = stringResource(id = R.string.shizukuSetup_step4_title),
+                    description = stringResource(id = R.string.shizukuSetup_step4_description),
+                    done = false,
+                    active = setupState == ShizukuSetupState.READY
+                ) {
+                    Button(onClick = { viewModel.grantViaShizuku() }) {
+                        Text(stringResource(id = R.string.action_grantPermission))
+                    }
                 }
             }
         }
     }
 }
+
+/** What the wizard says it sets up. */
+private val ShizukuSetupGoal.titleRes: Int
+    get() = when (this) {
+        ShizukuSetupGoal.GRAYSCALE -> R.string.shizukuSetup_title
+        ShizukuSetupGoal.SUSPEND -> R.string.shizukuSetup_suspend_title
+    }
+
+/** Why Shizuku, and what to expect of it, for this goal. */
+private val ShizukuSetupGoal.introRes: Int
+    get() = when (this) {
+        ShizukuSetupGoal.GRAYSCALE -> R.string.shizukuSetup_intro
+        ShizukuSetupGoal.SUSPEND -> R.string.shizukuSetup_suspend_intro
+    }
+
+/** What a reboot costs: nothing for a granted permission, the suspension until Shizuku runs again. */
+private val ShizukuSetupGoal.rebootHintRes: Int
+    get() = when (this) {
+        ShizukuSetupGoal.GRAYSCALE -> R.string.shizukuSetup_step2_rebootHint
+        ShizukuSetupGoal.SUSPEND -> R.string.shizukuSetup_suspend_step2_rebootHint
+    }
+
+/** What is ready once the wizard is through. */
+private val ShizukuSetupGoal.completedMessageRes: Int
+    get() = when (this) {
+        ShizukuSetupGoal.GRAYSCALE -> R.string.shizukuSetup_completed_message
+        ShizukuSetupGoal.SUSPEND -> R.string.shizukuSetup_suspend_completed_message
+    }
 
 /**
  * One numbered card of the wizard. The active step is highlighted and shows its action buttons,

@@ -4,6 +4,7 @@ import android.os.Parcelable
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.rules.GroupId
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.GrantPermissionsCommand
+import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupGoal
 import kotlinx.parcelize.Parcelize
 
 /**
@@ -19,8 +20,11 @@ sealed class NavigationRoutes : Parcelable {
     @Parcelize
     data object Onboarding : NavigationRoutes()
 
+    /** The guided Shizuku setup, for what [goal] names. */
     @Parcelize
-    data object ShizukuSetup : NavigationRoutes()
+    data class ShizukuSetup(
+        val goal: ShizukuSetupGoal
+    ) : NavigationRoutes()
 
     @Parcelize
     data class ManageFeature(
