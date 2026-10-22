@@ -1,0 +1,9 @@
+### Release v3.0.0
+
+✨ New Features
+- your rules are groups now: apps and websites, when they count, how much time they get, and what happens then; existing rules were carried over
+- websites, in Chrome, Firefox and most browsers built on them, with ready-made lists for porn, gambling, dating, shopping, social media and video
+
+🐛 Bug Fixes
+- the service comes back after a force stop, or says why it is off
+- today's screen time no longer includes the day before
