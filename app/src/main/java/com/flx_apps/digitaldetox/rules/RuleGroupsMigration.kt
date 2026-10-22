@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.data.DataStore
 import com.flx_apps.digitaldetox.data.DataStoreProperty
+import com.flx_apps.digitaldetox.data.loadValue
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
@@ -58,20 +60,16 @@ object RuleGroupsMigration {
                     schedule.scheduleRules.isNotEmpty()
     }
 
-    private object LegacyValues {
-        val grayAllowanceMs: Long by DataStoreProperty(
-            longPreferencesKey("${GrayscaleAppsFeatureId}_allowedDailyColorScreenTime"), 0L
-        )
-        val lockAllowanceMs: Long by DataStoreProperty(
-            longPreferencesKey("${DisableAppsFeatureId}_allowedDailyScreenTime"), 0L
-        )
-        val waitMs: Long by DataStoreProperty(
-            longPreferencesKey("${DisableAppsFeatureId}_waitBeforeOpening"), 0L
-        )
-        val timeUntilWarningMs: Long by DataStoreProperty(
-            longPreferencesKey("${BreakDoomScrollingFeatureId}_timeUntilWarning"),
-            TimeUnit.MINUTES.toMillis(3)
-        )
+    /**
+     * A number a feature stored before groups, or [default] when there is none or the store holds
+     * something else under the key, so one odd value costs a field, not the group.
+     */
+    private fun legacyMs(key: String, default: Long): Long =
+        (DataStore.loadValue<Any>(longPreferencesKey(key)) as? Long) ?: default
+
+    /** One feature's part of the migration; a failure in it costs that feature's group only. */
+    private inline fun each(featureId: FeatureId, block: () -> Unit) {
+        runCatching(block).onFailure { Timber.e(it, "Could not migrate the rules of %s", featureId) }
     }
 
     /** Runs the migration if the store is from before groups. Safe to call on every start. */
@@ -86,12 +84,13 @@ object RuleGroupsMigration {
         if (RuleGroups.all.isNotEmpty()) return
         val migrated = mutableListOf<FeatureId>()
 
-        val gray = LegacyRules(GrayscaleAppsFeatureId, AppExceptionListType.NOT_LIST)
-        if (gray.isConfigured) {
+        each(GrayscaleAppsFeatureId) {
+            val gray = LegacyRules(GrayscaleAppsFeatureId, AppExceptionListType.NOT_LIST)
+            if (!gray.isConfigured) return@each
             RuleGroups.create {
                 name = context.getString(R.string.ruleGroups_migrated_gray)
                 copyScope(gray)
-                val allowanceMs = LegacyValues.grayAllowanceMs
+                val allowanceMs = legacyMs("${GrayscaleAppsFeatureId}_allowedDailyColorScreenTime", 0L)
                 if (allowanceMs > 0L) {
                     budgetMs = allowanceMs
                     grayAfterMs = allowanceMs
@@ -102,16 +101,17 @@ object RuleGroupsMigration {
             migrated += GrayscaleAppsFeatureId
         }
 
-        // the feature only ever offered a list of apps to block, whatever its stored type said
-        val lock = LegacyRules(
-            DisableAppsFeatureId, AppExceptionListType.ONLY_LIST, AppExceptionListType.ONLY_LIST
-        )
-        if (lock.isConfigured) {
+        each(DisableAppsFeatureId) {
+            // the feature only ever offered a list of apps to block, whatever its stored type said
+            val lock = LegacyRules(
+                DisableAppsFeatureId, AppExceptionListType.ONLY_LIST, AppExceptionListType.ONLY_LIST
+            )
+            if (!lock.isConfigured) return@each
             RuleGroups.create {
                 name = context.getString(R.string.ruleGroups_migrated_locked)
                 copyScope(lock)
-                waitBeforeOpeningMs = LegacyValues.waitMs
-                val allowanceMs = LegacyValues.lockAllowanceMs
+                waitBeforeOpeningMs = legacyMs("${DisableAppsFeatureId}_waitBeforeOpening", 0L)
+                val allowanceMs = legacyMs("${DisableAppsFeatureId}_allowedDailyScreenTime", 0L)
                 when {
                     allowanceMs == LEGACY_NO_LIMIT -> locks = false
                     allowanceMs > 0L -> {
@@ -125,13 +125,15 @@ object RuleGroupsMigration {
             migrated += DisableAppsFeatureId
         }
 
-        val scroll = LegacyRules(BreakDoomScrollingFeatureId, AppExceptionListType.ONLY_LIST)
-        if (scroll.isConfigured) {
+        each(BreakDoomScrollingFeatureId) {
+            val scroll = LegacyRules(BreakDoomScrollingFeatureId, AppExceptionListType.ONLY_LIST)
+            if (!scroll.isConfigured) return@each
             RuleGroups.create {
                 name = context.getString(R.string.ruleGroups_migrated_scrollBreaks)
                 copyScope(scroll)
-                scrollBreakAfterMs =
-                    LegacyValues.timeUntilWarningMs.coerceAtLeast(TimeUnit.MINUTES.toMillis(1))
+                scrollBreakAfterMs = legacyMs(
+                    "${BreakDoomScrollingFeatureId}_timeUntilWarning", TimeUnit.MINUTES.toMillis(3)
+                ).coerceAtLeast(TimeUnit.MINUTES.toMillis(1))
             }
             migrated += BreakDoomScrollingFeatureId
         }
