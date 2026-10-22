@@ -6,21 +6,24 @@
     <string name="screenshot_1_title">Detox digital como padrão.</string>
     <string name="screenshot_1_subtitle">O DetoxDroid reduz aos poucos o uso do celular, sempre trabalhando em segundo plano.</string>
 
-    <string name="screenshot_2_title">Deixe seu celular menos tentador…</string>
-    <string name="screenshot_2_subtitle">Os apps que você escolher perdem a cor. Fica bem mais fácil largar o feed.</string>
+    <string name="screenshot_2_title">Suas regras, em uma frase.</string>
+    <string name="screenshot_2_subtitle">Escolha apps e sites, defina um limite de tempo e um horário e decida o que acontece depois: espera, cinza, pausa na rolagem ou bloqueio.</string>
 
-    <string name="screenshot_3_title">…sem perder os apps de que você precisa.</string>
-    <string name="screenshot_3_subtitle">Mapas, câmera e mensageiros continuam coloridos graças às exceções por app.</string>
+    <string name="screenshot_3_title">Deixe seu celular menos tentador…</string>
+    <string name="screenshot_3_subtitle">Os apps que você escolher perdem a cor. Fica bem mais fácil largar o feed.</string>
 
-    <string name="screenshot_4_title">Um momento para pensar duas vezes.</string>
-    <string name="screenshot_4_subtitle">Apps que distraem só abrem depois de uma breve espera, o suficiente para pegar o reflexo no ato.</string>
+    <string name="screenshot_4_title">…sem perder os apps de que você precisa.</string>
+    <string name="screenshot_4_subtitle">Mapas, câmera e mensageiros continuam coloridos graças às exceções por app.</string>
 
-    <string name="screenshot_5_title">Quebre a rolagem infinita.</string>
-    <string name="screenshot_5_subtitle">Pego no doomscrolling? O DetoxDroid interrompe com jeito e te manda seguir a vida.</string>
+    <string name="screenshot_5_title">Um momento para pensar duas vezes.</string>
+    <string name="screenshot_5_subtitle">Apps que distraem só abrem depois de uma breve espera, o suficiente para pegar o reflexo no ato.</string>
 
-    <string name="screenshot_6_title">Entenda seus hábitos.</string>
-    <string name="screenshot_6_subtitle">Veja para onde seu tempo vai de verdade: tempo de tela, aberturas de apps e até quanto você rolou.</string>
+    <string name="screenshot_6_title">Quebre a rolagem infinita.</string>
+    <string name="screenshot_6_subtitle">Pego no doomscrolling? O DetoxDroid interrompe com jeito e te manda seguir a vida.</string>
 
-    <string name="screenshot_7_title">Uma tela inicial mais calma.</string>
-    <string name="screenshot_7_subtitle">Troque a grade cheia de ícones por uma lista de apps simples, só texto.</string>
+    <string name="screenshot_7_title">Entenda seus hábitos.</string>
+    <string name="screenshot_7_subtitle">Veja para onde seu tempo vai de verdade: tempo de tela, aberturas de apps e até quanto você rolou.</string>
+
+    <string name="screenshot_8_title">Uma tela inicial mais calma.</string>
+    <string name="screenshot_8_subtitle">Troque a grade cheia de ícones por uma lista de apps simples, só texto.</string>
 </resources>

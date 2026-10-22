@@ -69,6 +69,7 @@ class MarketingStyle(val accent: Color, val background: Color)
  */
 object Slot {
     val Hero = MarketingStyle(accent = Color(0xFF97A9F2), background = Color(0xFF141B3A))
+    val Groups = MarketingStyle(accent = Color(0xFFF2A1C7), background = Color(0xFF2A1322))
     val Grayscale = MarketingStyle(accent = Color(0xFF6FD2E0), background = Color(0xFF0A2B36))
     val Exceptions = MarketingStyle(accent = Color(0xFFF5CD5C), background = Color(0xFF16233C))
     val Wait = MarketingStyle(accent = Color(0xFFF2A585), background = Color(0xFF2A1812))
@@ -100,14 +101,7 @@ enum class CardShape {
      * extra height is white space, and a crop meant to say "there is more below" says "the app is
      * empty" instead.
      */
-    Bleed,
-
-    /**
-     * The screen edge to edge at full card width, caption on a solid band across the bottom. For
-     * the scenes that are a whole phone rather than a panel — a break screen and a home screen lose
-     * more to a 26 dp gutter than they gain from the frame around it.
-     */
-    Band;
+    Bleed;
 
     val captionOnTop: Boolean get() = this == CaptionOver || this == Bleed
 }
@@ -129,10 +123,6 @@ fun MarketingCard(
     shape: CardShape = CardShape.CaptionUnder,
     content: @Composable () -> Unit,
 ) {
-    if (shape == CardShape.Band) {
-        BandCard(title, subtitle, style, icon, content)
-        return
-    }
     Box(Modifier.fillMaxSize().background(style.background)) {
         Column(Modifier.fillMaxSize()) {
             if (shape.captionOnTop) {
@@ -218,40 +208,6 @@ private fun ColumnScope.BleedPanel(style: MarketingStyle, content: @Composable (
                 .requiredHeight(BLEED_LAYOUT_HEIGHT),
             content = content,
         )
-    }
-}
-
-@Composable
-private fun BandCard(
-    title: String,
-    subtitle: String,
-    style: MarketingStyle,
-    icon: @Composable () -> Painter,
-    content: @Composable () -> Unit,
-) {
-    Box(Modifier.fillMaxSize().background(style.background)) {
-        Box(Modifier.fillMaxSize()) { content() }
-        // The band is exactly as tall as the caption it carries, so German running a line longer
-        // than English costs height here instead of leaving empty paint under the text.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .background(style.background),
-        ) {
-            Box(Modifier.fillMaxWidth().padding(top = 30.dp, bottom = 36.dp)) {
-                Caption(title, subtitle, style, icon)
-            }
-            // The band cuts the screen at a hard edge; the hairline says that was meant, the way
-            // the panel border does in the other shapes.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .align(Alignment.TopCenter)
-                    .background(style.accent.copy(alpha = 0.24f)),
-            )
-        }
     }
 }
 

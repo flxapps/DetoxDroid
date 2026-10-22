@@ -1,7 +1,9 @@
 package com.flx_apps.digitaldetox.screenshot
 
 import android.app.Application
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
+import android.graphics.drawable.GradientDrawable
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -15,11 +17,13 @@ import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.features.DoNotDisturbFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowSettings
 import org.robolectric.shadows.ShadowUsageStatsManager
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -47,17 +51,28 @@ object ScreenshotSeed {
     /** Today's foreground minutes per app (index-aligned with [apps]) for the home donut. */
     private val todayMinutes = listOf(38, 27, 22, 16, 11, 7, 5)
 
+    /** A plain round icon per app (index-aligned with [apps]), so the lists show something. */
+    private val iconColors = listOf(0xFF3B82F6, 0xFFE0457B, 0xFFEF4444, 0xFF10B981, 0xFF22C55E, 0xFF14B8A6, 0xFF8B5CF6)
+
     /**
      * Makes DetoxDroid appear "running" with two groups and a few features enabled, so the home
      * screen shows the green "Running" state, the group cards and green feature indicators.
      */
+    /** The group the rule screenshot shows, created by [seedActiveState]. */
+    lateinit var feedsGroupId: String
+
     fun seedActiveState() {
         DetoxDroidAccessibilityService.state.value = DetoxDroidState.Active
+        // the steps need the overlay permission; without it the group screen opens on a warning
+        ShadowSettings.setCanDrawOverlays(true)
         val context = DetoxDroidApplication.appContext
         if (RuleGroups.all.isEmpty()) {
             RuleGroups.create {
                 name = context.getString(R.string.ruleGroups_template_feeds)
-                appExceptions = setOf("com.instagram.android", "com.google.android.youtube")
+                appExceptions = setOf(
+                    "com.instagram.android", "com.google.android.youtube",
+                    Websites.entryOfSite("reddit.com"), Websites.entryOfSite("x.com")
+                )
                 budgetMs = 30 * 60_000L
                 grayAfterMs = 20 * 60_000L
                 locks = true
@@ -81,6 +96,7 @@ object ScreenshotSeed {
                 )
             }
         }
+        feedsGroupId = RuleGroups.all.first { it.hasBudget }.id
         DoNotDisturbFeature.isActivated = true
         PauseButtonFeature.isActivated = true
         // Unlock premium so the usage-stats timeframe selector shows without lock badges.
@@ -106,15 +122,37 @@ object ScreenshotSeed {
             }
             shadowOf(pm).installPackage(packageInfo)
         }
+        apps.forEachIndexed { index, (pkg, _) ->
+            val icon = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(iconColors[index].toInt())
+                setSize(96, 96)
+            }
+            shadowOf(pm).setApplicationIcon(pkg, icon)
+        }
     }
 
-    /** Seeds today's [UsageStatsManager] daily buckets used by the home donut chart. */
+    /**
+     * Seeds today's [UsageStatsManager] records: the event log the home screen and the
+     * notification add up (one session per app, back to back, ending a few minutes ago) and the
+     * daily buckets older code paths read.
+     */
     fun seedTodayUsageStats(context: Context) {
         val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val shadow = shadowOf(usm)
         val zone = ZoneId.systemDefault()
         val dayStart = LocalDate.now().atStartOfDay(zone).toInstant().toEpochMilli()
         val now = System.currentTimeMillis()
+        val totalMs = todayMinutes.sum() * 60_000L + apps.size * 60_000L
+        var t = (now - totalMs - 5 * 60_000L).coerceAtLeast(dayStart)
+        apps.forEachIndexed { index, (pkg, _) ->
+            fun event(type: Int, at: Long) = ShadowUsageStatsManager.EventBuilder.buildEvent()
+                .setTimeStamp(at).setPackage(pkg).setEventType(type).build()
+            shadow.addEvent(event(UsageEvents.Event.ACTIVITY_RESUMED, t))
+            t += todayMinutes[index] * 60_000L
+            shadow.addEvent(event(UsageEvents.Event.ACTIVITY_PAUSED, t))
+            t += 60_000L
+        }
         apps.forEachIndexed { index, (pkg, _) ->
             val fgMs = todayMinutes[index] * 60_000L
             val stats = ShadowUsageStatsManager.UsageStatsBuilder.newBuilder()

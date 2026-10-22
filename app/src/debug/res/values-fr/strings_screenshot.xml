@@ -6,21 +6,24 @@
     <string name="screenshot_1_title">La détox numérique, par défaut.</string>
     <string name="screenshot_1_subtitle">DetoxDroid calme ta consommation de téléphone en douceur, toujours actif en arrière-plan.</string>
 
-    <string name="screenshot_2_title">Rends ton téléphone moins tentant…</string>
-    <string name="screenshot_2_subtitle">Les applis que tu choisis perdent leurs couleurs. Les fils d\'actu deviennent bien plus faciles à lâcher.</string>
+    <string name="screenshot_2_title">Tes règles, en une phrase.</string>
+    <string name="screenshot_2_subtitle">Choisis des applis et des sites, fixe un budget et des horaires, et décide de la suite : attente, gris, pause de défilement ou verrouillage.</string>
 
-    <string name="screenshot_3_title">…sans perdre les applis dont tu as besoin.</string>
-    <string name="screenshot_3_subtitle">Cartes, appareil photo et messageries gardent toutes leurs couleurs grâce aux exceptions par appli.</string>
+    <string name="screenshot_3_title">Rends ton téléphone moins tentant…</string>
+    <string name="screenshot_3_subtitle">Les applis que tu choisis perdent leurs couleurs. Les fils d\'actu deviennent bien plus faciles à lâcher.</string>
 
-    <string name="screenshot_4_title">Un instant pour réfléchir.</string>
-    <string name="screenshot_4_subtitle">Les applis qui distraient ne s\'ouvrent qu\'après une courte attente, juste assez pour déjouer le réflexe.</string>
+    <string name="screenshot_4_title">…sans perdre les applis dont tu as besoin.</string>
+    <string name="screenshot_4_subtitle">Cartes, appareil photo et messageries gardent toutes leurs couleurs grâce aux exceptions par appli.</string>
 
-    <string name="screenshot_5_title">Casse le défilement infini.</string>
-    <string name="screenshot_5_subtitle">Pris en plein doomscrolling ? DetoxDroid t\'interrompt gentiment et te remet en route.</string>
+    <string name="screenshot_5_title">Un instant pour réfléchir.</string>
+    <string name="screenshot_5_subtitle">Les applis qui distraient ne s\'ouvrent qu\'après une courte attente, juste assez pour déjouer le réflexe.</string>
 
-    <string name="screenshot_6_title">Comprends tes habitudes.</string>
-    <string name="screenshot_6_subtitle">Vois où passe vraiment ton temps : temps d\'écran, ouvertures d\'applis, et même la distance que tu as fait défiler.</string>
+    <string name="screenshot_6_title">Casse le défilement infini.</string>
+    <string name="screenshot_6_subtitle">Pris en plein doomscrolling ? DetoxDroid t\'interrompt gentiment et te remet en route.</string>
 
-    <string name="screenshot_7_title">Un écran d\'accueil plus calme.</string>
-    <string name="screenshot_7_subtitle">Remplace la grille d\'icônes agitée par une liste d\'applis sobre, en texte seul.</string>
+    <string name="screenshot_7_title">Comprends tes habitudes.</string>
+    <string name="screenshot_7_subtitle">Vois où passe vraiment ton temps : temps d\'écran, ouvertures d\'applis, et même la distance que tu as fait défiler.</string>
+
+    <string name="screenshot_8_title">Un écran d\'accueil plus calme.</string>
+    <string name="screenshot_8_subtitle">Remplace la grille d\'icônes agitée par une liste d\'applis sobre, en texte seul.</string>
 </resources>

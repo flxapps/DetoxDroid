@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.QueryStats
+import androidx.compose.material.icons.outlined.Rule
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
@@ -55,7 +56,7 @@ import javax.inject.Inject
 
 /**
  * Generates the Play Store / F-Droid phone screenshots into
- * `fastlane/metadata/android/<locale>/images/phoneScreenshots/1.png … 7.png`.
+ * `fastlane/metadata/android/<locale>/images/phoneScreenshots/1.png … 8.png`.
  *
  * Real app screens (home, usage-stats) are driven through the real [MainActivity]/[NavHostScreen]
  * — they cannot be instantiated standalone because `NavViewModel.navViewModel()` casts the local
@@ -131,40 +132,53 @@ class StoreScreenshotTest {
         navigate = { /* Home is the start destination — no navigation needed */ },
     )
 
-    // ── 2 · Grayscale ────────────────────────────────────────────────────────
+    // ── 2 · A rule, as the group screen puts it ──────────────────────────────
     @Test
-    fun screenshot_2_grayscale() = captureScene(
+    fun screenshot_2_rule() = captureApp(
         index = 2,
         titleRes = R.string.screenshot_2_title,
         subtitleRes = R.string.screenshot_2_subtitle,
+        style = Slot.Groups,
+        icon = { rememberVectorPainter(Icons.Outlined.Rule) },
+        // The sentence and the steps are the point; the schedule below carries on past the crop.
+        shape = CardShape.Bleed,
+        navigate = { navVm -> navVm.openRoute(NavigationRoutes.RuleGroup(ScreenshotSeed.feedsGroupId)) },
+    )
+
+    // ── 3 · Grayscale ────────────────────────────────────────────────────────
+    @Test
+    fun screenshot_3_grayscale() = captureScene(
+        index = 3,
+        titleRes = R.string.screenshot_3_title,
+        subtitleRes = R.string.screenshot_3_subtitle,
         style = Slot.Grayscale,
         icon = { painterResource(R.drawable.ic_contrast) },
         // Framed, so the wipe edge sits at the panel's own centre.
         shape = CardShape.CaptionOver,
     ) { MockGrayscaleSplit() }
 
-    // ── 3 · App exceptions (kept in colour) ──────────────────────────────────
+    // ── 4 · App exceptions (kept in colour) ──────────────────────────────────
     @Test
-    fun screenshot_3_exceptions() = captureScene(
-        index = 3,
-        titleRes = R.string.screenshot_3_title,
-        subtitleRes = R.string.screenshot_3_subtitle,
+    fun screenshot_4_exceptions() = captureScene(
+        index = 4,
+        titleRes = R.string.screenshot_4_title,
+        subtitleRes = R.string.screenshot_4_subtitle,
         style = Slot.Exceptions,
         icon = { painterResource(R.drawable.ic_app_exceptions) },
         shape = CardShape.CaptionUnder,
     ) { MockExceptionsScene() }
 
-    // ── 4 · Wait before opening ──────────────────────────────────────────────
+    // ── 5 · Wait before opening ──────────────────────────────────────────────
     @Test
-    fun screenshot_4_waitBeforeOpening() {
+    fun screenshot_5_waitBeforeOpening() {
         // The bar drains over the wait, and a clock left to run finishes it before the capture.
         // Stopped after a few frames, the screenshot shows the bar partway down and the app not
         // yet open.
         composeRule.mainClock.autoAdvance = false
         captureScene(
-            index = 4,
-            titleRes = R.string.screenshot_4_title,
-            subtitleRes = R.string.screenshot_4_subtitle,
+            index = 5,
+            titleRes = R.string.screenshot_5_title,
+            subtitleRes = R.string.screenshot_5_subtitle,
             style = Slot.Wait,
             icon = { rememberVectorPainter(Icons.Outlined.HourglassTop) },
             // Caption on top and laid out at phone height, cut below the buttons: the break screen
@@ -187,16 +201,17 @@ class StoreScreenshotTest {
         }
     }
 
-    // ── 5 · Break doomscrolling ──────────────────────────────────────────────
+    // ── 6 · Break doomscrolling ──────────────────────────────────────────────
     @Test
-    fun screenshot_5_doomscrolling() = captureScene(
-        index = 5,
-        titleRes = R.string.screenshot_5_title,
-        subtitleRes = R.string.screenshot_5_subtitle,
+    fun screenshot_6_doomscrolling() = captureScene(
+        index = 6,
+        titleRes = R.string.screenshot_6_title,
+        subtitleRes = R.string.screenshot_6_subtitle,
         style = Slot.Doomscroll,
         icon = { painterResource(R.drawable.ic_scroll) },
-        // Edge to edge: the break screen is a whole phone, not a panel.
-        shape = CardShape.Band,
+        // Framed like the grayscale shot before it: the dark break screen stays a panel in the
+        // card instead of swallowing it.
+        shape = CardShape.CaptionOver,
     ) {
         Box(Modifier.fillMaxSize()) {
             MockSocialFeed(Modifier.grayscale())
@@ -204,12 +219,12 @@ class StoreScreenshotTest {
         }
     }
 
-    // ── 6 · Usage stats — In Perspective ─────────────────────────────────────
+    // ── 7 · Usage stats — In Perspective ─────────────────────────────────────
     @Test
-    fun screenshot_6_usageStats() = captureApp(
-        index = 6,
-        titleRes = R.string.screenshot_6_title,
-        subtitleRes = R.string.screenshot_6_subtitle,
+    fun screenshot_7_usageStats() = captureApp(
+        index = 7,
+        titleRes = R.string.screenshot_7_title,
+        subtitleRes = R.string.screenshot_7_subtitle,
         style = Slot.UsageStats,
         icon = { rememberVectorPainter(Icons.Outlined.QueryStats) },
         // The top-apps list carries on past the crop, which is the point of the screen.
@@ -230,16 +245,17 @@ class StoreScreenshotTest {
         },
     )
 
-    // ── 7 · Minimal launcher (text-only home screen) ─────────────────────────
+    // ── 8 · Minimal launcher (text-only home screen) ─────────────────────────
     @Test
-    fun screenshot_7_minimalLauncher() = captureScene(
-        index = 7,
-        titleRes = R.string.screenshot_7_title,
-        subtitleRes = R.string.screenshot_7_subtitle,
+    fun screenshot_8_minimalLauncher() = captureScene(
+        index = 8,
+        titleRes = R.string.screenshot_8_title,
+        subtitleRes = R.string.screenshot_8_subtitle,
         style = Slot.Launcher,
         icon = { rememberVectorPainter(Icons.Outlined.Widgets) },
-        // Edge to edge: a home screen inside a 26 dp gutter stops reading as a home screen.
-        shape = CardShape.Band,
+        // Framed with the caption underneath, like the exceptions shot: the last card closes the
+        // set the way the others are built.
+        shape = CardShape.CaptionUnder,
     ) { MockMinimalLauncher() }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
