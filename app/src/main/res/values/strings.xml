@@ -13,7 +13,6 @@
     <string name="app_brakeTile_until">Until %s</string>
     <string name="app_accessibilityService_name">DetoxDroid Accessibility Service</string>
     <string name="app_accessibilityService_description">Applies your DetoxDroid rules in real time based on the app you are using.</string>
-    <string name="app_notification_active">Digital Detox is active</string>
     <string name="app_notification_action_pause">Pause</string>
     <string name="app_notification_action_resume">Resume</string>
     <string name="app_notification_channelName">DetoxDroid Service</string>
@@ -22,7 +21,6 @@
     <string name="app_notification_alertChannelDescription">Tells you when your phone has stopped DetoxDroid</string>
     <string name="app_notification_screenTime">%s screen time today</string>
     <string name="app_notification_budget">%1$s: %2$s</string>
-    <string name="app_notification_mostUsed">Most used: %s</string>
     <string name="reliability_serviceDown_title">DetoxDroid stopped</string>
     <string name="reliability_serviceDown_message">Your phone stopped DetoxDroid in the background. Tap to start it again.</string>
     <string name="reliability_keepAlive_title">Keep DetoxDroid running</string>

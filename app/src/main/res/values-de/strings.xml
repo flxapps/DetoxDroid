@@ -9,7 +9,6 @@
     <string name="app_brakeTile_until">Bis %s</string>
     <string name="app_accessibilityService_name">DetoxDroid-Bedienungshilfe</string>
     <string name="app_accessibilityService_description">Setzt deine Regeln in Echtzeit um, je nachdem, welche App gerade offen ist.</string>
-    <string name="app_notification_active">Digital Detox ist aktiv</string>
     <string name="app_notification_action_pause">Pause</string>
     <string name="app_notification_action_resume">Fortsetzen</string>
     <string name="app_notification_channelName">DetoxDroid-Dienst</string>
@@ -18,7 +17,6 @@
     <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
     <string name="app_notification_screenTime">%s Bildschirmzeit heute</string>
     <string name="app_notification_budget">%1$s: %2$s</string>
-    <string name="app_notification_mostUsed">Am meisten genutzt: %s</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
     <string name="reliability_serviceDown_message">Dein Handy hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>

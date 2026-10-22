@@ -36,7 +36,6 @@ import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
-import com.flx_apps.digitaldetox.util.appLabel
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.websites.BrowserAddressBars
 import com.flx_apps.digitaldetox.websites.StrandedPages
@@ -86,9 +85,6 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     companion object {
         /** Whether the service is handing the app in front to the features again right now. */
         val isRedispatching: Boolean get() = instance?.redispatching == true
-
-        /** How many of the most used apps the expanded notification names. */
-        private const val NOTIFICATION_APP_COUNT = 3
 
         /**
          * How long after going back from a website its page is judged again. Long enough for the
@@ -739,12 +735,14 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     private fun startForegroundService() {
         val isPausing = PauseButtonFeature.isPausing()
         val isBraking = EmergencyBrakeFeature.isBraking()
-        val stateText = if (isBraking) {
-            getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText())
-        } else if (isPausing) {
-            // show the actual end of the pause instead of a bare "Paused"
-            getString(R.string.home_state_paused, PauseButtonFeature.endsAtText())
-        } else getString(R.string.app_notification_active)
+        // the notification being there says that DetoxDroid runs; only a pause or a brake has
+        // something to say below the title, namely when it ends
+        val stateText = when {
+            isBraking -> getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText())
+            // the actual end of the pause instead of a bare "Paused"
+            isPausing -> getString(R.string.home_state_paused, PauseButtonFeature.endsAtText())
+            else -> null
+        }
         // Reading the usage records blocks, so they are read off the main thread and the refresh
         // comes back through updateForegroundNotification(). Until then the title is the app name.
         val today = ScreenTimeSurfaces.today
@@ -755,10 +753,15 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
                 it.screenTimeMs.milliseconds.toHrMinString(this)
             )
         } ?: getString(R.string.app_displayName)
+        // below the title: the state, then what is left of each budget. One line collapsed, all
+        // of them expanded. Which apps the time went to is for the statistics screen it opens.
+        val lines = listOfNotNull(stateText) + today?.budgets.orEmpty().map {
+            getString(R.string.app_notification_budget, it.name, it.leftText(this))
+        }
 
-        fun NotificationCompat.Builder.withStatus() = apply {
+        fun NotificationCompat.Builder.withStatus(text: String?) = apply {
             setContentTitle(title)
-            setContentText(stateText)
+            text?.let { setContentText(it) }
             setSmallIcon(R.drawable.ic_pause)
             // the timestamp of the last refresh says nothing, a countdown does
             setShowWhen(isBraking || isPausing)
@@ -774,20 +777,20 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         }
 
         val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-            .withStatus()
+            .withStatus(lines.firstOrNull())
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             // the title changes with every refresh, which must not make a sound each time
             .setOnlyAlertOnce(true)
             .setContentIntent(MainActivity.openUsageStatsIntent(this))
             // a lock screen that hides notification content still gets the total and the state,
-            // just not which apps the time went to
+            // just not the groups
             .setPublicVersion(
                 NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-                    .withStatus().build()
+                    .withStatus(stateText).build()
             )
-        today?.let { notificationDetails(it) }?.let { details ->
-            builder.setStyle(NotificationCompat.BigTextStyle().bigText("$stateText\n$details"))
+        if (lines.size > 1) {
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(lines.joinToString("\n")))
         }
         if (EmergencyBrakeFeature.canUndo()) {
             builder.addAction(
@@ -831,33 +834,6 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         } catch (e: Exception) {
             Timber.e(e, "Failed to start foreground service")
         }
-    }
-
-    /**
-     * What the expanded notification adds below the state: what is left of the budgets, and where
-     * the time went. Null when there is nothing to add.
-     */
-    private fun notificationDetails(today: TodaySummary): String? {
-        val lines = buildList {
-            today.budgets.forEach {
-                add(
-                    getString(
-                        R.string.app_notification_budget,
-                        it.name,
-                        it.leftText(this@DetoxDroidAccessibilityService)
-                    )
-                )
-            }
-            val apps = today.topApps.take(NOTIFICATION_APP_COUNT)
-            if (apps.isNotEmpty()) {
-                add(getString(R.string.app_notification_mostUsed, apps.joinToString(" · ") {
-                    appLabel(it.packageName) + " " + it.screenTimeMs.milliseconds.toHrMinString(
-                        this@DetoxDroidAccessibilityService
-                    )
-                }))
-            }
-        }
-        return lines.takeIf { it.isNotEmpty() }?.joinToString("\n")
     }
 
     /**
