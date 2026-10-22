@@ -1,8 +1,5 @@
 package com.flx_apps.digitaldetox.ui.widgets.apps
 
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,27 +17,22 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 
 @Composable
 fun AppSelectionListItem(
     packageName: String,
     appName: String,
     appCategory: String,
-    isSystemApp: Boolean,
+    /** A package without a launcher icon, one of the system's own parts; the badge says so. */
+    isBackgroundApp: Boolean,
     checked: Boolean,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -54,17 +46,6 @@ fun AppSelectionListItem(
     extraTrailingContent: (@Composable RowScope.() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val packageManager = LocalContext.current.packageManager
-    val appIcon by produceState<Bitmap?>(null, key1 = packageName) {
-        value = withContext(Dispatchers.IO) {
-            try {
-                packageManager.getApplicationIcon(packageName).toBitmap(128, 128)
-            } catch (_: PackageManager.NameNotFoundException) {
-                null
-            }
-        }
-    }
-
     ListItem(
         modifier = modifier.then(
             if (rowClickTogglesSelection) {
@@ -108,9 +89,9 @@ fun AppSelectionListItem(
                 // nearly every row
                 val showCategory = appCategory.isNotBlank() &&
                         appCategory != stringResource(id = R.string.appCategories_other)
-                if (showTags && (isSystemApp || showCategory)) {
+                if (showTags && (isBackgroundApp || showCategory)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (isSystemApp) {
+                        if (isBackgroundApp) {
                             Badge(containerColor = MaterialTheme.colorScheme.secondary) {
                                 Text(
                                     text = stringResource(id = R.string.appList_badge_system),
@@ -144,13 +125,7 @@ fun AppSelectionListItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 extraLeadingContent?.invoke(this)
                 if (showAppIcon) {
-                    if (appIcon != null) {
-                        Image(
-                            bitmap = appIcon!!.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    } else {
+                    AppIcon(packageName = packageName, size = 48.dp) {
                         Icon(
                             imageVector = Icons.Default.CheckBoxOutlineBlank,
                             contentDescription = null,

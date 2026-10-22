@@ -3,9 +3,12 @@ package com.flx_apps.digitaldetox.features
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import com.flx_apps.digitaldetox.OneMinuteInMs
 import com.flx_apps.digitaldetox.feature_types.Feature
+import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 
@@ -85,7 +88,12 @@ object FeaturesProvider {
         lastActiveFeaturesReload = System.currentTimeMillis()
         // the new set is in place before any callback runs: onStart/onPause read activeFeatures
         // themselves, and would otherwise walk straight back into another reload
-        if (notifyTransitions) notifyScheduleTransitions(previouslyActive, _activeFeatures)
+        if (notifyTransitions) {
+            notifyScheduleTransitions(previouslyActive, _activeFeatures)
+            // a group's window opening or closing changes nothing about which features are
+            // active, only what they do with the app in front
+            Rules.applyScheduleTransitions()
+        }
     }
 
     /**
@@ -124,6 +132,8 @@ object FeaturesProvider {
                 DetoxDroidApplication.appContext
             )
         }
+        // the Pause feature decides whether the notification shows and whether it offers a pause
+        DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
     }
 
     /**
@@ -150,5 +160,13 @@ object FeaturesProvider {
     fun getFeatureById(id: String): Feature? {
         return featureMap[id]
     }
+
+    /**
+     * Whether the settings of the feature or group with [id] can't be changed right now, because
+     * the commitment password protects them or a running brake does. [RuleGroups.LOCK_ID] asks
+     * about the groups as a whole.
+     */
+    fun areSettingsLocked(id: String): Boolean =
+        CommitmentPasswordFeature.isFeatureLocked(id) || EmergencyBrakeFeature.locksSettings(id)
 }
 

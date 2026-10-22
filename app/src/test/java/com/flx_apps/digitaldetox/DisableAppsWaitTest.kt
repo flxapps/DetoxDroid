@@ -4,13 +4,17 @@ import android.app.KeyguardManager
 import android.media.AudioManager
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DisableAppsMode
+import com.flx_apps.digitaldetox.rules.GroupBudgets
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.AppDisabledOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.disable_apps.WaitBeforeOpeningActivity
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import java.time.LocalDate
+import java.time.ZoneId
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -21,23 +25,27 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
- * What [DisableAppsFeature] does when a listed app comes to the front: it waits first while there
- * is screen time left (but never over the lock screen or during a call), opens right away after a
- * wait until the screen turns off, and locks once the daily time is used up.
+ * What [DisableAppsFeature] does when an app of a group comes to the front: it waits first while
+ * there is budget left (but never over the lock screen or during a call), opens right away after a
+ * wait until the screen turns off, and locks once the group's budget is used up.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class DisableAppsWaitTest {
 
     private val context get() = RuntimeEnvironment.getApplication()
+    private lateinit var group: RuleGroup
 
     @Before
     fun setUp() {
         DetoxDroidApplication.appContext = RuntimeEnvironment.getApplication()
-        DisableAppsFeature.appExceptions = setOf(LISTED_APP)
+        group = RuleGroups.create {
+            name = "Feeds"
+            appExceptions = setOf(LISTED_APP)
+            waitBeforeOpeningMs = 10_000L
+            locks = false
+        }
         DisableAppsFeature.operationMode = DisableAppsMode.BLOCK
-        DisableAppsFeature.allowedDailyScreenTime = DisableAppsFeature.NO_DAILY_LIMIT
-        DisableAppsFeature.waitBeforeOpening = 10_000L
     }
 
     @After
@@ -45,11 +53,8 @@ class DisableAppsWaitTest {
         // the shadow keeps the audio mode in a static field, so it would leak into other tests
         context.getSystemService(AudioManager::class.java).mode = AudioManager.MODE_NORMAL
         DisableAppsFeature.onPause(context) // also forgets the apps that were waited for
-        DisableAppsFeature.trackingSinceTimestamp = 0L
-        DisableAppsFeature.usedUpScreenTime = 0L
-        DisableAppsFeature.appExceptions = emptySet()
-        DisableAppsFeature.allowedDailyScreenTime = 0L
-        DisableAppsFeature.waitBeforeOpening = 0L
+        GroupBudgets.stopAll()
+        RuleGroups.delete(group.id)
     }
 
     private fun open(packageName: String) =
@@ -61,11 +66,21 @@ class DisableAppsWaitTest {
     private fun blockScreenStarted() = shadowOf(context).nextStartedService?.component?.className ==
             AppDisabledOverlayService::class.java.name
 
+    /** Books [minutes] of use of the group's apps, ending a minute ago. */
+    /** A moment today that is a budget window away from no midnight, whenever the test runs. */
+    private fun noonToday(): Long =
+        LocalDate.now().atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    private fun useUp(minutes: Int) {
+        val endMs = noonToday() - 60_000L
+        GroupBudgets.onForeground(listOf(group), nowMs = endMs - minutes * 60_000L)
+        GroupBudgets.onForeground(emptyList(), nowMs = endMs)
+    }
+
     @Test
-    fun `a listed app waits, and the wait is not screen time`() {
+    fun `a listed app waits`() {
         open(LISTED_APP)
         assertTrue(waitScreenStarted())
-        assertEquals(0L, DisableAppsFeature.trackingSinceTimestamp)
     }
 
     @Test
@@ -80,7 +95,6 @@ class DisableAppsWaitTest {
         open(OTHER_APP)
         open(LISTED_APP)
         assertFalse(waitScreenStarted())
-        assertNotEquals(0L, DisableAppsFeature.trackingSinceTimestamp)
 
         DisableAppsFeature.onScreenTurnedOff(context)
         open(LISTED_APP)
@@ -102,42 +116,47 @@ class DisableAppsWaitTest {
     }
 
     @Test
-    fun `the lock takes over from the wait once the daily time is used up`() {
-        DisableAppsFeature.allowedDailyScreenTime = 30 * 60_000L
-        DisableAppsFeature.usedUpScreenTime = 30 * 60_000L
+    fun `the lock takes over from the wait once the budget is used up`() {
+        group.budgetMs = 30 * 60_000L
+        group.locks = true
+        useUp(30)
         open(LISTED_APP)
         assertFalse(waitScreenStarted())
         assertTrue(blockScreenStarted())
     }
 
     @Test
-    fun `a daily limit of zero locks right away`() {
-        DisableAppsFeature.allowedDailyScreenTime = 0L
+    fun `a lock without a budget locks right away`() {
+        group.locks = true
         open(LISTED_APP)
         assertFalse(waitScreenStarted())
         assertTrue(blockScreenStarted())
     }
 
     @Test
-    fun `time in a listed app stops counting when the feature pauses`() {
-        DisableAppsFeature.waitBeforeOpening = 0L
-        DisableAppsFeature.allowedDailyScreenTime = 30 * 60_000L
-        open(LISTED_APP)
-        // ten minutes in the app, then the schedule ends while it is still open
-        DisableAppsFeature.trackingSinceTimestamp -= 10 * 60_000L
-        DisableAppsFeature.onPause(context)
-        assertEquals(0L, DisableAppsFeature.trackingSinceTimestamp)
-        assertEquals(
-            10 * 60_000.0, DisableAppsFeature.currentUsedUpScreenTime().toDouble(), 1_000.0
-        )
+    fun `time in a listed app stops counting when nothing is in front any more`() {
+        group.budgetMs = 30 * 60_000L
+        val startMs = noonToday() - 10 * 60_000L
+        GroupBudgets.onForeground(listOf(group), nowMs = startMs)
+        // ten minutes in the app, then the screen goes off while it is still open
+        GroupBudgets.stopAll(nowMs = startMs + 10 * 60_000L)
+        assertEquals(10 * 60_000L, GroupBudgets.usedMs(group, nowMs = startMs + 15 * 60_000L))
     }
 
     @Test
-    fun `without a daily limit the apps never lock`() {
-        DisableAppsFeature.waitBeforeOpening = 0L
+    fun `a group that only waits never locks`() {
+        group.waitBeforeOpeningMs = 0L
         open(LISTED_APP)
         assertFalse(blockScreenStarted())
-        assertNotEquals(0L, DisableAppsFeature.trackingSinceTimestamp)
+    }
+
+    @Test
+    fun `a group of all apps but a few cannot hold any back`() {
+        group.appExceptionListType = com.flx_apps.digitaldetox.feature_types.AppExceptionListType.NOT_LIST
+        group.locks = true
+        open(OTHER_APP)
+        assertFalse(waitScreenStarted())
+        assertFalse(blockScreenStarted())
     }
 
     private companion object {

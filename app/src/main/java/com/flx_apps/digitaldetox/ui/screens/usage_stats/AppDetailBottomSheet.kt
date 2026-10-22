@@ -1,7 +1,6 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,24 +29,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
+import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.features.FeaturesProvider
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.colorRes
+import com.flx_apps.digitaldetox.ui.theme.brandTone
+import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.util.toHrMinString
 import com.flx_apps.digitaldetox.util.toShortDurationString
+import com.flx_apps.digitaldetox.util.formatDistance
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,23 +61,15 @@ fun AppDetailContent(
     onFeatureChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val pm = context.packageManager
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        val icon = runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (icon != null) {
-                Image(
-                    bitmap = icon.toBitmap().asImageBitmap(),
-                    contentDescription = app.label,
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
+            UsageItemIcon(item = app, size = 48.dp)
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = app.label,
@@ -108,13 +101,17 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usageStats_opens_short),
+                        text = stringResource(
+                            if (app.isWebsite) R.string.usageStats_visits_short
+                            else R.string.usageStats_opens_short
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            if (app.sessionCount > 0) {
+            // a website's visits are its sessions, already counted next to this
+            if (app.sessionCount > 0 && !app.isWebsite) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = app.sessionCount.toString(),
@@ -135,7 +132,10 @@ fun AppDetailContent(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = stringResource(R.string.usageStats_avgSession),
+                        text = stringResource(
+                            if (app.isWebsite) R.string.usageStats_avgVisit
+                            else R.string.usageStats_avgSession
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -215,32 +215,25 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
     val onToggled: () -> Unit = remember(app.packageName) {
         { version++; onFeatureChanged() }
     }
-    // the chips edit the app lists, so a running brake and a commitment password in force lock
-    // them like every other setting of the features they belong to
+    // the chips edit the groups' lists, so a running brake and a commitment password in force
+    // lock them like every other setting of the groups, group by group
     val brakeToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val passwordToken by CommitmentPasswordFeature.stateToken.collectAsState()
+    val groupsChanged by RuleGroups.changes.collectAsState()
     val braking = remember(brakeToken) { EmergencyBrakeFeature.isBraking() }
-    val manageable = remember(brakeToken, passwordToken) {
-        listOf(GrayscaleAppsFeature, BreakDoomScrollingFeature, DisableAppsFeature)
-            .filter {
-                it.isActivated && !EmergencyBrakeFeature.locksSettings(it.id) &&
-                        !CommitmentPasswordFeature.isFeatureLocked(it.id)
-            }
+    val groups = remember(groupsChanged) { RuleGroups.all }
+    val lockedIds = remember(brakeToken, passwordToken, groupsChanged) {
+        groups.filter { FeaturesProvider.areSettingsLocked(it.id) }.mapTo(mutableSetOf()) { it.id }
     }
-    val grayscaleActive = GrayscaleAppsFeature in manageable
-    val doomScrollingActive = BreakDoomScrollingFeature in manageable
-    val disableAppsActive = DisableAppsFeature in manageable
 
-    if (manageable.isEmpty()) {
-        val anyActive = GrayscaleAppsFeature.isActivated || BreakDoomScrollingFeature.isActivated ||
-                DisableAppsFeature.isActivated
+    if (groups.isEmpty() || lockedIds.size == groups.size) {
         Text(
             when {
+                groups.isEmpty() -> stringResource(R.string.usageStats_noGroups)
                 braking -> stringResource(
                     R.string.usageStats_lockedByBrake, EmergencyBrakeFeature.endsAtText()
                 )
-                anyActive -> stringResource(R.string.usageStats_lockedByPassword)
-                else -> stringResource(R.string.usageStats_noActiveFeatures)
+                else -> stringResource(R.string.usageStats_lockedByPassword)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -248,73 +241,70 @@ private fun QuickActionsSection(app: AppUsageStat, onFeatureChanged: () -> Unit)
         return
     }
 
+    Text(
+        text = stringResource(R.string.usageStats_inGroups),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
     ChipFlowRow {
         key(version) {
-            if (grayscaleActive) {
-                val isInGrayscale = GrayscaleAppsFeature.appliesTo(app.packageName)
+            groups.forEach { group ->
+                val covered = coversApp(group, app)
+                // in the color of the group's strongest step, as the chips on the rows are
+                val step = GroupTexts.strongestStep(group, isWebsite = app.isWebsite)
                 FeatureActionChip(
-                    label = if (isInGrayscale) stringResource(R.string.usageStats_removeGrayscale)
-                    else stringResource(R.string.usageStats_addGrayscale),
-                    color = colorResource(id = R.color.purple),
-                    isActive = isInGrayscale,
-                    onClick = {
-                        scope.toggleAppException(app.packageName, GrayscaleAppsFeature, onToggled)
-                    })
-            }
-
-            if (doomScrollingActive) {
-                val isInDoomScroll = BreakDoomScrollingFeature.appliesTo(app.packageName)
-                FeatureActionChip(
-                    label = if (isInDoomScroll) stringResource(R.string.usageStats_removeScrollGuard)
-                    else stringResource(R.string.usageStats_addScrollGuard),
-                    color = colorResource(id = R.color.orange),
-                    isActive = isInDoomScroll,
-                    onClick = {
-                        scope.toggleAppException(app.packageName, BreakDoomScrollingFeature, onToggled)
-                    })
-            }
-
-            if (disableAppsActive) {
-                val isDisabled = DisableAppsFeature.disableableApps.contains(app.packageName)
-                FeatureActionChip(
-                    label = if (isDisabled) stringResource(R.string.usageStats_enableApp)
-                    else stringResource(R.string.usageStats_disableApp),
-                    color = colorResource(id = R.color.pink),
-                    isActive = isDisabled,
-                    onClick = {
-                        scope.toggleAppException(app.packageName, DisableAppsFeature, onToggled)
-                    })
+                    label = GroupTexts.name(LocalContext.current, group),
+                    color = step?.let { brandTone(it.colorRes).content } ?: MaterialTheme.colorScheme.primary,
+                    isActive = covered,
+                    enabled = group.id !in lockedIds,
+                    onClick = { scope.toggleCoverage(app, group, onToggled) })
             }
         }
     }
 }
 
+/** Whether [group] covers [app], which for a website asks the group's website list. */
+private fun coversApp(group: RuleGroup, app: AppUsageStat): Boolean {
+    val site = Websites.siteOfEntry(app.packageName)
+    return if (site != null) Websites.covers(group, site) else group.appliesTo(app.packageName)
+}
+
 /**
- * Toggles [packageName] in the feature's exception list. The underlying [DataStoreProperty] write
- * is blocking, so it is dispatched off the main thread.
+ * Puts [app] under [group] or takes it out: for a group of selected apps by listing it, for a
+ * group of all apps but a few by excepting it. The underlying [DataStoreProperty] write is
+ * blocking, so it is dispatched off the main thread.
  */
-private fun CoroutineScope.toggleAppException(
-    packageName: String,
-    feature: SupportsAppExceptionsFeature,
+private fun CoroutineScope.toggleCoverage(
+    app: AppUsageStat,
+    group: RuleGroup,
     onComplete: () -> Unit = {}
 ) {
     launch(Dispatchers.IO) {
-        if (feature.appExceptions.contains(packageName)) {
-            feature.appExceptions -= packageName
+        val entry = app.packageName
+        val onlyListed = if (Websites.isWebsite(entry)) {
+            group.websiteListType == AppExceptionListType.ONLY_LIST
         } else {
-            feature.appExceptions += packageName
+            group.appExceptionListType == AppExceptionListType.ONLY_LIST
         }
-        FeaturesProvider.reloadActiveFeatures()
+        val wantCovered = !coversApp(group, app)
+        if (wantCovered == onlyListed) {
+            group.appExceptions += entry
+        } else {
+            group.appExceptions -= entry
+        }
+        RuleGroups.onChanged()
         onComplete()
     }
 }
 
 @Composable
 private fun FeatureActionChip(
-    label: String, color: Color, isActive: Boolean, onClick: () -> Unit
+    label: String, color: Color, isActive: Boolean, enabled: Boolean = true, onClick: () -> Unit
 ) {
     FilterChip(
         selected = isActive,
+        enabled = enabled,
         onClick = onClick,
         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
         colors = FilterChipDefaults.filterChipColors(

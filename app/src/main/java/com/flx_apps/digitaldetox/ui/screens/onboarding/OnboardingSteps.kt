@@ -52,7 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -540,7 +540,7 @@ internal fun PickAppsStep(viewModel: OnboardingViewModel) {
                         packageName = row.packageName,
                         appName = row.appName,
                         appCategory = row.appCategory,
-                        isSystemApp = row.isSystemApp,
+                        isBackgroundApp = false,
                         checked = row.checked,
                         supportingText = if (hasUsageData && row.avgDailyUsageMs > 0) {
                             stringResource(

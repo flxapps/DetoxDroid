@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- keyguard: the widget area of the lock screen takes it as well, and it is about the size of the
+     largest layout.
+     configuration_optional: the widget works as placed, its look can be changed later. Before
+     Android 12 the launcher opens the screen once on placing it anyway. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.flx_apps.digitaldetox.widgets.today.TodayWidgetConfigureActivity"
+    android:description="@string/widget_today_description"
+    android:initialLayout="@layout/widget_frame_system"
+    android:minWidth="250dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:previewLayout="@layout/widget_today_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen|keyguard"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

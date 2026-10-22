@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -33,6 +34,9 @@ import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.features.FeaturesProvider
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordViewModel
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -63,9 +67,7 @@ fun FeatureScreen(
     val lockStateToken by CommitmentPasswordFeature.stateToken.collectAsState()
     val brakeStateToken by EmergencyBrakeFeature.stateToken.collectAsState()
     val isFeatureSettingsLocked = remember(lockStateToken, brakeStateToken, featureId) {
-        featureId != CommitmentPasswordFeatureId &&
-                (CommitmentPasswordFeature.isFeatureLocked(featureId) ||
-                        EmergencyBrakeFeature.locksSettings(featureId))
+        featureId != CommitmentPasswordFeatureId && FeaturesProvider.areSettingsLocked(featureId)
     }
     LaunchedEffect(lockStateToken, featureId) {
         // Commitment Password can change its activation state from dialogs outside the switch toggle.
@@ -89,7 +91,28 @@ fun FeatureScreen(
                     )
                 }
             }, actions = {
-                FeatureActivationSwitch(isSettingsLocked = isFeatureSettingsLocked)
+                if (isStepFeature(feature)) {
+                    // the groups switch it on and off: this screen only tunes how it works
+                    val groupsChanged by RuleGroups.changes.collectAsState()
+                    val groupCount = remember(groupsChanged) {
+                        RuleGroups.enabled().count { it.usesFeature(feature) }
+                    }
+                    Text(
+                        text = if (groupCount == 0) {
+                            stringResource(id = R.string.ruleGroups_feature_unused)
+                        } else {
+                            pluralStringResource(
+                                id = R.plurals.ruleGroups_feature_usedBy, count = groupCount, groupCount
+                            )
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                } else {
+                    FeatureActivationSwitch(isSettingsLocked = isFeatureSettingsLocked)
+                }
             }, scrollBehavior = scrollBehavior)
         }
     ) {
@@ -105,6 +128,9 @@ fun FeatureScreen(
         }
     }
 }
+
+/** Whether [feature] runs a step of the groups, which switch it on and off in its place. */
+private fun isStepFeature(feature: Feature): Boolean = Step.entries.any { it.feature == feature }
 
 /**
  * A switch to toggle the active state of the feature. If the feature needs permissions to be

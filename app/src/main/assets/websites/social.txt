@@ -1,0 +1,36 @@
+# Social media: the feeds people lose time in, each with its subdomains (m., mobile., www.).
+# The first few are named on screen, so the best known come first.
+instagram.com
+tiktok.com
+facebook.com
+x.com
+reddit.com
+snapchat.com
+threads.com
+threads.net
+pinterest.com
+linkedin.com
+tumblr.com
+bsky.app
+mastodon.social
+quora.com
+9gag.com
+vk.com
+twitter.com
+weibo.com
+xiaohongshu.com
+ok.ru
+nextdoor.com
+imgur.com
+bereal.com
+lemmy.world
+lemmy.ml
+truthsocial.com
+gab.com
+mewe.com
+fb.com
+fb.watch
+douyin.com
+kwai.com
+likee.video
+snackvideo.com

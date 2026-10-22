@@ -47,7 +47,15 @@ You can still take intentional pauses when you need them.
 7. **Commitment Password**  
    Lock selected settings behind a passphrase.
 8. **Minimal Launcher Widget**  
-   A text-only launcher for the apps you actually meant to open.
+   A text-only launcher for the apps you actually meant to open. Light or dark text, straight on
+   the wallpaper or on a card. If you want, it shows how long you've used each app today and dims
+   the ones Disable Apps is blocking right now.
+9. **Screen Time Widget**  
+   Today's screen time, unlocks and how far you scrolled, and whether you're above or below a
+   usual day at this hour. Pull it bigger and it adds your most used apps and what's left of your
+   budgets; tap one to get to its details. You pick what it shows. It also fits the lock screen's
+   widget area on phones that have one, and the ongoing notification shows the same total. Light,
+   dark or with the system, and as see-through as you want it. When DetoxDroid is off, it says so.
 
 ## Installation
 

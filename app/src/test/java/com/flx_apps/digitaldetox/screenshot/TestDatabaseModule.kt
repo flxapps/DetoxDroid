@@ -6,6 +6,7 @@ import com.flx_apps.digitaldetox.data.AppDatabase
 import com.flx_apps.digitaldetox.data.DailyAppUsageDao
 import com.flx_apps.digitaldetox.data.DailyDeviceStatsDao
 import com.flx_apps.digitaldetox.data.DailyGrayscaleStatsDao
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsageDao
 import com.flx_apps.digitaldetox.data.DatabaseModule
 import com.flx_apps.digitaldetox.data.SelfMeasuredAppUsageDao
 import dagger.Module
@@ -49,4 +50,8 @@ object TestDatabaseModule {
     @Provides
     fun provideSelfMeasuredAppUsageDao(db: AppDatabase): SelfMeasuredAppUsageDao =
         db.selfMeasuredAppUsageDao()
+
+    @Provides
+    fun provideDailyWebsiteUsageDao(db: AppDatabase): DailyWebsiteUsageDao =
+        db.dailyWebsiteUsageDao()
 }

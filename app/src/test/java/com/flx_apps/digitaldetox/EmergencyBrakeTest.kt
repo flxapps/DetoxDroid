@@ -5,11 +5,13 @@ import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.DoNotDisturbFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.TrustedClock
 import org.junit.After
@@ -27,8 +29,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * A brake runs for the time it was pulled for, on a clock the date settings cannot move, and ends
- * early only after a wait. While it runs, the features it covers act as if their schedule were
- * open and their budget spent, and none of it touches what the user has set up.
+ * early only after a wait. While it runs, the groups act as if their schedule were open and their
+ * budget spent, and none of it touches what the user has set up.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -45,6 +47,9 @@ class EmergencyBrakeTest {
     private val listed = "com.example.feed"
     private val unlisted = "com.example.maps"
 
+    /** A group that turns [listed] gray from the first minute. */
+    private lateinit var group: RuleGroup
+
     @Before
     fun setUp() {
         DetoxDroidApplication.appContext = context
@@ -53,8 +58,12 @@ class EmergencyBrakeTest {
         TrustedClock.bootCount = { 1 }
         TrustedClock.sync()
         EmergencyBrakeFeature.isActivated = true
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-        GrayscaleAppsFeature.appExceptions = setOf(listed)
+        group = RuleGroups.create {
+            name = "Gray"
+            appExceptions = setOf(listed)
+            appExceptionListType = AppExceptionListType.ONLY_LIST
+            grayAfterMs = 0L
+        }
     }
 
     @After
@@ -67,11 +76,7 @@ class EmergencyBrakeTest {
         EmergencyBrakeFeature.lastDuration = halfAnHour
         // the singletons outlive the test class, so a filter left on would reach the next one
         GrayscaleAppsFeature.onPause(context)
-        GrayscaleAppsFeature.isActivated = false
-        GrayscaleAppsFeature.scheduleRules = emptySet()
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.NOT_LIST
-        GrayscaleAppsFeature.appExceptions = emptySet()
-        DisableAppsFeature.allowedDailyScreenTime = 0L
+        RuleGroups.delete(group.id)
         PauseButtonFeature.isActivated = false
         TrustedClock.wallMs = realClocks.first
         TrustedClock.elapsedMs = realClocks.second
@@ -179,54 +184,56 @@ class EmergencyBrakeTest {
 
     @Test
     fun itOpensAClosedSchedule() {
-        GrayscaleAppsFeature.isActivated = true
         val now = LocalDateTime.now()
         // a window that closed an hour ago
-        GrayscaleAppsFeature.scheduleRules = setOf(
+        group.scheduleRules = setOf(
             FeatureScheduleRule(
                 emptyList(),
                 now.minusHours(3).toLocalTime().withSecond(0).withNano(0),
                 now.minusHours(1).toLocalTime().withSecond(0).withNano(0)
             )
         )
-        assertFalse(GrayscaleAppsFeature.isActive(now))
+        assertTrue(Rules.resolve(listed, null, now).covering.isEmpty())
 
         EmergencyBrakeFeature.pull(context, halfAnHour)
-        assertTrue(GrayscaleAppsFeature.isActive(now))
+        assertEquals(listOf(group.id), Rules.resolve(listed, null, now).covering.map { it.group.id })
     }
 
     @Test
-    fun aFeatureThatIsOffStaysOff() {
-        GrayscaleAppsFeature.isActivated = false
+    fun aGroupThatIsOffStaysOff() {
+        group.isEnabled = false
         EmergencyBrakeFeature.pull(context, halfAnHour)
         assertFalse(GrayscaleAppsFeature.isActive())
+        assertTrue(Rules.resolve(listed, null).covering.isEmpty())
     }
 
     @Test
     fun grayscaleTakesTheWholeScreenAndGivesTheListBack() {
-        assertFalse(GrayscaleAppsFeature.appliesTo(unlisted))
+        assertEquals(Rules.GrayDecision.NotCovered, Rules.grayDecision(unlisted))
+        assertEquals(Rules.GrayDecision.Gray, Rules.grayDecision(listed))
 
         EmergencyBrakeFeature.pull(context, halfAnHour)
-        assertTrue(GrayscaleAppsFeature.appliesTo(listed))
-        assertTrue(GrayscaleAppsFeature.appliesTo(unlisted))
+        GrayscaleAppsFeature.onAppOpened(context, unlisted, AccessibilityEventUtil.createEvent())
+        assertTrue(GrayscaleAppsFeature.isScreenFilterSoftened)
 
         pass(halfAnHour)
-        assertFalse(GrayscaleAppsFeature.appliesTo(unlisted))
-        assertTrue(GrayscaleAppsFeature.appliesTo(listed))
-        assertEquals(setOf(listed), GrayscaleAppsFeature.appExceptions)
-        assertEquals(AppExceptionListType.ONLY_LIST, GrayscaleAppsFeature.appExceptionListType)
+        assertEquals(Rules.GrayDecision.NotCovered, Rules.grayDecision(unlisted))
+        assertEquals(Rules.GrayDecision.Gray, Rules.grayDecision(listed))
+        assertEquals(setOf(listed), group.appExceptions)
+        assertEquals(AppExceptionListType.ONLY_LIST, group.appExceptionListType)
     }
 
     @Test
     fun theBudgetCountsAsSpent() {
-        DisableAppsFeature.allowedDailyScreenTime = TimeUnit.HOURS.toMillis(1)
-        assertTrue(DisableAppsFeature.hasScreenTimeLeft())
+        group.budgetMs = TimeUnit.HOURS.toMillis(1)
+        group.locks = true
+        assertTrue(Rules.lockDecision(listed) is Rules.LockDecision.Open)
 
         EmergencyBrakeFeature.pull(context, halfAnHour)
-        assertFalse(DisableAppsFeature.hasScreenTimeLeft())
+        assertTrue(Rules.lockDecision(listed) is Rules.LockDecision.Locked)
 
         pass(halfAnHour)
-        assertTrue(DisableAppsFeature.hasScreenTimeLeft())
+        assertTrue(Rules.lockDecision(listed) is Rules.LockDecision.Open)
     }
 
     @Test
@@ -256,7 +263,6 @@ class EmergencyBrakeTest {
 
     @Test
     fun anAppThatIsGrayOnlyBecauseOfTheBrakeGetsTheSoftenedFilter() {
-        GrayscaleAppsFeature.isActivated = true
         EmergencyBrakeFeature.pull(context, halfAnHour)
 
         GrayscaleAppsFeature.onAppOpened(context, unlisted, AccessibilityEventUtil.createEvent())
@@ -271,10 +277,11 @@ class EmergencyBrakeTest {
 
     @Test
     fun itLocksTheSettingsButNotTheCommitmentPassword() {
-        assertFalse(EmergencyBrakeFeature.locksSettings(GrayscaleAppsFeature.id))
+        assertFalse(EmergencyBrakeFeature.locksSettings(RuleGroups.LOCK_ID))
 
         EmergencyBrakeFeature.pull(context, halfAnHour)
-        assertTrue(EmergencyBrakeFeature.locksSettings(GrayscaleAppsFeature.id))
+        assertTrue(EmergencyBrakeFeature.locksSettings(RuleGroups.LOCK_ID))
+        assertTrue(EmergencyBrakeFeature.locksSettings(group.id))
         assertTrue(EmergencyBrakeFeature.locksSettings(PauseButtonFeature.id))
         assertTrue(EmergencyBrakeFeature.locksSettings(EmergencyBrakeFeature.id))
         assertFalse(EmergencyBrakeFeature.locksSettings(CommitmentPasswordFeature.id))

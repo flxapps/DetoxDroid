@@ -88,13 +88,15 @@ object DistractingAppsHeuristic {
      * Ranks the candidates (highest score first, deterministic tie-breaking) and pre-checks the
      * top scorers above [PRE_CHECK_SCORE_THRESHOLD], capped at [MAX_PRE_CHECKED_APPS]. Callers
      * are expected to have filtered out non-launchable apps and DetoxDroid itself beforehand.
+     * @param limit how many apps to keep: the onboarding shows [MAX_DISPLAYED_APPS], a group
+     * template picks from all of them
      */
-    fun rankApps(candidates: List<DistractionCandidate>): List<RankedApp> {
+    fun rankApps(candidates: List<DistractionCandidate>, limit: Int = MAX_DISPLAYED_APPS): List<RankedApp> {
         val sorted = candidates.sortedWith(
             compareByDescending<DistractionCandidate> { score(it) }
                 .thenByDescending { it.avgDailyUsageMs }
                 .thenBy { it.packageName }
-        ).take(MAX_DISPLAYED_APPS)
+        ).take(limit)
         return sorted.mapIndexed { index, candidate ->
             val score = score(candidate)
             RankedApp(

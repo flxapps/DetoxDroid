@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What every widget frame holds: the background, an image so that its opacity can be set from
+     code, and the place the content goes. The frame's theme is what the content takes its colors
+     from. The background comes with the first update, so the frame on its own is empty and serves
+     as the widgets' initial layout. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ImageView
+        android:id="@+id/widget_frame_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <FrameLayout
+        android:id="@+id/widget_frame_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</merge>

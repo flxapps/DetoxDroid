@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.olshevski.navigation.reimagined.navController
 import dev.olshevski.navigation.reimagined.navigate
 import dev.olshevski.navigation.reimagined.pop
+import dev.olshevski.navigation.reimagined.popUpTo
 import dev.olshevski.navigation.reimagined.replaceAll
 import timber.log.Timber
 import javax.inject.Inject
@@ -65,6 +66,40 @@ class NavViewModel @Inject constructor(private val savedStateHandle: SavedStateH
         } else {
             navController.replaceAll(NavigationRoutes.Home)
         }
+    }
+
+    /**
+     * Opens [route] for a link from outside the app, unless it is in front already or the
+     * onboarding has to be finished first. The same screen with other arguments is replaced
+     * rather than stacked on, and the start screen is gone back to.
+     */
+    fun openFromOutside(route: NavigationRoutes) {
+        val current = navController.backstack.entries.lastOrNull()?.destination
+        if (current == route || current == NavigationRoutes.Onboarding) return
+        when {
+            route == NavigationRoutes.Home -> {
+                if (!navController.popUpTo(inclusive = false) { it == NavigationRoutes.Home }) {
+                    navController.replaceAll(NavigationRoutes.Home)
+                }
+            }
+
+            current != null && current::class == route::class -> {
+                // through openRoute, which hands the screen its arguments
+                navController.pop()
+                openRoute(route)
+            }
+
+            else -> openRoute(route)
+        }
+    }
+
+    /**
+     * Opens [route] in place of the screen in front, so going back skips that screen: the setup
+     * of a new group hands over to the group it made.
+     */
+    fun replaceRoute(route: NavigationRoutes) {
+        navController.pop()
+        openRoute(route)
     }
 
     /**

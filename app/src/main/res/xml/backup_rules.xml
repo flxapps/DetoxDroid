@@ -9,4 +9,9 @@
        that nothing can decrypt.
     -->
     <exclude domain="sharedpref" path="commitment_password_prefs.xml" />
+    <!--
+       Whether the accessibility service was running, and the watchdog's outage count, describe
+       this device. Restored onto another one they report a force stop that never happened there.
+    -->
+    <exclude domain="sharedpref" path="service_reliability_prefs.xml" />
 </full-backup-content>

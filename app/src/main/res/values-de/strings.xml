@@ -9,22 +9,27 @@
     <string name="app_brakeTile_until">Bis %s</string>
     <string name="app_accessibilityService_name">DetoxDroid-Bedienungshilfe</string>
     <string name="app_accessibilityService_description">Setzt deine Regeln in Echtzeit um, je nachdem, welche App gerade offen ist.</string>
-    <string name="app_notification_active">Digital Detox ist aktiv</string>
     <string name="app_notification_action_pause">Pause</string>
     <string name="app_notification_action_resume">Fortsetzen</string>
     <string name="app_notification_channelName">DetoxDroid-Dienst</string>
     <string name="app_notification_channelDescription">Hält DetoxDroid im Hintergrund aktiv</string>
     <string name="app_notification_alertChannelName">DetoxDroid-Hinweise</string>
     <string name="app_notification_alertChannelDescription">Meldet sich, wenn dein Handy DetoxDroid gestoppt hat</string>
+    <string name="app_notification_screenTime">%s Bildschirmzeit heute</string>
+    <string name="app_notification_budget">%1$s: %2$s</string>
     <string name="reliability_serviceDown_title">DetoxDroid wurde gestoppt</string>
     <string name="reliability_serviceDown_message">Dein Handy hat DetoxDroid im Hintergrund gestoppt. Tippe, um es wieder zu starten.</string>
     <string name="reliability_keepAlive_title">DetoxDroid aktiv halten</string>
-    <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
+    <string name="reliability_keepAlive_subtitle">Zeigt eine dauerhafte Benachrichtigung mit deiner Bildschirmzeit von heute, damit das System DetoxDroid im Hintergrund seltener stoppt.</string>
     <string name="reliability_keepAlive_locked_subtitle">Gesperrt, solange dein Commitment-Passwort gilt. Ohne die Benachrichtigung ließe sich DetoxDroid einfach wegwischen.</string>
-    <string name="reliability_battery_title">Uneingeschränkten Akku erlauben</string>
+    <string name="reliability_battery_title">Uneingeschränkte Akkunutzung erlauben</string>
     <string name="reliability_battery_subtitle">Verhindert, dass das System DetoxDroid schlafen legt. Empfohlen, wenn dein Handy Hintergrund-Apps aggressiv schließt.</string>
     <string name="reliability_onboarding_title">Zuverlässig bleiben</string>
     <string name="reliability_onboarding_message">Manche Handys stoppen Hintergrund-Apps, um Akku zu sparen. Dabei geht DetoxDroid schon mal unbemerkt mit aus. Diese optionalen Einstellungen helfen, dass es weiterläuft.</string>
+    <string name="reliability_forceStopped_title">Dein Handy hat DetoxDroid ausgeschaltet</string>
+    <string name="reliability_forceStopped_message">Android schaltet die Bedienungshilfe einer App ab, sobald sie zwangsweise beendet wird, und das passiert schon mal beim Schließen aller Apps oder durch den Akku-Manager. Fixier DetoxDroid in den laufenden Apps, lass es im Hintergrund laufen und starte es dann wieder.</string>
+    <string name="reliability_forceStopped_howTo">Zeig mir, wie</string>
+    <string name="reliability_forceStopped_dismiss">Aus lassen</string>
     <!-- endregion -->
 
     <!-- region Common Actions & States -->
@@ -39,6 +44,7 @@
     <string name="action_grantPermission">Berechtigung erteilen</string>
     <string name="action_openAppInfo">App-Info öffnen</string>
     <string name="action_requestPermissions">Für diese Funktion fehlen noch Berechtigungen.</string>
+    <string name="action_requestOverlayPermission">Dafür fehlt die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="action_search">Suchen</string>
     <string name="action_search_close">Suche schließen</string>
     <string name="action_filter">Filtern</string>
@@ -48,8 +54,8 @@
 
     <!-- region Common Formats -->
     <string name="duration_minutes">%d Min.</string>
-    <string name="duration_minutes_used">genutzt</string>
     <string name="duration_hoursMinutes">%1$d Std. %2$d Min.</string>
+    <string name="duration_hours">%d Std.</string>
     <string name="duration_hours_short">%dh</string>
     <string name="duration_minutes_short">%dmin</string>
     <string name="duration_hoursCompact">%1$dh%2$dmin</string>
@@ -75,14 +81,16 @@
     <string name="home_state_inactive">Gestoppt</string>
     <string name="home_screenTime_today">Bildschirmzeit heute</string>
     <string name="home_screenTime_unavailable">Bildschirmzeit nicht verfügbar</string>
+    <string name="home_screenTime_allLeftOut">Alles, was du heute benutzt hast, zählt gerade nicht mit.</string>
+    <string name="home_screenTime_allLeftOut_action">Ändern, was zählt</string>
     <string name="home_uninstall">DetoxDroid deinstallieren</string>
     <string name="home_uninstall_hint">Weil DetoxDroid erweiterte Berechtigungen hat, schlägt das Deinstallieren oft fehl. Tippe hier, um sie vorher zu entziehen.</string>
     <string name="home_uninstall_blocked_hint">Deaktiviert, solange das Commitment-Passwort aktiv ist.</string>
     <string name="home_uninstall_dialog_title">Bist du sicher?</string>
     <string name="home_uninstall_dialog_message">DetoxDroid gibt seine Berechtigungen ab, danach kannst du es ganz normal deinstallieren.\n\nBei einer Neuinstallation musst du sie erneut erteilen.</string>
     <string name="home_finishSetup_title">Einrichtung abschließen</string>
-    <string name="home_finishSetup_message">Die Graustufen warten nur noch auf eine Berechtigung.</string>
-    <string name="home_finishSetup_message_overlay">Scroll-Pausen und App-Sperre brauchen noch die Berechtigung „Über anderen Apps anzeigen“.</string>
+    <string name="home_finishSetup_message">Eine Gruppe macht Apps grau und wartet nur noch auf eine Berechtigung.</string>
+    <string name="home_finishSetup_message_overlay">Warten, Sperren und Scroll-Pausen brauchen noch die Berechtigung „Über anderen Apps anzeigen“.</string>
     <string name="home_finishSetup_action">Abschließen</string>
     <string name="home_batteryOptimization_title">DetoxDroid aktiv halten</string>
     <string name="home_batteryOptimization_message">Dein Handy stoppt DetoxDroid womöglich im Hintergrund. Lass es ohne Akku-Einschränkungen laufen, damit deine Regeln weiter greifen.</string>
@@ -103,8 +111,19 @@
     <string name="appList_section_available">Verfügbare Apps</string>
     <string name="appList_selected_empty">Noch keine Apps ausgewählt.</string>
     <string name="appList_badge_system">System</string>
-    <string name="appList_filter_userApps">Nutzer-Apps</string>
-    <string name="appList_filter_systemApps">System-Apps</string>
+    <string name="appList_filter_launchable">Apps, die du öffnen kannst</string>
+    <string name="appList_filter_background">Apps ohne Symbol</string>
+    <string name="appList_tab_apps">Apps</string>
+    <string name="appList_tab_websites">Websites</string>
+    <string name="appList_browser_websites_all">Auf jeder Website darin aktiv</string>
+    <string name="appList_browser_websites_only">Darin nur auf den ausgewählten Websites aktiv</string>
+    <string name="appList_browser_websites_allExcept">Auf jeder Website darin aktiv, außer den ausgewählten</string>
+    <string name="appList_browser_websites_unreadable">Die Websites darin kann DetoxDroid nicht lesen</string>
+    <plurals name="websites_coveredBrowsers">
+        <item quantity="one">In %s sowieso auf jeder Website aktiv, weil der Browser selbst bei den Apps mit drin ist.</item>
+        <item quantity="other">In %s sowieso auf jeder Website aktiv, weil die Browser selbst bei den Apps mit drin sind.</item>
+    </plurals>
+    <string name="websites_showApps">Zu den Apps</string>
     <string name="appCategories_video">Video</string>
     <string name="appCategories_music">Musik</string>
     <string name="appCategories_audio">Audio</string>
@@ -121,31 +140,81 @@
     <string name="appCategories_other">Sonstige</string>
     <!-- endregion -->
 
+    <!-- region Websites in app lists -->
+    <string name="websites_add_label">Website hinzufügen</string>
+    <string name="websites_add_placeholder">youtube.com oder youtube.com/shorts</string>
+    <string name="websites_add_action">Hinzufügen</string>
+    <string name="websites_add_invalid">Das sieht nicht nach einer Webadresse aus.</string>
+    <string name="websites_section_yours">Deine Websites</string>
+    <string name="websites_section_yours_empty">Noch keine. Eine Website zählt mit allem, was dazugehört, auch mit ihren Subdomains. Mit Pfad, etwa youtube.com/shorts, zählt nur dieser Teil.</string>
+    <string name="websites_section_collections">Fertige Listen</string>
+    <string name="websites_collection_social">Soziale Medien</string>
+    <string name="websites_collection_video">Video und Streaming</string>
+    <string name="websites_collection_shopping">Shopping</string>
+    <string name="websites_collection_dating">Dating</string>
+    <string name="websites_collection_adult">Pornoseiten</string>
+    <string name="websites_collection_gambling">Glücksspiel</string>
+    <string name="websites_collection_sample">%1$s und %2$d weitere</string>
+    <string name="websites_collection_size">%1$s Websites, %2$s</string>
+    <string name="websites_source_stevenBlack">aus den StevenBlack-Hosts-Listen</string>
+    <string name="websites_source_ut1">aus den UT1-Blacklists der Université Toulouse Capitole</string>
+    <string name="websites_source_stevenBlackAndUt1">aus den StevenBlack-Hosts-Listen und den UT1-Blacklists</string>
+    <string name="websites_browsers_readable">Funktioniert in %s.</string>
+    <string name="websites_browsers_unreadable">%s kann DetoxDroid nicht lesen, Websites bleiben dort also unbemerkt. Nimm stattdessen die App selbst in die Liste.</string>
+    <string name="websites_browsers_none">Keinen deiner Browser kann DetoxDroid lesen. Chrome, Firefox, Samsung Internet, Brave, Edge und viele mehr gehen.</string>
+    <string name="websites_inAppBrowsers">Links, die sich in einer anderen App öffnen, etwa im eingebauten Browser von Instagram, sind nicht abgedeckt.</string>
+    <!-- endregion -->
+
     <!-- region Shared Feature Settings -->
-    <string name="feature_settings_exceptions">App-Ausnahmen</string>
-    <string name="feature_settings_exceptions_notListed">Aktiv in allen Apps außer den %d ausgewählten.</string>
-    <string name="feature_settings_exceptions_onlyListed">Nur in %d ausgewählten Apps aktiv.</string>
+    <string name="feature_settings_exceptions">Apps und Websites</string>
+    <plurals name="feature_settings_exceptions_notListed">
+        <item quantity="one">Aktiv in allen Apps außer der %d ausgewählten.</item>
+        <item quantity="other">Aktiv in allen Apps außer den %d ausgewählten.</item>
+    </plurals>
+    <plurals name="feature_settings_exceptions_onlyListed">
+        <item quantity="one">Nur in %d ausgewählten App aktiv.</item>
+        <item quantity="other">Nur in %d ausgewählten Apps aktiv.</item>
+    </plurals>
+    <string name="feature_settings_exceptions_allApps">Aktiv in allen Apps.</string>
     <string name="feature_settings_exceptions_empty">Keine Apps gefunden.</string>
     <string name="feature_settings_exceptions_filterByAppType">Nach App-Typ filtern</string>
     <string name="feature_settings_exceptions_filterByCategory">Nach App-Kategorie filtern</string>
-    <string name="feature_settings_exceptions_listType">Funktion gilt für</string>
+    <string name="feature_settings_exceptions_listType">Gilt für</string>
     <string name="feature_settings_exceptions_listType_notList">Alle Apps außer den ausgewählten</string>
     <string name="feature_settings_exceptions_listType_onlyList">Nur ausgewählte Apps</string>
     <string name="feature_settings_exceptions_copyFrom">Übernehmen von …</string>
     <string name="feature_settings_exceptions_copyFrom_dialogTitle">Auswahl übernehmen von</string>
-    <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die App-Auswahl einer anderen Funktion hierher. Die aktuelle Auswahl ist damit weg.</string>
+    <string name="feature_settings_exceptions_copyFrom_dialogHint">Kopiert die Apps und Websites einer anderen Gruppe in diese Liste. Die aktuelle Auswahl ist damit weg.</string>
     <string name="feature_settings_exceptions_copyFrom_appCount">%d Apps</string>
     <string name="feature_settings_exceptions_switchListType_title">Ausgewählte Apps behalten?</string>
-    <string name="feature_settings_exceptions_switchListType_toNotList">Bisher gilt die Funktion nur für deine %d ausgewählten Apps. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList">Bisher gilt das nur für deine %d ausgewählten Apps. Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
     <string name="feature_settings_exceptions_switchListType_toOnlyList">Bisher sind deine %d ausgewählten Apps ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_exceptions_switchListType_keep">Auswahl behalten</string>
     <string name="feature_settings_exceptions_switchListType_clear">Liste vorher leeren</string>
+    <string name="feature_settings_exceptions_notListed_websites">Aktiv auf allen Websites außer den ausgewählten (%s).</string>
+    <string name="feature_settings_exceptions_onlyListed_websites">Nur auf ausgewählten Websites aktiv (%s).</string>
+    <string name="feature_settings_exceptions_noWebsites">Keine Websites ausgewählt.</string>
+    <plurals name="websites_count_sites">
+        <item quantity="one">%d Website</item>
+        <item quantity="other">%d Websites</item>
+    </plurals>
+    <plurals name="websites_count_collections">
+        <item quantity="one">%d Liste</item>
+        <item quantity="other">%d Listen</item>
+    </plurals>
+    <string name="feature_settings_exceptions_allWebsites">Aktiv auf allen Websites.</string>
+    <string name="feature_settings_exceptions_listType_notList_websites">Alle Websites außer den ausgewählten</string>
+    <string name="feature_settings_exceptions_listType_onlyList_websites">Nur ausgewählte Websites</string>
+    <string name="feature_settings_exceptions_copyFrom_appAndWebsiteCount">%1$d Apps, %2$d Websites</string>
+    <string name="feature_settings_exceptions_switchListType_title_websites">Ausgewählte Websites behalten?</string>
+    <string name="feature_settings_exceptions_switchListType_toNotList_websites">Bisher gilt das nur für die Websites, die du ausgewählt hast (%s). Nach dem Wechsel wären genau die ausgenommen, und alle anderen betroffen.</string>
+    <string name="feature_settings_exceptions_switchListType_toOnlyList_websites">Bisher sind die Websites, die du ausgewählt hast (%s), ausgenommen. Nach dem Wechsel wären nur noch die betroffen, und alle anderen nicht.</string>
     <string name="feature_settings_advanced">Erweitert</string>
 
     <string name="feature_settings_schedule">Zeitplan</string>
     <string name="feature_settings_schedule_hint">%d Zeitfenster</string>
     <string name="feature_settings_schedule_hint_activeAllTheTime">Durchgehend aktiv</string>
-    <string name="feature_settings_schedule_description">Mit einem Zeitfenster beschränkst du die Funktion auf bestimmte Tage und Uhrzeiten.</string>
+    <string name="feature_settings_schedule_description">Mit einem Zeitfenster gilt das nur an bestimmten Tagen und zu bestimmten Uhrzeiten.</string>
     <string name="feature_settings_schedule_everyDay">Täglich</string>
     <string name="feature_settings_schedule_allDay">ganztägig</string>
     <string name="feature_settings_schedule_nextDay">Folgetag</string>
@@ -159,6 +228,249 @@
     <string name="feature_settings_schedule_status_inactiveUntil">Gerade aus, aktiv ab %s</string>
     <!-- endregion -->
 
+    <!-- region Rule groups -->
+    <string name="ruleGroups_title">Deine Gruppen</string>
+    <string name="ruleGroups_new">Neue Gruppe</string>
+    <string name="ruleGroups_unnamed">Gruppe</string>
+    <string name="ruleGroups_quotedName">„%s“</string>
+    <string name="ruleGroups_name">Name</string>
+    <string name="ruleGroups_menu">Mehr</string>
+    <string name="ruleGroups_rename">Umbenennen</string>
+    <string name="ruleGroups_delete">Gruppe löschen</string>
+    <string name="ruleGroups_delete_title">„%s“ löschen?</string>
+    <string name="ruleGroups_delete_message">Apps, Websites, Zeitplan und Budget der Gruppe sind damit weg. Den Apps selbst passiert nichts.</string>
+    <string name="ruleGroups_empty_title">Noch keine Gruppen</string>
+    <string name="ruleGroups_empty_message">Eine Gruppe ist eine Handvoll Apps und Websites, wann sie zählen, wie viel Zeit sie bekommen, und was passiert, wenn die Zeit um ist: warten, grau, Scroll-Pause, Sperre.</string>
+    <string name="ruleGroups_migrated_gray">Grau</string>
+    <string name="ruleGroups_migrated_locked">Gesperrte Apps</string>
+    <string name="ruleGroups_migrated_scrollBreaks">Scroll-Pausen</string>
+    <string name="ruleGroups_onboarding_name">Ablenkende Apps</string>
+    <string name="ruleGroups_feature_unused">In keiner Gruppe</string>
+    <plurals name="ruleGroups_feature_usedBy">
+        <item quantity="one">In %d Gruppe</item>
+        <item quantity="other">In %d Gruppen</item>
+    </plurals>
+    <string name="home_section_more">Mehr</string>
+    <string name="home_finishSetup_message_grayEffects">Eine Gruppe macht Apps grau, aber alle Grau-Effekte sind aus.</string>
+    <string name="usageStats_inGroups">In diesen Gruppen</string>
+    <string name="usageStats_noGroups">Noch keine Gruppen. Leg eine auf dem Startbildschirm an.</string>
+
+    <string name="ruleGroups_card_usedOf">%1$s von %2$s</string>
+    <string name="ruleGroups_card_allExcept">Alle außer</string>
+    <string name="ruleGroups_status_offUntil">Aus bis %s</string>
+    <string name="ruleGroups_status_usedUp">Aufgebraucht</string>
+    <string name="ruleGroups_status_locked">Gesperrt</string>
+    <string name="ruleGroups_status_gray">Grau</string>
+    <string name="ruleGroups_status_wait">%s warten</string>
+    <string name="ruleGroups_status_scrollBreaks">Scroll-Pausen</string>
+    <string name="ruleGroups_status_noSteps">Keine Schritte</string>
+
+    <string name="ruleGroups_scope_nothingYet">noch keine Apps oder Websites</string>
+    <string name="ruleGroups_scope_allApps">Alle Apps</string>
+    <string name="ruleGroups_scope_everything">Alle Apps und Websites</string>
+    <string name="ruleGroups_scope_allWebsites">Alle Websites</string>
+    <string name="ruleGroups_scope_allExcept">Alle Apps außer %s</string>
+    <string name="ruleGroups_scope_andAllWebsites">%s und jede Website</string>
+    <plurals name="ruleGroups_scope_andMore">
+        <item quantity="one">%1$s und %2$d weitere</item>
+        <item quantity="other">%1$s und %2$d weitere</item>
+    </plurals>
+    <plurals name="ruleGroups_scope_moreApps">
+        <item quantity="one">%1$s und %2$d weitere App</item>
+        <item quantity="other">%1$s und %2$d weitere Apps</item>
+    </plurals>
+    <string name="ruleGroups_scope_plusWebsites">%1$s, dazu %2$s</string>
+    <string name="ruleGroups_budget_perDay">%s pro Tag</string>
+    <string name="ruleGroups_budget_perHour">%s pro Stunde</string>
+    <string name="ruleGroups_schedule_always">Immer</string>
+    <string name="ruleGroups_schedule_everyDay">jeden Tag</string>
+    <string name="ruleGroups_schedule_weekdays">werktags</string>
+    <string name="ruleGroups_schedule_weekends">am Wochenende</string>
+    <string name="ruleGroups_schedule_onDays">am %s</string>
+    <string name="ruleGroups_schedule_window">%1$s von %2$s bis %3$s</string>
+    <string name="ruleGroups_schedule_windowShort">%1$s, %2$s bis %3$s</string>
+    <plurals name="ruleGroups_schedule_windows">
+        <item quantity="one">in %d Zeitfenster</item>
+        <item quantity="other">in %d Zeitfenstern</item>
+    </plurals>
+    <plurals name="ruleGroups_schedule_windowsShort">
+        <item quantity="one">%d Zeitfenster</item>
+        <item quantity="other">%d Zeitfenster</item>
+    </plurals>
+    <plurals name="ruleGroups_schedule_moreWindows">
+        <item quantity="one">und %d weiteres</item>
+        <item quantity="other">und %d weitere</item>
+    </plurals>
+
+    <plurals name="ruleGroups_sentence_budget">
+        <item quantity="one">{scope} bekommt {budget}{schedule}.</item>
+        <item quantity="other">{scope} bekommen {budget}{schedule}.</item>
+    </plurals>
+    <plurals name="ruleGroups_sentence_noBudget">
+        <item quantity="one">{scope} {steps}{schedule}.</item>
+        <item quantity="other">{scope} {steps}{schedule}.</item>
+    </plurals>
+    <string name="ruleGroups_sentence_scheduleJoin">", %s"</string>
+    <string name="ruleGroups_sentence_empty">Diese Gruppe umfasst {scope}.</string>
+    <plurals name="ruleGroups_steps_nothingYet">
+        <item quantity="one">hat noch keine Schritte</item>
+        <item quantity="other">haben noch keine Schritte</item>
+    </plurals>
+    <plurals name="ruleGroups_steps_wait">
+        <item quantity="one">wartet vor dem Öffnen {wait}</item>
+        <item quantity="other">warten vor dem Öffnen {wait}</item>
+    </plurals>
+    <plurals name="ruleGroups_steps_gray">
+        <item quantity="one">ist grau</item>
+        <item quantity="other">sind grau</item>
+    </plurals>
+    <plurals name="ruleGroups_steps_scroll">
+        <item quantity="one">bekommt nach {scroll} Scrollen eine Pause</item>
+        <item quantity="other">bekommen nach {scroll} Scrollen eine Pause</item>
+    </plurals>
+    <plurals name="ruleGroups_steps_lock">
+        <item quantity="one">ist gesperrt</item>
+        <item quantity="other">sind gesperrt</item>
+    </plurals>
+    <string name="ruleGroups_before_wait">Vor jedem Öffnen heißt es erst mal {wait} warten.</string>
+    <string name="ruleGroups_before_grayAlways">Die ganze Zeit grau.</string>
+    <string name="ruleGroups_before_scroll">Doomscrolling bekommt nach {scroll} eine Pause.</string>
+    <plurals name="ruleGroups_after_lock">
+        <item quantity="one">Danach ist es gesperrt.</item>
+        <item quantity="other">Danach sind sie gesperrt.</item>
+    </plurals>
+    <plurals name="ruleGroups_after_gray">
+        <item quantity="one">Danach wird es grau.</item>
+        <item quantity="other">Danach werden sie grau.</item>
+    </plurals>
+    <plurals name="ruleGroups_after_grayFrom">
+        <item quantity="one">Ab {gray} wird es grau.</item>
+        <item quantity="other">Ab {gray} werden sie grau.</item>
+    </plurals>
+    <plurals name="ruleGroups_after_grayFromThenLock">
+        <item quantity="one">Ab {gray} wird es grau, danach gesperrt.</item>
+        <item quantity="other">Ab {gray} werden sie grau, danach gesperrt.</item>
+    </plurals>
+    <string name="ruleGroups_after_nothing">Danach {steps}.</string>
+    <string name="ruleGroups_steps_nothingHappens">passiert noch nichts</string>
+    <string name="ruleGroups_noBudget_value">Kein Zeitbudget</string>
+    <string name="ruleGroups_noBudget_withSteps">{budget}, das gilt also ab der ersten Minute.</string>
+    <string name="ruleGroups_noBudget">{budget}.</string>
+    <string name="ruleGroups_overlap">%1$s gilt auch für %2$s.</string>
+    <plurals name="ruleGroups_permission_steps">
+        <item quantity="one">%s kann noch nichts tun.</item>
+        <item quantity="other">%s können noch nichts tun.</item>
+    </plurals>
+    <string name="ruleGroups_idle_noBudget_title">Ab der ersten Minute gesperrt</string>
+    <plurals name="ruleGroups_idle_noBudget_message">
+        <item quantity="one">%s kommt so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
+        <item quantity="other">%s kommen so nie zum Zug. Mit einem Zeitbudget würde die Sperre erst greifen, wenn es aufgebraucht ist.</item>
+    </plurals>
+    <string name="ruleGroups_idle_setBudget">Budget festlegen</string>
+    <string name="ruleGroups_idle_grayAtLock_title">Grau fängt da an, wo die Sperre greift</string>
+    <string name="ruleGroups_idle_grayAtLock_message">Es wird also nie grau. Wähl einen früheren Zeitpunkt.</string>
+    <string name="ruleGroups_idle_grayAtLock_action">Früher</string>
+    <string name="ruleGroups_hint_tapToChange">Tipp auf einen unterstrichenen Teil, um ihn zu ändern.</string>
+    <string name="ruleGroups_hint_pastMidnight">Tipp auf einen unterstrichenen Teil, um ihn zu ändern. Das Zeitfenster geht über Mitternacht hinaus, und die %s gehen mit: Sie zählen, solange das Fenster offen ist, und fangen um Mitternacht nicht von vorn an.</string>
+
+    <string name="ruleGroups_today">Heute</string>
+    <string name="ruleGroups_thisHour">Diese Stunde</string>
+    <string name="ruleGroups_today_left">übrig</string>
+    <string name="ruleGroups_today_groupOff">Die Gruppe ist aus</string>
+    <string name="ruleGroups_today_freshBudget">Das Budget fängt neu an, wenn das Zeitfenster aufgeht.</string>
+    <string name="ruleGroups_today_grayFrom">Grau ab %s</string>
+    <string name="ruleGroups_today_grayAt">Grau ab %s</string>
+    <string name="ruleGroups_today_lockedAt">Gesperrt ab %s</string>
+
+    <string name="ruleGroups_steps_title">Was passiert</string>
+    <string name="ruleGroups_step_wait">Vor dem Öffnen warten</string>
+    <string name="ruleGroups_step_wait_on">%s bei jedem Öffnen</string>
+    <string name="ruleGroups_step_wait_off">Ein Moment, um es dir anders zu überlegen</string>
+    <string name="ruleGroups_step_gray">Grau werden</string>
+    <string name="ruleGroups_step_gray_on">Ab %s</string>
+    <string name="ruleGroups_step_gray_always">Die ganze Zeit</string>
+    <string name="ruleGroups_step_gray_off">Nimmt die Farbe raus, und damit den halben Reiz</string>
+    <string name="ruleGroups_step_gray_from">Grau ab</string>
+    <string name="ruleGroups_step_gray_fromStart">der ersten Minute</string>
+    <string name="ruleGroups_step_gray_fromMinutes">%d Min.</string>
+    <string name="ruleGroups_step_scrollBreak">Doomscrolling unterbrechen</string>
+    <string name="ruleGroups_step_scrollBreak_on">Nach %s Scrollen</string>
+    <string name="ruleGroups_step_scrollBreak_off">Eine Pause, wenn der Feed nicht aufhört</string>
+    <string name="ruleGroups_step_lock">Sperren</string>
+    <string name="ruleGroups_step_lock_on">Ab %s, bis zum nächsten Zeitfenster</string>
+    <string name="ruleGroups_step_lock_on_day">Ab %s, für den Rest des Tages</string>
+    <string name="ruleGroups_step_lock_on_hour">Ab %s, bis zur nächsten vollen Stunde</string>
+    <string name="ruleGroups_step_lock_always">Die ganze Zeit</string>
+    <string name="ruleGroups_step_lock_off">Hält sie außer Reichweite</string>
+    <string name="ruleGroups_step_onlySelectedApps">Nur bei einer Gruppe aus ausgewählten Apps</string>
+    <string name="ruleGroups_step_tune">Wie es funktioniert</string>
+    <string name="ruleGroups_steps_featureSettings">Funktionseinstellungen</string>
+    <string name="ruleGroups_steps_featureSettings_subtitle">Grau-Look, Sperrmodus, Scroll-Pausen. Für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_description">Gelten fürs ganze Handy, also für alle Gruppen gleich.</string>
+    <string name="ruleGroups_steps_featureSettings_lock">Mit Bildschirm sperren, einfrieren oder deaktivieren</string>
+    <string name="ruleGroups_steps_featureSettings_gray">Echte Graustufen oder Bildschirmfilter, und wie stark</string>
+    <string name="ruleGroups_steps_featureSettings_scroll">Wie schnell eine Pause kommt und wie lange sie hält</string>
+    <string name="ruleGroups_when_title">Wann aktiv</string>
+
+    <string name="ruleGroups_budget_title">Wie viel</string>
+    <string name="ruleGroups_budget_use">%s nutzen</string>
+    <string name="ruleGroups_budget_noLimit">Kein Limit</string>
+    <string name="ruleGroups_budget_less">Weniger</string>
+    <string name="ruleGroups_budget_more">Mehr</string>
+    <string name="ruleGroups_budget_period_day">pro Tag</string>
+    <string name="ruleGroups_budget_period_hour">pro Stunde</string>
+    <string name="ruleGroups_budget_perHour_hint">Fängt zu jeder vollen Stunde von vorn an, auch wenn du gerade in einer App bist.</string>
+    <string name="ruleGroups_budget_perDay_pastMidnight_hint">Das Zeitfenster geht über Mitternacht hinaus, das Budget auch: Es zählt, solange das Fenster offen ist, und fängt um Mitternacht nicht von vorn an.</string>
+    <string name="ruleGroups_budget_lastDays">Letzte 7 Tage in dieser Gruppe</string>
+    <string name="ruleGroups_budget_lastDays_average">%s am Tag</string>
+    <string name="ruleGroups_budget_lastDays_empty">In den letzten 7 Tagen ist für diese Apps nichts zusammengekommen.</string>
+    <string name="ruleGroups_budget_compare_less">%1$s sind %2$s weniger als ein durchschnittlicher Tag letzte Woche.</string>
+    <string name="ruleGroups_budget_compare_more">%1$s sind %2$s mehr als ein durchschnittlicher Tag letzte Woche.</string>
+    <string name="ruleGroups_budget_compare_same">Das ist genau ein durchschnittlicher Tag letzte Woche.</string>
+    <string name="ruleGroups_budget_compare_everyDayOver">Jeder Tag lag drüber.</string>
+    <string name="ruleGroups_budget_compare_noDayOver">Kein Tag lag drüber.</string>
+    <plurals name="ruleGroups_budget_compare_daysOver">
+        <item quantity="one">%1$d von %2$d Tagen lag drüber.</item>
+        <item quantity="other">%1$d von %2$d Tagen lagen drüber.</item>
+    </plurals>
+
+    <string name="ruleGroups_setup_what">Was zählt</string>
+    <string name="ruleGroups_setup_how">Wie streng</string>
+    <string name="ruleGroups_setup_create">Gruppe anlegen</string>
+    <string name="ruleGroups_template_intro">Nimm die Vorlage, die am ehesten passt. Alles darin lässt sich hinterher ändern.</string>
+    <string name="ruleGroups_templates_what">Was dir die Zeit frisst</string>
+    <string name="ruleGroups_templates_when">Zu bestimmten Zeiten</string>
+    <string name="ruleGroups_templates_phone">Das ganze Handy</string>
+    <string name="ruleGroups_template_feeds">Social Feeds</string>
+    <string name="ruleGroups_template_feeds_description">Instagram, Reddit, X, TikTok, News-Apps und Co. bekommen 30 Minuten am Tag, werden dann grau und schließlich gesperrt. Scrollen bekommt Pausen.</string>
+    <string name="ruleGroups_template_videosAndGames">Videos und Spiele</string>
+    <string name="ruleGroups_template_videosAndGames_description">Netflix, YouTube, Twitch und jedes Spiel bekommen eine Stunde am Tag, die letzten 15 Minuten in Grau, danach gesperrt.</string>
+    <string name="ruleGroups_template_shopping">Shopping</string>
+    <string name="ruleGroups_template_shopping_description">Jeder Shop wartet 10 Sekunden, bevor er aufgeht, und bekommt 30 Minuten am Tag.</string>
+    <string name="ruleGroups_template_gamblingAndPorn">Glücksspiel und Pornos</string>
+    <string name="ruleGroups_template_gamblingAndPorn_description">Wett-Apps, Glücksspiel- und Pornoseiten bleiben gesperrt, in jedem Browser.</string>
+    <string name="ruleGroups_template_nightsOff">Nachts Ruhe</string>
+    <string name="ruleGroups_template_nightsOff_description">Feeds, Videos und Spiele sind jeden Tag von %1$s bis %2$s gesperrt.</string>
+    <string name="ruleGroups_template_workHours">Arbeitszeit</string>
+    <string name="ruleGroups_template_workHours_description">Feeds, Videos, Spiele, Nachrichten und Shops sind werktags von %1$s bis %2$s gesperrt.</string>
+    <string name="ruleGroups_template_grayEssentials">Grau, bis auf das Nötigste</string>
+    <string name="ruleGroups_template_grayEssentials_description">Jede App und jede Website wird grau, außer Telefon, Kamera, Karten, Uhr, Kalender und deinen Messengern.</string>
+    <string name="ruleGroups_template_empty">Leer anfangen</string>
+    <string name="ruleGroups_template_empty_description">Nichts ausgewählt, nichts eingestellt.</string>
+    <string name="ruleGroups_setup_what_these">Diese Apps zählen. Die üblichen Verdächtigen stehen oben; nimm den Haken raus, wo keiner ist.</string>
+    <string name="ruleGroups_setup_what_except">Alles zählt, außer dem, was du hier abhakst. Setz einen Haken bei allem, was so bleiben soll, wie es ist.</string>
+    <string name="ruleGroups_setup_what_hint">Websites funktionieren in Chrome, Firefox und den meisten Browsern, die darauf aufbauen. Mehr Apps und Websites gibt\'s später auf dem Bildschirm der Gruppe.</string>
+    <string name="ruleGroups_setup_budget_description">Wie lange die Apps und Websites der Gruppe zusammen bekommen.</string>
+    <string name="ruleGroups_setup_schedule_hint">Genaue Tage und Uhrzeiten stellst du später auf dem Bildschirm der Gruppe ein.</string>
+    <string name="ruleGroups_schedulePreset_always">Immer</string>
+    <string name="ruleGroups_schedulePreset_weekdays">Werktags, 10:00 bis 22:00</string>
+    <string name="ruleGroups_schedulePreset_workHours">Werktags, 09:00 bis 17:00</string>
+    <string name="ruleGroups_schedulePreset_evenings">Abends, 18:00 bis 23:00</string>
+    <string name="ruleGroups_schedulePreset_nights">Nachts, 22:00 bis 07:00</string>
+    <string name="ruleGroups_schedulePreset_mornings">Morgens, bis 09:00</string>
+    <string name="ruleGroups_schedulePreset_weekends">Am Wochenende</string>
+    <!-- endregion -->
+
     <!-- region Feature: Do Not Disturb -->
     <string name="feature_doNotDisturb">Modus „Bitte nicht stören“</string>
     <string name="feature_doNotDisturb_subtitle">Ruhe als Grundeinstellung</string>
@@ -168,28 +480,24 @@
     <!-- endregion -->
 
     <!-- region Feature: Grayscale -->
-    <string name="feature_grayscale">Apps langweilig machen</string>
-    <string name="feature_grayscale_subtitle">Grau, gedimmt, verschwommen</string>
-    <string name="feature_grayscale_description">Nimmt ablenkenden Apps die Farbe. Wo der Graustufenfilter des Systems nicht drankommt, macht sie ein Bildschirmfilter stattdessen stumpf und unscharf.</string>
-    <string name="feature_grayscale_allowedColorScreenTime">Tägliches Farbbudget</string>
-    <string name="feature_grayscale_allowedColorScreenTime_description">So lange bleiben diese Apps täglich bunt. Danach sind sie bis morgen grau. (Zum Mitzählen muss DetoxDroid laufen.)</string>
-    <string name="feature_grayscale_extraDim">Extra dunkel</string>
-    <string name="feature_grayscale_extraDim_description">Dunkelt den Bildschirm unter das normale Minimum ab, solange eine App aus der Liste offen ist. (Lange drücken, um die Stärke einzustellen.)</string>
-    <string name="feature_grayscale_ignoreNonFullScreen">Eingeblendete Elemente ignorieren</string>
-    <string name="feature_grayscale_ignoreNonFullScreen_description">Kurz eingeblendete Elemente wie Lautstärkeregler oder Statusleiste schalten den Farbmodus dann nicht mehr um.</string>
-    <string name="feature_grayscale_exceptions_summary_notList">%d Apps bleiben unangetastet.</string>
-    <string name="feature_grayscale_exceptions_summary_onlyList">Greift in %d Apps.</string>
-    <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extra dunkel oder den Bildschirmfilter ein.</string>
+    <string name="feature_grayscale">Grau werden</string>
+    <string name="feature_grayscale_subtitle">Wie das Grau aussieht</string>
+    <string name="feature_grayscale_description">Nimmt allem die Farbe, was eine Gruppe grau macht, und damit den halben Reiz. Welche Apps, wann und nach wie viel Nutzung, das stellst du in der Gruppe ein.</string>
+    <string name="feature_grayscale_extraDim">Extradunkel</string>
+    <string name="feature_grayscale_extraDim_description">Dunkler, als der Helligkeitsregler hergibt, solange eine erfasste App offen ist. Lange drücken, um einzustellen, wie dunkel.</string>
+    <string name="feature_grayscale_ignoreNonFullScreen">Pop-ups und Leisten ignorieren</string>
+    <string name="feature_grayscale_ignoreNonFullScreen_description">Lautstärkeregler oder Statusleiste schalten die Farbe dann nicht mehr hin und her.</string>
+    <string name="feature_grayscale_noEffects">Schalte erst Graustufen, Extradunkel oder den Bildschirmfilter ein.</string>
     <string name="feature_grayscale_noEffects_noPermission">Schalte erst den Bildschirmfilter ein oder richte echte Graustufen ein.</string>
     <string name="feature_grayscale_systemGrayscale">Graustufen</string>
-    <string name="feature_grayscale_systemGrayscale_description">Stellt den Farbfilter des Systems auf Graustufen, solange eine App aus der Liste offen ist. Kostet keinen Akku.</string>
+    <string name="feature_grayscale_systemGrayscale_description">Der Farbfilter des Systems, solange eine erfasste App offen ist. Kostet keinen Akku.</string>
     <string name="feature_grayscale_screenFilter">Bildschirmfilter</string>
-    <string name="feature_grayscale_screenFilter_description">Echte Graustufen brauchen einmalig einen Computer oder Shizuku. Bis dahin zieht ein Filter ablenkenden Apps die Farbe ab und macht sie unscharf.</string>
-    <string name="feature_grayscale_screenFilter_description_granted">Läuft zusätzlich zum Graustufenfilter des Systems. Du hast das Original schon, das hier lohnt sich also nur, wenn dich Graustufen allein zu wenig stören.</string>
+    <string name="feature_grayscale_screenFilter_description">Zieht die Farbe ab und macht unscharf, ganz ohne Einrichtung. Echte Graustufen brauchen einmal einen Computer oder Shizuku.</string>
+    <string name="feature_grayscale_screenFilter_description_granted">Zusätzlich zu den echten Graustufen, falls dich Grau allein zu wenig stört.</string>
     <string name="feature_grayscale_screenFilter_intensity">Filterstärke</string>
-    <string name="feature_grayscale_screenFilter_intensity_description">Wie stark der Filter eingreift. Je stärker, desto schlechter lässt sich Text lesen.</string>
+    <string name="feature_grayscale_screenFilter_intensity_description">Wie weit er geht. Zu stark, und Text wird schwer lesbar.</string>
     <string name="feature_grayscale_screenFilter_effects">Was der Filter macht</string>
-    <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 oder neuer, und im Energiesparmodus schaltet das System sie ab.</string>
+    <string name="feature_grayscale_screenFilter_effects_description">Der Schleier zieht Farbe und Kontrast ab. Die Unschärfe braucht Android 12 und pausiert im Energiesparmodus.</string>
     <string name="feature_grayscale_screenFilter_effects_shade">Schleier</string>
     <string name="feature_grayscale_screenFilter_effects_blur">Unschärfe</string>
     <string name="feature_grayscale_screenFilter_effects_both">Beides</string>
@@ -197,6 +505,8 @@
     <string name="feature_grayscale_screenFilter_summary_shade">Schleier, %d %%</string>
     <string name="feature_grayscale_screenFilter_summary_blur">Unschärfe, %d %%</string>
     <string name="feature_grayscale_screenFilter_summary_both">Schleier und Unschärfe, %d %%</string>
+    <string name="feature_grayscale_preview_normal">Normal</string>
+    <string name="feature_grayscale_preview_gray">Grau</string>
     <!-- endregion -->
 
     <!-- region Feature: Pause -->
@@ -231,7 +541,7 @@
     <!-- region Feature: Emergency Brake -->
     <string name="feature_brake">Notbremse</string>
     <string name="feature_brake_subtitle">Alle Regeln auf Anschlag, sofort</string>
-    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abdriftest. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, auf der strengsten Stufe: Der ganze Bildschirm wird grau, deine Apps aus der Liste sind gesperrt, egal wie viel Zeit heute noch übrig wäre, Zeitpläne gelten nicht, und pausieren kannst du auch nicht.</string>
+    <string name="feature_brake_description">Für den Moment, in dem du merkst, dass du gerade abdriftest. Eine Zeit lang läuft dann alles, was du eingeschaltet hast, auf der strengsten Stufe: Der ganze Bildschirm wird grau, gesperrte Apps bleiben gesperrt, egal wie viel Zeit noch übrig wäre, Zeitpläne gelten nicht, und pausieren kannst du auch nicht.</string>
     <string name="feature_brake_status_off">Wähl aus, wie lange, und los geht\'s.</string>
     <string name="feature_brake_status_notActivated">Schalte die Notbremse erst oben ein.</string>
     <string name="feature_brake_status_notRunning">DetoxDroid läuft nicht, da gibt es nichts zu bremsen.</string>
@@ -249,7 +559,7 @@
     <string name="feature_brake_noPause">Keine Pause, solange die Notbremse läuft. Sie geht bis %s.</string>
     <string name="feature_brake_stop_locked">Die Notbremse läuft bis %s. So lange lässt sich DetoxDroid nicht stoppen.</string>
     <string name="feature_brake_ways">So löst du sie aus</string>
-    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Ein Tipp dort, und sie läuft so lange wie beim letzten Mal.</string>
+    <string name="feature_brake_fromQuickSettings_description">Tippe hier, und die Notbremse landet in deinen Schnelleinstellungen. Einmal antippen, und sie läuft so lange wie beim letzten Mal.</string>
     <string name="feature_brake_fromQuickSettings_alreadyAdded">Die Notbremse ist schon in deinen Schnelleinstellungen.</string>
     <string name="feature_brake_fromHomeScreen">Startbildschirm</string>
     <string name="feature_brake_fromHomeScreen_description">Tippe hier, und die Notbremse bekommt ein eigenes Symbol auf deinem Startbildschirm. Halte das DetoxDroid-Symbol gedrückt, dann findest du sie da auch.</string>
@@ -257,7 +567,7 @@
     <string name="feature_brake_shortcut">Notbremse</string>
     <string name="feature_brake_autoPull_header">Von selbst auslösen</string>
     <string name="feature_brake_autoPull">Automatisch auslösen</string>
-    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doom Scrolling durchbrechen“ an ist.</string>
+    <string name="feature_brake_autoPull_description">Wirst du %1$d-mal in %2$d Min. beim Doomscrolling erwischt, löst die Notbremse von selbst aus, für %3$s. Zählt nur, solange „Doomscrolling unterbrechen“ an ist.</string>
     <string name="feature_brake_autoPull_breaks">Wie oft erwischt</string>
     <string name="feature_brake_autoPull_breaks_description">So oft muss es passieren, über alle Apps gezählt.</string>
     <string name="feature_brake_autoPull_window">Innerhalb von</string>
@@ -267,62 +577,58 @@
     <!-- endregion -->
 
     <!-- region Feature: Break Doom Scrolling -->
-    <string name="feature_doomScrolling">„Doom Scrolling“ durchbrechen</string>
-    <string name="feature_doomScrolling_subtitle">Wenn der Feed einfach nicht aufhört</string>
-    <string name="feature_doomScrolling_description">EXPERIMENTELL: erkennt lange Scroll-Sessions und bietet dir einen Ausstieg an.</string>
+    <string name="feature_doomScrolling">Doomscrolling unterbrechen</string>
+    <string name="feature_doomScrolling_subtitle">Empfindlichkeit und Abklingzeit</string>
+    <string name="feature_doomScrolling_description">Experimentell. Erkennt langes, schnelles Scrollen in den Apps einer Gruppe und bietet dir einen Ausstieg an. Welche Apps und ab wann, das stellst du in der Gruppe ein.</string>
     <string name="feature_doomScrolling_timeUntilWarning">Zeit bis zur Warnung</string>
-    <string name="feature_doomScrolling_timeUntilWarning_description">So lange darfst du scrollen, bevor die Warnung kommt.</string>
-    <string name="feature_doomScrolling_exceptions_summary_notList">%d Apps sind von der Scroll-Erkennung ausgenommen.</string>
-    <string name="feature_doomScrolling_exceptions_summary_onlyList">Die Scroll-Erkennung läuft in %d Apps.</string>
-    <string name="feature_doomScrolling_cooldownTime">Abkühlphase</string>
-    <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App nach einer Pause gesperrt (oder nur der Feed, der sie ausgelöst hat).</string>
+    <string name="feature_doomScrolling_cooldownTime">Abklingzeit</string>
+    <string name="feature_doomScrolling_cooldownTime_description">So lange bleibt die App zu, oder nur der Feed, der es ausgelöst hat.</string>
     <string name="feature_doomScrolling_sensitivity">Empfindlichkeit</string>
-    <string name="feature_doomScrolling_sensitivity_description">Wie schnell zügiges Scrollen eine Pause auslöst. „Streng“ greift am frühesten ein. Endlose Feeds werden immer erkannt.</string>
+    <string name="feature_doomScrolling_sensitivity_description">Wie schnell du scrollen musst, bis eine Pause kommt. Endlose Feeds werden so oder so erkannt.</string>
     <string name="feature_doomScrolling_sensitivity_relaxed">Entspannt</string>
     <string name="feature_doomScrolling_sensitivity_balanced">Ausgewogen</string>
     <string name="feature_doomScrolling_sensitivity_strict">Streng</string>
+    <string name="feature_doomScrolling_sensitivity_screensPerMinute">Ab etwa %d Bildschirmen pro Minute</string>
 
     <!-- overlay shown when a doomscrolling session is detected -->
     <string name="feature_doomScrolling_warning_title">Aufwachen!</string>
     <string name="feature_doomScrolling_warning_message">Sieht aus, als hättest du dich festgescrollt.</string>
     <string name="feature_doomScrolling_warning_exit">Hol mich hier raus</string>
-    <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann höre ich auf</string>
+    <string name="feature_doomScrolling_warning_finishFirst">Nur noch das hier, dann hör ich auf</string>
     <string name="feature_doomScrolling_warning_pullBrake">Für %s die Notbremse ziehen</string>
     <string name="feature_doomScrolling_warning_context_intensity">In den letzten %2$d Minuten sind rund %1$d Bildschirme an dir vorbeigezogen.</string>
     <string name="feature_doomScrolling_warning_context_endless">Der Feed lädt immer weiter nach. Du bist schon %1$d Minuten dabei.</string>
+    <string name="feature_doomScrolling_warning_context_shortVideos">In den letzten %2$d Minuten hast du %1$d Kurzvideos weggewischt.</string>
     <string name="feature_doomScrolling_warning_context_probation">Direkt nach der Pause schon wieder dabei. Diesmal pausiert die ganze App.</string>
     <string name="feature_doomScrolling_warning_context_brakePulled">Das war Nummer %1$d in kurzer Zeit. Die Notbremse läuft jetzt bis %2$s.</string>
     <string name="feature_doomScrolling_warning_context_braking">Die Notbremse läuft, also bleibt die App bis %s zu.</string>
     <string name="feature_doomScrolling_guideOut_title">Abgemacht ist abgemacht</string>
     <string name="feature_doomScrolling_guideOut_message">Hoffentlich hat sich\'s gelohnt. Zurück zum Startbildschirm.</string>
-    <string name="feature_doomScrolling_cooldown_title">Noch in der Abkühlphase</string>
+    <string name="feature_doomScrolling_cooldown_title">Abklingzeit läuft noch</string>
     <string name="feature_doomScrolling_cooldown_message">Hier läuft dir nichts weg. Genieß noch ein paar Minuten für dich.</string>
     <string name="feature_doomScrolling_cooldown_context_app">%1$s ist in %2$d Min. wieder da.</string>
     <string name="feature_doomScrolling_cooldown_context_surface">Dieser Feed in %1$s ist in %2$d Min. wieder da.</string>
     <!-- endregion -->
 
     <!-- region Feature: Disable Apps -->
-    <string name="feature_disableApps">Apps deaktivieren</string>
-    <string name="feature_disableApps_subtitle">Warten lassen oder wegsperren</string>
-    <string name="feature_disableApps_description">Lässt ausgewählte Apps erst mal warten und sperrt oder deaktiviert sie, sobald ihre Zeit für heute um ist, samt Launcher-Symbol und Benachrichtigungen.</string>
-    <string name="feature_disableApps_deactivatedApps">Deaktivierte Apps</string>
-    <string name="feature_disableApps_manage">Deaktivierte Apps verwalten</string>
-    <string name="feature_disableApps_manage_defined">%d Apps zur Deaktivierung vorgemerkt</string>
-    <string name="feature_disableApps_allowedDailyTime">Tägliches Zeitbudget</string>
-    <string name="feature_disableApps_allowedDailyTime_description">So viel Zeit bleibt dir täglich für diese Apps. Danach sind sie bis zum nächsten Tag gesperrt. (Zum Mitzählen muss DetoxDroid laufen.)</string>
-    <string name="feature_disableApps_allowedDailyTime_noLimit">Kein Limit</string>
-    <string name="feature_disableApps_waitBeforeOpening">Wartezeit beim Öffnen</string>
-    <string name="feature_disableApps_waitBeforeOpening_description">Diese Apps lassen dich erst mal warten, bevor sie aufgehen. Hast du einmal gewartet, geht die App sofort auf, bis der Bildschirm wieder ausgeht.</string>
-    <string name="feature_disableApps_waitBeforeOpening_lockedRightAway">Bei 0 Min. Zeitbudget sind die Apps sofort gesperrt, eine Wartezeit hätte also keinen Sinn. Stell erst ein Budget ein oder „Kein Limit“.</string>
-    <string name="feature_disableApps_operationMode">Betriebsmodus</string>
-    <string name="feature_disableApps_operationMode_description">Sperren legt einen Warnbildschirm über die App. Einfrieren graut sie im Launcher aus, sodass sie gar nicht erst startet, dafür braucht es Shizuku. Deaktivieren blendet sie komplett aus und braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben.</string>
+    <string name="feature_disableApps">Warten und sperren</string>
+    <string name="feature_disableApps_subtitle">Wie eine Sperre aussieht</string>
+    <string name="feature_disableApps_description">Was eine Sperre mit einer App macht, sobald sie greift. Welche Apps, wann und wie lange, das stellst du in der Gruppe ein. Fürs Warten gibt es hier nichts einzustellen.</string>
+    <string name="feature_disableApps_operationMode">Was eine Sperre macht</string>
     <string name="feature_disableApps_operationMode_block">Sperren</string>
+    <string name="feature_disableApps_operationMode_block_description">Ein Bildschirm vor der App, mit Weg zurück</string>
     <string name="feature_disableApps_operationMode_suspend">Einfrieren</string>
     <string name="feature_disableApps_operationMode_suspend_needsShizuku">Zum Einfrieren von Apps muss Shizuku laufen.</string>
+    <string name="feature_disableApps_operationMode_suspend_description">Im Launcher ausgegraut, startet nicht</string>
+    <string name="feature_disableApps_operationMode_suspend_requirement">Braucht Shizuku</string>
     <string name="feature_disableApps_operationMode_deactivate">Deaktivieren</string>
+    <string name="feature_disableApps_operationMode_deactivate_description">Weg aus dem Launcher, Benachrichtigungen auch</string>
+    <string name="feature_disableApps_operationMode_deactivate_requirement">Braucht Device-Owner-Rechte, die die meisten Handys nicht hergeben</string>
     <string name="feature_disableApps_overlay_title">Zeit ist um!</string>
     <string name="feature_disableApps_overlay_message">Deine tägliche Bildschirmzeit für diese App ist aufgebraucht.</string>
     <string name="feature_disableApps_overlay_message2">Mach eine Pause und komm morgen wieder.</string>
+    <string name="feature_disableApps_overlay_message_website">Deine tägliche Bildschirmzeit für diese Website ist aufgebraucht.</string>
+    <string name="feature_disableApps_overlay_goBack">Zurück</string>
 
     <!-- screen that holds an app back before it opens -->
     <string name="feature_disableApps_wait_title">Moment mal</string>
@@ -361,7 +667,7 @@
     </plurals>
     <string name="feature_commitmentPassword_show">Passphrase anzeigen</string>
     <string name="feature_commitmentPassword_hide">Passphrase verbergen</string>
-    <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuche es in %s erneut.</string>
+    <string name="feature_commitmentPassword_lockedOut">Zu viele Fehlversuche. Versuch\'s in %s noch mal.</string>
     <string name="feature_commitmentPassword_forgot">Passphrase vergessen?</string>
     <string name="feature_commitmentPassword_recovery_title">Passphrase-Wiederherstellung</string>
     <string name="feature_commitmentPassword_recovery_message">Hast du deine Passphrase vergessen, kannst du einen 24-Stunden-Timer starten. Danach lässt sie sich zurücksetzen.\n\nBis dahin bleiben die Einstellungen gesperrt.</string>
@@ -381,10 +687,10 @@
     <string name="feature_commitmentPassword_banner_unlocked">Einstellungen für diese Sitzung entsperrt.</string>
     <string name="feature_commitmentPassword_lockAgain">Wieder sperren</string>
     <string name="feature_commitmentPassword_lockedBadge">Durch dein Commitment-Passwort gesperrt</string>
-    <string name="feature_commitmentPassword_selectFeatures">Zu sperrende Funktionen</string>
+    <string name="feature_commitmentPassword_selectFeatures">Was gesperrt wird</string>
     <string name="feature_commitmentPassword_selectAll">Alle</string>
     <string name="feature_commitmentPassword_selectNone">Keine</string>
-    <string name="feature_commitmentPassword_featuresSelected">%1$d von %2$d Funktionen ausgewählt</string>
+    <string name="feature_commitmentPassword_featuresSelected">%1$d von %2$d ausgewählt</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_title">Optional: mit Device Owner verstärken</string>
     <string name="feature_commitmentPassword_deviceOwner_hint_subtitle">Das Commitment-Passwort kommt mit Geräteadministrator-Rechten aus. Device Owner verhindert zusätzlich, dass sich DetoxDroid deinstallieren lässt. Tippe für den ADB-Befehl.</string>
     <string name="feature_commitmentPassword_stop_locked">Stoppen ist durch das Commitment-Passwort gesperrt. Entsperre zuerst die Einstellungen.</string>
@@ -411,7 +717,7 @@
     <!-- endregion -->
 
     <!-- region Minimal Launcher Widget -->
-    <string name="widget_minimalLauncher_name">DetoxDroid Launcher-Widget</string>
+    <string name="widget_minimalLauncher_name">DetoxDroid-Launcher-Widget</string>
     <string name="widget_minimalLauncher_description">Launcher-Widget, das ausgewählte Apps nur als Text anzeigt.</string>
     <string name="widget_minimalLauncher_empty">Tippe hier, um Apps auszuwählen</string>
     <string name="widget_minimalLauncher_configure_title">Launcher-Widget einrichten</string>
@@ -423,7 +729,37 @@
     <string name="widget_minimalLauncher_label_original">Original: %1$s</string>
     <string name="widget_minimalLauncher_label_edit">Namen bearbeiten</string>
     <string name="widget_minimalLauncher_reorder_drag">Zum Umsortieren ziehen</string>
-    <string name="widget_minimalLauncher_app_unavailable">Diese App ist nicht mehr verfügbar.</string>
+    <string name="widget_style_title">Widget anpassen</string>
+    <string name="widget_style_theme_description">Bei „System“ wird es zusammen mit deinem Handy dunkel.</string>
+    <string name="widget_style_background">Hintergrund</string>
+    <string name="widget_style_background_description">Ganz runtergedreht bleibt nur der Text auf deinem Hintergrundbild.</string>
+    <string name="widget_style_background_percent">%d %%</string>
+    <string name="widget_style_summary">%1$s, Hintergrund %2$s</string>
+    <string name="widget_today_name">Bildschirmzeit</string>
+    <string name="widget_today_description">Bildschirmzeit, Entsperrungen und Scroll-Strecke von heute. Zieh es größer, dann zeigt es auch deine meistgenutzten Apps und was von deinen Budgets noch übrig ist.</string>
+    <string name="widget_today_screenTime">Bildschirmzeit</string>
+    <string name="widget_today_scrolled">gescrollt</string>
+    <string name="widget_today_noApps">Heute noch keine App benutzt</string>
+    <string name="widget_today_allLeftOut">Die Apps von heute zählen alle nicht mit</string>
+    <string name="widget_parts_title">Anzeigen</string>
+    <string name="widget_today_parts_description">Neben deiner Bildschirmzeit, sobald das Widget groß genug dafür ist.</string>
+    <string name="widget_today_part_unlocks">Entsperrungen</string>
+    <string name="widget_today_part_scrolled">Scroll-Strecke</string>
+    <string name="widget_today_part_vsUsual">Vergleich mit einem normalen Tag</string>
+    <string name="widget_today_part_apps">Meistgenutzte Apps</string>
+    <string name="widget_today_part_budgets">Zeitbudgets</string>
+    <string name="widget_today_part_scrollComparison">Strecke im Vergleich</string>
+    <string name="widget_today_vsUsual_less">%s weniger als sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_more">%s mehr als sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_same">Etwa so viel wie sonst um diese Zeit</string>
+    <string name="widget_today_vsUsual_label">vs. sonst</string>
+    <string name="widget_today_off">DetoxDroid ist aus</string>
+    <string name="widget_minimalLauncher_parts_description">Wie lange du jede App heute schon benutzt hast, und welche Apps deine Gruppen gerade sperren.</string>
+    <string name="widget_minimalLauncher_part_timeToday">Zeit heute</string>
+    <string name="widget_minimalLauncher_part_dimBlocked">Gesperrte ausgrauen</string>
+    <string name="widget_today_preview_screenTime">2 Std. 6 Min.</string>
+    <string name="today_budget_left">noch %s</string>
+    <string name="today_budget_usedUp">aufgebraucht</string>
     <!-- endregion -->
 
     <!-- region Usage Stats -->
@@ -449,16 +785,12 @@
     <string name="usageStats_dailyAverage_short">Ø pro Tag</string>
     <string name="usageStats_vsYesterday">vs. gestern</string>
     <string name="usageStats_vsPreviousPeriod">vs. Vorzeitraum</string>
-    <string name="usageStats_topApps">Top-Apps</string>
     <string name="usageStats_timeOfDay">Öffnungen nach Uhrzeit</string>
     <string name="usageStats_byDay">Nach Tag</string>
     <string name="usageStats_weekdayAverages">Schnitt pro Wochentag</string>
     <string name="usageStats_detoxImpact">Detox-Wirkung</string>
-    <string name="usageStats_badge_grayscale">Graustufen</string>
-    <string name="usageStats_badge_disabled">Deaktiviert</string>
-    <string name="usageStats_badge_doomScroll">Scroll-Schutz</string>
     <string name="usageStats_grayscaleTime">In Graustufen</string>
-    <string name="usageStats_colorRemaining">Farbe übrig</string>
+    <string name="usageStats_colorRemaining">In Farbe</string>
     <string name="usageStats_scrollBreaks">Scroll-Pausen</string>
     <string name="usageStats_blocks">Gesperrt</string>
     <string name="usageStats_launches">%d Öffnungen</string>
@@ -498,6 +830,23 @@
     <string name="usageStats_sort_screenTime">Nach Bildschirmzeit</string>
     <string name="usageStats_sort_opens">Nach Öffnungen</string>
     <string name="usageStats_sort_scrollIntensity">Nach Scroll-Intensität</string>
+    <string name="usageStats_websites_title">Zeit auf Websites</string>
+    <string name="usageStats_websites_optIn">DetoxDroid kann zählen, wie lange du in %s auf welcher Website bist. Es merkt sich nur die Website, nie die einzelne Seite, und nichts davon verlässt dein Handy.</string>
+    <string name="usageStats_websites_optIn_action">Zeit auf Websites zählen</string>
+    <string name="usageStats_websites_empty">Noch nichts gezählt. Die Zeit auf Websites zählt ab dem Moment, in dem du das eingeschaltet hast.</string>
+    <string name="usageStats_websites_partOf">Steckt schon in der Bildschirmzeit deiner Browser.</string>
+    <string name="usageStats_websites_turnOff">Ausschalten</string>
+    <string name="usageStats_websites_turnOff_title">Websites nicht mehr zählen?</string>
+    <string name="usageStats_websites_turnOff_message">Was bisher gezählt wurde, wird dabei auch gelöscht.</string>
+    <plurals name="usageStats_visits">
+        <item quantity="one">%d Besuch</item>
+        <item quantity="other">%d Besuche</item>
+    </plurals>
+    <string name="usageStats_visits_short">Besuche</string>
+    <string name="usageStats_avgVisit">Ø Besuch</string>
+    <string name="usageStats_sort_visits">Nach Besuchen</string>
+    <string name="usageStats_blockSite">Website sperren</string>
+    <string name="usageStats_unblockSite">Website freigeben</string>
     <string name="usageStats_perspective">Zum Vergleich</string>
     <string name="usageStats_perspective_subtitle">Dieselben Zahlen, greifbar gemacht</string>
     <string name="usageStats_perspective_footer">Ohne Wertung. So lässt sich Zeit halt leichter greifen.</string>
@@ -506,7 +855,7 @@
     <string name="usageStats_odometer_floors">≈ %1$d Stockwerke</string>
     <string name="usageStats_timeValue_setup">Was ist dir eine Stunde deiner Zeit wert?</string>
     <string name="usageStats_timeValue_hint">Tippe, um zu sehen, was deine Bildschirmzeit wert ist</string>
-    <string name="usageStats_timeValue_label">deine Bildschirmzeit bei %1$s</string>
+    <string name="usageStats_timeValue_label">deine Bildschirmzeit, gerechnet mit %1$s</string>
     <string name="usageStats_timeValue_off">aus</string>
     <string name="usageStats_ratePerHour">%1$s/Std.</string>
 
@@ -529,7 +878,7 @@
     <string name="onboarding_action_next">Weiter</string>
     <string name="onboarding_action_skipSetup">Einrichtung überspringen</string>
     <string name="onboarding_skipSetup_dialog_title">Einrichtung überspringen?</string>
-    <string name="onboarding_skipSetup_dialog_message">Dann wird nichts eingerichtet. Jede Funktion lässt sich später einzeln einstellen, oder du startest die Einrichtung im Über-Bereich noch einmal.</string>
+    <string name="onboarding_skipSetup_dialog_message">Dann wird nichts eingerichtet. Jede Funktion lässt sich später einzeln einstellen, oder du startest die Einrichtung unter „Über &amp; Einstellungen“ noch einmal.</string>
     <string name="onboarding_skipSetup_dialog_confirm">Überspringen</string>
     <string name="onboarding_progress_stepOf">Schritt %1$d von %2$d</string>
     <string name="onboarding_welcome_title">Hol dir deine Aufmerksamkeit zurück</string>
@@ -577,7 +926,7 @@
     <string name="onboarding_permissions_accessibility_manual">Tippe, um die Bedienungshilfen zu öffnen und DetoxDroid dort zu aktivieren.</string>
     <string name="onboarding_permissions_state_granted">Erteilt</string>
     <string name="onboarding_done_title">Alles bereit</string>
-    <string name="onboarding_done_message">DetoxDroid ist eingerichtet. App-Listen, Zeitpläne und Budgets bleiben über den Startbildschirm änderbar.</string>
+    <string name="onboarding_done_message">DetoxDroid ist eingerichtet. Deine Auswahl ist jetzt eine Gruppe auf dem Startbildschirm. Apps, Zeitplan, Budget und Schritte kannst du dort jederzeit ändern.</string>
     <plurals name="onboarding_done_summary_scrollBreaks">
         <item quantity="one">Scroll-Pausen in %d App</item>
         <item quantity="other">Scroll-Pausen in %d Apps</item>
@@ -587,9 +936,9 @@
     <string name="onboarding_done_summary_grayscaleFilter">Ablenkende Apps werden nach %s täglicher Nutzung stumpf und unscharf. Echte Graustufen brauchen noch einen einmaligen Schritt.</string>
     <string name="onboarding_done_summary_blocking">Apps gesperrt nach %s täglicher Nutzung</string>
     <string name="onboarding_done_summary_blockingPending">Die App-Sperre ist eingerichtet. Ihr fehlt nur noch die Berechtigung „Über anderen Apps anzeigen“.</string>
-    <string name="onboarding_done_summary_accessibilityPending">DetoxDroids Bedienungshilfe läuft noch nicht. Du kannst sie über den Startbildschirm starten.</string>
+    <string name="onboarding_done_summary_accessibilityPending">Die Bedienungshilfe von DetoxDroid läuft noch nicht. Du kannst sie über den Startbildschirm starten.</string>
     <string name="onboarding_done_summary_nothing">Du hast keine Apps ausgewählt, deshalb wurde nichts eingerichtet. Schau dich in Ruhe auf dem Startbildschirm um.</string>
-    <string name="onboarding_done_summary_rerunHint">Beim Abschließen ersetzt diese Auswahl die App-Listen und Tagesbudgets der betroffenen Funktionen.</string>
+    <string name="onboarding_done_summary_rerunHint">Beim Abschließen kommt eine neue Gruppe zu deinen bisherigen dazu.</string>
     <string name="onboarding_done_summary_permissionsHint">Erteile die fehlenden Berechtigungen, um das anzuschalten. Später geht auch, wir erinnern dich auf dem Startbildschirm.</string>
     <!-- endregion -->
 
@@ -661,7 +1010,7 @@
     <string name="about_theme_dark">Dunkel</string>
     <string name="about_onboarding">DetoxDroid neu einrichten</string>
     <string name="about_onboarding_subtitle">Willkommenstour und Voreinstellungen noch einmal durchlaufen</string>
-    <string name="about_onboarding_locked_subtitle">Das würde deine gesperrten Einstellungen überschreiben. Entsperre sie zuerst.</string>
+    <string name="about_onboarding_locked_subtitle">Das würde an deinen gesperrten Gruppen etwas ändern. Entsperre sie zuerst.</string>
     <string name="about_debugLog_subtitle">Hält fest, was DetoxDroid so macht, für Fehlerberichte. Bleibt auf dem Handy und wird beim Ausschalten gelöscht.</string>
     <string name="about_debugLog_open">Debug-Log öffnen</string>
     <string name="about_section_backup">Sicherung</string>
@@ -683,6 +1032,10 @@
     <plurals name="about_backup_preview_apps">
         <item quantity="one">%d App</item>
         <item quantity="other">%d Apps</item>
+    </plurals>
+    <plurals name="about_backup_preview_websites">
+        <item quantity="one">%d Website</item>
+        <item quantity="other">%d Websites</item>
     </plurals>
     <plurals name="about_backup_preview_otherSettings">
         <item quantity="one">%d weitere Einstellung</item>

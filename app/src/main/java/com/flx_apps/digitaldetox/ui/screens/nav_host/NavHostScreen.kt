@@ -20,6 +20,9 @@ import com.flx_apps.digitaldetox.ui.screens.logs.LogViewerScreen
 import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingScreen
 import com.flx_apps.digitaldetox.ui.screens.permissions_required.PermissionsRequiredScreen
 import com.flx_apps.digitaldetox.ui.screens.premium.PremiumSheetHost
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupBudgetScreen
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.NewRuleGroupScreen
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.RuleGroupScreen
 import com.flx_apps.digitaldetox.ui.screens.schedule.FeatureScheduleScreen
 import com.flx_apps.digitaldetox.ui.screens.shizuku_setup.ShizukuSetupScreen
 import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsScreen
@@ -84,11 +87,20 @@ fun NavHostScreen(navViewModel: NavViewModel = viewModel(viewModelStoreOwner = L
                 featureId = route.featureId
             )
 
+            is NavigationRoutes.RuleGroup -> RuleGroupScreen(groupId = route.groupId)
+
+            is NavigationRoutes.GroupBudget -> GroupBudgetScreen(groupId = route.groupId)
+
+            is NavigationRoutes.NewRuleGroup -> NewRuleGroupScreen()
+
             is NavigationRoutes.PermissionsRequired -> PermissionsRequiredScreen(
                 grantPermissionsCommand = route.grantPermissionsCommand
             )
 
-            is NavigationRoutes.UsageStats -> UsageStatsScreen()
+            is NavigationRoutes.UsageStats -> UsageStatsScreen(
+                showExclusions = route.showExclusions,
+                openApp = route.openApp
+            )
 
             is NavigationRoutes.About -> AboutScreen()
 

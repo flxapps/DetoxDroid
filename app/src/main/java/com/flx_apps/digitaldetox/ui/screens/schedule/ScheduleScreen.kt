@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.FeatureId
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
@@ -61,16 +60,16 @@ private fun ruleAccents(): List<Pair<Color, Color>> = MaterialTheme.colorScheme.
 }
 
 /**
- * The schedule screen for a feature. Allows the user to set rules for when the feature should be
- * active or inactive. A rule consists of a time range and a day of the week. The feature will be
+ * The schedule screen for a group or a feature. Allows the user to set rules for when it should
+ * be active or inactive. A rule consists of a time range and a day of the week. The group will be
  * active during the time range on the specified day of the week. If multiple rules apply, the
- * feature will be active if at least one of them is active.
- * @param featureId The ID of the feature.
+ * group will be active if at least one of them is active.
+ * @param featureId The id of the group or feature whose schedule it is.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeatureScheduleScreen(
-    featureId: FeatureId,
+    featureId: String,
     scheduleViewModel: ScheduleViewModel = ScheduleViewModel.withFeatureId(featureId)
 ) {
     PasswordLockGate(featureId = featureId, showBanner = false) {
@@ -100,7 +99,7 @@ fun FeatureScheduleScreen(
                         rules = orderedRules.mapIndexed { index, (_, rule) ->
                             rule to accentOf(index).first
                         },
-                        showStatus = scheduleViewModel.featureIsActive.collectAsState().value,
+                        showStatus = scheduleViewModel.isOwnerEnabled,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }

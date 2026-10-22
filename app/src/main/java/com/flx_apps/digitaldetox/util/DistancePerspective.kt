@@ -1,6 +1,9 @@
 package com.flx_apps.digitaldetox.util
 
+import android.content.Context
+import android.util.DisplayMetrics
 import com.flx_apps.digitaldetox.R
+import java.util.Locale
 
 /**
  * Turns abstract scroll distances into something tangible: physical meters and a playful
@@ -50,5 +53,45 @@ object DistancePerspective {
         return pixels / ydpi.toDouble() * METERS_PER_INCH
     }
 
+    /**
+     * Converts screen pixels to meters on this screen, falling back to the density bucket where a
+     * device reports a bogus [DisplayMetrics.ydpi].
+     */
+    fun pixelsToMeters(pixels: Long, metrics: DisplayMetrics): Double {
+        val ydpi = if (metrics.ydpi in 60f..1000f) metrics.ydpi else metrics.densityDpi.toFloat()
+        return pixelsToMeters(pixels, ydpi)
+    }
+
     private const val METERS_PER_INCH = 0.0254
+}
+
+/** "361 m" / "1.2 km" */
+fun formatDistance(context: Context, meters: Double): String {
+    return if (meters >= 1000) {
+        context.getString(R.string.distance_kilometers, meters / 1000)
+    } else {
+        context.getString(R.string.distance_meters, meters.toInt())
+    }
+}
+
+/** "≈ 1.1 × the Eiffel Tower", or null for a distance too short to compare with anything. */
+fun scrollComparisonText(context: Context, meters: Double): String? {
+    return when (val comparison = DistancePerspective.comparisonFor(meters)) {
+        is DistancePerspective.Comparison.Landmark -> context.getString(
+            R.string.usageStats_odometer_comparison,
+            formatMultiplier(comparison.multiplier),
+            context.getString(comparison.nameRes)
+        )
+        is DistancePerspective.Comparison.Floors ->
+            context.getString(R.string.usageStats_odometer_floors, comparison.floors)
+        null -> null
+    }
+}
+
+private fun formatMultiplier(multiplier: Double): String {
+    return if (multiplier >= 10) {
+        String.format(Locale.getDefault(), "%.0f", multiplier)
+    } else {
+        String.format(Locale.getDefault(), "%.1f", multiplier)
+    }
 }

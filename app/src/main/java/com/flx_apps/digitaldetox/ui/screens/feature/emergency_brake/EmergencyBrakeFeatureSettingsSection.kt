@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddToHomeScreen
+import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.AutoMode
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.PanTool
@@ -265,7 +265,7 @@ private fun EndEarlyDialog(viewModel: EmergencyBrakeFeatureSettingsViewModel = v
 @Composable
 private fun HomeScreenIconTile(viewModel: EmergencyBrakeFeatureSettingsViewModel = viewModel()) {
     SimpleListTile(
-        leadingIcon = Icons.Default.AddToHomeScreen,
+        leadingIcon = Icons.AutoMirrored.Filled.AddToHomeScreen,
         titleText = stringResource(id = R.string.feature_brake_fromHomeScreen),
         subtitleText = stringResource(id = R.string.feature_brake_fromHomeScreen_description),
         allowClickWhenLocked = true,

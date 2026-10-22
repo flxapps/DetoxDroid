@@ -5,15 +5,12 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
-import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.ScreenFilterEffects
 import com.flx_apps.digitaldetox.features.ScreenFilterMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * The view model for the grayscale apps feature settings tile.
@@ -76,22 +73,6 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
     val ignoreNonFullScreenApps: StateFlow<Boolean> = _ignoreNonFullScreenApps
 
     /**
-     * The allowed daily color screen time *in minutes*.
-     * @see GrayscaleAppsFeature.allowedDailyColorScreenTime
-     */
-    private var _allowedDailyColorScreenTime: MutableStateFlow<Long> =
-        MutableStateFlow(GrayscaleAppsFeature.allowedDailyColorScreenTime.milliseconds.inWholeMinutes)
-    val allowedDailyColorScreenTime: StateFlow<Long> = _allowedDailyColorScreenTime
-
-    /**
-     * Whether the dialog to set the allowed daily color screen time should be shown.
-     */
-    private var _showAllowedDailyColorScreenTimeDialog: MutableStateFlow<Boolean> =
-        MutableStateFlow(false)
-    val showAllowedDailyColorScreenTimeDialog: StateFlow<Boolean> =
-        _showAllowedDailyColorScreenTimeDialog
-
-    /**
      * Re-reads every switch on this screen from the feature. Called when the screen comes back,
      * because the WRITE_SECURE_SETTINGS permission can have arrived in the meantime and
      * [ScreenFilterMode.AUTO] resolves against it.
@@ -147,21 +128,14 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
 
     /**
      * Drops the effects that are currently applied, so a setting the user just changed takes hold
-     * immediately instead of at the next app switch. Switching off the last remaining effect also
-     * switches the feature itself off: it could not do anything any more, and a feature that shows
-     * as activated while it silently does nothing is worse than an honest off.
-     * @return whether the feature's own activation state changed, so the caller can refresh the
-     * switch in the app bar
+     * immediately instead of at the next app switch. With every effect switched off the gray step
+     * does nothing; the group screens say so where the step is on.
+     * @return whether the feature's own activation state changed, which the groups decide now, so
+     * never
      */
     private fun refreshEffects(): Boolean {
-        val application = getApplication<Application>()
-        GrayscaleAppsFeature.refreshEffects(application)
-        if (!GrayscaleAppsFeature.isActivated || GrayscaleAppsFeature.hasPermissions(application)) {
-            return false
-        }
-        GrayscaleAppsFeature.isActivated = false
-        FeaturesProvider.startOrStopFeature(GrayscaleAppsFeature)
-        return true
+        GrayscaleAppsFeature.refreshEffects(getApplication())
+        return false
     }
 
     /**
@@ -188,19 +162,4 @@ class GrayscaleAppsFeatureSettingsViewModel @Inject constructor(application: App
         _ignoreNonFullScreenApps.value = GrayscaleAppsFeature.ignoreNonFullScreenApps
     }
 
-    /**
-     * Sets whether the dialog to set the allowed daily color screen time should be shown.
-     */
-    fun setShowAllowedDailyColorScreenTimeDialog(show: Boolean) {
-        _showAllowedDailyColorScreenTimeDialog.value = show
-    }
-
-    /**
-     * Sets the allowed daily color screen time in minutes.
-     */
-    fun setAllowedDailyColorScreenTime(minutes: Long) {
-        GrayscaleAppsFeature.allowedDailyColorScreenTime =
-            minutes.minutes.inWholeMilliseconds // convert to milliseconds
-        _allowedDailyColorScreenTime.value = minutes
-    }
 }

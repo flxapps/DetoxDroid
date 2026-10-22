@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/WidgetToday.Root"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingHorizontal="6dp"
+    android:paddingVertical="10dp">
+
+    <TextView
+        android:id="@+id/widget_today_screen_time"
+        style="@style/WidgetToday.Value"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:autoSizeMaxTextSize="34sp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/widget_today_caption"
+        style="@style/WidgetToday.Label.Stat"
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:gravity="center"
+        android:text="@string/home_screenTime_today" />
+
+    <TextView
+        android:id="@+id/widget_today_off"
+        style="@style/WidgetToday.Label.Off"
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:gravity="center"
+        android:text="@string/widget_today_off"
+        android:visibility="gone" />
+</LinearLayout>

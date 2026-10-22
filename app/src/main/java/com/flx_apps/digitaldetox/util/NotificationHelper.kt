@@ -3,10 +3,8 @@ package com.flx_apps.digitaldetox.util
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
@@ -59,18 +57,11 @@ object NotificationHelper {
         return areNotificationsEnabled && isChannelEnabled
     }
 
-    /**
-     * Opens the Android notification settings for the app's service channel.
-     * On Android O+, opens the channel-specific settings.
-     * On older versions, opens the app notification settings.
-     */
+    /** Opens the Android notification settings for the app's service channel. */
     fun openNotificationSettings(context: Context) {
-        val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-            putExtra(Settings.EXTRA_CHANNEL_ID, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        context.startActivity(intent)
+        NavigationUtil.openNotificationChannelSettings(
+            context, DetoxDroidApplication.SERVICE_CHANNEL_ID
+        )
     }
 
     /**

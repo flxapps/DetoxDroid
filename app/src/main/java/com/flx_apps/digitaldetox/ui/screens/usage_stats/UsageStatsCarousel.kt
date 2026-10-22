@@ -219,16 +219,6 @@ fun StatsCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
 }
 
 @Composable
-fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-    )
-}
-
-@Composable
 private fun PageDots(currentPage: Int, pageCount: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,

@@ -21,8 +21,10 @@ interface OnScreenTurnedOffSubscriptionFeature {
  */
 interface OnAppOpenedSubscriptionFeature {
     /**
-     * Called when an app is opened.
-     * @param packageName The package name of the app.
+     * Called when an app is opened, and in a browser when the website it shows changes what this
+     * feature is told is in front.
+     * @param packageName The package name of the app, or in a browser the website entry of this
+     * feature's list that the page falls under (see [com.flx_apps.digitaldetox.websites.Websites]).
      * @param accessibilityEvent The accessibility event that triggered the app open.
      */
     fun onAppOpened(context: Context, packageName: String, accessibilityEvent: AccessibilityEvent)
@@ -49,25 +51,34 @@ interface OnScrollEventSubscriptionFeature {
          * constant — so this is the behavior the detection has always had.)
          *
          * @param accessibilityEvent The accessibility event that triggered the scroll event.
+         * @param viewIdResourceName The view-id resource name of the event's source, if it has one.
          */
-        fun calculateScrollViewId(accessibilityEvent: AccessibilityEvent): Int {
+        fun calculateScrollViewId(
+            accessibilityEvent: AccessibilityEvent, viewIdResourceName: String?
+        ): Int {
             return accessibilityEvent.className.hashCode() +
                     accessibilityEvent.packageName.hashCode() +
-                    (accessibilityEvent.source?.viewIdResourceName?.hashCode() ?: 0)
+                    (viewIdResourceName?.hashCode() ?: 0)
         }
     }
 
     /**
      * Called when a scroll event is detected.
+     * @param packageName What is scrolled in: the app, or in a browser the website entry of this
+     * feature's list that the page falls under, as in [OnAppOpenedSubscriptionFeature.onAppOpened].
      * @param scrollViewId The (calculated) ID of the scroll view.
      * @param scrollViewSize The size of the scroll view, either in pixels or items count
      * (depending on which information is available).
+     * @param viewIdResourceName The view-id resource name of the scrolled view, if it has one. Read
+     * from the event's source by the caller, so the node is not fetched once per feature.
      * @param accessibilityEvent The accessibility event that triggered the scroll event.
      */
     fun onScrollEvent(
         context: Context,
+        packageName: String,
         scrollViewId: Int,
         scrollViewSize: Int,
+        viewIdResourceName: String?,
         accessibilityEvent: AccessibilityEvent
     )
 }

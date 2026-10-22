@@ -1,9 +1,9 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,21 +26,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import com.flx_apps.digitaldetox.R
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.colorRes
+import com.flx_apps.digitaldetox.ui.theme.brandTone
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.formatDistance
+import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AppUsageRow(
     app: AppUsageStat,
-    pm: android.content.pm.PackageManager,
     onClick: () -> Unit,
     showScrollInfo: Boolean = false
 ) {
@@ -48,14 +55,7 @@ fun AppUsageRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val icon = runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
-        if (icon != null) {
-            Image(
-                bitmap = icon.toBitmap().asImageBitmap(),
-                contentDescription = app.label,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+        UsageItemIcon(item = app, size = 36.dp)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(app.label, style = MaterialTheme.typography.bodyMedium)
@@ -65,11 +65,7 @@ fun AppUsageRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                if (app.detoxBadges.isNotEmpty()) {
-                    for (badge in app.detoxBadges) {
-                        BadgeChip(badge)
-                    }
-                }
+                app.groups.forEach { GroupChip(it) }
             }
         }
         Column(horizontalAlignment = Alignment.End) {
@@ -95,7 +91,13 @@ fun AppUsageRow(
                 )
             } else if (!showScrollInfo && app.launchCount > 0) {
                 Text(
-                    stringResource(R.string.usageStats_launches, app.launchCount),
+                    if (app.isWebsite) {
+                        pluralStringResource(
+                            R.plurals.usageStats_visits, app.launchCount, app.launchCount
+                        )
+                    } else {
+                        stringResource(R.string.usageStats_launches, app.launchCount)
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -104,28 +106,42 @@ fun AppUsageRow(
     }
 }
 
+/**
+ * An app's icon, or for a website a globe of the same size, since a site has no icon DetoxDroid
+ * could show without fetching one.
+ */
 @Composable
-fun BadgeChip(badge: DetoxBadge) {
-    val bgAlpha = if (isSystemInDarkTheme()) 0.25f else 0.15f
-    val (label, color) = when (badge) {
-        DetoxBadge.GRAYSCALE -> stringResource(R.string.usageStats_badge_grayscale) to colorResource(
-            id = R.color.purple
-        )
-        DetoxBadge.DISABLED -> stringResource(R.string.usageStats_badge_disabled) to colorResource(
-            id = R.color.pink
-        )
-        DetoxBadge.DOOM_SCROLL -> stringResource(R.string.usageStats_badge_doomScroll) to colorResource(
-            id = R.color.orange
+fun UsageItemIcon(item: AppUsageStat, size: Dp) {
+    if (!item.isWebsite) {
+        AppIcon(packageName = item.packageName, size = size, contentDescription = item.label)
+        return
+    }
+    Box(
+        modifier = Modifier
+            .size(size)
+            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Language,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.size(size * 0.58f)
         )
     }
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = color.copy(alpha = bgAlpha)
-    ) {
+}
+
+/** A group that covers the app, in the color of its strongest step. */
+@Composable
+fun GroupChip(badge: GroupBadge) {
+    val tone = brandTone(badge.step.colorRes)
+    Surface(shape = RoundedCornerShape(8.dp), color = tone.container) {
         Text(
-            text = label,
+            text = badge.name,
             style = MaterialTheme.typography.labelSmall,
-            color = color,
+            color = tone.content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
         )
     }

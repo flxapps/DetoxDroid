@@ -7,17 +7,28 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DailyAppUsage
+import com.flx_apps.digitaldetox.data.DailyWebsiteUsage
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository.Companion.HISTORY_RETENTION_MONTHS
 import com.flx_apps.digitaldetox.data.repository.UsageSource
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.DisableAppsFeature
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.system_integration.TodaySummary
 import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
 import com.flx_apps.digitaldetox.system_integration.screenTimeMs
+import com.flx_apps.digitaldetox.ui.screens.rule_groups.GroupTexts
 import com.flx_apps.digitaldetox.util.DistancePerspective
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
+import com.flx_apps.digitaldetox.util.appCategory
+import com.flx_apps.digitaldetox.util.appLabel
+import com.flx_apps.digitaldetox.util.startOfDayMillis
+import com.flx_apps.digitaldetox.websites.InstalledBrowsers
+import com.flx_apps.digitaldetox.websites.WebsiteCollections
+import com.flx_apps.digitaldetox.websites.Websites
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +39,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.math.sqrt
 
@@ -51,8 +61,7 @@ class UsageStatsViewModel @Inject constructor(
      * What the user has left out of the numbers, read once per refresh so that every aggregate in
      * one snapshot is built from the same answer.
      */
-    private var excludedPackages: Set<String> = emptySet()
-    private var excludedCategories: Set<Int> = emptySet()
+    private var exclusions = UsageExclusions(application)
 
     /**
      * Which instrument this snapshot is built from. Read once per refresh so one snapshot cannot
@@ -60,19 +69,19 @@ class UsageStatsViewModel @Inject constructor(
      */
     private var source: UsageSource = UsageSource.OS
 
-    /** [ApplicationInfo.category] per package; a package manager lookup per app per refresh adds up. */
-    private val categoryCache = ConcurrentHashMap<String, Int>()
-
-    private fun categoryOf(packageName: String): Int = categoryCache.getOrPut(packageName) {
-        runCatching {
-            getApplication<Application>().packageManager.getApplicationInfo(packageName, 0).category
-        }.getOrDefault(ApplicationInfo.CATEGORY_UNDEFINED)
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val browsers = InstalledBrowsers.find(getApplication()).readable.map { it.label }
+            _uiState.update { it.copy(readableBrowsers = browsers) }
+        }
     }
 
-    private fun isExcluded(packageName: String) =
-        packageName in excludedPackages || categoryOf(packageName) in excludedCategories
-
-    private val hasExclusions get() = excludedPackages.isNotEmpty() || excludedCategories.isNotEmpty()
+    /** The name of [categoryId], or "Other" for one the system has no name for. */
+    private fun categoryLabel(categoryId: Int): String {
+        val context = getApplication<Application>()
+        return ApplicationInfo.getCategoryTitle(context, categoryId)?.toString()
+            ?: context.getString(R.string.appCategories_other)
+    }
 
     fun setTimeFrame(timeFrame: TimeFrame) {
         _uiState.update { it.copy(timeFrame = timeFrame, selectedDay = null) }
@@ -126,6 +135,18 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     /**
+     * Starts or stops counting the time on websites. Stopping deletes what was counted: off means
+     * no list of sites is kept on the phone at all.
+     */
+    fun setCountWebsites(count: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            UsageStatsSettings.countWebsites = count
+            if (!count) repository.deleteWebsiteUsage()
+            refresh()
+        }
+    }
+
+    /**
      * Reloads the screen. [force] additionally snapshots today's live counters into Room even if
      * a snapshot was taken recently (used by pull-to-refresh and the initial load).
      */
@@ -156,8 +177,7 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     private suspend fun refreshHistoryMetadata() {
-        excludedPackages = UsageStatsSettings.excludedApps
-        excludedCategories = UsageStatsSettings.excludedCategories
+        exclusions = UsageExclusions(getApplication())
         source = if (UsageAccessUtil.hasUsageAccess(getApplication())) {
             UsageSource.OS
         } else {
@@ -171,7 +191,8 @@ class UsageStatsViewModel @Inject constructor(
                 availableHistoryDays = historyDays,
                 earliestHistoryDate = earliest,
                 hourlyRate = UsageStatsSettings.hourlyRate,
-                isSelfMeasured = source == UsageSource.SELF_MEASURED
+                isSelfMeasured = source == UsageSource.SELF_MEASURED,
+                countsWebsites = UsageStatsSettings.countWebsites
             )
         }
     }
@@ -192,22 +213,23 @@ class UsageStatsViewModel @Inject constructor(
 
     private suspend fun loadToday(today: LocalDate) {
         val zone = ZoneId.systemDefault()
-        val startMs = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        val startMs = today.startOfDayMillis(zone)
         val nowMs = System.currentTimeMillis()
 
         val readsOs = source == UsageSource.OS
         val events = if (readsOs) {
-            UsageStatsProvider.queryEventCounts(startMs, nowMs) { !isExcluded(it) }
+            UsageStatsProvider.queryEventCounts(startMs, nowMs) { !exclusions.excludes(it) }
         } else {
             UsageStatsProvider.EventCounts.EMPTY
         }
         val sessionCounts = UsageStatsProvider.groupSessionCounts(events.sessions)
 
         val allApps = if (readsOs) {
-            UsageStatsProvider.queryForPeriod(startMs, nowMs).mapValues { (pkg, stat) ->
+            // every app, the left-out ones too, which the exclusions sheet lists
+            UsageStatsProvider.foregroundTimeByPackage(startMs, nowMs).mapValues { (pkg, timeMs) ->
                 AggregatedAppStats(
                     packageName = pkg,
-                    totalTimeMs = stat.screenTimeMs,
+                    totalTimeMs = timeMs,
                     launchCount = events.launchCounts[pkg] ?: 0,
                     sessionCount = sessionCounts[pkg] ?: 0,
                     scrollCount = UsageStatsTracker.scrollEventCounter.countFor(pkg),
@@ -217,18 +239,18 @@ class UsageStatsViewModel @Inject constructor(
         } else {
             selfMeasuredToday()
         }
-        val perApp = allApps.filterKeys { !isExcluded(it) }
+        val perApp = allApps.filterKeys { !exclusions.excludes(it) }
         val total = perApp.values.sumOf { it.totalTimeMs }
 
         val yesterdayStartMs =
-            today.minusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            today.minusDays(1).startOfDayMillis(zone)
         val yesterday = today.minusDays(1)
         val yesterdayTotal = if (readsOs) {
-            UsageStatsProvider.queryForPeriod(yesterdayStartMs, startMs)
-                .filterKeys { !isExcluded(it) }.values.sumOf { it.screenTimeMs }
+            UsageStatsProvider.foregroundTimeByPackage(yesterdayStartMs, startMs)
+                .filterKeys { !exclusions.excludes(it) }.values.sum()
         } else {
             repository.getHistorical(yesterday, yesterday, source)
-                .filterNot { isExcluded(it.packageName) }.sumOf { it.totalTimeMs }
+                .filterNot { exclusions.excludes(it.packageName) }.sumOf { it.totalTimeMs }
         }
         val yesterdayUnlocks = if (readsOs) {
             UsageStatsProvider.queryEventCounts(yesterdayStartMs, startMs).unlockCount
@@ -237,14 +259,11 @@ class UsageStatsViewModel @Inject constructor(
         // break/block counts come from Room (refreshed by the snapshot above): unlike the live
         // in-memory counters, the persisted counts survive process restarts
         val todayRows = repository.getHistorical(today, today)
-        val colorAllowance = GrayscaleAppsFeature.allowedDailyColorScreenTime
         val detoxImpact = buildDetoxImpact(
             breakCount = todayRows.sumOf { it.breakCount },
             blockCount = todayRows.sumOf { it.blockCount },
             grayscaleTimeMs = GrayscaleAppsFeature.currentGrayscaleTimeMs(),
-            colorScreenTimeRemainingMs = if (GrayscaleAppsFeature.isActivated && colorAllowance > 0L) {
-                (colorAllowance - GrayscaleAppsFeature.currentUsedUpScreenTime()).coerceAtLeast(0L)
-            } else null
+            colorScreenTimeRemainingMs = TodaySummary.budgets().mapNotNull { it.colorLeftMs }.minOrNull()
         )
 
         _uiState.update {
@@ -263,7 +282,14 @@ class UsageStatsViewModel @Inject constructor(
                 effectiveDays = 1,
                 scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
                 excludedApps = buildExcludedApps(allApps),
-                categories = buildCategoryFilters(allApps)
+                categories = buildCategoryFilters(allApps),
+                topWebsites = if (UsageStatsSettings.countWebsites) {
+                    buildTopWebsites(
+                        UsageStatsTracker.websiteTimeRecorder.snapshot().mapValues { (_, time) ->
+                            time.foregroundMs to time.launchCount
+                        }
+                    )
+                } else emptyList()
             )
         }
     }
@@ -277,7 +303,7 @@ class UsageStatsViewModel @Inject constructor(
         val historical = repository.getHistorical(start, end, source)
         val allRows =
             if (readsOs) withBackfilledRecentDays(historical, start, end) else historical
-        val rows = allRows.filterNot { isExcluded(it.packageName) }
+        val rows = allRows.filterNot { exclusions.excludes(it.packageName) }
 
         // per-day totals, zero-filled so the time axis has no silent gaps
         val totalsByDate = rows.groupBy { it.date }
@@ -296,14 +322,16 @@ class UsageStatsViewModel @Inject constructor(
         val focusStart = selectedDay ?: start
         val focusEnd = selectedDay ?: end
 
-        val eventsStartMs = focusStart.atStartOfDay(zone).toInstant().toEpochMilli()
+        val eventsStartMs = focusStart.startOfDayMillis(zone)
         val eventsEndMs = if (focusEnd >= today) {
             System.currentTimeMillis()
         } else {
-            focusEnd.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            focusEnd.plusDays(1).startOfDayMillis(zone)
         }
         val events = if (readsOs) {
-            UsageStatsProvider.queryEventCounts(eventsStartMs, eventsEndMs) { !isExcluded(it) }
+            UsageStatsProvider.queryEventCounts(eventsStartMs, eventsEndMs) {
+                !exclusions.excludes(it)
+            }
         } else {
             UsageStatsProvider.EventCounts.EMPTY
         }
@@ -369,10 +397,59 @@ class UsageStatsViewModel @Inject constructor(
                 effectiveDays = days,
                 scrollDistanceMeters = pixelsToMeters(perApp.values.sumOf { it.scrollDistancePx }),
                 excludedApps = buildExcludedApps(allPerApp),
-                categories = buildCategoryFilters(allPerApp)
+                categories = buildCategoryFilters(allPerApp),
+                topWebsites = if (UsageStatsSettings.countWebsites) {
+                    buildTopWebsites(
+                        repository.getWebsiteUsage(focusStart, focusEnd).groupBy { it.site }
+                            .mapValues { (_, days) ->
+                                days.sumOf(DailyWebsiteUsage::timeMs) to
+                                        days.sumOf(DailyWebsiteUsage::visitCount)
+                            }
+                    )
+                } else emptyList()
             )
         }
     }
+
+    /**
+     * The sites worth a row, from their time and visits ([perSite]), the way [buildTopApps] picks
+     * the apps.
+     */
+    private fun buildTopWebsites(perSite: Map<String, Pair<Long, Int>>): List<AppUsageStat> {
+        loadListedCollections()
+        return perSite.filterValues { (timeMs, _) -> timeMs >= MIN_APP_FOREGROUND_TIME_MS }
+            .map { (site, numbers) ->
+                val (timeMs, visits) = numbers
+                AppUsageStat(
+                    packageName = Websites.entryOfSite(site),
+                    label = site,
+                    totalTimeMs = timeMs,
+                    launchCount = visits,
+                    sessionCount = visits,
+                    scrollEventCount = 0,
+                    scrollIntensityScore = 0f,
+                    scrollsPerMinute = 0f,
+                    scrollDistanceMeters = 0.0,
+                    groups = websiteGroupsFor(site)
+                )
+            }
+            .sortedByDescending { it.totalTimeMs }
+    }
+
+    /**
+     * Reads the collections the features list, so a site one of them holds gets its badge on the
+     * first load. Blocking, but each file only once per process.
+     */
+    private fun loadListedCollections() {
+        RuleGroups.all
+            .flatMap { group -> group.appExceptions.mapNotNull(Websites::collectionOf) }
+            .toSet()
+            .forEach { WebsiteCollections.load(getApplication(), it) }
+    }
+
+    /** The groups with a step for [site] as a website, like [groupsFor] for an app. */
+    private fun websiteGroupsFor(site: String): List<GroupBadge> =
+        badgesOf(RuleGroups.enabled().filter { Websites.covers(it, site) }, isWebsite = true)
 
     private fun sumHourBuckets(buckets: List<IntArray>): IntArray {
         return IntArray(24) { hour -> buckets.sumOf { it.getOrElse(hour) { 0 } } }
@@ -386,16 +463,17 @@ class UsageStatsViewModel @Inject constructor(
     private fun withBackfilledRecentDays(
         rows: List<DailyAppUsage>, start: LocalDate, end: LocalDate
     ): List<DailyAppUsage> {
-        val daysWithData = rows.mapTo(mutableSetOf()) { it.date }
+        // a row with counters only (a scroll, a break) says nothing about the day's screen time
+        val daysWithData = rows.filter { it.totalTimeMs > 0L }.mapTo(mutableSetOf()) { it.date }
         val backfilled = rows.toMutableList()
-        for ((date, stats) in UsageStatsProvider.queryDailyUsage(BACKFILL_DAYS)) {
+        for ((date, timeByApp) in UsageStatsProvider.queryDailyUsage(BACKFILL_DAYS)) {
             if (date < start || date > end || date in daysWithData) continue
-            stats.mapTo(backfilled) { (pkg, stat) ->
+            timeByApp.mapTo(backfilled) { (pkg, timeMs) ->
                 DailyAppUsage(
                     rowId = DailyAppUsage.createRowId(date, pkg),
                     date = date,
                     packageName = pkg,
-                    totalTimeMs = stat.screenTimeMs,
+                    totalTimeMs = timeMs,
                     sessionCount = 0,
                     launchCount = 0,
                     scrollCount = 0,
@@ -444,8 +522,8 @@ class UsageStatsViewModel @Inject constructor(
     ): Pair<Long?, Int?> {
         val prevStart = start.minusDays(days.toLong())
         val prevEnd = start.minusDays(1)
-        val prevStartMs = prevStart.atStartOfDay(zone).toInstant().toEpochMilli()
-        val prevEndMs = start.atStartOfDay(zone).toInstant().toEpochMilli()
+        val prevStartMs = prevStart.startOfDayMillis(zone)
+        val prevEndMs = start.startOfDayMillis(zone)
         val minCoverageDays = (days + 1) / 2
 
         if (days > EVENT_LOG_RELIABLE_DAYS || source == UsageSource.SELF_MEASURED) {
@@ -462,7 +540,7 @@ class UsageStatsViewModel @Inject constructor(
         }
 
         val prevTotal = UsageStatsProvider.queryForPeriod(prevStartMs, prevEndMs)
-            .filterKeys { !isExcluded(it) }.values.sumOf { it.screenTimeMs }
+            .filterKeys { !exclusions.excludes(it) }.values.sumOf { it.screenTimeMs }
         val prevUnlocks = UsageStatsProvider.queryEventCounts(prevStartMs, prevEndMs).unlockCount
         return (if (prevTotal > 0) currentTotal - prevTotal else null) to
             (if (prevUnlocks > 0) currentUnlocks - prevUnlocks else null)
@@ -473,9 +551,9 @@ class UsageStatsViewModel @Inject constructor(
      * with exclusions it has to walk the per-app rows, which is why the cheap path is kept.
      */
     private suspend fun previousRoomTotal(start: LocalDate, end: LocalDate): Long {
-        if (!hasExclusions) return repository.getTotalScreenTimeInRange(start, end, source)
+        if (exclusions.isEmpty) return repository.getTotalScreenTimeInRange(start, end, source)
         return repository.getHistorical(start, end, source)
-            .filterNot { isExcluded(it.packageName) }.sumOf { it.totalTimeMs }
+            .filterNot { exclusions.excludes(it.packageName) }.sumOf { it.totalTimeMs }
     }
 
     /**
@@ -496,15 +574,10 @@ class UsageStatsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Converts odometer pixels to meters using the screen's physical DPI (with a sanity fallback
-     * to the density bucket for devices that report bogus [android.util.DisplayMetrics.ydpi]).
-     */
-    private fun pixelsToMeters(pixels: Long): Double {
-        val metrics = getApplication<Application>().resources.displayMetrics
-        val ydpi = if (metrics.ydpi in 60f..1000f) metrics.ydpi else metrics.densityDpi.toFloat()
-        return DistancePerspective.pixelsToMeters(pixels, ydpi)
-    }
+    /** Converts odometer pixels to meters using the screen's physical DPI. */
+    private fun pixelsToMeters(pixels: Long): Double = DistancePerspective.pixelsToMeters(
+        pixels, getApplication<Application>().resources.displayMetrics
+    )
 
     /** Average screen time per weekday (Mon..Sun), ignoring days without any recorded usage. */
     private fun weekdayAverages(byDay: List<DailyUsage>): FloatArray {
@@ -533,7 +606,7 @@ class UsageStatsViewModel @Inject constructor(
      * they are brought back.
      */
     private fun buildExcludedApps(allApps: Map<String, AggregatedAppStats>): List<AppUsageStat> {
-        return excludedPackages
+        return exclusions.apps
             .map { pkg ->
                 toAppUsageStat(
                     allApps[pkg] ?: AggregatedAppStats(pkg, 0L, 0, 0, 0, 0L)
@@ -551,32 +624,27 @@ class UsageStatsViewModel @Inject constructor(
         allApps: Map<String, AggregatedAppStats>
     ): List<UsageCategoryFilter> {
         val context = getApplication<Application>()
-        val fallbackLabel = context.getString(R.string.appCategories_other)
         val timeByCategory = mutableMapOf<Int, Long>()
         for ((pkg, stat) in allApps) {
-            timeByCategory.merge(categoryOf(pkg), stat.totalTimeMs, Long::plus)
+            timeByCategory.merge(context.appCategory(pkg), stat.totalTimeMs, Long::plus)
         }
-        excludedCategories.forEach { timeByCategory.putIfAbsent(it, 0L) }
+        exclusions.categories.forEach { timeByCategory.putIfAbsent(it, 0L) }
         return timeByCategory.entries
             .map { (categoryId, totalTimeMs) ->
                 UsageCategoryFilter(
                     categoryId = categoryId,
-                    label = ApplicationInfo.getCategoryTitle(context, categoryId)?.toString()
-                        ?: fallbackLabel,
+                    label = categoryLabel(categoryId),
                     totalTimeMs = totalTimeMs,
-                    isExcluded = categoryId in excludedCategories
+                    isExcluded = categoryId in exclusions.categories
                 )
             }
             .sortedByDescending { it.totalTimeMs }
     }
 
     private fun toAppUsageStat(stat: AggregatedAppStats): AppUsageStat {
-        val pm = getApplication<Application>().packageManager
         return AppUsageStat(
             packageName = stat.packageName,
-            label = runCatching {
-                pm.getApplicationInfo(stat.packageName, 0).loadLabel(pm).toString()
-            }.getOrDefault(stat.packageName),
+            label = getApplication<Application>().appLabel(stat.packageName),
             totalTimeMs = stat.totalTimeMs,
             launchCount = stat.launchCount,
             sessionCount = stat.sessionCount,
@@ -584,21 +652,23 @@ class UsageStatsViewModel @Inject constructor(
             scrollIntensityScore = scrollIntensityScore(stat.scrollCount, stat.totalTimeMs),
             scrollsPerMinute = scrollsPerMinute(stat.scrollCount, stat.totalTimeMs),
             scrollDistanceMeters = pixelsToMeters(stat.scrollDistancePx),
-            detoxBadges = detoxBadgesFor(stat.packageName)
+            groups = groupsFor(stat.packageName)
         )
     }
 
-    private fun detoxBadgesFor(packageName: String): List<DetoxBadge> = buildList {
-        if (GrayscaleAppsFeature.isActivated && GrayscaleAppsFeature.appliesTo(packageName)) {
-            add(DetoxBadge.GRAYSCALE)
+    private fun groupsFor(packageName: String): List<GroupBadge> =
+        badgesOf(RuleGroups.enabled().filter { it.appliesTo(packageName) }, isWebsite = false)
+
+    /**
+     * The [covering] groups that do something to what they cover, one badge each. A lock or a
+     * wait reaches an app only from a group that names it, a website from any group, see
+     * [RuleGroup.canHoldBackApps].
+     */
+    private fun badgesOf(covering: List<RuleGroup>, isWebsite: Boolean): List<GroupBadge> =
+        covering.mapNotNull { group ->
+            val step = GroupTexts.strongestStep(group, isWebsite) ?: return@mapNotNull null
+            GroupBadge(group.id, GroupTexts.name(getApplication(), group), step)
         }
-        if (DisableAppsFeature.isActivated && DisableAppsFeature.disableableApps.contains(packageName)) {
-            add(DetoxBadge.DISABLED)
-        }
-        if (BreakDoomScrollingFeature.isActivated && BreakDoomScrollingFeature.appliesTo(packageName)) {
-            add(DetoxBadge.DOOM_SCROLL)
-        }
-    }
 
     private fun buildDetoxImpact(
         breakCount: Int?,
@@ -624,26 +694,31 @@ class UsageStatsViewModel @Inject constructor(
         perApp: Map<String, AggregatedAppStats>
     ): Map<String, Long> {
         val context = getApplication<Application>()
-        val fallbackLabel = context.getString(R.string.appCategories_other)
         val byCategory = mutableMapOf<String, Long>()
         for ((pkg, stat) in perApp) {
-            val label = ApplicationInfo.getCategoryTitle(context, categoryOf(pkg))?.toString()
-                ?: fallbackLabel
-            byCategory.merge(label, stat.totalTimeMs, Long::plus)
+            byCategory.merge(categoryLabel(context.appCategory(pkg)), stat.totalTimeMs, Long::plus)
         }
         return byCategory.entries.sortedByDescending { it.value }
             .associate { it.key to it.value }
     }
 
+    /** Loads the sparkline of [packageName], an app's package or a website's entry. */
     fun loadAppTrend(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val end = LocalDate.now()
             val start = end.minusDays(APP_TREND_DAYS - 1L)
-            val byDate = repository.getAppHistorical(packageName, start, end, source)
-                .associateBy { it.date }
+            val byDate = if (Websites.isWebsite(packageName)) {
+                val site = Websites.siteOfEntry(packageName)
+                    ?: Websites.displayName(getApplication(), packageName)
+                repository.getSiteHistorical(site, start, end)
+                    .associate { it.date to it.timeMs }
+            } else {
+                repository.getAppHistorical(packageName, start, end, source)
+                    .associate { it.date to it.totalTimeMs }
+            }
             _appTrend.value = (0 until APP_TREND_DAYS).map { offset ->
                 val date = start.plusDays(offset.toLong())
-                date to (byDate[date]?.totalTimeMs ?: 0L)
+                date to (byDate[date] ?: 0L)
             }
         }
     }

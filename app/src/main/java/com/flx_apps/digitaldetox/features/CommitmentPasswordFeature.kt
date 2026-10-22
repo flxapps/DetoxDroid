@@ -15,6 +15,8 @@ import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Step
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.CommitmentPasswordFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
@@ -101,15 +103,24 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     )
 
     /**
-     * Returns the configured feature IDs to lock.
-     * An explicit "none" selection is stored internally via a sentinel.
+     * The ids the password locks, as the lock list shows them: an explicit "none" is empty, and
+     * the all-groups entry older states hold stands for every group there is.
      */
     fun getConfiguredLockedFeatureIds(): Set<String> {
-        return if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) {
-            emptySet()
-        } else {
-            lockedFeatureIds
-        }
+        val ids = lockedFeatureIds
+        val groups = RuleGroups.all.mapTo(mutableSetOf()) { it.id }
+        return when {
+            ids.contains(LOCKED_FEATURES_NONE_SENTINEL) -> emptySet()
+            RuleGroups.LOCK_ID in ids -> ids - RuleGroups.LOCK_ID + groups
+            else -> ids
+        }.filterTo(mutableSetOf()) { !RuleGroups.isGroupId(it) || it in groups }
+    }
+
+    /** A group is gone: its id leaves the lock list, where it would otherwise be counted on. */
+    fun forgetLockable(id: String) {
+        val ids = lockedFeatureIds
+        if (id !in ids) return
+        updateLockedFeatureIds(ids - id)
     }
 
     private fun notifyStateChanged() {
@@ -212,8 +223,14 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
     }
 
     /**
-     * Returns true if the given feature is configured to be protected by the password, regardless
-     * of whether the session is currently unlocked.
+     * Whether the feature or group with [featureId] is configured to be protected by the
+     * password, regardless of whether the session is currently unlocked. [RuleGroups.LOCK_ID]
+     * asks about the groups as a whole: any of them.
+     *
+     * Groups lock one by one. That opens no way around a locked group, since every group that
+     * covers an app applies and the strictest wins: another group can only add to what a locked
+     * one does, never take from it. The step features are lockables of their own: their screens
+     * hold the settings behind the steps, and the list says whether those are locked as well.
      */
     fun isFeatureProtected(featureId: String): Boolean {
         if (!isActivated) return false
@@ -222,32 +239,53 @@ object CommitmentPasswordFeature : Feature(), NeedsPermissionsFeature {
 
         // Explicit user choice: lock no feature settings.
         if (lockedFeatureIds.contains(LOCKED_FEATURES_NONE_SENTINEL)) return false
-
+        if (featureId == RuleGroups.LOCK_ID) return RuleGroups.all.any { isFeatureProtected(it.id) }
         return if (lockedFeatureIds.isEmpty()) {
             // Backward-compatibility fallback for older persisted states.
-            getLockableFeatures().any { it.id == featureId }
+            getLockables().any { it.id == featureId }
         } else {
-            lockedFeatureIds.contains(featureId)
+            featureId in lockedFeatureIds ||
+                    RuleGroups.isGroupId(featureId) && RuleGroups.LOCK_ID in lockedFeatureIds
         }
     }
 
     /**
-     * Returns all features that implement [LockableFeature].
+     * Something the password can lock: a group, or a feature that implements [LockableFeature]. A
+     * step feature stands in the list next to the groups that use its step, so its [subtitle] says
+     * that it is the settings behind the step that are locked here.
      */
-    fun getLockableFeatures(): List<Feature> {
-        return FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
+    data class Lockable(
+        val id: String, val title: String, val lockedByDefault: Boolean, val subtitle: String? = null
+    )
+
+    /** Everything the password can lock, the groups first. */
+    fun getLockables(context: Context = DetoxDroidApplication.appContext): List<Lockable> =
+        RuleGroups.all.map { group ->
+            Lockable(
+                group.id, group.name.ifBlank { context.getString(R.string.ruleGroups_unnamed) },
+                lockedByDefault = true
+            )
+        } + FeaturesProvider.featureList.filterIsInstance<LockableFeature>()
             .filterIsInstance<Feature>().filter { it.id != id }
-    }
+            .map { feature ->
+                val subtitle = if (Step.entries.any { it.feature == feature }) {
+                    context.getString(feature.texts.subtitle)
+                } else null
+                Lockable(
+                    feature.id, context.getString(feature.texts.title),
+                    (feature as LockableFeature).lockedByDefault, subtitle
+                )
+            }
 
     /**
-     * Populate [lockedFeatureIds] from the current default selections (all lockable features
-     * whose [LockableFeature.lockedByDefault] is true). Called once when enabling the feature.
+     * Populate [lockedFeatureIds] from the current default selections (every group and every
+     * lockable feature whose [LockableFeature.lockedByDefault] is true). Called once when
+     * enabling the feature. A group made later starts out unlocked: it can only add rules.
      */
     fun initializeLockedFeatures() {
         if (lockedFeatureIds.isEmpty()) {
             updateLockedFeatureIds(
-                getLockableFeatures().filter { (it as? LockableFeature)?.lockedByDefault == true }
-                    .map { it.id }.toSet()
+                getLockables().filter { it.lockedByDefault }.map { it.id }.toSet()
             )
         }
     }

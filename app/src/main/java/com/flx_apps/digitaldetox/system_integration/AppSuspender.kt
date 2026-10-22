@@ -32,6 +32,9 @@ object AppSuspender {
 
     val hasSuspendedApps: Boolean get() = suspendedApps.isNotEmpty()
 
+    /** The packages suspended right now, as far as this object knows. */
+    val suspended: Set<String> get() = suspendedApps
+
     /** Whether a command would run right now without putting a permission dialog in front of it. */
     val isAvailable: Boolean get() = ShizukuUtils.canExecuteCommandsSilently()
 
@@ -59,8 +62,14 @@ object AppSuspender {
      * Releases everything this object suspended. A failure leaves the record in place, so the next
      * attempt covers it.
      */
-    fun releaseAll() {
-        val targets = suspendedApps.toList()
+    fun releaseAll() = release(suspendedApps)
+
+    /**
+     * Releases those of [packageNames] this object suspended. A failure leaves the record in
+     * place, so the next attempt covers it.
+     */
+    fun release(packageNames: Collection<String>) {
+        val targets = packageNames.filter { it in suspendedApps }
         if (targets.isEmpty()) return
         if (!isAvailable) {
             Timber.w("Cannot release %s yet, Shizuku is not available", targets)

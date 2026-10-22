@@ -1,36 +1,25 @@
 package com.flx_apps.digitaldetox.ui.screens.onboarding
 
-import android.Manifest
 import android.app.Application
-import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.data.repository.ApplicationInfoRepository
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
-import com.flx_apps.digitaldetox.feature_types.Feature
-import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
-import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
-import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
-import com.flx_apps.digitaldetox.features.DisableAppsFeature
-import com.flx_apps.digitaldetox.features.FeaturesProvider
-import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.ReliabilitySettings
-import com.flx_apps.digitaldetox.system_integration.UsageStatsProvider
-import com.flx_apps.digitaldetox.system_integration.screenTimeMs
 import com.flx_apps.digitaldetox.util.BatteryOptimizationHelper
 import com.flx_apps.digitaldetox.util.DistractingAppsHeuristic
-import com.flx_apps.digitaldetox.util.DistractionCandidate
+import com.flx_apps.digitaldetox.util.RankedApps
 import com.flx_apps.digitaldetox.util.NotificationHelper
 import com.flx_apps.digitaldetox.util.ShizukuUtils
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
-import com.flx_apps.digitaldetox.util.knownCategoryOf
-import com.topjohnwu.superuser.Shell
+import com.flx_apps.digitaldetox.util.PrivilegedShell
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,18 +69,10 @@ data class OnboardingAppRow(
 class OnboardingViewModel @Inject constructor(
     private val application: Application
 ) : AndroidViewModel(application) {
-    companion object {
-        /** Usage is averaged over the last week (zero days included). */
-        const val USAGE_DAYS = 7
-
-        /** System apps without a known category are hidden below this average daily usage. */
-        val MIN_SYSTEM_APP_USAGE_MS: Long = TimeUnit.MINUTES.toMillis(5)
-    }
-
     /**
      * Whether onboarding had already been completed when this flow was started (i.e. the user is
-     * re-running it from the About screen). Completing it again replaces the affected features'
-     * app lists, which the summary step points out.
+     * re-running it from the About screen). Completing it again adds another group next to the
+     * ones there are, which the summary step points out.
      */
     val isRerun: Boolean = OnboardingState.isOnboardingCompleted
 
@@ -147,46 +128,21 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private fun buildAppRows(hasUsageAccess: Boolean): List<OnboardingAppRow> {
-        val avgUsageByApp: Map<String, Long> = if (hasUsageAccess) {
-            val totals = HashMap<String, Long>()
-            UsageStatsProvider.queryDailyUsage(USAGE_DAYS).forEach { (_, statsByApp) ->
-                statsByApp.forEach { (packageName, stats) ->
-                    totals.merge(packageName, stats.screenTimeMs, Long::plus)
-                }
-            }
-            totals.mapValues { it.value / USAGE_DAYS }
-        } else {
-            emptyMap()
-        }
-        val installedApps = ApplicationInfoRepository.getInstalledApps()
-        val candidates = installedApps.filter { app ->
-            app.packageName != application.packageName && app.hasLaunchIntent && (!app.isSystemApp || knownCategoryOf(
-                app.packageName
-            ) != null || (avgUsageByApp[app.packageName] ?: 0L) >= MIN_SYSTEM_APP_USAGE_MS)
-        }.map { app ->
-            DistractionCandidate(
-                packageName = app.packageName,
-                knownCategory = knownCategoryOf(app.packageName),
-                osCategory = app.osCategory,
-                avgDailyUsageMs = avgUsageByApp[app.packageName] ?: 0L
-            )
-        }
-        val appsByPackage = installedApps.associateBy { it.packageName }
+        val (ranked, hasUsageData) = RankedApps.load(application, hasUsageAccess)
         val previouslyChecked = _appRows.value.filter { it.checked }.map { it.packageName }.toSet()
-        _hasUsageData.value = hasUsageAccess && avgUsageByApp.isNotEmpty()
-        return DistractingAppsHeuristic.rankApps(candidates).map { rankedApp ->
-            val appInfo = appsByPackage.getValue(rankedApp.packageName)
+        _hasUsageData.value = hasUsageData
+        return ranked.map { row ->
             OnboardingAppRow(
-                packageName = rankedApp.packageName,
-                appName = appInfo.appName,
-                appCategory = appInfo.appCategory,
-                isSystemApp = appInfo.isSystemApp,
-                avgDailyUsageMs = rankedApp.avgDailyUsageMs,
+                packageName = row.packageName,
+                appName = row.appName,
+                appCategory = row.appCategory,
+                isSystemApp = row.isSystemApp,
+                avgDailyUsageMs = row.avgDailyUsageMs,
                 // keep the user's manual selection when re-ranking
                 checked = if (appsLoadedWithUsageAccess != null) {
-                    rankedApp.packageName in previouslyChecked
+                    row.packageName in previouslyChecked
                 } else {
-                    rankedApp.preChecked
+                    row.preChecked
                 }
             )
         }
@@ -242,7 +198,7 @@ class OnboardingViewModel @Inject constructor(
         MutableStateFlow(NotificationHelper.hasNotificationPermission(application))
     val notificationsGranted: StateFlow<Boolean> = _notificationsGranted
 
-    private val _writeSecureSettingsGranted = MutableStateFlow(hasWriteSecureSettings())
+    private val _writeSecureSettingsGranted = MutableStateFlow(application.hasWriteSecureSettings())
     val writeSecureSettingsGranted: StateFlow<Boolean> = _writeSecureSettingsGranted
 
     /**
@@ -260,34 +216,24 @@ class OnboardingViewModel @Inject constructor(
     private val _canOneTapGrant = MutableStateFlow(false)
     val canOneTapGrant: StateFlow<Boolean> = _canOneTapGrant
 
-    private var isRootAvailable = false
-    private var rootChecked = false
-
-    private fun hasWriteSecureSettings(): Boolean =
-        application.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
-
     /**
      * Re-checks all permission states, e.g. when the user returns from the system settings.
      * Shizuku availability is cheap and can change while the user hops to the wizard and back, so
-     * it is probed every time; the root probe spawns an `su` process and can stall, so it runs
-     * only once.
+     * it is probed every time; the root probe spawns an `su` process and can stall, so only the
+     * first one asks (see [PrivilegedShell.isRootAvailable]).
      */
     fun refreshPermissionStates() {
         refreshUsageAccess()
         _overlayGranted.value = Settings.canDrawOverlays(application)
         _notificationsGranted.value = NotificationHelper.hasNotificationPermission(application)
-        _writeSecureSettingsGranted.value = hasWriteSecureSettings()
+        _writeSecureSettingsGranted.value = application.hasWriteSecureSettings()
         _batteryOptimizationIgnored.value =
             BatteryOptimizationHelper.isIgnoringBatteryOptimizations(application)
         viewModelScope.launch(Dispatchers.IO) {
             val isShizukuAvailable = ShizukuUtils.isShizukuAvailable()
             // publish the fast probe first so a stalling root check cannot delay the one-tap offer
             if (isShizukuAvailable) _canOneTapGrant.value = true
-            if (!rootChecked) {
-                rootChecked = true
-                isRootAvailable = runCatching { Shell.getShell().isRoot }.getOrDefault(false)
-            }
-            _canOneTapGrant.value = isRootAvailable || isShizukuAvailable
+            _canOneTapGrant.value = PrivilegedShell.isRootAvailable() || isShizukuAvailable
         }
     }
 
@@ -296,15 +242,8 @@ class OnboardingViewModel @Inject constructor(
      * first pop its own permission dialog; [ShizukuUtils.executeCommand] retries after the grant.
      */
     fun grantWriteSecureSettings() {
-        val command =
-            application.getString(R.string.rootCommand_grantWriteSecuritySettingsPermission)
         viewModelScope.launch(Dispatchers.IO) {
-            if (isRootAvailable) {
-                Shell.cmd(command).exec()
-                refreshPermissionStates()
-            } else {
-                ShizukuUtils.executeCommand(command) { _, _ -> refreshPermissionStates() }
-            }
+            PrivilegedShell.grantWriteSecureSettings(application) { refreshPermissionStates() }
         }
     }
 
@@ -348,11 +287,11 @@ class OnboardingViewModel @Inject constructor(
     private var completed = false
 
     /**
-     * Applies the chosen preset to the features and marks onboarding as completed. Grayscale is
-     * only activated when WRITE_SECURE_SETTINGS is present — otherwise it would be a permanent
-     * silent no-op; instead it is fully configured and flagged as pending, and the home screen
-     * offers to finish the setup. A feature the commitment password has locked is left alone,
-     * so running the wizard again cannot undo what the passphrase protects.
+     * Turns the selection and the preset into one group and marks onboarding as completed. A step
+     * whose permission is still missing goes in anyway: the home screen offers to finish the setup
+     * until the permission arrives, and the step takes hold the moment it does. With the groups
+     * locked by the commitment password nothing is written, so running the wizard again cannot
+     * get around the passphrase.
      * @return false when onboarding was already completed by an earlier call (double-tap guard) —
      * the caller must not navigate again in that case
      */
@@ -361,61 +300,30 @@ class OnboardingViewModel @Inject constructor(
         completed = true
         val selectedApps = _appRows.value.filter { it.checked }.map { it.packageName }.toSet()
         val budgetMs = TimeUnit.MINUTES.toMillis(_budgetMinutes.value.toLong())
-        // features that were configured but could not be activated yet because a required
-        // permission is still missing — the home screen finishes these once the permission arrives.
-        // Locked features keep the entry they already had, since nothing below rewrites them.
-        val pending = OnboardingState.pendingFeatureActivations.filterTo(mutableSetOf(), ::isLocked)
-        if (selectedApps.isNotEmpty()) {
-            if (!isLocked(BreakDoomScrollingFeature.id)) {
-                BreakDoomScrollingFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                BreakDoomScrollingFeature.appExceptions = selectedApps
-                activateOrDefer(BreakDoomScrollingFeature, pending)
-            }
-            if (_preset.value != OnboardingPreset.GENTLE && !isLocked(GrayscaleAppsFeature.id)) {
-                GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                GrayscaleAppsFeature.appExceptions = selectedApps
-                // in the Strict preset grayscale warns before the block kicks in — with identical
-                // thresholds the block would always win and the grayscale phase would never show
-                GrayscaleAppsFeature.allowedDailyColorScreenTime =
-                    if (_preset.value == OnboardingPreset.STRICT) {
+        val preset = _preset.value
+        if (selectedApps.isNotEmpty() && !OnboardingState.isOnboardingLocked) {
+            RuleGroups.create {
+                name = RuleGroups.uniqueName(application.getString(R.string.ruleGroups_onboarding_name))
+                appExceptions = selectedApps
+                appExceptionListType = AppExceptionListType.ONLY_LIST
+                scrollBreakAfterMs = BreakDoomScrollingFeature.DefaultTimeUntilWarningMs
+                if (preset != OnboardingPreset.GENTLE) {
+                    this.budgetMs = budgetMs
+                    // in the Strict preset gray warns before the lock takes hold; with identical
+                    // thresholds the lock would always win and the gray stretch would never show
+                    grayAfterMs = if (preset == OnboardingPreset.STRICT) {
                         DistractingAppsHeuristic.strictGrayscaleBudgetMs(budgetMs)
                     } else {
                         budgetMs
                     }
-                activateOrDefer(GrayscaleAppsFeature, pending)
+                    locks = preset == OnboardingPreset.STRICT
+                }
             }
-            if (_preset.value == OnboardingPreset.STRICT && !isLocked(DisableAppsFeature.id)) {
-                DisableAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-                DisableAppsFeature.appExceptions = selectedApps
-                DisableAppsFeature.allowedDailyScreenTime = budgetMs
-                activateOrDefer(DisableAppsFeature, pending)
-            }
+            RuleGroups.onChanged()
         }
-        // (re)assign the pending set in every path so re-running onboarding cannot leave a stale
-        // reminder behind
-        OnboardingState.pendingFeatureActivations = pending
         // start DetoxDroid itself if possible (throws without WRITE_SECURE_SETTINGS)
         runCatching { AccessibilityServiceController.activate(application) }
         OnboardingState.isOnboardingCompleted = true
         return true
-    }
-
-    /** Whether the commitment password protects the given feature and is not unlocked right now. */
-    private fun isLocked(featureId: String) =
-        CommitmentPasswordFeature.isFeatureLocked(featureId) ||
-                EmergencyBrakeFeature.locksSettings(featureId)
-
-    /**
-     * Activates [feature] when its required permissions are present, otherwise leaves it configured
-     * but deactivated and records it in [pending] — a feature that cannot work must not appear as
-     * "activated". A missing permission always wins over a previously activated state (e.g. a
-     * re-run after the permission was revoked), so the feature is explicitly stopped in that case.
-     */
-    private fun activateOrDefer(feature: Feature, pending: MutableSet<String>) {
-        val hasPermissions =
-            feature !is NeedsPermissionsFeature || feature.hasPermissions(application)
-        feature.isActivated = hasPermissions
-        if (!hasPermissions) pending += feature.id
-        FeaturesProvider.startOrStopFeature(feature)
     }
 }

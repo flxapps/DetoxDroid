@@ -7,11 +7,16 @@
        The commitment passphrase is sealed with a key that lives in this device's keystore, and
        keystore keys move with neither a backup nor a device transfer. Carrying the file over on
        its own leaves a keyset that nothing can decrypt.
+
+       Whether the accessibility service was running, and the watchdog's outage count, describe
+       this device. Carried over to another one they report a force stop that never happened there.
     -->
     <cloud-backup>
         <exclude domain="sharedpref" path="commitment_password_prefs.xml" />
+        <exclude domain="sharedpref" path="service_reliability_prefs.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="commitment_password_prefs.xml" />
+        <exclude domain="sharedpref" path="service_reliability_prefs.xml" />
     </device-transfer>
 </data-extraction-rules>

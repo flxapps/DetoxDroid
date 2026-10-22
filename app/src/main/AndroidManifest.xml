@@ -114,7 +114,18 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:label="@string/widget_minimalLauncher_configure_title"
-            android:theme="@style/Theme.DetoxDroid">
+            android:theme="@style/Theme.DetoxDroid.WidgetConfigure">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".widgets.today.TodayWidgetConfigureActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/widget_today_name"
+            android:theme="@style/Theme.DetoxDroid.WidgetConfigure">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -175,8 +186,17 @@
                 android:resource="@xml/minimal_launcher_widget_info" />
         </receiver>
         <receiver
-            android:name=".widgets.minimal_launcher.MinimalLauncherWidgetClickReceiver"
-            android:exported="false" />
+            android:name=".widgets.today.TodayWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_today_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/today_widget_info" />
+        </receiver>
 
         <!-- Re-arms the reliability watchdog after a reboot / app update. -->
         <receiver

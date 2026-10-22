@@ -6,7 +6,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
 import com.flx_apps.digitaldetox.DetoxDroidApplication
-import com.flx_apps.digitaldetox.TenSecondsInMs
+import com.flx_apps.digitaldetox.util.startOfDayMillis
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Calendar
@@ -42,32 +42,25 @@ object UsageStatsProvider {
             Context.USAGE_STATS_SERVICE
         ) as UsageStatsManager
 
-    private var usageStatsTodayLastRefresh = 0L
+    /** Today's foreground time per app so far, from the event log, see [foregroundTimeByPackage]. */
+    fun foregroundTimeToday(): Map<String, Long> =
+        foregroundTimeByPackage(LocalDate.now().startOfDayMillis(), System.currentTimeMillis())
 
-    var usageStatsToday: Map<String, UsageStats> = mapOf()
-        get() {
-            val now = System.currentTimeMillis()
-            if (now - usageStatsTodayLastRefresh > TenSecondsInMs) {
-                val dayBeginningMs =
-                    LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                field = queryForPeriod(dayBeginningMs, now)
-                usageStatsTodayLastRefresh = now
-            }
-            return field
-        }
-
-    fun getUpdatedUsageStatsToday(): Map<String, UsageStats> {
-        usageStatsTodayLastRefresh = 0L
-        return usageStatsToday
-    }
-
-    fun getScreenTimeForApps(apps: List<String>): Long {
-        return apps.sumOf { usageStatsToday[it]?.screenTimeMs ?: 0L }
-    }
+    /**
+     * The foreground time per app between [startMs] and [endMs], added up from the event log. The
+     * daily buckets of [queryForPeriod] cannot give this for a part of a day: a bucket begins with
+     * the first event after the previous one ran out and runs a day from there, so it is not
+     * aligned to midnight and carries whatever came before it. The event log is kept for a few
+     * days only, so this is for today and yesterday; the buckets remain the source further back.
+     */
+    fun foregroundTimeByPackage(startMs: Long, endMs: Long): Map<String, Long> =
+        queryEventCounts(startMs, endMs).foregroundTimeByPackage()
 
     /**
      * Queries the OS daily usage buckets for [startMs]..[endMs] and merges them into one
-     * [UsageStats] per package, dropping apps without foreground time in the period.
+     * [UsageStats] per package, dropping apps without foreground time in the period. A bucket is
+     * a day long but begins where the previous one ran out, not at midnight, so the buckets of a
+     * calendar day include what spilled over from the day before, see [foregroundTimeByPackage].
      */
     fun queryForPeriod(startMs: Long, endMs: Long): Map<String, UsageStats> {
         return usageStatsManager.queryUsageStats(
@@ -100,6 +93,13 @@ object UsageStatsProvider {
         val unlockHourBuckets: IntArray,
         val sessions: List<SessionInfo>
     ) {
+        /** The foreground time per app, the [sessions] added up. */
+        fun foregroundTimeByPackage(): Map<String, Long> {
+            val totals = HashMap<String, Long>()
+            sessions.forEach { totals.merge(it.packageName, it.totalTimeMs, Long::plus) }
+            return totals
+        }
+
         companion object {
             /** What the event log amounts to when there is no permission to read it. */
             val EMPTY = EventCounts(emptyMap(), IntArray(24), 0, IntArray(24), emptyList())
@@ -131,6 +131,9 @@ object UsageStatsProvider {
 
         var currentPkg: String? = null
         var currentStartMs: Long = 0
+        // until the first app comes to the front inside the range, a pause is the app that was
+        // already in front when the range began, in front since then
+        var beforeFirstResume = true
 
         fun endCurrentSession(endTimeMs: Long) {
             val pkg = currentPkg ?: return
@@ -158,9 +161,15 @@ object UsageStatsProvider {
                     endCurrentSession(event.timeStamp)
                     currentPkg = event.packageName
                     currentStartMs = event.timeStamp
+                    beforeFirstResume = false
                 }
 
                 UsageEvents.Event.ACTIVITY_PAUSED -> {
+                    if (beforeFirstResume && currentPkg == null) {
+                        currentPkg = event.packageName
+                        currentStartMs = startMs
+                        beforeFirstResume = false
+                    }
                     if (currentPkg == event.packageName) {
                         endCurrentSession(event.timeStamp)
                     }
@@ -200,17 +209,26 @@ object UsageStatsProvider {
     }
 
     /**
-     * Queries the merged per-app usage for each of the last [days] calendar days (today first).
-     * Limited by the OS retention window for daily buckets.
+     * The foreground time per app for each of the last [days] calendar days (today first): from
+     * the event log where it still reaches, which is exact to the day, from the daily buckets
+     * further back, which spill over from the day before (see [foregroundTimeByPackage]).
      */
-    fun queryDailyUsage(days: Int): List<Pair<LocalDate, Map<String, UsageStats>>> {
+    fun queryDailyUsage(days: Int): List<Pair<LocalDate, Map<String, Long>>> {
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
         return (0 until days).map { dayOffset ->
             val date = today.minusDays(dayOffset.toLong())
-            val startMs = date.atStartOfDay(zone).toInstant().toEpochMilli()
-            val endMs = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
-            date to queryForPeriod(startMs, endMs)
+            val startMs = date.startOfDayMillis(zone)
+            val endMs = minOf(date.plusDays(1).startOfDayMillis(zone), System.currentTimeMillis())
+            val events = queryEventCounts(startMs, endMs)
+            val fromEvents = events.foregroundTimeByPackage()
+            // a day the log no longer has leaves no session and no launch behind
+            val retained = fromEvents.isNotEmpty() || events.launchCounts.isNotEmpty()
+            date to if (retained) {
+                fromEvents
+            } else {
+                queryForPeriod(startMs, endMs).mapValues { it.value.screenTimeMs }
+            }
         }
     }
 }

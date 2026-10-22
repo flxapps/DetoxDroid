@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The browsers DetoxDroid can tell websites apart in, and where it finds the address of the page
+     each one shows: the view id of its address bar as the accessibility service sees it.
+
+     An id that starts with "id/" belongs to the browser's own package. Anything else is a Compose
+     test tag, which the system cannot search for, so the window is walked for it instead.
+
+     Several ids per browser are tried in order. Browsers rename their address bar now and then, and
+     an id that is gone simply finds nothing, so an old one can stay for older versions. A browser
+     that is not listed here keeps working as an app; only its websites go unrecognised. -->
+<browsers>
+    <!-- Chromium and the browsers built on it -->
+    <browser package="com.android.chrome"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.chrome.beta"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.chrome.dev"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.chrome.canary"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.google.android.apps.chrome"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.chromium.chrome"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.brave.browser"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.brave.browser_beta"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.brave.browser_dev"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.brave.browser_nightly"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.vivaldi.browser"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.vivaldi.browser.snapshot"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.microsoft.emmx"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.microsoft.emmx.beta"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.microsoft.emmx.dev"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.microsoft.emmx.canary"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.kiwibrowser.browser"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.ecosia.android"><addressBar id="id/url_bar" /></browser>
+    <browser package="com.naver.whale"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.cromite.cromite"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.bromite.bromite"><addressBar id="id/url_bar" /></browser>
+    <browser package="app.vanadium.browser"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.calyxos.chromium"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.ungoogled.chromium.stable"><addressBar id="id/url_bar" /></browser>
+    <browser package="org.ungoogled.chromium.extensions.stable"><addressBar id="id/url_bar" /></browser>
+    <browser package="io.github.jqssun.helium"><addressBar id="id/url_bar" /></browser>
+
+    <!-- Firefox and the browsers built on it: the address bar of older versions first, which is found
+         with one lookup, then the Compose one of current versions, which takes a walk -->
+    <browser package="org.mozilla.firefox">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.firefox_beta">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.fenix">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.fennec_fdroid">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.ironfoxoss.ironfox">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.ironfoxoss.ironfox.nightly">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="us.spotco.fennec_dos">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="io.github.forkmaintainers.iceraven">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.torproject.torbrowser">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.torproject.torbrowser_alpha">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.gnu.icecat">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="com.qwant.liberty">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="com.cookiejarapps.android.smartcookieweb">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="com.iode.firefox">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.focus">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.focus.beta">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.focus.nightly">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+    <browser package="org.mozilla.klar">
+        <addressBar id="id/mozac_browser_toolbar_url_view" />
+        <addressBar id="ADDRESSBAR_URL_BOX" />
+    </browser>
+
+    <!-- The rest, each with an address bar of its own -->
+    <browser package="com.sec.android.app.sbrowser">
+        <addressBar id="id/location_bar_edit_text" />
+        <addressBar id="id/url_bar" />
+    </browser>
+    <browser package="com.sec.android.app.sbrowser.beta">
+        <addressBar id="id/location_bar_edit_text" />
+        <addressBar id="id/url_bar" />
+    </browser>
+    <browser package="com.opera.browser">
+        <addressBar id="id/url_field" />
+        <addressBar id="id/address_field" />
+    </browser>
+    <browser package="com.opera.browser.beta">
+        <addressBar id="id/url_field" />
+        <addressBar id="id/address_field" />
+    </browser>
+    <browser package="com.opera.gx"><addressBar id="id/addressbarEdit" /></browser>
+    <browser package="com.opera.mini.native"><addressBar id="id/url_field" /></browser>
+    <browser package="com.opera.mini.native.beta"><addressBar id="id/url_field" /></browser>
+    <browser package="com.duckduckgo.mobile.android">
+        <addressBar id="id/omnibarTextInput" />
+        <addressBar id="id/omniboxTextInput" />
+    </browser>
+    <browser package="com.stoutner.privacybrowser.standard"><addressBar id="id/url_edittext" /></browser>
+    <browser package="com.stoutner.privacybrowser.free"><addressBar id="id/url_edittext" /></browser>
+</browsers>

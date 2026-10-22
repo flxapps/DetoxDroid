@@ -1,12 +1,15 @@
 package com.flx_apps.digitaldetox
 
 import android.Manifest
+import android.app.Application
 import android.provider.Settings
 import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER
 import com.flx_apps.digitaldetox.features.DISPLAY_DALTONIZER_ENABLED
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.ScreenFilterMode
+import com.flx_apps.digitaldetox.rules.RuleGroup
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -26,13 +29,16 @@ import org.robolectric.annotation.Config
  * setting is the user's again.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// A plain Application: DetoxDroid's own hands the display filters back on a thread of its own when
+// the service is off, which it is here, and that thread would race the test for the same settings.
+@Config(application = Application::class, sdk = [34])
 class GrayscaleSystemFilterTest {
 
     private val context get() = RuntimeEnvironment.getApplication()
     private val resolver get() = context.contentResolver
     private val listed = "com.example.feed"
     private val unlisted = "com.example.maps"
+    private lateinit var group: RuleGroup
 
     @Before
     fun setUp() {
@@ -43,20 +49,20 @@ class GrayscaleSystemFilterTest {
         GrayscaleAppsFeature.screenFilterMode = ScreenFilterMode.OFF
         GrayscaleAppsFeature.systemGrayscale = true
         GrayscaleAppsFeature.extraDim = false
-        GrayscaleAppsFeature.allowedDailyColorScreenTime = 0L
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.ONLY_LIST
-        GrayscaleAppsFeature.appExceptions = setOf(listed)
-        GrayscaleAppsFeature.isActivated = true
+        group = RuleGroups.create {
+            name = "Gray"
+            appExceptions = setOf(listed)
+            appExceptionListType = AppExceptionListType.ONLY_LIST
+            grayAfterMs = 0L
+        }
     }
 
     @After
     fun tearDown() {
         GrayscaleAppsFeature.onPause(context)
-        GrayscaleAppsFeature.isActivated = false
+        RuleGroups.delete(group.id)
         GrayscaleAppsFeature.screenFilterMode = ScreenFilterMode.AUTO
         GrayscaleAppsFeature.extraDim = true
-        GrayscaleAppsFeature.appExceptionListType = AppExceptionListType.NOT_LIST
-        GrayscaleAppsFeature.appExceptions = emptySet()
     }
 
     private fun open(packageName: String) =

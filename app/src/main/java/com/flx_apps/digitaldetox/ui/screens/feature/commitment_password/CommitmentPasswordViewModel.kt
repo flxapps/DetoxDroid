@@ -3,9 +3,8 @@ package com.flx_apps.digitaldetox.ui.screens.feature.commitment_password
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.flx_apps.digitaldetox.feature_types.Feature
-import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,8 +53,9 @@ class CommitmentPasswordViewModel @Inject constructor(
     private val _remainingRecoveryTime = MutableStateFlow(0L)
     val remainingRecoveryTime: StateFlow<Long> = _remainingRecoveryTime
 
-    private val _lockableFeatures = MutableStateFlow<List<Feature>>(emptyList())
-    val lockableFeatures: StateFlow<List<Feature>> = _lockableFeatures
+    private val _lockableFeatures =
+        MutableStateFlow<List<CommitmentPasswordFeature.Lockable>>(emptyList())
+    val lockableFeatures: StateFlow<List<CommitmentPasswordFeature.Lockable>> = _lockableFeatures
 
     private val _selectedFeatureIds = MutableStateFlow<Set<String>>(emptySet())
     val selectedFeatureIds: StateFlow<Set<String>> = _selectedFeatureIds
@@ -67,6 +67,10 @@ class CommitmentPasswordViewModel @Inject constructor(
             CommitmentPasswordFeature.stateToken.collect {
                 updateState()
             }
+        }
+        // groups come and go and get renamed while this screen is open
+        viewModelScope.launch {
+            RuleGroups.changes.collect { loadLockableFeatures() }
         }
     }
 
@@ -88,14 +92,12 @@ class CommitmentPasswordViewModel @Inject constructor(
     }
 
     private fun loadLockableFeatures() {
-        val features = CommitmentPasswordFeature.getLockableFeatures()
+        val features = CommitmentPasswordFeature.getLockables(context)
         _lockableFeatures.value = features
 
         val configuredIds = CommitmentPasswordFeature.getConfiguredLockedFeatureIds()
         if (CommitmentPasswordFeature.lockedFeatureIds.isEmpty()) {
-            _selectedFeatureIds.value =
-                features.filter { (it as? LockableFeature)?.lockedByDefault == true }
-                    .map { it.id }.toSet()
+            _selectedFeatureIds.value = features.filter { it.lockedByDefault }.map { it.id }.toSet()
         } else {
             _selectedFeatureIds.value = configuredIds
         }

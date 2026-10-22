@@ -1,7 +1,15 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
+import com.flx_apps.digitaldetox.rules.GroupId
+import com.flx_apps.digitaldetox.rules.Step
+import com.flx_apps.digitaldetox.websites.Websites
 import java.time.LocalDate
 
+/**
+ * One app's numbers over the selected period, or one website's: for a website [packageName] is
+ * its entry ("web:youtube.com", see [Websites]), [label] the site, and [launchCount] and
+ * [sessionCount] both its visits.
+ */
 data class AppUsageStat(
     val packageName: String,
     val label: String,
@@ -13,10 +21,17 @@ data class AppUsageStat(
     val scrollsPerMinute: Float,
     /** Physical scroll distance (the app's share of the scroll odometer). */
     val scrollDistanceMeters: Double,
-    val detoxBadges: List<DetoxBadge>
-)
+    /** The groups that do something to it, see [GroupBadge]. */
+    val groups: List<GroupBadge>
+) {
+    val isWebsite: Boolean get() = Websites.isWebsite(packageName)
+}
 
-enum class DetoxBadge { GRAYSCALE, DISABLED, DOOM_SCROLL }
+/**
+ * One group that covers an app or website and has a step for it, for the chip on its row.
+ * @param step the strongest of the group's steps that reach it, which colors the chip
+ */
+data class GroupBadge(val groupId: GroupId, val name: String, val step: Step)
 
 data class DailyUsage(
     val date: LocalDate,
@@ -92,5 +107,11 @@ data class UsageStatsUiState(
      * Whether these numbers are DetoxDroid's own measurement rather than the system's, which it
      * falls back to where usage access cannot be granted.
      */
-    val isSelfMeasured: Boolean = false
+    val isSelfMeasured: Boolean = false,
+    /** The sites with time on them in the period, while the user has websites counted. */
+    val topWebsites: List<AppUsageStat> = emptyList(),
+    /** Whether the time on websites is counted, see [UsageStatsSettings.countWebsites]. */
+    val countsWebsites: Boolean = false,
+    /** The browsers the time on websites can be counted in, by name; null until known. */
+    val readableBrowsers: List<String>? = null
 )

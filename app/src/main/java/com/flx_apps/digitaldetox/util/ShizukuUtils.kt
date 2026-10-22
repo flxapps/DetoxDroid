@@ -1,6 +1,8 @@
 package com.flx_apps.digitaldetox.util
 
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import moe.shizuku.server.IShizukuService
@@ -124,7 +126,9 @@ object ShizukuUtils {
      * Based on the implementation pattern from successful Shizuku apps.
      *
      * @param command The shell command to execute
-     * @param onCompleted Callback with success status and output
+     * @param onCompleted Callback with success status and output, always on the main thread: the
+     * command runs on a thread of its own, and callers update UI state and records from it that
+     * the main thread writes as well
      */
     fun executeCommand(command: String, onCompleted: ((Boolean, String) -> Unit)?) {
         Timber.d("Executing command via Shizuku: $command")
@@ -147,7 +151,7 @@ object ShizukuUtils {
                 }
                 Shizuku.addRequestPermissionResultListener(listener)
 
-                onCompleted?.invoke(
+                onCompleted.deliver(
                     false,
                     "Shizuku permission not granted yet. Please grant permission and try again."
                 )
@@ -162,18 +166,25 @@ object ShizukuUtils {
                     val output = result.second ?: "Command completed"
 
                     Timber.d("Command execution completed with exit code: ${result.first}")
-                    onCompleted?.invoke(success, output)
+                    onCompleted.deliver(success, output)
 
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to execute command via Shizuku")
-                    onCompleted?.invoke(false, "Failed to execute command: ${e.message}")
+                    onCompleted.deliver(false, "Failed to execute command: ${e.message}")
                 }
             }.start()
 
         } catch (e: Exception) {
             Timber.e(e, "Shizuku execution setup failed")
-            onCompleted?.invoke(false, "Shizuku execution failed: ${e.message}")
+            onCompleted.deliver(false, "Shizuku execution failed: ${e.message}")
         }
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private fun ((Boolean, String) -> Unit)?.deliver(success: Boolean, output: String) {
+        val callback = this ?: return
+        mainHandler.post { callback(success, output) }
     }
 
     /**

@@ -5,6 +5,8 @@ import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
 import com.flx_apps.digitaldetox.feature_types.nextTransitionAfter
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
+import com.flx_apps.digitaldetox.rules.BudgetWindow
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -49,21 +51,26 @@ object ServiceReliabilityScheduler {
     }
 
     /**
-     * Arms a wake-up for the next moment any feature's schedule opens or closes, so a boundary
-     * passed while nobody is using the phone still takes effect. The end of a running brake is
-     * such a boundary as well. Re-armed by the worker itself after every run, and whenever the
-     * schedules change.
+     * Arms a wake-up for the next moment any feature's or group's schedule opens or closes, so a
+     * boundary passed while nobody is using the phone still takes effect. The end of a running
+     * brake is such a boundary as well, and so is the start of a budget's next window: a lock that
+     * lifts with it has to hand suspended apps back. Re-armed by the worker itself after every run,
+     * and whenever the schedules change.
      */
     fun scheduleNextScheduleBoundary(context: Context) {
         val workManager = WorkManager.getInstance(context)
+        val now = LocalDateTime.now()
         val brakeEnd = EmergencyBrakeFeature.endsAtWallClock().takeIf { it > 0L }?.let {
             LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault())
         }
-        val next = listOfNotNull(
-            FeaturesProvider.featureList.filterIsInstance<SupportsScheduleFeature>()
-                .flatMap { it.scheduleRules }.nextTransitionAfter(LocalDateTime.now()),
-            brakeEnd
-        ).minOrNull()
+        val groups = RuleGroups.enabled()
+        val rules = FeaturesProvider.featureList.filterIsInstance<SupportsScheduleFeature>()
+            .flatMap { it.scheduleRules } + groups.flatMap { it.scheduleRules }
+        val budgetWindows = groups.filter { it.hasBudget }.mapNotNull {
+            BudgetWindow.nextChangeAfter(it.scheduleRules, it.budgetPeriod, now)
+        }
+        val next = (listOfNotNull(rules.nextTransitionAfter(now), brakeEnd) + budgetWindows)
+            .minOrNull()
         if (next == null || !AccessibilityServiceController.isEnabledInSettings(context)) {
             workManager.cancelUniqueWork(ScheduleBoundaryWorker.WORK_NAME)
             return

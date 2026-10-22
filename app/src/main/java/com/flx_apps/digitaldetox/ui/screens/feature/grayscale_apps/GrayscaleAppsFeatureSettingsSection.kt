@@ -1,18 +1,24 @@
 package com.flx_apps.digitaldetox.ui.screens.feature.grayscale_apps
 
-import android.Manifest
-import android.content.pm.PackageManager
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.BrightnessLow
-import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.InvertColors
@@ -23,6 +29,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -34,39 +41,48 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.colorResource
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flx_apps.digitaldetox.R
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.features.MaxScreenFilterBlurDp
 import com.flx_apps.digitaldetox.features.MinScreenFilterIntensity
 import com.flx_apps.digitaldetox.features.ScreenFilterEffects
 import com.flx_apps.digitaldetox.system_integration.ScreenFilterOverlay
 import com.flx_apps.digitaldetox.ui.screens.feature.FeatureViewModel
-import com.flx_apps.digitaldetox.ui.screens.feature.OpenAppExceptionsTile
-import com.flx_apps.digitaldetox.ui.screens.feature.OpenScheduleTile
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavigationRoutes
-import com.flx_apps.digitaldetox.ui.theme.labelVerySmall
+import com.flx_apps.digitaldetox.ui.theme.isAppInDarkTheme
 import com.flx_apps.digitaldetox.ui.widgets.AdvancedSettings
-import com.flx_apps.digitaldetox.ui.widgets.NumberPickerDialog
 import com.flx_apps.digitaldetox.ui.widgets.OptionsRow
+import com.flx_apps.digitaldetox.ui.widgets.SheetSetting
 import com.flx_apps.digitaldetox.ui.widgets.SettingsGroup
 import com.flx_apps.digitaldetox.ui.widgets.SimpleListTile
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.observeAsState
-import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.util.hasWriteSecureSettings
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
 
 /**
- * A tile for the grayscale apps feature settings screen.
+ * The settings of the gray step: which filters make the apps gray and how strongly. Which apps,
+ * when and after how much use is set on the groups.
  */
 @Composable
 fun GrayscaleAppsFeatureSettingsSection(
@@ -83,21 +99,41 @@ fun GrayscaleAppsFeatureSettingsSection(
     // grayscale and extra dim are secure settings, so without the permission they can only be
     // offered as something to set up (see the Shizuku tile), not as something to switch
     val canWriteSecureSettings = hasWriteSecureSettingsPermission()
+    val systemGrayscale = viewModel.systemGrayscale.collectAsState().value
+    val screenFilterEnabled = viewModel.screenFilterEnabled.collectAsState().value
+    val effects = effectiveScreenFilterEffects(viewModel.screenFilterEffects.collectAsState().value)
+    val extraDim = viewModel.extraDimActivated.collectAsState().value
+    GrayPreview(
+        grayscale = canWriteSecureSettings && systemGrayscale,
+        shade = screenFilterEnabled && effects != ScreenFilterEffects.BLUR,
+        blur = screenFilterEnabled && effects != ScreenFilterEffects.SHADE,
+        intensity = viewModel.screenFilterIntensity.collectAsState().value,
+        dim = canWriteSecureSettings && extraDim,
+        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+    )
+    if (!screenFilterEnabled && !(canWriteSecureSettings && (systemGrayscale || extraDim))) {
+        // the two sides look the same, and the line says why
+        Text(
+            text = stringResource(
+                id = if (canWriteSecureSettings) {
+                    R.string.feature_grayscale_noEffects
+                } else {
+                    R.string.feature_grayscale_noEffects_noPermission
+                }
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        )
+    }
     SettingsGroup {
         ShizukuWizardTile()
-        OpenAppExceptionsTile(
-            subtitleRes = if (GrayscaleAppsFeature.appExceptionListType == AppExceptionListType.NOT_LIST) {
-                R.string.feature_grayscale_exceptions_summary_notList
-            } else {
-                R.string.feature_grayscale_exceptions_summary_onlyList
-            }
-        )
-        OpenScheduleTile()
         if (canWriteSecureSettings) SystemGrayscaleTile()
         ScreenFilterTile()
-        AllowedDailyColorScreenTimeTile()
     }
-    val extraDim = viewModel.extraDimActivated.collectAsState().value
     AdvancedSettings(
         summary = listOfNotNull(
             stringResource(id = R.string.feature_grayscale_extraDim)
@@ -120,9 +156,7 @@ fun GrayscaleAppsFeatureSettingsSection(
 private fun hasWriteSecureSettingsPermission(): Boolean {
     val context = LocalContext.current
     val lifecycleState = LocalLifecycleOwner.current.lifecycle.observeAsState().value
-    return remember(lifecycleState) {
-        context.checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
-    }
+    return remember(lifecycleState) { context.hasWriteSecureSettings() }
 }
 
 /**
@@ -213,6 +247,17 @@ private fun ScreenFilterSheet(
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
+            val canWriteSecureSettings = hasWriteSecureSettingsPermission()
+            val effects = effectiveScreenFilterEffects(viewModel.screenFilterEffects.collectAsState().value)
+            // follows the slider as it moves, so the strength is seen before it is set
+            GrayPreview(
+                grayscale = canWriteSecureSettings && viewModel.systemGrayscale.collectAsState().value,
+                shade = enabled && effects != ScreenFilterEffects.BLUR,
+                blur = enabled && effects != ScreenFilterEffects.SHADE,
+                intensity = intensity.roundToInt(),
+                dim = canWriteSecureSettings && viewModel.extraDimActivated.collectAsState().value,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
             // a device that cannot blur has only one thing the filter can do, so there is nothing to pick
             if (ScreenFilterOverlay.isBlurAvailable()) {
                 SheetSetting(
@@ -248,29 +293,6 @@ private fun ScreenFilterSheet(
                 )
             }
         }
-    }
-}
-
-/** One setting in [ScreenFilterSheet]: a title with an optional value, a line on it, a control. */
-@Composable
-private fun SheetSetting(
-    title: String,
-    description: String,
-    value: String? = null,
-    control: @Composable () -> Unit
-) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            value?.let { Text(text = it, style = MaterialTheme.typography.titleMedium) }
-        }
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-        )
-        control()
     }
 }
 
@@ -350,47 +372,171 @@ fun IgnoreFullScreenAppsTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = 
 }
 
 /**
- * The UI element for setting the allowed daily color screen time. On click, a dialog will be shown
- * that allows the user to set the allowed daily color screen time.
+ * Extra dim is the system's own setting and how dark it goes is not readable from here, so the
+ * preview darkens by a fixed amount.
+ */
+private const val EXTRA_DIM_PREVIEW_ALPHA = 0.35f
+
+/**
+ * What the gray step does to an app, next to the same app untouched: the system filter drains the
+ * color, the screen filter washes and blurs it, extra dim darkens it. Drawn from the settings as
+ * they stand, with the same wash color, alpha and blur radius the filter itself uses.
+ * @param intensity the screen filter strength in percent
  */
 @Composable
-fun AllowedDailyColorScreenTimeTile(viewModel: GrayscaleAppsFeatureSettingsViewModel = viewModel()) {
-    val context = LocalContext.current
-    val showAllowedDailyColorScreenTimeDialog =
-        viewModel.showAllowedDailyColorScreenTimeDialog.collectAsState().value
-    // includes the still-running tracking session, so the display doesn't lag behind
-    val usedUpScreenTime =
-        GrayscaleAppsFeature.currentUsedUpScreenTime().milliseconds.inWholeMinutes.toInt()
-    val allowedDailyColorScreenTime =
-        viewModel.allowedDailyColorScreenTime.collectAsState().value.toInt()
-    if (showAllowedDailyColorScreenTimeDialog) {
-        NumberPickerDialog(titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
-            initialValue = allowedDailyColorScreenTime,
-            onValueSelected = { viewModel.setAllowedDailyColorScreenTime(it.toLong()) },
-            onDismissRequest = { viewModel.setShowAllowedDailyColorScreenTimeDialog(false) },
-            range = 0..180 step 5,
-            label = { it.minutes.toHrMinString(context) })
+internal fun GrayPreview(
+    grayscale: Boolean,
+    shade: Boolean,
+    blur: Boolean,
+    intensity: Int,
+    dim: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val strength = intensity.coerceIn(MinScreenFilterIntensity, 100) / 100f
+    val wash = Color(
+        if (isAppInDarkTheme()) ScreenFilterOverlay.WASH_COLOR_DARK else ScreenFilterOverlay.WASH_COLOR_LIGHT
+    )
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.padding(horizontal = 16.dp)
+    ) {
+        PreviewScreen(
+            label = stringResource(id = R.string.feature_grayscale_preview_normal),
+            modifier = Modifier.weight(1f)
+        ) {
+            SampleFeed()
+        }
+        PreviewScreen(
+            label = stringResource(id = R.string.feature_grayscale_preview_gray),
+            modifier = Modifier.weight(1f)
+        ) {
+            Box {
+                SampleFeed(
+                    modifier = Modifier
+                        .then(if (blur) Modifier.blur((strength * MaxScreenFilterBlurDp).dp) else Modifier)
+                        .saturation(if (grayscale) 0f else 1f)
+                )
+                if (shade) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(wash.copy(alpha = strength * ScreenFilterOverlay.MAX_WASH_ALPHA))
+                    )
+                }
+                if (dim) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(Color.Black.copy(alpha = EXTRA_DIM_PREVIEW_ALPHA))
+                    )
+                }
+            }
+        }
     }
+}
 
-    SimpleListTile(
-        titleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime),
-        subtitleText = stringResource(id = R.string.feature_grayscale_allowedColorScreenTime_description),
-        trailing = {
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
-                Text(stringResource(id = R.string.duration_minutes, allowedDailyColorScreenTime))
-                Text(
-                    modifier = Modifier.padding(top = 8.dp),
-                    text = stringResource(
-                        id = R.string.duration_minutes, usedUpScreenTime
-                    ) + "\n" + stringResource(
-                        id = R.string.duration_minutes_used
-                    ),
-                    style = androidx.compose.material3.MaterialTheme.typography.labelVerySmall,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+/** A small screen with [label] under it, one side of the [GrayPreview]. */
+@Composable
+private fun PreviewScreen(label: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = colors.surface,
+            border = BorderStroke(1.dp, colors.outlineVariant),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            content()
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp)
+        )
+    }
+}
+
+/** A made-up feed in the brand colors: an avatar, a photo, a row of buttons, some text. */
+@Composable
+private fun SampleFeed(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val ink = colors.onSurface.copy(alpha = 0.55f)
+    val faint = colors.onSurface.copy(alpha = 0.22f)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .background(colorResource(id = R.color.blue))
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 6.dp)
+            ) {
+                SampleLine(0.7f, ink)
+                SampleLine(0.45f, faint)
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            colorResource(id = R.color.pink),
+                            colorResource(id = R.color.orange),
+                            colorResource(id = R.color.yellow)
+                        )
+                    )
+                )
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(R.color.green, R.color.purple, R.color.pink).forEach { colorRes ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(7.dp))
+                        .background(colorResource(id = colorRes))
                 )
             }
-        },
-        onClick = { viewModel.setShowAllowedDailyColorScreenTimeDialog(true) },
-        leadingIcon = Icons.Default.ColorLens
+        }
+        SampleLine(1f, faint)
+        SampleLine(0.8f, faint)
+    }
+}
+
+@Composable
+private fun SampleLine(fraction: Float, color: Color) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(fraction)
+            .height(6.dp)
+            .clip(RoundedCornerShape(3.dp))
+            .background(color)
     )
 }
+
+/** Draws the content with its colors pulled towards gray, as the system filter does to the screen. */
+private fun Modifier.saturation(saturation: Float): Modifier =
+    if (saturation >= 1f) this else drawWithContent {
+        val paint = Paint().apply {
+            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) })
+        }
+        drawIntoCanvas { canvas ->
+            canvas.saveLayer(Rect(Offset.Zero, size), paint)
+            drawContent()
+            canvas.restore()
+        }
+    }

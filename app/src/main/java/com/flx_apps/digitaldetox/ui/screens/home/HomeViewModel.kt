@@ -7,7 +7,6 @@ import androidx.lifecycle.AndroidViewModel
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
-import com.flx_apps.digitaldetox.ui.screens.onboarding.OnboardingState
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidDeviceAdminReceiver
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
@@ -87,24 +86,6 @@ class HomeViewModel @Inject constructor(
     fun setSnackbarState(state: HomeScreenSnackbarState) {
         _snackbarState.value = state
     }
-
-    /**
-     * Called when the home screen (re)appears: if onboarding configured features it could not
-     * activate for lack of a permission, and that permission showed up in the meantime (Shizuku
-     * wizard, root, adb or the system settings), finish the pending activations.
-     * @return whether the "finish setup" reminder card should be visible
-     */
-    fun resolvePendingOnboardingSetup(): Boolean =
-        OnboardingState.resolvePendingFeatureActivations()
-
-    /**
-     * Which permission the pending onboarding setup is still waiting for, so the "finish setup"
-     * card can route the user to the right place. Grayscale (WRITE_SECURE_SETTINGS) needs the
-     * guided Shizuku/adb wizard and takes precedence; everything else needs the overlay permission,
-     * which the user can grant from the system settings directly.
-     */
-    fun pendingSetupNeedsGrayscalePermission(): Boolean =
-        OnboardingState.isGrayscaleActivationPending
 
     /**
      * Stops DetoxDroid and all running features, revokes the device admin permission and uninstalls.

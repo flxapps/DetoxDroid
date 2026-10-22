@@ -5,7 +5,9 @@ import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * How long each app was in front today, measured by DetoxDroid itself.
+ * How long each app was in front today, measured by DetoxDroid itself. The same measurement keyed
+ * by site instead of package is the time on websites (see
+ * [com.flx_apps.digitaldetox.features.UsageStatsTracker.websiteTimeRecorder]).
  *
  * This is the fallback for phones where `UsageStatsManager` is not an option: on some ROMs the
  * usage-access grant sits behind a restricted-settings gate that a sideloaded app may never get
@@ -121,6 +123,21 @@ class ForegroundTimeRecorder(
     fun isComplete(today: LocalDate = LocalDate.now()): Boolean {
         rollOverIfNeeded(today)
         return restoredDay == today
+    }
+
+    /**
+     * Forgets everything measured today, the running session included, as if nothing had been. For
+     * switching a measurement off, whose persisted values go at the same time.
+     */
+    @Synchronized
+    fun clear(today: LocalDate = LocalDate.now()) {
+        rollOverIfNeeded(today)
+        foregroundMs.clear()
+        launchCounts.clear()
+        openPackage = null
+        openSinceMs = 0L
+        // nothing is persisted any more, so the live values are the whole of the day
+        restoredDay = today
     }
 
     /**

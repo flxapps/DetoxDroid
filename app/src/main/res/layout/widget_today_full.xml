@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The stats with whatever the size has room for below them: the comparison with a usual day,
+     apps, budgets, the scroll comparison. The row, the apps and the full sizes all use it and hide
+     from code what they leave out. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_today_full"
+    style="@style/WidgetToday.Root"
+    android:orientation="vertical">
+
+    <include layout="@layout/widget_today_stats" />
+
+    <!-- shrinks rather than gets cut off: "1 Std. 5 Min. mehr als sonst um diese Zeit" -->
+    <TextView
+        android:id="@+id/widget_today_vs_usual"
+        style="@style/WidgetToday.Comparison"
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:layout_marginTop="4dp"
+        android:autoSizeMaxTextSize="12sp"
+        android:autoSizeMinTextSize="9sp"
+        android:autoSizeTextType="uniform"
+        android:gravity="center"
+        android:maxLines="1"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/widget_today_separator"
+        style="@style/WidgetToday.Separator" />
+
+    <LinearLayout
+        android:id="@+id/widget_today_apps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/widget_today_apps_empty"
+        style="@style/WidgetToday.Label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="@string/widget_today_noApps"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/widget_today_budgets"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical" />
+
+    <LinearLayout
+        android:id="@+id/widget_today_comparison_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_scroll"
+            android:tint="?attr/widgetAccent" />
+
+        <TextView
+            android:id="@+id/widget_today_comparison"
+            style="@style/WidgetToday.Comparison"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1" />
+    </LinearLayout>
+</LinearLayout>

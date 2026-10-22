@@ -1,10 +1,13 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
+import com.flx_apps.digitaldetox.util.appCategory
 
 /** User preferences of the usage stats screen (not tied to any detox feature). */
 object UsageStatsSettings {
@@ -36,4 +39,29 @@ object UsageStatsSettings {
         DataStorePropertyTransformer.SetStorePropertyTransformer(
             { it.toString() }, { it.toIntOrNull() })
     )
+
+    /**
+     * Whether DetoxDroid counts the time on each website in the browsers it can read. Off until
+     * the user switches it on: it means reading the address bar of every browser all the time,
+     * which nothing else asks for, and a list of sites is closer to a browsing history than
+     * anything else DetoxDroid keeps.
+     */
+    var countWebsites: Boolean by DataStoreProperty(
+        booleanPreferencesKey("UsageStatsScreen_countWebsites"), false
+    )
+}
+
+/**
+ * What [UsageStatsSettings] leaves out, read once, so that everything built from one reading
+ * counts the same apps. The usage screen, the screen time widget and the notification all go
+ * through this, which is what keeps their totals in agreement.
+ */
+class UsageExclusions(private val context: Context) {
+    val apps: Set<String> = UsageStatsSettings.excludedApps
+    val categories: Set<Int> = UsageStatsSettings.excludedCategories
+
+    val isEmpty: Boolean get() = apps.isEmpty() && categories.isEmpty()
+
+    fun excludes(packageName: String): Boolean = packageName in apps ||
+            (categories.isNotEmpty() && context.appCategory(packageName) in categories)
 }

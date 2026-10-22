@@ -20,9 +20,11 @@ import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.rules.RuleGroups
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidState
 import com.flx_apps.digitaldetox.system_integration.EmergencyBrakeTileService
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.ui.screens.feature.emergency_brake.EmergencyBrakeFeatureSettingsSection
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
 import com.flx_apps.digitaldetox.util.RecentEvents
@@ -157,12 +159,14 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     fun covers(feature: Feature): Boolean = feature is PausableFeature && isBraking()
 
     /**
-     * Whether a running brake locks the settings of the feature with [featureId]. The commitment
-     * password keeps its own lock.
+     * Whether a running brake locks the settings of the feature or the groups with [featureId]
+     * (see [RuleGroups.LOCK_ID]). The commitment password keeps its own lock.
      */
-    fun locksSettings(featureId: FeatureId): Boolean =
-        featureId != CommitmentPasswordFeatureId &&
-                FeaturesProvider.getFeatureById(featureId) is LockableFeature && isBraking()
+    fun locksSettings(featureId: FeatureId): Boolean {
+        if (!isBraking() || featureId == CommitmentPasswordFeatureId) return false
+        return featureId == RuleGroups.LOCK_ID || RuleGroups.isGroupId(featureId) ||
+                FeaturesProvider.getFeatureById(featureId) is LockableFeature
+    }
 
     /** Whether the end of the running brake has been asked for and is being waited out. */
     fun isEndRequested(): Boolean = isBraking() && endRequestedAt > 0L
@@ -294,7 +298,7 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
     fun reapply(context: Context) {
         if (!isBraking()) return
         val service = DetoxDroidAccessibilityService.instance ?: return
-        carryToFeatures(context, service.currentForegroundPackage)
+        carryToFeatures(context, service)
     }
 
     private fun release(context: Context) {
@@ -335,16 +339,18 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         } else {
             FeaturesProvider.applyScheduleTransitions()
         }
-        carryToFeatures(context, service.currentForegroundPackage)
+        carryToFeatures(context, service)
     }
 
-    private fun carryToFeatures(context: Context, foregroundPackage: String) {
+    private fun carryToFeatures(context: Context, service: DetoxDroidAccessibilityService) {
         if (DetoxDroidAccessibilityService.updateState() != DetoxDroidState.Active) return
         FeaturesProvider.activeFeatures.filter { it is PausableFeature }.forEach {
             kotlin.runCatching {
                 (it as? BrakeAwareFeature)?.onBrakeChanged(context)
-                if (foregroundPackage.isNotEmpty() && it is OnAppOpenedSubscriptionFeature) {
-                    it.onAppOpened(context, foregroundPackage, AccessibilityEventUtil.createEvent())
+                // in a browser, each feature gets the website it lists, as on an app switch
+                val foreground = service.foregroundFor(it)
+                if (foreground.isNotEmpty() && it is OnAppOpenedSubscriptionFeature) {
+                    it.onAppOpened(context, foreground, AccessibilityEventUtil.createEvent())
                 }
             }.onFailure { e -> Timber.w(e, "Could not carry the brake to ${it.id}") }
         }
@@ -355,6 +361,8 @@ object EmergencyBrakeFeature : Feature(), LockableFeature {
         _stateToken.update { it + 1 }
         scheduleEnd(context)
         DetoxDroidAccessibilityService.instance?.updateForegroundNotification()
+        // the launcher widget dims the apps a brake blocks
+        ScreenTimeSurfaces.invalidate(context)
         // a tile that is on screen right now is only redrawn when asked
         kotlin.runCatching {
             TileService.requestListeningState(

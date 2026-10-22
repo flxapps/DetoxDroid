@@ -13,20 +13,19 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.DataStoreProperty
 import com.flx_apps.digitaldetox.data.DataStorePropertyTransformer
-import com.flx_apps.digitaldetox.feature_types.AppExceptionListType
 import com.flx_apps.digitaldetox.feature_types.BrakeAwareFeature
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureTexts
-import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
+import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsDrawOverlayPermissionFeature
 import com.flx_apps.digitaldetox.feature_types.NeedsPermissionsFeature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScreenTurnedOffSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsAppExceptionsFeature
-import com.flx_apps.digitaldetox.feature_types.SupportsScheduleFeature
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.OverlayService
+import com.flx_apps.digitaldetox.system_integration.ScrollSurfaces
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingFeatureSettingsSection
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakDoomScrollingOverlayService
 import com.flx_apps.digitaldetox.ui.screens.feature.break_doom_scrolling.BreakScreenMode
@@ -38,6 +37,7 @@ import com.flx_apps.digitaldetox.util.ScrollDistanceEstimator
 import com.flx_apps.digitaldetox.util.ScrollSessionMonitor
 import com.flx_apps.digitaldetox.util.ScrollSessionSnapshot
 import com.flx_apps.digitaldetox.util.SelfExpiringHashMap
+import com.flx_apps.digitaldetox.util.ShortVideoRuns
 import com.flx_apps.digitaldetox.util.appLabel
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -50,16 +50,20 @@ val BreakDoomScrollingFeatureId = Feature.createId(BreakDoomScrollingFeature::cl
 /**
  * How easily the scroll-intensity trigger of [BreakDoomScrollingFeature] fires. Thresholds apply
  * to the live [ScrollSessionSnapshot] of the current scroll session: STRICT intervenes at slower
- * scrolling, RELAXED only at frantic feed-flicking. The endless-feed (growth) trigger is not
- * affected by the sensitivity.
+ * scrolling, RELAXED only at frantic feed-flicking. On a pager of short videos the pace is counted
+ * in videos instead, see [isDoomSwiping]. The endless-feed (growth) trigger is not affected by the
+ * sensitivity.
+ * @param minShortVideosPerMinute the pace of swiping through short videos that counts, averaged
+ * over the run: a video every 15 s for RELAXED, every 30 s for STRICT
  */
 enum class DoomScrollingSensitivity(
     val minScreenHeightsPerMinute: Float,
-    val minDownScrollRatio: Float
+    val minDownScrollRatio: Float,
+    val minShortVideosPerMinute: Float,
 ) {
-    RELAXED(14f, 0.85f),
-    BALANCED(9f, 0.8f),
-    STRICT(6f, 0.75f);
+    RELAXED(14f, 0.85f, 4f),
+    BALANCED(9f, 0.8f, 3f),
+    STRICT(6f, 0.75f, 2f);
 
     /**
      * Returns true if [snapshot] shows sustained (≥ [minSessionDurationMs]), fast, mostly-downward
@@ -70,6 +74,21 @@ enum class DoomScrollingSensitivity(
                 snapshot.screenHeightsPerMinute >= minScreenHeightsPerMinute &&
                 snapshot.downScrollRatio >= minDownScrollRatio
 
+    /**
+     * Returns true if [run] shows sustained (≥ [minSessionDurationMs]) swiping through short
+     * videos at this sensitivity's pace: at least [MIN_SHORT_VIDEOS] of them, so one long video
+     * and its comments never count, and on average [minShortVideosPerMinute] of them a minute.
+     */
+    fun isDoomSwiping(run: ShortVideoRuns.Snapshot, minSessionDurationMs: Long): Boolean =
+        run.durationMs >= minSessionDurationMs &&
+                run.videos >= MIN_SHORT_VIDEOS &&
+                run.videos * 60_000f / run.durationMs >= minShortVideosPerMinute
+
+    companion object {
+        /** Fewer short videos than this are never a break, however long the run. */
+        const val MIN_SHORT_VIDEOS = 5
+    }
+
     /** The next-stricter level; applied while an app is on probation after an incident. */
     fun stricter(): DoomScrollingSensitivity = when (this) {
         RELAXED -> BALANCED
@@ -78,12 +97,18 @@ enum class DoomScrollingSensitivity(
 }
 
 /**
- * This feature detects doom scrolling and opens a break screen when it has been going on for
- * [timeUntilWarning]. Two independent triggers feed the same break screen:
+ * Runs the scroll break step of the groups (see [com.flx_apps.digitaldetox.rules.Step]): detects
+ * doom scrolling in the apps a group covers and opens a break screen when it has been going on for
+ * the group's time ([Rules.scrollBreak]). Three independent triggers feed the same break screen:
  * - **Endless screen**: a scroll view whose reported size keeps growing (classic infinite feed).
  * - **Scroll intensity**: sustained, fast, mostly-downward scrolling in an app, measured by
  *   [ScrollSessionMonitor] — catches virtualized feeds that never report growth. Its thresholds
  *   are user-tunable via [detectionSensitivity].
+ * - **Short videos**: on the pagers of Reels, Shorts and their kind in the apps
+ *   [ScrollSurfaces] knows, where one swipe is one video and even steady swiping never looks fast,
+ *   the videos swiped past are counted ([ShortVideoRuns]) and time and pace decide. The table
+ *   only adds to the two triggers above: an app or a pager it does not know is judged by its
+ *   physics like any other.
  *
  * The break screen offers two ways out:
  * - **"Get me out of here"**: leave immediately (home screen, best-effort force-stop).
@@ -106,12 +131,8 @@ enum class DoomScrollingSensitivity(
  */
 object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     OnAppOpenedSubscriptionFeature, OnScreenTurnedOffSubscriptionFeature,
-    SupportsAppExceptionsFeature by SupportsAppExceptionsFeature.Impl(
-        BreakDoomScrollingFeatureId,
-        defaultExceptionListType = AppExceptionListType.ONLY_LIST,
-    ), SupportsScheduleFeature by SupportsScheduleFeature.Impl(BreakDoomScrollingFeatureId),
-    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature, PausableFeature,
-    BrakeAwareFeature {
+    NeedsPermissionsFeature by NeedsDrawOverlayPermissionFeature(), LockableFeature,
+    PausableFeature, BrakeAwareFeature {
     override val texts: FeatureTexts = FeatureTexts(
         R.string.feature_doomScrolling,
         R.string.feature_doomScrolling_subtitle,
@@ -121,14 +142,20 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     override val settingsContent: @Composable () -> Unit =
         { BreakDoomScrollingFeatureSettingsSection() }
 
+    /** On while any switched-on group breaks up doomscrolling; the groups are the switch. */
+    override var isActivated: Boolean
+        get() = Rules.usesFeature(this)
+        set(@Suppress("UNUSED_PARAMETER") value) {}
+
+    /** The time a new group's scroll break starts out with. */
+    val DefaultTimeUntilWarningMs: Long = TimeUnit.MINUTES.toMillis(3)
+
     /**
-     * The time in milliseconds until the break screen is opened, if the user has been scrolling for
-     * too long.
+     * How long the scrolling in [packageName] may run before the break screen shows: the shortest
+     * time of the groups that cover it with the step, or null when none does.
      */
-    var timeUntilWarning: Long by DataStoreProperty(
-        longPreferencesKey("${BreakDoomScrollingFeatureId}_timeUntilWarning"),
-        TimeUnit.MINUTES.toMillis(3)
-    )
+    private fun timeUntilWarningFor(packageName: String): Long? =
+        Rules.scrollBreak(packageName)?.afterMs
 
     /**
      * How long an app (or the offending surface within it) stays locked after a doom-scrolling
@@ -165,6 +192,9 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     private val scrollSessionMonitor by lazy {
         ScrollSessionMonitor(Resources.getSystem().displayMetrics.heightPixels)
     }
+
+    /** Counts the videos swiped past on a short-video pager, for the short-videos trigger. */
+    private val shortVideoRuns = ShortVideoRuns()
 
     /**
      * Per-app count of doom-scroll breaks triggered today. Resets automatically at midnight and is
@@ -215,12 +245,14 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
      */
     override fun onScrollEvent(
         context: Context,
+        packageName: String,
         scrollViewId: Int,
         scrollViewSize: Int,
+        viewIdResourceName: String?,
         accessibilityEvent: AccessibilityEvent
     ) {
-        val pkg = accessibilityEvent.packageName.toString()
-        val surfaceId = accessibilityEvent.source?.viewIdResourceName
+        val pkg = packageName
+        val surfaceId = viewIdResourceName
 
         if (finishGrace.isInGrace(pkg)) {
             onGraceScrollEvent(context, pkg, surfaceId, accessibilityEvent)
@@ -232,7 +264,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             return
         }
 
-        if (!appliesTo(pkg)) return
+        val timeUntilWarning = timeUntilWarningFor(pkg) ?: return
 
         // under a brake every app is on probation from the start, and
         // while another surface of this app is still cooling down, the app is on probation:
@@ -240,10 +272,36 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         // different surface right after a break is caught quickly (see the class docs)
         val onProbation = cooldowns.hasAnyCooldown(pkg) || EmergencyBrakeFeature.covers(this)
         val sensitivity = if (onProbation) detectionSensitivity.stricter() else detectionSensitivity
-        val minSessionMs = if (onProbation) probationSessionGateMs() else timeUntilWarning
+        val minSessionMs =
+            if (onProbation) probationSessionGateMs(timeUntilWarning) else timeUntilWarning
 
-        // trigger 1: scroll intensity — sustained, fast, mostly-downward scrolling in this app
         val isDownScroll = AccessibilityEventUtil.isDownScrollEvent(accessibilityEvent)
+
+        // trigger 1: short videos — on a known pager, where a swipe is a video, time and the
+        // pace of swiping decide, because the speed below never adds up on one
+        val app = accessibilityEvent.packageName?.toString()
+        if (surfaceId != null && app != null && ScrollSurfaces.isShortVideoPager(context, app, surfaceId)) {
+            val run = shortVideoRuns.onScrollEvent(
+                pkg, surfaceId, accessibilityEvent.fromIndex, isDownScroll
+            )
+            if (run.fresh) Timber.d("Short videos: %s swipes through %s", pkg, surfaceId)
+            if (sensitivity.isDoomSwiping(run, minSessionMs)) {
+                Timber.i(
+                    "Short-video break triggered for pkg=%s (%d videos in %d ms)",
+                    pkg, run.videos, run.durationMs
+                )
+                warn(
+                    context, pkg, surfaceId, contextText = context.getString(
+                        R.string.feature_doomScrolling_warning_context_shortVideos,
+                        run.videos,
+                        TimeUnit.MILLISECONDS.toMinutes(run.durationMs).coerceAtLeast(1)
+                    )
+                )
+                return
+            }
+        }
+
+        // trigger 2: scroll intensity — sustained, fast, mostly-downward scrolling in this app
         val deltaMagnitude = abs(AccessibilityEventUtil.getScrollDeltaY(accessibilityEvent))
         val intensity = scrollSessionMonitor.onScrollEvent(
             pkg, scrollDistanceEstimator.distancePxFor(pkg, deltaMagnitude), isDownScroll
@@ -266,7 +324,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             return
         }
 
-        // trigger 2: endless screen — a scroll view that keeps growing in size
+        // trigger 3: endless screen — a scroll view that keeps growing in size
         if (!isDownScroll) return
         val scrollViewInfo = activeScrollViews[scrollViewId]
 
@@ -338,7 +396,8 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
             scrollDistanceEstimator.distancePxFor(packageName, deltaMagnitude),
             isDownScroll
         )
-        if (detectionSensitivity.stricter().isDoomScrolling(intensity, probationSessionGateMs())) {
+        val gateMs = probationSessionGateMs(timeUntilWarningFor(packageName) ?: DefaultTimeUntilWarningMs)
+        if (detectionSensitivity.stricter().isDoomScrolling(intensity, gateMs)) {
             Timber.i("Doom scrolling resumed during finish-grace of %s", packageName)
             guideOut(context, packageName, escalateToWholeApp = true)
         }
@@ -356,7 +415,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
     ) {
         finishGrace.activePackages().filter { it != packageName }.forEach { endGraceSilently(it) }
 
-        if (!appliesTo(packageName)) return
+        if (timeUntilWarningFor(packageName) == null) return
         cooldowns.appLockEndMs(packageName)?.let { endsAtMs ->
             showCooldownScreen(
                 context, packageName, CooldownRegistry.ActiveCooldown(endsAtMs, wholeApp = true)
@@ -390,6 +449,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         val cooldownScope = if (escalateToWholeApp) null else surfaceId
         breakCounter.increment(packageName)
         scrollSessionMonitor.reset(packageName)
+        shortVideoRuns.reset(packageName)
         lastCooldownScopes[packageName] = cooldownScope
         // Under a brake the app stays away for the rest of it. Keeping messages reachable is what
         // scoping a cooldown to the feed is for, and what the brake was pulled to go without.
@@ -493,6 +553,7 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
         lastCooldownScopes[packageName] = cooldownScope
         cooldowns.start(packageName, cooldownScope, cooldownTime)
         scrollSessionMonitor.reset(packageName)
+        shortVideoRuns.reset(packageName)
         openBreakScreen(context, packageName, BreakScreenMode.GUIDE_OUT)
     }
 
@@ -510,9 +571,11 @@ object BreakDoomScrollingFeature : Feature(), OnScrollEventSubscriptionFeature,
 
     /**
      * The session-duration gate for detection while an app is on probation — much shorter than
-     * [timeUntilWarning], but never longer (in case the user configured something tiny).
+     * the group's [timeUntilWarning], but never longer (in case the user configured something
+     * tiny).
      */
-    private fun probationSessionGateMs(): Long = minOf(timeUntilWarning, PROBATION_SESSION_GATE_MS)
+    private fun probationSessionGateMs(timeUntilWarning: Long): Long =
+        minOf(timeUntilWarning, PROBATION_SESSION_GATE_MS)
 
     /**
      * (Re-)shows the break screen in cooldown mode, telling the user how long the app or surface

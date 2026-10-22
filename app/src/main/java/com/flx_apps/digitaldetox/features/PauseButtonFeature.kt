@@ -18,10 +18,16 @@ import com.flx_apps.digitaldetox.feature_types.FeatureTexts
 import com.flx_apps.digitaldetox.feature_types.LockableFeature
 import com.flx_apps.digitaldetox.feature_types.PausableFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature.hardwareKey
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService
 import com.flx_apps.digitaldetox.system_integration.PauseInteractionService
 import com.flx_apps.digitaldetox.system_integration.PauseTileService
 import com.flx_apps.digitaldetox.ui.screens.feature.pause_button.PauseButtonFeatureSettingsSection
+import timber.log.Timber
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.concurrent.TimeUnit
 
 /**
@@ -97,11 +103,15 @@ object PauseButtonFeature : Feature(), LockableFeature {
         isPausing() && feature is PausableFeature && feature.id !in pauseExemptFeatureIds
 
     /**
-     * Holds the time until the pause is over. Also read by the UI to display the actual end time
-     * of a running pause.
+     * Holds the time until the pause is over. See [endsAtText] for how the UI shows it.
      */
     var pauseUntil = 0L
         private set
+
+    /** The end of the running pause as a time of day, e.g. "21:30". */
+    fun endsAtText(): String =
+        Instant.ofEpochMilli(pauseUntil).atZone(ZoneId.systemDefault()).toLocalTime()
+            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
@@ -112,6 +122,7 @@ object PauseButtonFeature : Feature(), LockableFeature {
      */
     private val autoResumeRunnable = Runnable {
         kotlin.runCatching { if (!isPausing()) resume() }
+            .onFailure { Timber.e(it, "Could not end the pause") }
     }
 
     /**
@@ -181,6 +192,8 @@ object PauseButtonFeature : Feature(), LockableFeature {
             if (!stop && it.id in pauseExemptFeatureIds) return@forEach
             it.onPause(context)
         }
+        // a paused DetoxDroid sees no app switches that could end a budget's session later
+        Rules.onNothingInFront()
         DetoxDroidAccessibilityService.updateState()
     }
 
@@ -199,6 +212,8 @@ object PauseButtonFeature : Feature(), LockableFeature {
             service.updateForegroundNotification()
         }
         DetoxDroidAccessibilityService.updateState()
+        // the app in front counts again, and the features judge it as if it had just come up
+        Rules.reevaluateForeground()
     }
 
     fun isPausing(): Boolean {

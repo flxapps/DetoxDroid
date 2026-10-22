@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_minimal_launcher_item_container"
     android:layout_width="match_parent"
     android:layout_height="0dp"
     android:layout_weight="1"
     android:gravity="center_vertical"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingHorizontal="8dp"
+    tools:ignore="UselessParent">
 
-    <TextView
-        android:id="@+id/widget_minimal_launcher_item_text"
+    <!-- its own row, so the time sits on the name's baseline: a LinearLayout that centers its
+         children vertically does not align them on it -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:fontFamily="sans-serif-medium"
-        android:maxLines="1"
-        android:gravity="start|center_vertical"
-        android:paddingHorizontal="8dp"
-        android:textColor="@android:color/white"
-        android:textSize="24sp" />
+        android:baselineAligned="true"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/widget_minimal_launcher_item_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:textColor="?attr/widgetOnSurface"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/widget_minimal_launcher_item_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:maxLines="1"
+            android:textColor="?attr/widgetOnSurfaceVariant"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </LinearLayout>
 
 </LinearLayout>

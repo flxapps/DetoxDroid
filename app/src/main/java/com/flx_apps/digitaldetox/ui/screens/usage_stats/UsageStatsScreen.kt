@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +54,8 @@ import com.flx_apps.digitaldetox.premium.PremiumManager
 import com.flx_apps.digitaldetox.premium.PremiumSheetController
 import com.flx_apps.digitaldetox.review.AppReviewController
 import com.flx_apps.digitaldetox.ui.screens.nav_host.NavViewModel
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppListTab
+import com.flx_apps.digitaldetox.ui.widgets.apps.AppListTabSelector
 import com.flx_apps.digitaldetox.util.NavigationUtil
 import com.flx_apps.digitaldetox.util.RestrictedSettingsUtil
 import com.flx_apps.digitaldetox.util.UsageAccessUtil
@@ -60,7 +63,8 @@ import dev.olshevski.navigation.reimagined.hilt.hiltViewModel
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-private const val TOP_APPS_PREVIEW_COUNT = 10
+/** How many apps or websites the most-used list shows before "Show more". */
+internal const val TOP_ITEMS_PREVIEW_COUNT = 10
 
 private enum class TopAppsSort(val labelRes: Int) {
     SCREEN_TIME(R.string.usageStats_sort_screenTime),
@@ -71,6 +75,8 @@ private enum class TopAppsSort(val labelRes: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsageStatsScreen(
+    showExclusions: Boolean = false,
+    openApp: String? = null,
     navViewModel: NavViewModel = NavViewModel.navViewModel(),
     viewModel: UsageStatsViewModel = hiltViewModel()
 ) {
@@ -78,7 +84,9 @@ fun UsageStatsScreen(
     val isPremiumUnlocked by PremiumManager.isPremiumUnlocked.collectAsState()
     val selectedApp = remember { mutableStateOf<AppUsageStat?>(null) }
     val showCustomPicker = remember { mutableStateOf(false) }
-    val showExclusions = remember { mutableStateOf(false) }
+    val exclusionsShown = remember { mutableStateOf(showExclusions) }
+    var appToOpen by remember { mutableStateOf(openApp) }
+    var listTab by rememberSaveable { mutableStateOf(AppListTab.APPS) }
     var sortMode by remember { mutableStateOf(TopAppsSort.SCREEN_TIME) }
     var sortExpanded by remember { mutableStateOf(false) }
     val sortedApps = remember(state.topApps, sortMode) {
@@ -88,8 +96,21 @@ fun UsageStatsScreen(
             TopAppsSort.SCROLL_INTENSITY -> state.topApps.sortedByDescending { it.scrollIntensityScore }
         }
     }
+    // websites have no scrolling of their own to sort by, so that order keeps them by time
+    val sortedWebsites = remember(state.topWebsites, sortMode) {
+        if (sortMode == TopAppsSort.OPENS) state.topWebsites.sortedByDescending { it.launchCount }
+        else state.topWebsites.sortedByDescending { it.totalTimeMs }
+    }
 
     LaunchedEffect(Unit) { viewModel.refresh(force = true) }
+    // a link from the widget names an app, whose details open once the numbers have it
+    LaunchedEffect(state.topApps) {
+        val packageName = appToOpen ?: return@LaunchedEffect
+        state.topApps.find { it.packageName == packageName }?.let {
+            selectedApp.value = it
+            appToOpen = null
+        }
+    }
 
     // Looking at a week+ of usage stats is the moment the app's value is most visible — a good,
     // frequency-capped time to ask for a store review (no-op in the FOSS build).
@@ -101,7 +122,6 @@ fun UsageStatsScreen(
     }
 
     val context = LocalContext.current
-    val pm = context.packageManager
 
     if (showCustomPicker.value) {
         UsageStatsDateRangePicker(
@@ -127,7 +147,7 @@ fun UsageStatsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showExclusions.value = true }) {
+                    IconButton(onClick = { exclusionsShown.value = true }) {
                         Icon(
                             Icons.Default.VisibilityOff,
                             contentDescription = stringResource(R.string.usageStats_exclusions_title)
@@ -234,49 +254,75 @@ fun UsageStatsScreen(
                     )
                 }
 
-                if (state.topApps.isNotEmpty()) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            SectionLabel(stringResource(R.string.usageStats_topApps))
-                            Box {
-                                IconButton(onClick = { sortExpanded = true }) {
-                                    Icon(
-                                        Icons.Default.FilterList,
-                                        contentDescription = stringResource(R.string.usageStats_sort),
-                                        modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AppListTabSelector(
+                            selected = listTab,
+                            onSelected = { listTab = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box {
+                            IconButton(onClick = { sortExpanded = true }) {
+                                Icon(
+                                    Icons.Default.FilterList,
+                                    contentDescription = stringResource(R.string.usageStats_sort),
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = sortExpanded,
+                                onDismissRequest = { sortExpanded = false }
+                            ) {
+                                val forWebsites = listTab == AppListTab.WEBSITES
+                                val modes = TopAppsSort.entries.filterNot {
+                                    forWebsites && it == TopAppsSort.SCROLL_INTENSITY
                                 }
-                                DropdownMenu(
-                                    expanded = sortExpanded,
-                                    onDismissRequest = { sortExpanded = false }
-                                ) {
-                                    for (mode in TopAppsSort.values()) {
-                                        DropdownMenuItem(
-                                            text = { Text(stringResource(mode.labelRes)) },
-                                            onClick = {
-                                                sortMode = mode
-                                                sortExpanded = false
-                                            }
-                                        )
-                                    }
+                                for (mode in modes) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    if (forWebsites && mode == TopAppsSort.OPENS) {
+                                                        R.string.usageStats_sort_visits
+                                                    } else mode.labelRes
+                                                )
+                                            )
+                                        },
+                                        onClick = {
+                                            sortMode = mode
+                                            sortExpanded = false
+                                        }
+                                    )
                                 }
                             }
                         }
                     }
+                }
+
+                if (listTab == AppListTab.WEBSITES) {
+                    item {
+                        WebsiteUsageCard(
+                            state = state,
+                            websites = sortedWebsites,
+                            onOpen = { selectedApp.value = it },
+                            onCountWebsites = { viewModel.setCountWebsites(it) }
+                        )
+                    }
+                }
+
+                if (listTab == AppListTab.APPS && state.topApps.isNotEmpty()) {
                     item {
                         var expanded by remember { mutableStateOf(false) }
                         val displayedApps =
-                            if (expanded) sortedApps else sortedApps.take(TOP_APPS_PREVIEW_COUNT)
+                            if (expanded) sortedApps else sortedApps.take(TOP_ITEMS_PREVIEW_COUNT)
                         StatsCard {
                             displayedApps.forEachIndexed { index, app ->
                                 AppUsageRow(
                                     app = app,
-                                    pm = pm,
                                     onClick = { selectedApp.value = app },
                                     showScrollInfo = sortMode == TopAppsSort.SCROLL_INTENSITY
                                 )
@@ -284,7 +330,7 @@ fun UsageStatsScreen(
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
                                 }
                             }
-                            if (state.topApps.size > TOP_APPS_PREVIEW_COUNT) {
+                            if (state.topApps.size > TOP_ITEMS_PREVIEW_COUNT) {
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
                                 TextButton(
                                     onClick = { expanded = !expanded },
@@ -300,7 +346,7 @@ fun UsageStatsScreen(
                     }
                 }
 
-                if (state.topApps.isEmpty()) {
+                if (listTab == AppListTab.APPS && state.topApps.isEmpty()) {
                     item {
                         // An empty period is not a missing permission: a user who has granted usage
                         // access and simply has no data yet should not be sent to a settings page
@@ -359,10 +405,10 @@ fun UsageStatsScreen(
             }
         }
 
-        if (showExclusions.value) {
+        if (exclusionsShown.value) {
             val exclusionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
             ModalBottomSheet(
-                onDismissRequest = { showExclusions.value = false },
+                onDismissRequest = { exclusionsShown.value = false },
                 sheetState = exclusionsSheetState
             ) {
                 UsageStatsExclusionsSheet(
@@ -377,10 +423,12 @@ fun UsageStatsScreen(
             }
         }
 
-        // Keep the selected-app reference in sync when topApps is rebuilt after a feature change.
-        LaunchedEffect(state.topApps) {
+        // Keep the selected app or website in sync when the lists are rebuilt after a feature
+        // change.
+        LaunchedEffect(state.topApps, state.topWebsites) {
             selectedApp.value?.let { old ->
-                selectedApp.value = state.topApps.find { it.packageName == old.packageName }
+                val items = if (old.isWebsite) state.topWebsites else state.topApps
+                selectedApp.value = items.find { it.packageName == old.packageName }
             }
         }
     }

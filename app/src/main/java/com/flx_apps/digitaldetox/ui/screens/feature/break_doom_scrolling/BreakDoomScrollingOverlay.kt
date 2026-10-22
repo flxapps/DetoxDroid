@@ -22,7 +22,6 @@ import com.flx_apps.digitaldetox.ui.widgets.DrainingBar
 import com.flx_apps.digitaldetox.ui.widgets.InterventionPrimaryButton
 import com.flx_apps.digitaldetox.ui.widgets.InterventionScreen
 import com.flx_apps.digitaldetox.ui.widgets.InterventionSecondaryButton
-import com.flx_apps.digitaldetox.util.ForceStopUtil
 import com.flx_apps.digitaldetox.util.formatDurationMsCompact
 
 /**
@@ -93,18 +92,14 @@ fun BreakDoomScrollingOverlay() {
             formatDurationMsCompact(context, EmergencyBrakeFeature.lastDuration)
         } else null,
         onExitApp = {
-            overlayService?.let { service ->
-                service.closeOverlay()
-                // best-effort: kill the doom-scrolling app so it also disappears from recents
-                // (works when Shizuku is set up; otherwise degrades gracefully, never crashes)
-                ForceStopUtil.tryForceStop(service, service.runningAppPackageName)
-            }
+            // best-effort: kill the doom-scrolling app so it also disappears from recents
+            // (works when Shizuku is set up; otherwise degrades gracefully, never crashes)
+            overlayService?.leave(forceStop = true)
         },
         onPullBrake = {
             overlayService?.let { service ->
                 BreakDoomScrollingFeature.pullBrake(service, service.runningAppPackageName)
-                service.closeOverlay()
-                ForceStopUtil.tryForceStop(service, service.runningAppPackageName)
+                service.leave(forceStop = true)
             }
         },
         onFinishFirst = {

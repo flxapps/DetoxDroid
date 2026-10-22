@@ -14,8 +14,11 @@ import androidx.work.WorkManager
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
 import com.flx_apps.digitaldetox.ui.theme.AppearanceSettings
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
+import com.flx_apps.digitaldetox.rules.RuleGroupsMigration
 import com.flx_apps.digitaldetox.premium.PremiumSupport
 import com.flx_apps.digitaldetox.system_integration.AccessibilityServiceController
+import com.flx_apps.digitaldetox.system_integration.ForceStopRecovery
+import com.flx_apps.digitaldetox.system_integration.ScreenTimeSurfaces
 import com.flx_apps.digitaldetox.util.DebugLog
 import com.flx_apps.digitaldetox.util.DebugLogTree
 import com.flx_apps.digitaldetox.widgets.minimal_launcher.MinimalLauncherWidgetProvider
@@ -93,6 +96,10 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         if (!isMainProcess()) return
 
         scheduleUsageStatsSnapshot()
+        // before anything reads the secure setting as "DetoxDroid is off"
+        ForceStopRecovery.onAppStart(this)
+        // the rules the features used to carry become groups, before anything reads either
+        RuleGroupsMigration.runIfNeeded(this)
         ServiceReliabilityScheduler.schedule(this)
         restoreDisplayFiltersIfStopped()
         UsageStatsTracker.init(this)
@@ -100,9 +107,11 @@ class DetoxDroidApplication : Application(), Configuration.Provider {
         // Flavor seam: no-op in FOSS; the Google Play flavor connects Play Billing and restores
         // the premium entitlement here.
         PremiumSupport.initialize(this)
-        // Re-render all minimal launcher widgets on startup — after a process kill
-        // (e.g. hot restart) the system may have reset them to the initial layout.
-        MinimalLauncherWidgetProvider.updateAllWidgets(this)
+        // Re-render all widgets on startup — after a process kill (e.g. hot restart) the system
+        // may have reset them to the initial layout, which is an empty frame. From then on both
+        // follow what they show for as long as the process lives.
+        MinimalLauncherWidgetProvider.start(this)
+        ScreenTimeSurfaces.start(this)
     }
 
     private fun isMainProcess(): Boolean {

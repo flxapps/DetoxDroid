@@ -12,10 +12,15 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.flx_apps.digitaldetox.BuildConfig
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeatureId
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeatureId
+import com.flx_apps.digitaldetox.features.DisableAppsFeatureId
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeatureId
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.widgets.WidgetSettingsStore
+import com.flx_apps.digitaldetox.websites.Websites
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
@@ -36,8 +41,9 @@ import kotlin.system.exitProcess
  * import the old state back over a lock that is in force. A running brake stays out for the same
  * reason, the premium flag because it is bought, and the rest because it describes this phone
  * rather than a choice: what is suspended through Shizuku right now, the clock anchors, the system
- * color settings the grayscale feature owes the user back, today's used-up budgets, the apps picked
- * for a widget id that exists on no other phone. Carried over, each of them is wrong on arrival.
+ * color settings the grayscale feature owes the user back, today's used-up budgets, the apps and
+ * the look picked for a widget id that exists on no other phone. Carried over, each of them is
+ * wrong on arrival.
  */
 object ConfigBackup {
     const val MIME_TYPE = "application/json"
@@ -75,6 +81,7 @@ object ConfigBackup {
         "AppSuspender_",
         "trustedClock_",
         "minimal_launcher_widget_",
+        WidgetSettingsStore.KEY_PREFIX,
         "premium_nudge_",
         "review_request_",
         "${GrayscaleAppsFeatureId}_daltonizerApplied",
@@ -83,7 +90,7 @@ object ConfigBackup {
     )
 
     /** Key suffixes of state that belongs to today, see the class docs. */
-    private val EXCLUDED_SUFFIXES = listOf("_usedUpScreenTime")
+    private val EXCLUDED_SUFFIXES = listOf("_usedUpScreenTime", "_budgetWindow")
 
     fun suggestedFileName(): String = "detoxdroid-settings-${LocalDate.now()}.json"
 
@@ -104,12 +111,17 @@ object ConfigBackup {
         val values: Map<String, Any>,
     )
 
-    /** One feature's share of a file, for the user to look at before restoring. */
+    /**
+     * One feature's or group's share of a file, for the user to look at before restoring. A group
+     * carries its [name]; a feature its [titleRes].
+     */
     data class FeatureSummary(
         val featureId: String,
         @StringRes val titleRes: Int?,
         val isActivated: Boolean?,
         val appCount: Int?,
+        val websiteCount: Int = 0,
+        val name: String? = null,
     )
 
     /**
@@ -148,32 +160,59 @@ object ConfigBackup {
         val values = applicable(file.values.filterKeys { isBackedUp(it) }, current)
         val knownFeatureIds = FeaturesProvider.featureList.map { it.id }.toSet()
         val byFeature = values.keys.groupBy { featureIdOf(it) }
+        // the groups first, in the order the file lists them, then the features
+        val groupIds = (values["ruleGroups_order"] as? String).orEmpty().split(",")
+            .filter { it.isNotBlank() && values.keys.any { key -> key.startsWith("${it}_") } }
+        val groups = groupIds.map { groupId ->
+            val entries = (values["${groupId}_exceptions"] as? Set<*>)?.filterIsInstance<String>()
+            FeatureSummary(
+                featureId = groupId,
+                titleRes = null,
+                isActivated = values["${groupId}_isActivated"] as? Boolean,
+                appCount = entries?.let { Websites.appsOf(it).size },
+                websiteCount = entries?.let { Websites.websitesOf(it).size } ?: 0,
+                name = values["${groupId}_name"] as? String,
+            )
+        }
         val features = FeaturesProvider.featureList.filter { it.id in byFeature }.map { feature ->
+            val entries = (values["${feature.id}_exceptions"] as? Set<*>)?.filterIsInstance<String>()
             FeatureSummary(
                 featureId = feature.id,
                 titleRes = feature.texts.title,
                 isActivated = values["${feature.id}_isActivated"] as? Boolean,
-                appCount = (values["${feature.id}_exceptions"] as? Set<*>)?.size
+                appCount = entries?.let { Websites.appsOf(it).size },
+                websiteCount = entries?.let { Websites.websitesOf(it).size } ?: 0
             )
         }
+        val groupKeys = values.keys.count { key -> groupIds.any { key.startsWith("${it}_") } }
         return Preview(
             file = file,
             values = values,
-            features = features,
-            otherSettings = byFeature.filterKeys { it !in knownFeatureIds }.values.sumOf { it.size },
+            features = groups + features,
+            otherSettings = byFeature.filterKeys { it !in knownFeatureIds }.values.sumOf { it.size } -
+                    groupKeys - (if ("ruleGroups_order" in values) 1 else 0) -
+                    (if ("ruleGroups_version" in values) 1 else 0),
             changes = values.count { (name, value) -> current[name] != value }
         )
     }
 
     /**
      * Writes [values] back (the file's values as [preview] filtered them), leaving preferences the
-     * file does not name alone.
+     * file does not name alone. A file from before there were groups carries the features' own
+     * lists instead; those become groups through the migration, which runs once the store says it
+     * holds none, so the groups of this phone make way for the rules in the file.
      * @return how many values were written
      */
     suspend fun import(values: Map<String, Any>): Int {
         if (values.isEmpty()) return 0
         var written = 0
         DataStore.editLocked { preferences ->
+            if (isFromBeforeGroups(values)) {
+                preferences.asMap().keys
+                    .filter { RuleGroups.isGroupId(it.name) || it.name == RULE_GROUPS_ORDER }
+                    .forEach { preferences.remove(it) }
+                preferences[intPreferencesKey(RULE_GROUPS_VERSION)] = 0
+            }
             for ((name, value) in values) {
                 val key = keyFor(name, value) ?: continue
                 @Suppress("UNCHECKED_CAST")
@@ -182,6 +221,20 @@ object ConfigBackup {
             }
         }
         return written
+    }
+
+    private const val RULE_GROUPS_ORDER = "ruleGroups_order"
+    private const val RULE_GROUPS_VERSION = "ruleGroups_version"
+
+    /** Whether the file was written before groups and carries a feature's own rules. */
+    private fun isFromBeforeGroups(values: Map<String, Any>): Boolean {
+        if (RULE_GROUPS_VERSION in values || RULE_GROUPS_ORDER in values) return false
+        val legacyFeatures = listOf(GrayscaleAppsFeatureId, DisableAppsFeatureId, BreakDoomScrollingFeatureId)
+        return values.keys.any { name ->
+            legacyFeatures.any { id ->
+                name == "${id}_exceptions" || name == "${id}_scheduleRules" || name == "${id}_isActivated"
+            }
+        }
     }
 
     /**

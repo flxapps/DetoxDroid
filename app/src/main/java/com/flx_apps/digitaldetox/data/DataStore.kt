@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.flx_apps.digitaldetox.DetoxDroidApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -26,7 +27,14 @@ import timber.log.Timber
  */
 val DataStore: DataStore<Preferences> by lazy { DetoxDroidApplication.appContext.dataStore }
 
-private val dataStorePersistScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+/**
+ * Persists one write at a time, in the order they were made. With writes free to start in any
+ * order, two quick writes of one key could reach the disk older-last, and after the next restart
+ * the file would no longer match what the app had in memory.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+private val dataStorePersistScope =
+    CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 private val dataStorePersistMutex = Mutex()
 
 /**
@@ -39,7 +47,8 @@ val Context.dataStore by preferencesDataStore("detox_droid_preferences")
 
 /**
  * Helper function to persist a value to the data store. Writes run on a serialized background
- * scope because feature state also keeps an in-memory value for immediate reads.
+ * scope (see [dataStorePersistScope]) because feature state also keeps an in-memory value for
+ * immediate reads.
  *
  * The data store is only used to persist the preferences across app restarts.
  */
@@ -75,5 +84,24 @@ fun <T> DataStore<Preferences>.loadValue(key: Preferences.Key<*>): T? {
     return runBlocking {
         val data = data.first()
         data[key] as T?
+    }
+}
+
+/**
+ * Drops every preference whose key starts with [prefix], behind the same lock as the other writes.
+ * What a deleted group stored would otherwise sit in the file for good, and come back in every
+ * settings file written after it.
+ */
+fun DataStore<Preferences>.removeKeysWithPrefix(prefix: String) {
+    dataStorePersistScope.launch {
+        try {
+            editLocked { preferences ->
+                preferences.asMap().keys
+                    .filter { it.name.startsWith(prefix) }
+                    .forEach { preferences.remove(it) }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to remove DataStore preferences with prefix %s", prefix)
+        }
     }
 }

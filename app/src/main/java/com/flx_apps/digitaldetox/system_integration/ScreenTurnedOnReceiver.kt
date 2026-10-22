@@ -14,6 +14,13 @@ import android.content.Intent
  */
 class ScreenTurnedOnReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
+        // the lock screen's widget shows from the first moment, so it can't wait for the unlock
+        if (intent?.action == Intent.ACTION_SCREEN_ON) context?.let {
+            ScreenTimeSurfaces.refreshIfStale(it)
+        }
+        if (intent?.action == Intent.ACTION_USER_PRESENT) context?.let {
+            ScreenTimeSurfaces.refreshAfterUnlock(it)
+        }
         val service = DetoxDroidAccessibilityService.instance ?: return
         // Where there is a lock screen, [Intent.ACTION_SCREEN_ON] arrives while it is still up and
         // [Intent.ACTION_USER_PRESENT] follows once it is gone; a phone without one only sends the

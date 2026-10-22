@@ -149,8 +149,10 @@ fun SummaryCardContent(
                         )
                     }
                     detoxImpact.colorScreenTimeRemainingMs?.let {
+                        // rounded up to the minute, as the widget shows what is left
+                        val leftMinutes = (it + 59_999L) / 60_000L
                         DetoxMetricChip(
-                            value = it.milliseconds.toHrMinString(context),
+                            value = (leftMinutes * 60_000L).milliseconds.toHrMinString(context),
                             label = stringResource(R.string.usageStats_colorRemaining),
                             color = colorResource(id = R.color.green)
                         )

@@ -6,6 +6,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.core.os.bundleOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.FeatureId
@@ -24,8 +25,12 @@ import javax.inject.Inject
  * view model.
  */
 abstract class FeatureViewModelFactory {
+    /**
+     * @param featureId the id of the feature, or of the group whose list or schedule the view
+     * model is for
+     */
     @Composable
-    inline fun <reified T : FeatureViewModel> withFeatureId(featureId: FeatureId): T {
+    inline fun <reified T : ViewModel> withFeatureId(featureId: String): T {
         Timber.d("withFeatureId: $featureId")
         return hiltViewModel(defaultArguments = bundleOf("featureId" to featureId))
     }

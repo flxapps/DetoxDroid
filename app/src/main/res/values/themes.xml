@@ -8,4 +8,11 @@
     <style name="Theme.DetoxDroid.Intervention" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
     </style>
+
+    <!-- Widget setup leaves the wallpaper visible around the widget's preview, so its background
+         opacity can be judged against what will be behind it -->
+    <style name="Theme.DetoxDroid.WidgetConfigure">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowShowWallpaper">true</item>
+    </style>
 </resources>

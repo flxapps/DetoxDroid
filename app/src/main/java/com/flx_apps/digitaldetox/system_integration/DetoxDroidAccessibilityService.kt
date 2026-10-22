@@ -7,28 +7,42 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Browser
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.flx_apps.digitaldetox.DetoxDroidApplication
+import com.flx_apps.digitaldetox.MainActivity
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.data.repository.UsageStatsRepository
 import com.flx_apps.digitaldetox.feature_types.Feature
 import com.flx_apps.digitaldetox.feature_types.OnAppOpenedSubscriptionFeature
 import com.flx_apps.digitaldetox.feature_types.OnScrollEventSubscriptionFeature
+import com.flx_apps.digitaldetox.features.BreakDoomScrollingFeature
 import com.flx_apps.digitaldetox.features.CommitmentPasswordFeature
 import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.features.PauseButtonFeature
 import com.flx_apps.digitaldetox.features.UsageStatsTracker
+import com.flx_apps.digitaldetox.rules.RuleGroups
+import com.flx_apps.digitaldetox.rules.Rules
 import com.flx_apps.digitaldetox.ui.screens.device_admin_revoked.DeviceAdminRevokedWarningActivity
+import com.flx_apps.digitaldetox.ui.screens.usage_stats.UsageStatsSettings
 import com.flx_apps.digitaldetox.util.AccessibilityEventUtil
+import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.websites.BrowserAddressBars
+import com.flx_apps.digitaldetox.websites.StrandedPages
+import com.flx_apps.digitaldetox.websites.WebPage
+import com.flx_apps.digitaldetox.websites.WebsiteCollections
+import com.flx_apps.digitaldetox.websites.WebsiteMonitor
+import com.flx_apps.digitaldetox.websites.Websites
 import com.flx_apps.digitaldetox.workers.ServiceReliabilityScheduler
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.instance
 import com.flx_apps.digitaldetox.system_integration.DetoxDroidAccessibilityService.Companion.state
@@ -37,10 +51,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import kotlin.time.Duration.Companion.milliseconds
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -72,6 +83,16 @@ enum class DetoxDroidState {
  */
 open class DetoxDroidAccessibilityService : AccessibilityService() {
     companion object {
+        /** Whether the service is handing the app in front to the features again right now. */
+        val isRedispatching: Boolean get() = instance?.redispatching == true
+
+        /**
+         * How long after going back from a website its page is judged again. Long enough for the
+         * browser to have shown the page before, short enough that a site that is held back as
+         * well does not get to show much of itself.
+         */
+        private const val LEAVE_WEBSITE_RECHECK_MS = 600L
+
         /**
          * The current instance of the [DetoxDroidAccessibilityService]. This is set in
          * [onCreate] and unset in [onDestroy]. It is guaranteed by Android that only one instance
@@ -125,12 +146,94 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * The package that is currently in front ("" before the first window event). Features can
-     * re-evaluate against it when they (re)start without a fresh window event, e.g. resuming from
-     * a pause while the user is still inside an affected app, where no new window event will
-     * arrive until the next app switch.
+     * The package that is currently in front ("" before the first window event). Features that
+     * re-evaluate when they (re)start without a fresh window event read [foregroundFor] instead,
+     * which knows about websites.
      */
     val currentForegroundPackage: String get() = foregroundAppMonitor.currentPackage
+
+    /**
+     * The page of the browser in front, for the features that have websites in their lists.
+     */
+    private val websiteMonitor by lazy {
+        WebsiteMonitor(
+            addressBarIds = { BrowserAddressBars.idsFor(this, it) },
+            readRoot = { rootInActiveWindow },
+            onPageChanged = ::dispatchWebsiteChange
+        )
+    }
+
+    /** The websites going back could not leave, see [leaveWebsite]. */
+    private val strandedPages = StrandedPages()
+
+    /**
+     * What the features were last told is in front: an app, or for a website the entry the groups
+     * list it under (see [Rules.Foreground.subject]). A new page only reaches the features when it
+     * changes this.
+     */
+    private var dispatchedSubject: String? = null
+
+    /**
+     * What [feature] is told is in front right now, for a feature that re-evaluates without a fresh
+     * window event (resuming from a pause, a brake starting): the subject the groups resolved for
+     * the last app switch, or the app itself before any.
+     */
+    fun foregroundFor(@Suppress("UNUSED_PARAMETER") feature: Feature): String =
+        Rules.foreground?.subject ?: foregroundAppMonitor.currentPackage
+
+    /** The page the browser in front shows, or null when no readable browser is in front. */
+    private fun pageInFront(app: String): WebPage? =
+        websiteMonitor.page?.takeIf { app == websiteMonitor.browserPackage }
+
+    /**
+     * The site the browser in front shows, the way it would be typed ("youtube.com"), or null when
+     * no browser DetoxDroid can read is in front. For naming a website that one of DetoxDroid's
+     * screens holds back where the list only says "Porn sites".
+     */
+    fun currentWebsiteName(): String? {
+        if (foregroundAppMonitor.currentPackage != websiteMonitor.browserPackage) return null
+        return websiteMonitor.page?.let(Websites::siteOf)
+    }
+
+    /**
+     * Goes back in the browser in front, the way out of a website one of DetoxDroid's screens held
+     * back. Going home would leave the browser on that page, and opening the browser again would
+     * end on the same screen. It goes back once per call and never on its own: if the page before
+     * is held back as well, it gets its screen again, and the user decides again.
+     *
+     * A page that going back could not leave last time, because its tab had nothing to go back to
+     * (see [StrandedPages]), gets an empty page put in front of it instead.
+     */
+    fun leaveWebsite() {
+        if (dispatchedSubject?.let(Websites::isWebsite) == true) dispatchedSubject = null
+        val browser = websiteMonitor.browserPackage
+        val page = websiteMonitor.page
+        if (browser != null && page != null) {
+            if (!strandedPages.isStranded(browser, page) || !openEmptyPage(browser)) {
+                strandedPages.onWentBack(browser, page, SystemClock.elapsedRealtime())
+                performGlobalAction(GLOBAL_ACTION_BACK)
+            }
+        } else {
+            performGlobalAction(GLOBAL_ACTION_BACK)
+        }
+        // the page before can be on the same site and leave the address bar as it was
+        websiteMonitor.recheck(LEAVE_WEBSITE_RECHECK_MS)
+    }
+
+    /**
+     * Opens an empty page in [browser], in front of the page it shows. Chrome opens it in a tab of
+     * its own, marked as DetoxDroid's, and reuses that tab the next time instead of adding another.
+     * The tab the user was in stays as it was: no app can navigate it from outside. False when the
+     * browser does not open the page.
+     */
+    private fun openEmptyPage(browser: String): Boolean = runCatching {
+        startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("about:blank"))
+                .setPackage(browser)
+                .putExtra(Browser.EXTRA_APPLICATION_ID, packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }.onFailure { Timber.w(it, "%s did not open an empty page", browser) }.isSuccess
 
     /**
      * Drops the remembered foreground package, so the next window event counts as an app switch
@@ -140,6 +243,9 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
     fun forgetForegroundPackage() {
         mainHandler.removeCallbacks(settleForegroundApp)
         foregroundAppMonitor.forget()
+        websiteMonitor.reset()
+        dispatchedSubject = null
+        updateWebsiteEvents(false)
     }
 
     /**
@@ -281,6 +387,7 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         // place every way of switching DetoxDroid on passes through, including the system settings.
         ServiceReliabilityScheduler.schedule(this)
         ServiceReliabilityScheduler.scheduleNextScheduleBoundary(this)
+        ForceStopRecovery.recordRunning(this, true)
         DetoxDroidDeviceAdminReceiver.allowSystemBackups(this)
     }
 
@@ -289,15 +396,35 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * occurs. It forwards the event to the [FeaturesProvider.activeFeatures] for processing.
      */
     override fun onAccessibilityEvent(accessibilityEvent: AccessibilityEvent) {
+        if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            // only asked for while a browser is in front, see updateWebsiteEvents
+            websiteMonitor.onContentChanged(accessibilityEvent.packageName)
+            return
+        }
         if (accessibilityEvent.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            if (AccessibilityEventUtil.isTextFieldScrollEvent(accessibilityEvent)) return
+            // every read of the source hands out a fresh copy of the node, and scrolling sends up
+            // to ten events a second, so it is read once here and recycled (which still frees
+            // native memory below API 33). Without a source the event says too little to count.
+            val source = accessibilityEvent.source ?: return
+            if (AccessibilityEventUtil.isTextFieldScrollEvent(source)) {
+                source.recycle()
+                return
+            }
+            // the short-video pager a known app scrolls inside of counts as the surface, where
+            // there is one, so a break on it is scoped to it (see ScrollSurfaces). Only looked
+            // for while a group breaks up scrolling at all: the look costs calls into the app.
+            val viewIdResourceName = ScrollSurfaces.surfaceOf(
+                this, accessibilityEvent.packageName?.toString(), source,
+                climb = BreakDoomScrollingFeature in FeaturesProvider.activeFeatures
+            )
+            source.recycle()
             // usage statistics are pure measurement and keep counting during a pause —
             // a pause only suspends the interventions below
-            if (accessibilityEvent.source != null && accessibilityEvent.packageName != null) {
+            if (accessibilityEvent.packageName != null) {
                 UsageStatsTracker.onScrollEvent(accessibilityEvent)
             }
             // per-feature pause gating happens inside handleScrollEvent
-            handleScrollEvent(accessibilityEvent)
+            handleScrollEvent(accessibilityEvent, viewIdResourceName)
             return
         }
 
@@ -409,18 +536,119 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
 
     /**
      * Hands an app that came to the front to the active [OnAppOpenedSubscriptionFeature]s, minus
-     * the ones a running pause suspends.
+     * the ones a running pause suspends. For a browser, each feature hears about the website it
+     * shows where that is in its list, see [foregroundFor].
      */
     private fun dispatchAppOpened(packageName: String, accessibilityEvent: AccessibilityEvent) {
         // usage statistics are pure measurement and keep counting during a pause —
-        // a pause only suspends the interventions below
+        // a pause only suspends the interventions below. They count apps, never websites.
         UsageStatsTracker.onForegroundApp(packageName)
+        // the app that was left has its time booked now, and going home is when the widget is seen
+        ScreenTimeSurfaces.requestRefresh(this)
+        strandedPages.onAppSwitch(packageName, SystemClock.elapsedRealtime())
+        watchWebsites(packageName)
+        websiteMonitor.browserPackage?.let { strandedPages.onPageShown(it, websiteMonitor.page) }
+        UsageStatsTracker.onWebsite(countedSite(packageName))
+        val foreground = Rules.onForeground(packageName, pageInFront(packageName))
+        dispatchedSubject = foreground.subject
+        dispatchToFeatures(foreground.subject, accessibilityEvent)
+    }
+
+    /** Hands [subject] to the active [OnAppOpenedSubscriptionFeature]s a pause does not suspend. */
+    private fun dispatchToFeatures(subject: String, accessibilityEvent: AccessibilityEvent) {
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onAppOpenedFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
-            (it as OnAppOpenedSubscriptionFeature).onAppOpened(
-                this, packageName, accessibilityEvent
-            )
+            (it as OnAppOpenedSubscriptionFeature).onAppOpened(this, subject, accessibilityEvent)
         }
+    }
+
+    /**
+     * Judges the app in front again without a window event: a budget ran out, a group's window
+     * opened or closed, a group was edited, a pause ended. The budgets and the features see it as
+     * if the app had just come to the front, the usage statistics do not.
+     */
+    fun redispatchForegroundApp() {
+        val app = foregroundAppMonitor.currentPackage
+        if (app.isEmpty()) return
+        watchWebsites(app)
+        val foreground = Rules.onForeground(app, pageInFront(app))
+        dispatchedSubject = foreground.subject
+        redispatching = true
+        try {
+            dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
+        } finally {
+            redispatching = false
+        }
+    }
+
+    /** True while [redispatchForegroundApp] hands the app in front to the features once more. */
+    @Volatile
+    private var redispatching = false
+
+    /**
+     * The browser in front shows another page. The budgets hear of it either way; the features
+     * only when it changes what they are told is in front, otherwise they are still in the same
+     * browser.
+     */
+    private fun dispatchWebsiteChange() {
+        val app = foregroundAppMonitor.currentPackage
+        if (app != websiteMonitor.browserPackage) return
+        strandedPages.onPageShown(app, websiteMonitor.page)
+        UsageStatsTracker.onWebsite(countedSite(app))
+        val foreground = Rules.onForeground(app, websiteMonitor.page)
+        if (dispatchedSubject == foreground.subject) return
+        dispatchedSubject = foreground.subject
+        dispatchToFeatures(foreground.subject, AccessibilityEventUtil.createEvent(isFullScreen = true))
+    }
+
+    /**
+     * The site the browser [app] shows, for the time on websites in the usage stats, or null when
+     * [app] shows none or the user does not have websites counted.
+     */
+    private fun countedSite(app: String): String? {
+        if (!UsageStatsSettings.countWebsites || app != websiteMonitor.browserPackage) return null
+        return websiteMonitor.page?.let(Websites::siteOf)
+    }
+
+    /**
+     * Follows the websites of [app] when it is a browser and websites matter to some active group
+     * (see [Websites.matterTo]), or the user has the time on them counted. Otherwise the address
+     * bar is never read and no content change is asked for.
+     */
+    private fun watchWebsites(app: String) {
+        val groups = RuleGroups.active().filter(Websites::matterTo)
+        val collections = groups
+            .flatMap { it.appExceptions.mapNotNull(Websites::collectionOf) }
+            .toSet()
+        if (collections.isNotEmpty()) {
+            // a collection that is still loading cannot match yet, so the page is judged again
+            // once it is in
+            WebsiteCollections.prefetch(collections) {
+                mainHandler.post { websiteMonitor.recheck(0L) }
+            }
+        }
+        websiteMonitor.onForegroundApp(
+            app, watch = groups.isNotEmpty() || UsageStatsSettings.countWebsites
+        )
+        updateWebsiteEvents(websiteMonitor.browserPackage != null)
+    }
+
+    /**
+     * Asks for window content changes only while a browser whose websites matter is in front. They
+     * are by far the busiest event type, and nothing else here needs them. Not declared in the
+     * service XML for that reason: if this fails, websites go unrecognised and nothing else changes.
+     */
+    private fun updateWebsiteEvents(needed: Boolean) {
+        val info = serviceInfo ?: return
+        val contentChanged = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+        if ((info.eventTypes and contentChanged != 0) == needed) return
+        info.eventTypes = if (needed) {
+            info.eventTypes or contentChanged
+        } else {
+            info.eventTypes and contentChanged.inv()
+        }
+        kotlin.runCatching { serviceInfo = info }
+            .onFailure { Timber.w(it, "Could not update the content change events") }
     }
 
     /**
@@ -428,28 +656,41 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
      * is relevant and does some preprocessing before forwarding it to the intersection of
      * [FeaturesProvider.activeFeatures] and [FeaturesProvider.onScrollEventFeatures].
      */
-    private fun handleScrollEvent(accessibilityEvent: AccessibilityEvent) {
+    private fun handleScrollEvent(
+        accessibilityEvent: AccessibilityEvent, viewIdResourceName: String?
+    ) {
         val scrollViewSize = when {
             accessibilityEvent.itemCount > 0 -> accessibilityEvent.itemCount
             else -> accessibilityEvent.maxScrollY
         }
 
         // dispose scroll events that contain too less information
-        if (accessibilityEvent.source == null || scrollViewSize == -1 ||
+        if (scrollViewSize == -1 ||
             accessibilityEvent.className == null || accessibilityEvent.packageName == null
         ) {
             return
         }
 
         val scrollViewId =
-            OnScrollEventSubscriptionFeature.calculateScrollViewId(accessibilityEvent)
+            OnScrollEventSubscriptionFeature.calculateScrollViewId(
+                accessibilityEvent, viewIdResourceName
+            )
 
+        val app = accessibilityEvent.packageName.toString()
+        // a scroll in a browser is a scroll in the website the groups list it under, like a switch
+        val subject = if (app == foregroundAppMonitor.currentPackage) {
+            dispatchedSubject ?: app
+        } else {
+            app
+        }
         FeaturesProvider.activeFeatures.intersect(FeaturesProvider.onScrollEventFeatures).forEach {
             if (PauseButtonFeature.isFeaturePaused(it as Feature)) return@forEach
             (it as OnScrollEventSubscriptionFeature).onScrollEvent(
                 this,
+                subject,
                 scrollViewId,
                 scrollViewSize = scrollViewSize,
+                viewIdResourceName = viewIdResourceName,
                 accessibilityEvent = accessibilityEvent
             )
         }
@@ -467,8 +708,10 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         super.onDestroy()
 
         UsageStatsTracker.shutdown()
+        ForceStopRecovery.recordRunning(this, false)
 
         mainHandler.removeCallbacks(settleForegroundApp)
+        // pausing stops the budgets as well: nothing is in front of a service that is gone
         PauseButtonFeature.pauseFeatures(this, stop = true)
         kotlin.runCatching { unregisterReceiver(screenTurnedOffReceiver) }
         kotlin.runCatching { unregisterReceiver(screenTurnedOnReceiver) }
@@ -487,36 +730,67 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
         updateState()
     }
 
+    private var isInForeground = false
+
     private fun startForegroundService() {
         val isPausing = PauseButtonFeature.isPausing()
         val isBraking = EmergencyBrakeFeature.isBraking()
-        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_displayName))
-            .setContentText(
-                if (isBraking) {
-                    getString(
-                        R.string.home_state_braking, EmergencyBrakeFeature.endsAtText()
-                    )
-                } else if (isPausing) {
-                    // show the actual end of the pause instead of a bare "Paused"
-                    getString(
-                        R.string.home_state_paused,
-                        Instant.ofEpochMilli(PauseButtonFeature.pauseUntil)
-                            .atZone(ZoneId.systemDefault()).toLocalTime()
-                            .format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))
-                    )
-                } else getString(R.string.app_notification_active)
+        // the notification being there says that DetoxDroid runs; only a pause or a brake has
+        // something to say below the title, namely when it ends
+        val stateText = when {
+            isBraking -> getString(R.string.home_state_braking, EmergencyBrakeFeature.endsAtText())
+            // the actual end of the pause instead of a bare "Paused"
+            isPausing -> getString(R.string.home_state_paused, PauseButtonFeature.endsAtText())
+            else -> null
+        }
+        // Reading the usage records blocks, so they are read off the main thread and the refresh
+        // comes back through updateForegroundNotification(). Until then the title is the app name.
+        val today = ScreenTimeSurfaces.today
+        if (today == null) ScreenTimeSurfaces.refreshIfStale(this)
+        val title = today?.let {
+            getString(
+                R.string.app_notification_screenTime,
+                it.screenTimeMs.milliseconds.toHrMinString(this)
             )
-            .setSmallIcon(R.drawable.ic_pause)
+        } ?: getString(R.string.app_displayName)
+        // below the title: the state, then what is left of each budget. One line collapsed, all
+        // of them expanded. Which apps the time went to is for the statistics screen it opens.
+        val lines = listOfNotNull(stateText) + today?.budgets.orEmpty().map {
+            getString(R.string.app_notification_budget, it.name, it.leftText(this))
+        }
+
+        fun NotificationCompat.Builder.withStatus(text: String?) = apply {
+            setContentTitle(title)
+            text?.let { setContentText(it) }
+            setSmallIcon(R.drawable.ic_pause)
+            // the timestamp of the last refresh says nothing, a countdown does
+            setShowWhen(isBraking || isPausing)
+            if (isBraking || isPausing) {
+                // live countdown to the end of the brake or the pause in the collapsed notification
+                setWhen(
+                    if (isBraking) EmergencyBrakeFeature.endsAtWallClock()
+                    else PauseButtonFeature.pauseUntil
+                )
+                setUsesChronometer(true)
+                setChronometerCountDown(true)
+            }
+        }
+
+        val builder = NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+            .withStatus(lines.firstOrNull())
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
-        if (isBraking || isPausing) {
-            // live countdown to the end of the brake or the pause in the collapsed notification
-            builder.setWhen(
-                if (isBraking) EmergencyBrakeFeature.endsAtWallClock() else PauseButtonFeature.pauseUntil
+            // the title changes with every refresh, which must not make a sound each time
+            .setOnlyAlertOnce(true)
+            .setContentIntent(MainActivity.openUsageStatsIntent(this))
+            // a lock screen that hides notification content still gets the total and the state,
+            // just not the groups
+            .setPublicVersion(
+                NotificationCompat.Builder(this, DetoxDroidApplication.SERVICE_CHANNEL_ID)
+                    .withStatus(stateText).build()
             )
-            builder.setUsesChronometer(true)
-            builder.setChronometerCountDown(true)
+        if (lines.size > 1) {
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(lines.joinToString("\n")))
         }
         if (EmergencyBrakeFeature.canUndo()) {
             builder.addAction(
@@ -554,25 +828,32 @@ open class DetoxDroidAccessibilityService : AccessibilityService() {
             ServiceCompat.startForeground(
                 this, 101, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
-            Timber.i("Service moved to foreground")
+            // the screen time refreshes repost the notification every minute or so
+            if (!isInForeground) Timber.i("Service moved to foreground")
+            isInForeground = true
         } catch (e: Exception) {
             Timber.e(e, "Failed to start foreground service")
         }
     }
 
     /**
+     * Whether the service runs in the foreground with its notification: when the user opted into
+     * the keepalive, while the Pause feature is on (its notification carries the pause action), or
+     * under a brake. Otherwise it stays a plain bound service.
+     */
+    val showsNotification: Boolean
+        get() = ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
+                EmergencyBrakeFeature.isBraking()
+
+    /**
      * Updates the foreground notification (e.g., when pause state changes)
      */
     fun updateForegroundNotification() {
-        // Run as a foreground service only when the user opted into the keepalive, or while a pause
-        // is active (the pause notification needs it), or a brake. Otherwise stay a plain bound
-        // service.
-        if (ReliabilitySettings.keepServiceAliveEnabled || PauseButtonFeature.isActivated ||
-            EmergencyBrakeFeature.isBraking()
-        ) {
+        if (showsNotification) {
             startForegroundService()
         } else {
             runCatching { stopForeground(STOP_FOREGROUND_REMOVE) }
+            isInForeground = false
         }
     }
 }

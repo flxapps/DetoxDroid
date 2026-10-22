@@ -1,6 +1,5 @@
 package com.flx_apps.digitaldetox.ui.screens.usage_stats
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,14 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.ui.widgets.ChipFlowRow
 import com.flx_apps.digitaldetox.util.toHrMinString
+import com.flx_apps.digitaldetox.ui.widgets.AppIcon
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -48,8 +46,6 @@ fun UsageStatsExclusionsSheet(
     onAppExcluded: (packageName: String, excluded: Boolean) -> Unit,
     onCategoryExcluded: (categoryId: Int, excluded: Boolean) -> Unit
 ) {
-    val context = LocalContext.current
-    val pm = context.packageManager
     val excludedPackages = state.excludedApps.mapTo(mutableSetOf()) { it.packageName }
 
     LazyColumn(
@@ -102,7 +98,6 @@ fun UsageStatsExclusionsSheet(
             items(state.excludedApps) { app ->
                 ExclusionRow(
                     app = app,
-                    pm = pm,
                     isExcluded = true,
                     onToggle = { onAppExcluded(app.packageName, false) }
                 )
@@ -115,7 +110,6 @@ fun UsageStatsExclusionsSheet(
             items(selectable) { app ->
                 ExclusionRow(
                     app = app,
-                    pm = pm,
                     isExcluded = false,
                     onToggle = { onAppExcluded(app.packageName, true) }
                 )
@@ -150,7 +144,6 @@ private fun SheetSectionLabel(text: String) {
 @Composable
 private fun ExclusionRow(
     app: AppUsageStat,
-    pm: android.content.pm.PackageManager,
     isExcluded: Boolean,
     onToggle: () -> Unit
 ) {
@@ -162,16 +155,7 @@ private fun ExclusionRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val icon = runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
-        if (icon != null) {
-            Image(
-                bitmap = icon.toBitmap().asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.size(32.dp))
-        }
+        AppIcon(packageName = app.packageName, size = 32.dp)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(app.label, style = MaterialTheme.typography.bodyMedium)

@@ -13,6 +13,9 @@ import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleService
@@ -21,7 +24,9 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.flx_apps.digitaldetox.util.ForceStopUtil
 import com.flx_apps.digitaldetox.util.NavigationUtil
+import com.flx_apps.digitaldetox.websites.Websites
 import timber.log.Timber
 
 /**
@@ -47,11 +52,16 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
     private var dismissed = false
 
     /**
-     * The package name of the app that was in the foreground when the overlay was requested
-     * (empty if the launching intent did not carry [EXTRA_RUNNING_APP_PACKAGE_NAME]).
+     * The package name of the app that was in the foreground when the overlay was requested, or
+     * the website entry a feature was told about instead (empty if the launching intent did not
+     * carry [EXTRA_RUNNING_APP_PACKAGE_NAME]). Compose state, because the content is set up before
+     * the intent arrives.
      */
-    var runningAppPackageName: String = ""
+    var runningAppPackageName: String by mutableStateOf("")
         private set
+
+    /** Whether the overlay is up over a website rather than an app, see [leave]. */
+    val isOverWebsite: Boolean get() = Websites.isWebsite(runningAppPackageName)
 
     override fun onCreate() {
         super.onCreate()
@@ -132,6 +142,21 @@ abstract class OverlayService(private val overlayContent: OverlayContent) : Life
             alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerTime, pendingIntentToHome)
         }
         dismissOverlay()
+    }
+
+    /**
+     * Closes the overlay and takes the user out of what it was shown over: home from an app (and
+     * with [forceStop], the app out of the recent apps as well, where that is possible), back in the
+     * browser from a website, see [DetoxDroidAccessibilityService.leaveWebsite].
+     */
+    fun leave(forceStop: Boolean = false) {
+        if (isOverWebsite) {
+            dismissOverlay()
+            DetoxDroidAccessibilityService.instance?.leaveWebsite()
+            return
+        }
+        closeOverlay()
+        if (forceStop) ForceStopUtil.tryForceStop(this, runningAppPackageName)
     }
 
     /**
