@@ -373,7 +373,7 @@
     <string name="ruleGroups_idle_grayAtLock_message">Es wird also nie grau. Wähl einen früheren Zeitpunkt.</string>
     <string name="ruleGroups_idle_grayAtLock_action">Früher</string>
     <string name="ruleGroups_hint_tapToChange">Tipp auf einen unterstrichenen Teil, um ihn zu ändern.</string>
-    <string name="ruleGroups_hint_countsFromWindow">Tipp auf einen unterstrichenen Teil, um ihn zu ändern. Die %s zählen ab dem Moment, in dem das Zeitfenster aufgeht, nicht ab Mitternacht.</string>
+    <string name="ruleGroups_hint_pastMidnight">Tipp auf einen unterstrichenen Teil, um ihn zu ändern. Das Zeitfenster geht über Mitternacht hinaus, und die %s gehen mit: Sie zählen, solange das Fenster offen ist, und fangen um Mitternacht nicht von vorn an.</string>
 
     <string name="ruleGroups_today">Heute</string>
     <string name="ruleGroups_thisHour">Diese Stunde</string>
@@ -422,6 +422,7 @@
     <string name="ruleGroups_budget_period_day">pro Tag</string>
     <string name="ruleGroups_budget_period_hour">pro Stunde</string>
     <string name="ruleGroups_budget_perHour_hint">Gezählt ab jeder vollen Stunde.</string>
+    <string name="ruleGroups_budget_perDay_pastMidnight_hint">Das Zeitfenster geht über Mitternacht hinaus, das Budget auch: Es zählt, solange das Fenster offen ist, und fängt um Mitternacht nicht von vorn an.</string>
     <string name="ruleGroups_budget_lastDays">Letzte 7 Tage in dieser Gruppe</string>
     <string name="ruleGroups_budget_lastDays_average">%s am Tag</string>
     <string name="ruleGroups_budget_lastDays_empty">In den letzten 7 Tagen ist für diese Apps nichts zusammengekommen.</string>

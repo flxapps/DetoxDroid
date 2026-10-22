@@ -390,7 +390,7 @@
     <string name="ruleGroups_idle_grayAtLock_message">So it never shows. Pick an earlier time.</string>
     <string name="ruleGroups_idle_grayAtLock_action">Earlier</string>
     <string name="ruleGroups_hint_tapToChange">Tap any underlined part to change it.</string>
-    <string name="ruleGroups_hint_countsFromWindow">Tap any underlined part to change it. The %s count from when the window opens, not from midnight.</string>
+    <string name="ruleGroups_hint_pastMidnight">Tap any underlined part to change it. The window runs past midnight, and the %s go with it: they count while the window is open and do not start over at midnight.</string>
 
     <!-- today's use against the budget -->
     <string name="ruleGroups_today">Today</string>
@@ -442,6 +442,7 @@
     <string name="ruleGroups_budget_period_day">per day</string>
     <string name="ruleGroups_budget_period_hour">per hour</string>
     <string name="ruleGroups_budget_perHour_hint">Counted from the top of each hour.</string>
+    <string name="ruleGroups_budget_perDay_pastMidnight_hint">The window runs past midnight, and so does the budget: it counts while the window is open and does not start over at midnight.</string>
     <string name="ruleGroups_budget_lastDays">Last 7 days in this group</string>
     <string name="ruleGroups_budget_lastDays_average">%s a day</string>
     <string name="ruleGroups_budget_lastDays_empty">Nothing counted for these apps in the last 7 days.</string>

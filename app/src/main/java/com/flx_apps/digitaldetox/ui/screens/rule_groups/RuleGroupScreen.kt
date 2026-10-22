@@ -98,6 +98,7 @@ import com.flx_apps.digitaldetox.features.EmergencyBrakeFeature
 import com.flx_apps.digitaldetox.features.FeaturesProvider
 import com.flx_apps.digitaldetox.features.GrayscaleAppsFeature
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
+import com.flx_apps.digitaldetox.rules.BudgetWindow
 import com.flx_apps.digitaldetox.rules.GroupBudgets
 import com.flx_apps.digitaldetox.rules.GroupId
 import com.flx_apps.digitaldetox.rules.RuleGroup
@@ -319,11 +320,11 @@ fun RuleGroupScreen(
                 }
                 item {
                     key(revision) { Text(
-                        text = if (group.hasBudget && group.scheduleRules.isNotEmpty() &&
-                            group.budgetPeriod == BudgetPeriod.DAY
+                        text = if (group.hasBudget && group.budgetPeriod == BudgetPeriod.DAY &&
+                            BudgetWindow.runsPastMidnight(group.scheduleRules)
                         ) {
                             stringResource(
-                                id = R.string.ruleGroups_hint_countsFromWindow,
+                                id = R.string.ruleGroups_hint_pastMidnight,
                                 GroupTexts.duration(context, group.budgetMs)
                             )
                         } else {

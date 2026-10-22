@@ -2,6 +2,7 @@ package com.flx_apps.digitaldetox.rules
 
 import com.flx_apps.digitaldetox.feature_types.FeatureScheduleRule
 import com.flx_apps.digitaldetox.feature_types.nextTransitionAfter
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
@@ -33,6 +34,21 @@ object BudgetWindow {
             if (earlier == null || !earlier.isBefore(start)) return start
             start = earlier
             if (!start.isAfter(now.minusDays(1))) return midnight
+        }
+    }
+
+    /**
+     * Whether a day's budget runs past midnight: the rules keep the group on from one day into the
+     * next for less than a whole day, so the window, and the budget with it, does not start over
+     * at midnight. What someone who reads "per day" is told about where it applies.
+     */
+    fun runsPastMidnight(rules: Collection<FeatureScheduleRule>): Boolean {
+        if (rules.isEmpty()) return false
+        // the rules know weekdays, not dates, so any week will do
+        val monday = LocalDate.of(2024, 1, 1)
+        return (0L until 7L).any { day ->
+            val midnight = monday.plusDays(day).atStartOfDay()
+            startOf(rules, BudgetPeriod.DAY, midnight.plusSeconds(1)).isBefore(midnight)
         }
     }
 

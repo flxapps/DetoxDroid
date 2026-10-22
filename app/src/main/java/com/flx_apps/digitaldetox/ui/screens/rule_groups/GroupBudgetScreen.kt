@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flx_apps.digitaldetox.R
 import com.flx_apps.digitaldetox.rules.BudgetPeriod
+import com.flx_apps.digitaldetox.rules.BudgetWindow
 import com.flx_apps.digitaldetox.rules.GroupId
 import com.flx_apps.digitaldetox.ui.screens.feature.LocalSettingsLocked
 import com.flx_apps.digitaldetox.ui.screens.feature.commitment_password.PasswordLockGate
@@ -190,9 +192,18 @@ fun GroupBudgetScreen(
                             onClick = { viewModel.setMinutes(0) }
                         )
                     }
-                    if (period == BudgetPeriod.HOUR) {
+                    val pastMidnight = remember {
+                        BudgetWindow.runsPastMidnight(viewModel.group?.scheduleRules.orEmpty())
+                    }
+                    if (period == BudgetPeriod.HOUR || minutes > 0 && pastMidnight) {
                         Text(
-                            text = stringResource(id = R.string.ruleGroups_budget_perHour_hint),
+                            text = stringResource(
+                                id = if (period == BudgetPeriod.HOUR) {
+                                    R.string.ruleGroups_budget_perHour_hint
+                                } else {
+                                    R.string.ruleGroups_budget_perDay_pastMidnight_hint
+                                }
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 12.dp)
