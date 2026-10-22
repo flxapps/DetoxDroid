@@ -1,0 +1,9 @@
+### Release v3.0.1
+
+✨ New Features
+- your rules are groups now: apps and websites, when they count, how much time they get, and what happens then; existing rules were carried over
+- websites, in Chrome, Firefox and most browsers built on them, with ready-made lists for porn, gambling, dating, shopping, social media and video
+
+🐛 Bug Fixes
+- Suspend as the lock mode now sets up Shizuku, not the grayscale permission
+- while Shizuku is not running, a suspend lock shows the block screen instead
