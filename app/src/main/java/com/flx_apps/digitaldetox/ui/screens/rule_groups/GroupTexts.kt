@@ -63,6 +63,9 @@ object GroupTexts {
     /** How many named apps are spelled out before the rest become "and 3 more". */
     private const val NAMED_APPS = 3
 
+    /** How many websites are named before they become "4 websites". */
+    private const val NAMED_SITES = 2
+
     /** A group without a name, which the setup allows. */
     fun name(context: Context, group: RuleGroup): String =
         group.name.ifBlank { context.getString(R.string.ruleGroups_unnamed) }
@@ -81,11 +84,20 @@ object GroupTexts {
         val allWebsites = group.websiteListType == AppExceptionListType.NOT_LIST
         // a group of all apps but a few covers the browsers anyway, so sites it lists on top add
         // nothing to its subject and would read as if they were left out with the apps
-        val websitesText = if (allApps && !allWebsites) null else websitesPhrase(context, websites)
-        // a short list reads as one: "Instagram, TikTok and 4 websites". A long one names a few
-        // apps, counts the rest, and adds the websites after that, so no "and" meets another.
+        val siteNames = if (allApps && !allWebsites) emptyList() else websiteNames(context, websites)
+        // a short list reads as one: "Instagram, TikTok, reddit.com and x.com", or with many sites
+        // "Instagram, TikTok and 4 websites". A long one names a few apps, counts the rest, and
+        // adds the websites after that. Either way no "and" meets another.
+        val websitesText = when {
+            siteNames.isEmpty() -> null
+            siteNames.size <= NAMED_SITES -> joinNatural(siteNames)
+            else -> context.resources.getQuantityString(
+                R.plurals.websites_count_sites, siteNames.size, siteNames.size
+            )
+        }
         val listedText = when {
             appNames.isEmpty() -> websitesText
+            appNames.size <= NAMED_APPS && siteNames.size <= NAMED_SITES -> joinNatural(appNames + siteNames)
             appNames.size <= NAMED_APPS -> joinNatural(appNames + listOfNotNull(websitesText))
             websitesText == null -> namedList(context, appNames)
             else -> context.getString(
@@ -119,18 +131,9 @@ object GroupTexts {
         )
     }
 
-    /** "reddit.com", "youtube.com/shorts and x.com", "4 websites"; null without any. */
-    private fun websitesPhrase(context: Context, websites: Set<String>): String? {
-        if (websites.isEmpty()) return null
-        val names = websites.map { Websites.displayName(context, it) }.sorted()
-        return if (names.size <= 2) {
-            joinNatural(names)
-        } else {
-            context.resources.getQuantityString(
-                R.plurals.websites_count_sites, names.size, names.size
-            )
-        }
-    }
+    /** The websites as the user reads them, "reddit.com", "youtube.com/shorts", sorted. */
+    private fun websiteNames(context: Context, websites: Set<String>): List<String> =
+        websites.map { Websites.displayName(context, it) }.sorted()
 
     /** "30 minutes per day", null without a budget. */
     fun budget(context: Context, group: RuleGroup): String? {
