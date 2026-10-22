@@ -488,28 +488,31 @@ private fun Note(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 12.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+        // the button sits under the text: beside it, the text of a narrow card got a few words a
+        // line, and a long title wrapped four times next to a long label
+        Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
                 )
-                Text(text = message, style = MaterialTheme.typography.bodySmall)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(text = message, style = MaterialTheme.typography.bodySmall)
+                }
             }
-            TextButton(onClick = onAction) { Text(text = actionLabel) }
+            TextButton(onClick = onAction, modifier = Modifier.align(Alignment.End)) {
+                Text(text = actionLabel)
+            }
         }
     }
 }
