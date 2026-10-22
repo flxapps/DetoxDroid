@@ -2,22 +2,31 @@ Die meisten Digital-Detox-Apps wollen, dass du einen Vertrag mit dir selbst schl
 
 Nutze dein Handy, statt dich von ihm nutzen zu lassen.
 
-FUNKTIONEN
+SO FUNKTIONIERT ES
 
-* Apps langweilig machen (grau, gedimmt, verschwommen). Den Apps auf deiner Liste geht die Farbe aus, ab Android 12 werden sie auch unscharf: Aus einem Feed werden Formen, in denen du dich noch zurechtfindest, durch die du aber nicht mehr scrollen willst. Das läuft ab der Installation. Kein Computer, kein Root, nichts freizugeben.
+Du sortierst deine Apps und Websites in Gruppen. Eine Gruppe sagt, wann sie zählt: immer, nachts, werktags von neun bis fünf. Sie sagt, wie viel Zeit ihre Apps und Websites zusammen bekommen, pro Tag oder pro Stunde. Und sie sagt, was dann passiert: kurz warten vor jedem Öffnen, grau werden, eine Pause, wenn du zu lange scrollst, eine Sperre. Vorlagen helfen beim Start, von Social Feeds bis nachts Ruhe, und alles darin lässt sich ändern. Kommst du von einer älteren Version, werden deine Regeln als Gruppen übernommen.
+
+WAS EINE GRUPPE KANN
+
+* Grau werden (und dunkel und unscharf). Den Apps und Websites der Gruppe geht die Farbe aus, ab der ersten Minute oder sobald ein Teil des Budgets weg ist, ab Android 12 werden sie auch unscharf: Aus einem Feed werden Formen, in denen du dich noch zurechtfindest, durch die du aber nicht mehr scrollen willst. Das läuft ab der Installation. Kein Computer, kein Root, nichts freizugeben.
 Echte Graustufen sind es halt nicht. Ein Overlay kann nur oben drauf malen, es zieht Farbe und Kontrast Richtung Grau, statt die Farbe rauszurechnen. Ein roter Punkt am App-Symbol bleibt erkennbar rot. Der Bildschirm sieht eben tot aus, und genau darum geht es. Wer das Original will: siehe EINRICHTUNG.
-* "Doom Scrolling" durchbrechen. Merkt, wenn du in einem endlosen Feed hängst (Shorts, Reels und Konsorten), und unterbricht dich. Nach der Pause bleibt genau dieser Feed noch eine Weile gesperrt.
-* Apps deaktivieren. Eine ablenkende App kann dich erst ein paar Sekunden warten lassen, hinter einem Sperrbildschirm verschwinden oder gleich ganz deaktiviert werden, samt Symbol im Launcher und Benachrichtigungen. Gib ihr ein Tagesbudget, dann kostet jedes Öffnen die Wartezeit, bis das Budget weg ist. Danach sperrt sich die App bis morgen selbst.
-* Automatisch "Bitte nicht stören". An, solange DetoxDroid läuft. Benachrichtigungen warten dann auf dich.
-* Pause-Taste. Über die Schnelleinstellungen, den Assistenten oder zwei Sekunden auf einer Hardware-Taste. Danach läuft DetoxDroid von allein weiter, und ein Mindestabstand zwischen zwei Pausen hält "nur noch einmal" im Zaum.
-* Commitment-Passwort. Sperrt die Einstellungen hinter einem Passwort. Behalt es selbst oder gib es jemandem, der es dir nicht sofort wieder rausrückt.
-* Widgets. Eins zeigt, wie lange du heute schon am Handy warst, verglichen mit sonst um diese Zeit, und bei genug Platz deine meistgenutzten Apps und Restbudgets. Das andere ist ein Launcher, der die Apps deiner Wahl als reinen Text zeigt, ohne die Symbole, nach denen der Daumen blind greift.
+* Doomscrolling unterbrechen. Merkt, wenn du in einem endlosen Feed hängst, und zählt die Kurzvideos, die du bei Reels, Shorts und TikTok wegwischst. Nach der Pause bleibt genau dieser Feed noch eine Weile gesperrt.
+* Warten und sperren. Eine ablenkende App kann dich erst ein paar Sekunden warten lassen, hinter einem Sperrbildschirm verschwinden oder gleich ganz deaktiviert werden, samt Symbol im Launcher und Benachrichtigungen. Ist das Budget der Gruppe weg, sind ihre Apps bis zum nächsten Zeitfenster zu.
+* Websites, in Chrome, Firefox und den meisten Browsern, die darauf aufbauen. Deine eigene Liste oder fertige Listen für Pornos, Glücksspiel, Dating, Shopping, Social Media und Video. Links, die sich in einer anderen App öffnen, sind nicht abgedeckt.
+
+UND DRUMHERUM
+
+* Notbremse. Einmal tippen, und für eine Zeit deiner Wahl läuft jede Gruppe auf der strengsten Stufe: Bildschirm komplett grau, gesperrte Apps bleiben gesperrt, Zeitpläne und Pause aus. Früher raus geht, dauert aber zehn Minuten.
+* Automatisch „Bitte nicht stören“. An, solange DetoxDroid läuft. Benachrichtigungen warten dann auf dich.
+* Pause-Taste. Über die Schnelleinstellungen, den Assistenten oder zwei Sekunden auf einer Hardware-Taste. Danach läuft DetoxDroid von allein weiter, und ein Mindestabstand zwischen zwei Pausen hält „nur noch einmal“ im Zaum.
+* Commitment-Passwort. Sperrt Gruppen hinter einem Passwort, einzeln oder alle. Behalt es selbst oder gib es jemandem, der es dir nicht sofort wieder rausrückt.
+* Bildschirmzeit. Pro App und, wenn du willst, pro Website; Öffnungen, Scroll-Strecke, was die Stunden wert wären. Ein Widget und die Benachrichtigung zeigen die Zeit von heute, ohne dass du die App öffnest. Das andere Widget ist ein Launcher, der die Apps deiner Wahl als reinen Text zeigt, ohne die Symbole, nach denen der Daumen blind greift.
 
 EINRICHTUNG (optional, lohnt sich aber)
 
-Den Farbfilter des Systems gibt Android nur an Apps mit WRITE_SECURE_SETTINGS, und einen Dialog dafür gibt es nicht. Einmal erteilt, werden aus dem Grauschleier echte Graustufen, dazu kommt "Extra dunkel", das den Bildschirm unter die normale Mindesthelligkeit drückt. Drei Wege: vom Computer per adb, direkt am Handy über Shizuku (die App führt dich durch, etwa fünf Minuten) oder mit einem Fingertipp, wenn dein Gerät gerootet ist. Neustarts überlebt die Berechtigung.
+Den Farbfilter des Systems gibt Android nur an Apps mit WRITE_SECURE_SETTINGS, und einen Dialog dafür gibt es nicht. Einmal erteilt, werden aus dem Grauschleier echte Graustufen, dazu kommt „Extradunkel“, das den Bildschirm unter die normale Mindesthelligkeit drückt. Drei Wege: vom Computer per adb, direkt am Handy über Shizuku (die App führt dich durch, etwa fünf Minuten) oder mit einem Fingertipp, wenn dein Gerät gerootet ist. Neustarts überlebt die Berechtigung.
 
-Graustufen, "Extra dunkel" und der Bildschirmfilter sind getrennte Schalter. Nimm einen, nimm alle.
+Graustufen, „Extradunkel“ und der Bildschirmfilter sind getrennte Schalter. Nimm einen, nimm alle.
 
 Die Unschärfe braucht Android 12 oder neuer, und im Energiesparmodus schaltet Android sie ab. Daran kann ich leider nichts ändern.
 
@@ -27,6 +36,6 @@ Manche Handys räumen Hintergrund-Apps rigoros ab, und ein gestopptes DetoxDroid
 
 KOSTENLOS & QUELLOFFEN
 
-Keine Werbung, kein Tracking, kein Konto. Alle Funktionen stehen allen offen. Die Extras (gerade die längere Statistik-Historie) liegen hinter einer Sperre, die aufgeht, wenn du spendest oder auf "Ohne Spende freischalten" tippst. Die Sperre ist ein Schubs. Das prüft niemand nach.
+Keine Werbung, kein Tracking, kein Konto. Alle Funktionen stehen allen offen. Die Extras (gerade die längere Statistik-Historie) liegen hinter einer Sperre, die aufgeht, wenn du spendest oder auf „Ohne Spende freischalten“ tippst. Die Sperre ist ein Schubs. Das prüft niemand nach.
 
 Wenn DetoxDroid sich seinen Platz auf deinem Handy verdient: LiberaPay und Ko-fi halten mich dran. Fehler und Ideen: https://github.com/flxapps/DetoxDroid
