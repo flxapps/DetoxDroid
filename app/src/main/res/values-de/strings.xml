@@ -1071,6 +1071,9 @@
         <item quantity="other">Noch %d Fingertipps, dann legst du dein Handy weg.</item>
     </plurals>
     <string name="about_version_putItDown">Jetzt leg es aber auch weg.</string>
+    <string name="about_website">Website</string>
+    <string name="about_website_link">https://detoxdroid.com/de/</string>
+    <string name="about_website_subtitle">detoxdroid.com. Leg dort den Schalter um, dann wird die Seite grau.</string>
     <string name="about_contact">Kontakt aufnehmen</string>
     <string name="about_contact_subtitle">Feature-Wünsche und Ideen sind willkommen. Ich lese alles, antworte aber nicht immer.</string>
     <string name="about_github">Auf GitHub mitwirken</string>
