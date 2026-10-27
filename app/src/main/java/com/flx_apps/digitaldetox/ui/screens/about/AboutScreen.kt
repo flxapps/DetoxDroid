@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.CurrencyBitcoin
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -77,9 +78,12 @@ import java.text.NumberFormat
 fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
     val uriHandler = LocalUriHandler.current
     val activity = LocalActivity.current
+    val websiteLink = stringResource(id = R.string.about_website_link)
     val reportIssueLink = stringResource(id = R.string.about_reportIssue_link)
     val githubLink = stringResource(id = R.string.about_github_link)
     val contactLink = stringResource(id = R.string.about_contact_link)
+    val websiteTitle = stringResource(id = R.string.about_website)
+    val websiteSubtitle = stringResource(id = R.string.about_website_subtitle)
     val reportIssueTitle = stringResource(id = R.string.navigation_reportIssue)
     val githubTitle = stringResource(id = R.string.about_github)
     val contactTitle = stringResource(id = R.string.about_contact)
@@ -250,6 +254,12 @@ fun AboutScreen(navViewModel: NavViewModel = NavViewModel.navViewModel()) {
 
                 SectionHeader(projectSection)
                 SettingsGroup {
+                    LinkTile(
+                        icon = Icons.Default.Language,
+                        title = websiteTitle,
+                        subtitle = websiteSubtitle,
+                        onClick = { uriHandler.openUri(websiteLink) }
+                    )
                     LinkTile(
                         icon = Icons.Default.BugReport,
                         title = reportIssueTitle,

@@ -1105,6 +1105,10 @@
         <item quantity="other">You\'re %d taps away from putting your phone down.</item>
     </plurals>
     <string name="about_version_putItDown">Now put it down.</string>
+    <string name="about_website">Website</string>
+    <!-- the page exists per language, so the address is translated rather than fixed -->
+    <string name="about_website_link">https://detoxdroid.com/</string>
+    <string name="about_website_subtitle">detoxdroid.com. Flip the switch there and the page goes gray.</string>
     <string name="about_contact">Contact me</string>
     <string name="about_contact_link" translatable="false">mailto:detoxdroid@flx-apps.com</string>
     <string name="about_contact_subtitle">Feature requests and ideas are welcome. I read everything, I don\'t always answer.</string>
