@@ -39,43 +39,33 @@ import androidx.compose.ui.unit.sp
 
 // The frame every store screenshot sits in.
 //
-// Six cards on one charcoal gradient, under the same centred caption, read as a template applied
-// six times, which is what the old strip was. Three things vary now, and one deliberately does not.
+// Each card stands on one flat colour, and the eight cards in a row walk the launcher icon's
+// rainbow from its pink stripe to its violet one. The icon has six stripes and the strip has eight
+// slots, so the two widest hue gaps get a stop in between, lime after yellow and teal after green;
+// the other six hues are the icon's own.
 //
-// Varying: the background is a flat colour per slot, the caption carries the icon the app itself
-// uses for that feature, and the composition rotates through [CardShape].
+// All eight grounds sit at the same lightness (OKLCH L 0.40, chroma 0.12 or as much as sRGB has
+// there), so the row reads as one palette and a caption reads the same on every card. The ground
+// is flat on purpose: a gradient behind an app panel muddies the edge between frame and screen at
+// the ~200 px thumbnail Play shows first, which is the size that decides the install.
 //
-// Not varying: the backgrounds are flat. A gradient behind an app panel muddies the edge between
-// frame and screen at the ~200 px thumbnail Play shows first, which is the size that decides the
-// install.
-//
-// The six colours are one palette: night blues from petrol through indigo to violet. Warm grounds
-// were tried first and a dark red or olive at this value is just brown, which is what the panel
-// ends up sitting in. The accent beside each is that ground's own hue lifted until it clears 7:1,
-// because the caption title is drawn in it.
+// The caption title, its icon and the panel hairline are the ground's own hue lifted to L 0.85.
+// That is where a card gets its colour from. A yellow this dark is brown; the title still says
+// yellow.
 
 /** Flat background and accent for one screenshot slot. */
 class MarketingStyle(val accent: Color, val background: Color)
 
-/**
- * The six slots, in strip order: indigo, petrol, steel blue, green, navy, violet.
- *
- * The hues land where they mean something. Petrol is the slot where the feed loses its colour,
- * green the break screen, navy the statistics, violet the twilight the minimal launcher draws.
- *
- * [Exceptions] is the exception. Its card is the one about the apps that keep their colour, so its
- * title is amber over the blue instead of the blue lifted, and it is the only warm thing on the
- * strip.
- */
+/** The eight slots in strip order: pink, orange, yellow, lime, green, teal, blue, violet. */
 object Slot {
-    val Hero = MarketingStyle(accent = Color(0xFF97A9F2), background = Color(0xFF141B3A))
-    val Groups = MarketingStyle(accent = Color(0xFFF2A1C7), background = Color(0xFF2A1322))
-    val Grayscale = MarketingStyle(accent = Color(0xFF6FD2E0), background = Color(0xFF0A2B36))
-    val Exceptions = MarketingStyle(accent = Color(0xFFF5CD5C), background = Color(0xFF16233C))
-    val Wait = MarketingStyle(accent = Color(0xFFC9D4E8), background = Color(0xFF1E2430))
-    val Doomscroll = MarketingStyle(accent = Color(0xFF7BD5AF), background = Color(0xFF092519))
-    val UsageStats = MarketingStyle(accent = Color(0xFF7BB8F4), background = Color(0xFF09192A))
-    val Launcher = MarketingStyle(accent = Color(0xFFB399E6), background = Color(0xFF1C1726))
+    val Hero = MarketingStyle(accent = Color(0xFFFFB7C3), background = Color(0xFF7A243B)) // pink
+    val Groups = MarketingStyle(accent = Color(0xFFFFBBA6), background = Color(0xFF7B290D)) // orange
+    val Grayscale = MarketingStyle(accent = Color(0xFFEDC980), background = Color(0xFF5D4300)) // yellow
+    val Exceptions = MarketingStyle(accent = Color(0xFFC6D88C), background = Color(0xFF424E00)) // lime
+    val Wait = MarketingStyle(accent = Color(0xFF98E2B1), background = Color(0xFF00572E)) // green
+    val Doomscroll = MarketingStyle(accent = Color(0xFF76E1ED), background = Color(0xFF005259)) // teal
+    val UsageStats = MarketingStyle(accent = Color(0xFFADD1FF), background = Color(0xFF0F4786)) // blue
+    val Launcher = MarketingStyle(accent = Color(0xFFD1C4FF), background = Color(0xFF4E3680)) // violet
 }
 
 /** 80 % off-white. Subtitles are the same on every card; only the accent moves. */
